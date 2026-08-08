@@ -18,6 +18,7 @@ public:
         std::function<float()> masterGain;
         std::function<bool()> emergencyMuted;
         std::function<bool()> isSafetyLatched;
+        std::function<juce::String()> runtimeSnapshotJson;
     };
 
     explicit EditorShell(Callbacks callbacks);
@@ -27,7 +28,7 @@ public:
 
 private:
     void timerCallback() override;
-    static std::optional<juce::WebBrowserComponent::Resource> getWebResource(const juce::String& path);
+    std::optional<juce::WebBrowserComponent::Resource> getWebResource(const juce::String& path) const;
 
     Callbacks callbacks_;
     juce::Label status_;

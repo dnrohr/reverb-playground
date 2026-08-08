@@ -1,7 +1,8 @@
 add_library(reverb_graph STATIC
     Source/BarrReferenceGraph.cpp
     Source/GraphDocument.cpp
-    Source/PatchJson.cpp)
+    Source/PatchJson.cpp
+    Source/RuntimeSnapshot.cpp)
 
 target_include_directories(reverb_graph
     PUBLIC

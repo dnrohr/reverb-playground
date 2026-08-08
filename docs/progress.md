@@ -15,6 +15,7 @@ Last updated: 2026-08-08
 | M1.4 Add reference measurements | Complete | Automated onset/length/peak/stereo/Schroeder/RT60 metrics; synthetic estimator tests; versioned artifact |
 | M1.5 Create the audible reference harness | Complete | Live wet processor; device/default status; impulse/gain/mute/safety controls; startup tests; screenshot/video |
 | M2.1 Prototype the schematic editor shell | Complete | Embedded three-pane React Flow shell; documented navigation; scaling check; screenshot/video evidence |
+| M2.2 Bind visible nodes to the fixed runtime | Complete | Native runtime snapshot; single-source identities/values; live inspector; mismatch detection |
 
 ## M0.2 verification
 
@@ -145,3 +146,15 @@ Results:
 - Selected-node screenshot: [`artifacts/ui/m2-1-schematic-editor/selected-node.png`](../artifacts/ui/m2-1-schematic-editor/selected-node.png).
 - Zoomed screenshot: [`artifacts/ui/m2-1-schematic-editor/zoomed.png`](../artifacts/ui/m2-1-schematic-editor/zoomed.png).
 - Pan/zoom/selection/inspector video: [`artifacts/ui/m2-1-schematic-editor/schematic-interactions.mp4`](../artifacts/ui/m2-1-schematic-editor/schematic-interactions.mp4).
+
+## M2.2 verification
+
+- Native immutable runtime descriptors now own every Barr node ID, type, label, role, port, parameter value/unit, and connection.
+- DSP preparation, semantic graph construction, and the web runtime snapshot all consume those same descriptors.
+- Contract-v1 parsing rejects unsupported contracts/engines, duplicate identities, unsupported types/roles, invalid values/units/signals, and unknown connection endpoints before rendering.
+- Selecting a block displays values and units supplied by the native snapshot; the UI visibly reports `RUNTIME BOUND` and the active sample rate.
+- Native identity validation compares nodes, ports, parameters, and connections; deliberate rename/value/connection drift is detected by tests and a debug assertion guards snapshot serving.
+- Stereo-to-mono normalization, the explicit output branch, audition impulse boundary, and post-patch master gain/safety processing are documented; no hidden sum, polarity, channel conversion, or delay remains.
+- Shared Debug verification passes 4/4 web tests and 27/27 native tests, including Standalone and VST3 builds.
+- Bound graph screenshot: [`artifacts/ui/m2-2-runtime-binding/runtime-bound-default.png`](../artifacts/ui/m2-2-runtime-binding/runtime-bound-default.png).
+- Live inspector screenshot: [`artifacts/ui/m2-2-runtime-binding/runtime-bound-inspector.png`](../artifacts/ui/m2-2-runtime-binding/runtime-bound-inspector.png).

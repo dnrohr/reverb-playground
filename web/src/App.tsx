@@ -14,7 +14,7 @@ import {
   type OnSelectionChangeParams,
   type Viewport,
 } from '@xyflow/react';
-import { createFlowModel, type PatchNodeData } from './graph';
+import { createFlowModel, parseRuntimeSnapshot, type PatchNodeData, type RuntimeSnapshot } from './graph';
 import { PatchNode } from './PatchNode';
 
 const modules = [
@@ -29,9 +29,9 @@ function formatValue(value: number, unit: string) {
   return value.toFixed(2);
 }
 
-function Editor() {
+function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const { fitView } = useReactFlow();
-  const initial = useMemo(createFlowModel, []);
+  const initial = useMemo(() => createFlowModel(snapshot), [snapshot]);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<PatchNodeData>>(initial.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initial.edges);
   const [selectedNode, setSelectedNode] = useState<Node<PatchNodeData> | null>(null);
@@ -39,13 +39,13 @@ function Editor() {
   const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 });
 
   const resetReference = useCallback(() => {
-    const fresh = createFlowModel();
+    const fresh = createFlowModel(snapshot);
     setNodes(fresh.nodes);
     setEdges(fresh.edges);
     setSelectedNode(null);
     setSelectedEdge(null);
     requestAnimationFrame(() => void fitView({ padding: 0.16, minZoom: 0.58, maxZoom: 1.1 }));
-  }, [fitView, setEdges, setNodes]);
+  }, [fitView, setEdges, setNodes, snapshot]);
 
   const handleSelection = useCallback(({ nodes: selectedNodes, edges: selectedEdges }: OnSelectionChangeParams) => {
     setSelectedNode((selectedNodes[0] as Node<PatchNodeData> | undefined) ?? null);
@@ -70,9 +70,7 @@ function Editor() {
         </div>
         <div className="header-status" aria-label="Audition status">
           <span className="status-dot" aria-hidden="true" />
-          <span>WET REFERENCE ONLINE</span>
-          <span className="status-divider">/</span>
-          <span>48.0 kHz</span>
+          <span>RUNTIME BOUND / {snapshot.sampleRate > 0 ? `${(snapshot.sampleRate / 1000).toFixed(1)} kHz` : 'awaiting audio'}</span>
         </div>
       </header>
 
@@ -104,7 +102,7 @@ function Editor() {
           <div className="canvas-toolbar">
             <div>
               <strong>REFERENCE.graph</strong>
-              <span>10 blocks / 11 cables</span>
+              <span>{snapshot.nodes.length} blocks / {snapshot.connections.length} cables</span>
             </div>
             <div className="canvas-actions">
               <span>{Math.round(viewport.zoom * 100)}%</span>
@@ -170,7 +168,7 @@ function Editor() {
                   <small>{parameter.unit}</small>
                 </div>
               )) : <p className="empty-parameters">No editable parameters.</p>}
-              <div className="selection-note">UI presentation copy only. Runtime binding begins in M2.2.</div>
+              <div className="selection-note">Live value from native DSP runtime contract v{snapshot.contractVersion}.</div>
             </div>
           ) : selectedEdge ? (
             <div className="inspector-content">
@@ -200,5 +198,25 @@ function Editor() {
 }
 
 export function App() {
-  return <ReactFlowProvider><Editor /></ReactFlowProvider>;
+  const [snapshot, setSnapshot] = useState<RuntimeSnapshot | null>(null);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(new URL('./runtime-snapshot.json', window.location.href), { signal: controller.signal, cache: 'no-store' })
+      .then((response) => {
+        if (!response.ok) throw new Error(`Native runtime returned HTTP ${response.status}`);
+        return response.json() as Promise<unknown>;
+      })
+      .then((payload) => setSnapshot(parseRuntimeSnapshot(payload)))
+      .catch((reason: unknown) => {
+        if (!controller.signal.aborted)
+          setError(reason instanceof Error ? reason.message : 'Unknown runtime binding failure');
+      });
+    return () => controller.abort();
+  }, []);
+
+  if (error) return <main className="binding-state binding-error"><strong>RUNTIME BINDING FAILED</strong><span>{error}</span></main>;
+  if (!snapshot) return <main className="binding-state"><strong>BINDING NATIVE RUNTIME…</strong></main>;
+  return <ReactFlowProvider><Editor snapshot={snapshot} /></ReactFlowProvider>;
 }

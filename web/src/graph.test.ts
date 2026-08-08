@@ -1,26 +1,70 @@
 import { describe, expect, it } from 'vitest';
-import { createFlowModel, deleteSelected } from './graph';
+import { createFlowModel, deleteSelected, parseRuntimeSnapshot, type RuntimeSnapshot } from './graph';
 
-describe('reference graph presentation model', () => {
-  it('preserves all stable node and connection identities', () => {
-    const model = createFlowModel();
-    expect(model.nodes).toHaveLength(10);
-    expect(model.edges).toHaveLength(11);
-    expect(model.nodes.map((node) => node.id)).toContain('diffuser-1');
-    expect(model.edges.map((edge) => edge.id)).toContain('tank-to-right');
+const snapshot: RuntimeSnapshot = {
+  contractVersion: 1,
+  engineId: 'barr-reference',
+  sampleRate: 48000,
+  nodes: [
+    {
+      id: 'tank-2', type: 'allpass', label: 'Tank 2', role: 'tank', position: { x: 20, y: 30 },
+      ports: [
+        { id: 'in', signal: 'audio', direction: 'input' },
+        { id: 'out', signal: 'audio', direction: 'output' },
+      ],
+      parameters: [
+        { id: 'delay', value: 19.91, unit: 'milliseconds' },
+        { id: 'coefficient', value: -0.5, unit: 'unitless' },
+      ],
+    },
+    {
+      id: 'left-tap', type: 'allpass', label: 'Left Tap', role: 'tap', position: { x: 200, y: 30 },
+      ports: [
+        { id: 'in', signal: 'audio', direction: 'input' },
+        { id: 'out', signal: 'audio', direction: 'output' },
+      ],
+      parameters: [{ id: 'delay', value: 29.71, unit: 'milliseconds' }],
+    },
+  ],
+  connections: [
+    { id: 'tank-to-left', source: 'tank-2', sourcePort: 'out', target: 'left-tap', targetPort: 'in', signal: 'audio' },
+  ],
+  outsidePatch: [
+    { id: 'master-audition-gain', purpose: 'audition output level' },
+    { id: 'numerical-safety-guards', purpose: 'mute invalid output' },
+  ],
+};
+
+describe('native runtime graph presentation model', () => {
+  it('renders stable identities and live values from the native snapshot', () => {
+    const parsed = parseRuntimeSnapshot(snapshot);
+    const model = createFlowModel(parsed);
+    expect(model.nodes.map((node) => node.id)).toEqual(['tank-2', 'left-tap']);
+    expect(model.edges.map((edge) => edge.id)).toEqual(['tank-to-left']);
+    expect(model.nodes[0]?.data.parameters[0]).toEqual({ id: 'delay', value: 19.91, unit: 'milliseconds' });
   });
 
-  it('deletes selected nodes and every incident connection from only the UI copy', () => {
-    const model = createFlowModel();
+  it('rejects contract and runtime identity mismatches before rendering', () => {
+    expect(() => parseRuntimeSnapshot({ ...snapshot, contractVersion: 2 })).toThrow('unsupported contract version');
+    expect(() => parseRuntimeSnapshot({ ...snapshot, engineId: 'different-engine' })).toThrow('unexpected engine identity');
+    expect(() => parseRuntimeSnapshot({ ...snapshot, nodes: [...snapshot.nodes, snapshot.nodes[0]] })).toThrow('node IDs must be unique');
+    expect(() => parseRuntimeSnapshot({
+      ...snapshot,
+      connections: [{ ...snapshot.connections[0], sourcePort: 'missing' }],
+    })).toThrow('invalid source port');
+  });
+
+  it('deletes selected nodes and incident connections from only the UI copy', () => {
+    const model = createFlowModel(snapshot);
     const selected = model.nodes.map((node) => ({ ...node, selected: node.id === 'tank-2' }));
     const result = deleteSelected(selected, model.edges);
     expect(result.nodes.some((node) => node.id === 'tank-2')).toBe(false);
-    expect(result.edges.some((edge) => edge.source === 'tank-2' || edge.target === 'tank-2')).toBe(false);
-    expect(createFlowModel().nodes.some((node) => node.id === 'tank-2')).toBe(true);
+    expect(result.edges).toHaveLength(0);
+    expect(createFlowModel(snapshot).nodes.some((node) => node.id === 'tank-2')).toBe(true);
   });
 
   it('marks audio cables with a semantic class independent of color', () => {
-    const model = createFlowModel();
+    const model = createFlowModel(snapshot);
     expect(model.edges.every((edge) => edge.className?.includes('signal-audio'))).toBe(true);
   });
 });

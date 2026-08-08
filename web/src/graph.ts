@@ -2,6 +2,7 @@ import type { Edge, Node } from '@xyflow/react';
 
 export type SignalType = 'audio' | 'control';
 export type PortDirection = 'input' | 'output';
+export type NodeRole = 'io' | 'routing' | 'filter' | 'diffusion' | 'tank' | 'tap';
 
 export interface PatchPort {
   id: string;
@@ -20,65 +21,107 @@ export interface PatchNodeData extends Record<string, unknown> {
   type: string;
   ports: PatchPort[];
   parameters: PatchParameter[];
-  role: 'io' | 'routing' | 'filter' | 'diffusion' | 'tank' | 'tap';
+  role: NodeRole;
 }
 
-export interface PatchNode {
+export interface RuntimeNode {
   id: string;
-  data: PatchNodeData;
+  type: string;
+  label: string;
+  role: NodeRole;
+  ports: PatchPort[];
+  parameters: PatchParameter[];
   position: { x: number; y: number };
 }
 
-export interface PatchConnection {
+export interface RuntimeConnection {
   id: string;
   source: string;
-  sourceHandle: string;
+  sourcePort: string;
   target: string;
-  targetHandle: string;
+  targetPort: string;
   signal: SignalType;
 }
 
-const audioInput = (id: string): PatchPort => ({ id, signal: 'audio', direction: 'input' });
-const audioOutput = (id: string): PatchPort => ({ id, signal: 'audio', direction: 'output' });
-const milliseconds = (value: number): PatchParameter => ({ id: 'delay', value, unit: 'milliseconds' });
-const coefficient = (value: number): PatchParameter => ({ id: 'coefficient', value, unit: 'unitless' });
+export interface RuntimeSnapshot {
+  contractVersion: 1;
+  engineId: 'barr-reference';
+  sampleRate: number;
+  nodes: RuntimeNode[];
+  connections: RuntimeConnection[];
+  outsidePatch: { id: string; purpose: string }[];
+}
 
-export const referenceNodes: PatchNode[] = [
-  { id: 'input', position: { x: 0, y: 80 }, data: { label: 'Stereo Input', type: 'stereo-input', role: 'io', ports: [audioOutput('out-l'), audioOutput('out-r')], parameters: [] } },
-  { id: 'sum', position: { x: 180, y: 80 }, data: { label: 'Mono Sum', type: 'sum', role: 'routing', ports: [audioInput('in-l'), audioInput('in-r'), audioOutput('out')], parameters: [] } },
-  { id: 'input-filter', position: { x: 360, y: 80 }, data: { label: 'Input Low-pass', type: 'lowpass', role: 'filter', ports: [audioInput('in'), audioOutput('out')], parameters: [{ id: 'cutoff', value: 7000, unit: 'hertz' }] } },
-  { id: 'diffuser-1', position: { x: 540, y: 80 }, data: { label: 'Diffuser 1', type: 'allpass', role: 'diffusion', ports: [audioInput('in'), audioOutput('out')], parameters: [milliseconds(4.31), coefficient(0.5)] } },
-  { id: 'diffuser-2', position: { x: 720, y: 80 }, data: { label: 'Diffuser 2', type: 'allpass', role: 'diffusion', ports: [audioInput('in'), audioOutput('out')], parameters: [milliseconds(7.13), coefficient(0.5)] } },
-  { id: 'tank-1', position: { x: 720, y: 260 }, data: { label: 'Tank 1', type: 'allpass', role: 'tank', ports: [audioInput('in'), audioOutput('out')], parameters: [milliseconds(13.73), coefficient(0.5)] } },
-  { id: 'tank-2', position: { x: 540, y: 260 }, data: { label: 'Tank 2', type: 'allpass', role: 'tank', ports: [audioInput('in'), audioOutput('out')], parameters: [milliseconds(19.91), coefficient(-0.5)] } },
-  { id: 'left-tap', position: { x: 360, y: 210 }, data: { label: 'Left Tap', type: 'allpass', role: 'tap', ports: [audioInput('in'), audioOutput('out')], parameters: [milliseconds(29.71), coefficient(0.5)] } },
-  { id: 'right-tap', position: { x: 360, y: 330 }, data: { label: 'Right Tap', type: 'allpass', role: 'tap', ports: [audioInput('in'), audioOutput('out')], parameters: [milliseconds(37.11), coefficient(0.5)] } },
-  { id: 'output', position: { x: 180, y: 260 }, data: { label: 'Stereo Output', type: 'stereo-output', role: 'io', ports: [audioInput('in-l'), audioInput('in-r')], parameters: [] } },
-];
+const nodeRoles = new Set<NodeRole>(['io', 'routing', 'filter', 'diffusion', 'tank', 'tap']);
+const nodeTypes = new Set(['stereo-input', 'stereo-output', 'sum', 'lowpass', 'allpass']);
 
-export const referenceConnections: PatchConnection[] = [
-  { id: 'input-l-to-sum', source: 'input', sourceHandle: 'out-l', target: 'sum', targetHandle: 'in-l', signal: 'audio' },
-  { id: 'input-r-to-sum', source: 'input', sourceHandle: 'out-r', target: 'sum', targetHandle: 'in-r', signal: 'audio' },
-  { id: 'sum-to-filter', source: 'sum', sourceHandle: 'out', target: 'input-filter', targetHandle: 'in', signal: 'audio' },
-  { id: 'filter-to-diffuser-1', source: 'input-filter', sourceHandle: 'out', target: 'diffuser-1', targetHandle: 'in', signal: 'audio' },
-  { id: 'diffuser-1-to-diffuser-2', source: 'diffuser-1', sourceHandle: 'out', target: 'diffuser-2', targetHandle: 'in', signal: 'audio' },
-  { id: 'diffuser-2-to-tank-1', source: 'diffuser-2', sourceHandle: 'out', target: 'tank-1', targetHandle: 'in', signal: 'audio' },
-  { id: 'tank-1-to-tank-2', source: 'tank-1', sourceHandle: 'out', target: 'tank-2', targetHandle: 'in', signal: 'audio' },
-  { id: 'tank-to-left', source: 'tank-2', sourceHandle: 'out', target: 'left-tap', targetHandle: 'in', signal: 'audio' },
-  { id: 'tank-to-right', source: 'tank-2', sourceHandle: 'out', target: 'right-tap', targetHandle: 'in', signal: 'audio' },
-  { id: 'left-to-output', source: 'left-tap', sourceHandle: 'out', target: 'output', targetHandle: 'in-l', signal: 'audio' },
-  { id: 'right-to-output', source: 'right-tap', sourceHandle: 'out', target: 'output', targetHandle: 'in-r', signal: 'audio' },
-];
+function requireCondition(condition: unknown, message: string): asserts condition {
+  if (!condition) throw new Error(`Runtime snapshot mismatch: ${message}`);
+}
 
-export function createFlowModel(): { nodes: Node<PatchNodeData>[]; edges: Edge[] } {
+export function parseRuntimeSnapshot(input: unknown): RuntimeSnapshot {
+  requireCondition(typeof input === 'object' && input !== null, 'payload is not an object');
+  const snapshot = input as Partial<RuntimeSnapshot>;
+  requireCondition(snapshot.contractVersion === 1, 'unsupported contract version');
+  requireCondition(snapshot.engineId === 'barr-reference', 'unexpected engine identity');
+  requireCondition(typeof snapshot.sampleRate === 'number' && Number.isFinite(snapshot.sampleRate), 'invalid sample rate');
+  requireCondition(Array.isArray(snapshot.nodes) && snapshot.nodes.length > 0, 'nodes are missing');
+  requireCondition(Array.isArray(snapshot.connections), 'connections are missing');
+  requireCondition(Array.isArray(snapshot.outsidePatch), 'outside-patch processing is missing');
+
+  const nodeIds = new Set<string>();
+  const portsByNode = new Map<string, Map<string, PatchPort>>();
+  for (const node of snapshot.nodes) {
+    requireCondition(typeof node.id === 'string' && !nodeIds.has(node.id), 'node IDs must be unique');
+    nodeIds.add(node.id);
+    requireCondition(nodeTypes.has(node.type), `unsupported node type ${node.type}`);
+    requireCondition(nodeRoles.has(node.role), `unsupported role ${node.role}`);
+    requireCondition(Array.isArray(node.ports) && Array.isArray(node.parameters), `invalid node ${node.id}`);
+    requireCondition(Number.isFinite(node.position?.x) && Number.isFinite(node.position?.y), `invalid layout for ${node.id}`);
+    const ports = new Map<string, PatchPort>();
+    for (const port of node.ports) {
+      requireCondition(typeof port.id === 'string' && !ports.has(port.id), `port IDs must be unique on ${node.id}`);
+      requireCondition(port.signal === 'audio' || port.signal === 'control', `invalid signal on ${node.id}.${port.id}`);
+      requireCondition(port.direction === 'input' || port.direction === 'output', `invalid direction on ${node.id}.${port.id}`);
+      ports.set(port.id, port);
+    }
+    portsByNode.set(node.id, ports);
+    for (const parameter of node.parameters) {
+      requireCondition(typeof parameter.id === 'string' && Number.isFinite(parameter.value), `invalid parameter on ${node.id}`);
+      requireCondition(typeof parameter.unit === 'string' && parameter.unit.length > 0, `missing unit on ${node.id}.${parameter.id}`);
+    }
+  }
+  for (const connection of snapshot.connections) {
+    requireCondition(nodeIds.has(connection.source) && nodeIds.has(connection.target), `connection ${connection.id} references an unknown node`);
+    requireCondition(connection.signal === 'audio' || connection.signal === 'control', `connection ${connection.id} has an invalid signal`);
+    const sourcePort = portsByNode.get(connection.source)?.get(connection.sourcePort);
+    const targetPort = portsByNode.get(connection.target)?.get(connection.targetPort);
+    requireCondition(sourcePort?.direction === 'output' && sourcePort.signal === connection.signal, `connection ${connection.id} has an invalid source port`);
+    requireCondition(targetPort?.direction === 'input' && targetPort.signal === connection.signal, `connection ${connection.id} has an invalid target port`);
+  }
+  return snapshot as RuntimeSnapshot;
+}
+
+export function createFlowModel(snapshot: RuntimeSnapshot): { nodes: Node<PatchNodeData>[]; edges: Edge[] } {
   return {
-    nodes: referenceNodes.map((node) => ({ ...node, type: 'patchNode', data: { ...node.data, ports: [...node.data.ports], parameters: [...node.data.parameters] } })),
-    edges: referenceConnections.map((connection) => ({
+    nodes: snapshot.nodes.map((node) => ({
+      id: node.id,
+      type: 'patchNode',
+      position: { ...node.position },
+      data: {
+        label: node.label,
+        type: node.type,
+        role: node.role,
+        ports: node.ports.map((port) => ({ ...port })),
+        parameters: node.parameters.map((parameter) => ({ ...parameter })),
+      },
+    })),
+    edges: snapshot.connections.map((connection) => ({
       id: connection.id,
       source: connection.source,
-      sourceHandle: connection.sourceHandle,
+      sourceHandle: connection.sourcePort,
       target: connection.target,
-      targetHandle: connection.targetHandle,
+      targetHandle: connection.targetPort,
       type: 'smoothstep',
       className: `signal-edge signal-${connection.signal}`,
       data: { signal: connection.signal },

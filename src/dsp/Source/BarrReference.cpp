@@ -1,4 +1,5 @@
 #include <reverb/dsp/BarrReference.h>
+#include <reverb/dsp/BarrReferenceRuntime.h>
 
 #include <reverb/dsp/Sum.h>
 
@@ -8,14 +9,20 @@ namespace reverb::dsp {
 
 void BarrReference::prepare(const double sampleRate)
 {
+    const auto prepareAllpass = [sampleRate](Allpass& allpass, const std::string_view nodeId) {
+        allpass.prepare(
+            sampleRate,
+            barrReferenceParameter(nodeId, "delay"),
+            static_cast<float>(barrReferenceParameter(nodeId, "coefficient")));
+    };
     inputGain_.setLinear(0.5F);
-    inputFilter_.prepare(sampleRate, 7'000.0);
-    diffuserOne_.prepare(sampleRate, 4.31, 0.5F);
-    diffuserTwo_.prepare(sampleRate, 7.13, 0.5F);
-    tankOne_.prepare(sampleRate, 13.73, 0.5F);
-    tankTwo_.prepare(sampleRate, 19.91, -0.5F);
-    leftTap_.prepare(sampleRate, 29.71, 0.5F);
-    rightTap_.prepare(sampleRate, 37.11, 0.5F);
+    inputFilter_.prepare(sampleRate, barrReferenceParameter("input-filter", "cutoff"));
+    prepareAllpass(diffuserOne_, "diffuser-1");
+    prepareAllpass(diffuserTwo_, "diffuser-2");
+    prepareAllpass(tankOne_, "tank-1");
+    prepareAllpass(tankTwo_, "tank-2");
+    prepareAllpass(leftTap_, "left-tap");
+    prepareAllpass(rightTap_, "right-tap");
 }
 
 void BarrReference::reset() noexcept

@@ -5,6 +5,7 @@ add_executable(reverb_tests
     LiveReferenceHarnessTests.cpp
     OfflineRendererTests.cpp
     ResponseMeasurementsTests.cpp
+    RuntimeSnapshotTests.cpp
     NumericalSafetyGuardTests.cpp
     GraphDocumentTests.cpp)
 

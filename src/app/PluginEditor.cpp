@@ -36,6 +36,7 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
           [&processor] { return processor.masterGain(); },
           [&processor] { return processor.isEmergencyMuted(); },
           [&processor] { return processor.isSafetyLatched(); },
+          [&processor] { return processor.runtimeSnapshotJson(); },
       })
 {
     addAndMakeVisible(shell_);

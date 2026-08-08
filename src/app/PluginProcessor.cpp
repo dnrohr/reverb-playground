@@ -2,6 +2,9 @@
 
 #include "PluginEditor.h"
 
+#include <reverb/graph/BarrReferenceGraph.h>
+#include <reverb/graph/RuntimeSnapshot.h>
+
 ReverbPlaygroundProcessor::ReverbPlaygroundProcessor()
     : AudioProcessor(BusesProperties()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
@@ -90,6 +93,15 @@ float ReverbPlaygroundProcessor::masterGain() const noexcept { return harness_.m
 bool ReverbPlaygroundProcessor::isEmergencyMuted() const noexcept { return harness_.isEmergencyMuted(); }
 bool ReverbPlaygroundProcessor::isSafetyLatched() const noexcept { return harness_.isSafetyLatched(); }
 double ReverbPlaygroundProcessor::activeSampleRate() const noexcept { return harness_.sampleRate(); }
+
+juce::String ReverbPlaygroundProcessor::runtimeSnapshotJson() const
+{
+    const auto identityErrors = reverb::graph::validateBarrRuntimeIdentity(
+        reverb::graph::makeBarrReferenceGraph());
+    jassert(identityErrors.empty());
+    const auto json = reverb::graph::writeBarrRuntimeSnapshotJson(activeSampleRate());
+    return juce::String::fromUTF8(json.data(), static_cast<int>(json.size()));
+}
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {

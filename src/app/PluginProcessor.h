@@ -39,6 +39,7 @@ public:
     [[nodiscard]] bool isEmergencyMuted() const noexcept;
     [[nodiscard]] bool isSafetyLatched() const noexcept;
     [[nodiscard]] double activeSampleRate() const noexcept;
+    [[nodiscard]] juce::String runtimeSnapshotJson() const;
 
 private:
     reverb::dsp::LiveReferenceHarness harness_;

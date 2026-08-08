@@ -72,7 +72,7 @@ EditorShell::EditorShell(Callbacks callbacks)
         .withWinWebView2Options(juce::WebBrowserComponent::Options::WinWebView2 {}
             .withUserDataFolder(juce::File::getSpecialLocation(juce::File::tempDirectory)
                 .getChildFile("reverb-playground-webview-m2-1-c")))
-        .withResourceProvider([](const auto& path) { return getWebResource(path); });
+        .withResourceProvider([this](const auto& path) { return getWebResource(path); });
     browser_ = std::make_unique<juce::WebBrowserComponent>(std::move(options));
     addAndMakeVisible(*browser_);
     browser_->goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
@@ -89,9 +89,15 @@ void EditorShell::paint(juce::Graphics& graphics)
     graphics.drawLine(0.0F, controls.getBottom() - 1.0F, controls.getRight(), controls.getBottom() - 1.0F);
 }
 
-std::optional<juce::WebBrowserComponent::Resource> EditorShell::getWebResource(const juce::String& path)
+std::optional<juce::WebBrowserComponent::Resource> EditorShell::getWebResource(const juce::String& path) const
 {
     const auto requested = path == "/" ? juce::String("index.html") : path.trimCharactersAtStart("/");
+    if (requested == "runtime-snapshot.json") {
+        const auto json = callbacks_.runtimeSnapshotJson();
+        std::vector<std::byte> bytes(static_cast<std::size_t>(json.getNumBytesAsUTF8()));
+        std::memcpy(bytes.data(), json.toRawUTF8(), bytes.size());
+        return juce::WebBrowserComponent::Resource { std::move(bytes), "application/json" };
+    }
     const char* data = nullptr;
     int size = 0;
     juce::String mime;

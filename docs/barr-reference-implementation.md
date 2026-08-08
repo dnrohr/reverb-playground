@@ -24,4 +24,6 @@ These differences are intentional and test-visible. M1.2 establishes the archite
 
 ## Runtime contract
 
-`BarrReference::prepare` configures every public primitive. `process` performs no allocation and uses caller-owned mono input/output spans. Stereo inputs are summed at `0.5` gain; output spans are always written or zero-filled. `reset` clears all filter and allpass state.
+`BarrReference::prepare` configures every public primitive from the same immutable runtime descriptors that generate the visible graph. `process` performs no allocation and uses caller-owned mono input/output spans. Stereo inputs are summed and normalized at `0.5` gain as the explicit **Mono Sum** block's documented behavior; output spans are always written or zero-filled. `reset` clears all filter and allpass state.
+
+The audition impulse is injected at the normalized mono-sum boundary as a test stimulus. It is not a hidden processor applied to live input. Master audition gain and the two numerical safety guards operate after the reference patch and are exposed in the native audition strip; they are also listed in the runtime snapshot's `outsidePatch` metadata.
