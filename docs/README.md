@@ -18,6 +18,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Progress log](progress.md) - completed roadmap tasks and verification evidence.
 - [Patch format v1](patch-format.md) - versioned semantic graph, editor layout, typed ports, units, validation, and migration policy.
 - [Real-time and safety contract v1](real-time-safety-contract-v1.md) - feedback legality, audio-thread rules, resource bounds, numerical containment, and runtime publication.
+- [DSP primitives](dsp-primitives.md) - equations, units, preparation/processing lifetime, and deterministic test tolerances.
 
 ## Local source tree
 

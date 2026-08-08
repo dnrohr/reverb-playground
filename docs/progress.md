@@ -9,6 +9,7 @@ Last updated: 2026-08-08
 | M0.3 Establish continuous integration and quality checks | Complete | Shared local/CI verifier; warnings-as-errors; repository checks; deliberate failing-test proof |
 | M0.4 Define the graph schema v1 | Complete | JSON Schema; typed C++ graph; deterministic serialization; valid/invalid fixtures; 4/4 tests; commit `29491a1` on `origin/main` |
 | M0.5 Define real-time and safety contracts | Complete | Versioned contract; executable cycle validation; latched numerical guard; native tests |
+| M1.1 Implement core DSP primitives | Complete | Mono gain/invert, sum, delay, allpass, and low-pass; multi-rate timing, energy, polarity, and reset tests |
 
 ## M0.2 verification
 
@@ -75,4 +76,14 @@ Results:
 - The numerical output guard detects NaN, infinity, and finite runaway levels, zeros the complete block, and remains muted until explicit reset.
 - Parameter smoothing and immutable topology-snapshot publication have separate specified paths.
 - Native tests observe zero-delay rejection, legal delayed feedback, non-finite containment, runaway containment, the mute latch, and reset.
+- UI unchanged; no screenshot or video required.
+
+## M1.1 verification
+
+- Gain/invert and explicit sum match signed reference vectors.
+- Delay impulse timing is tested at 44.1 and 96 kHz using the documented nearest-sample millisecond conversion.
+- Coefficient-0.5 and general allpasses preserve impulse energy within the documented `1e-5` tolerance.
+- One-pole low-pass step response is monotonic and bounded.
+- Stateful primitives produce deterministic silence after reset.
+- Allocation and validation occur in `prepare`; `process` and `reset` are bounded and `noexcept`.
 - UI unchanged; no screenshot or video required.

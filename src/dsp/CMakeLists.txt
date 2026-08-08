@@ -1,6 +1,10 @@
 add_library(reverb_dsp STATIC
+    Source/Allpass.cpp
+    Source/Delay.cpp
     Source/Gain.cpp
-    Source/NumericalSafetyGuard.cpp)
+    Source/NumericalSafetyGuard.cpp
+    Source/OnePoleLowPass.cpp
+    Source/Sum.cpp)
 
 target_include_directories(reverb_dsp
     PUBLIC
