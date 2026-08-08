@@ -20,6 +20,10 @@ The reference patch opens fitted to the available canvas. Blocks retain stable I
 
 Deletion affects only the current presentation copy. **Reset view copy** reconstructs the canvas from the last native runtime snapshot. General graph compilation begins in M3, so presentation deletion does not yet alter audio.
 
+## Learn mode
+
+The inspector's **Learn On/Off** control reveals or hides contextual explanations without changing the graph or selected parameters. A card can also be dismissed for its current context. Cards distinguish documented Barr/MIDIVerb evidence from choices in this reconstruction and link to the complete architecture research bundled into an offline reader. See [Contextual teaching](contextual-teaching.md).
+
 ## Signal semantics
 
 Audio and control connections never rely on colour alone. Audio uses a solid cable and circular ports; control uses a dashed cable and diamond ports. The module library and canvas legend repeat those labels in text.

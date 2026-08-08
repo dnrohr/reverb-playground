@@ -18,6 +18,8 @@ import { createFlowModel, parseRuntimeSnapshot, type PatchNodeData, type Runtime
 import { PatchNode } from './PatchNode';
 import { callNative } from './nativeBridge';
 import { parsePatchJson, writePatchJson } from './patchPersistence';
+import researchText from '../../docs/keith-barr-reverb-architectures.md?raw';
+import { teachingTopicFor, type TeachingTopic } from './teaching';
 import {
   commitParameterEdit as commitHistoryEdit,
   redoParameterEdit as takeRedo,
@@ -37,6 +39,21 @@ function formatValue(value: number, unit: string) {
   return value.toFixed(2);
 }
 
+function TeachingCard({ topic, onDismiss, onResearch }: {
+  topic: TeachingTopic; onDismiss: () => void; onResearch: () => void;
+}) {
+  return (
+    <section className="teaching-card" aria-label="Contextual explanation">
+      <div className="teaching-title"><span>LEARN / CONTEXT</span><button type="button" aria-label="Dismiss explanation" onClick={onDismiss}>×</button></div>
+      <h3>{topic.title}</h3>
+      <h4>DOCUMENTED BARR / MIDIVERB</h4><p>{topic.documented}</p>
+      <h4>THIS RECONSTRUCTION</h4><p>{topic.reconstruction}</p>
+      <h4>LISTEN / NOTICE</h4><p>{topic.takeaway}</p>
+      <button className="research-link" type="button" onClick={onResearch}>READ OFFLINE ARCHITECTURE RESEARCH</button>
+    </section>
+  );
+}
+
 function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const { fitView, setViewport: setFlowViewport } = useReactFlow();
   const initial = useMemo(() => createFlowModel(snapshot), [snapshot]);
@@ -50,6 +67,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const activeEdit = useRef<ParameterEdit | null>(null);
   const loadInput = useRef<HTMLInputElement | null>(null);
   const [fileStatus, setFileStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
+  const [teachingEnabled, setTeachingEnabled] = useState(() => {
+    try { return window.localStorage.getItem('reverb-playground-teaching') !== 'off'; } catch { return true; }
+  });
+  const [dismissedTeaching, setDismissedTeaching] = useState<string | null>(null);
+  const [researchOpen, setResearchOpen] = useState(false);
 
   const applyParameter = useCallback((nodeId: string, parameterId: string, value: number) => {
     const update = (node: Node<PatchNodeData>) => node.id !== nodeId ? node : {
@@ -175,6 +197,16 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     }
   }, [setEdges, setFlowViewport, setNodes, snapshot]);
 
+  const teachingKey = selectedNode?.id ?? 'overview';
+  const showTeaching = teachingEnabled && dismissedTeaching !== teachingKey;
+  const toggleTeaching = useCallback(() => {
+    setTeachingEnabled((current) => {
+      const next = !current;
+      try { window.localStorage.setItem('reverb-playground-teaching', next ? 'on' : 'off'); } catch { /* preference remains session-local */ }
+      return next;
+    });
+  }, []);
+
   return (
     <main className="editor-shell">
       <header className="editor-header">
@@ -283,7 +315,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         </section>
 
         <aside className="inspector" aria-label="Inspector">
-          <div className="pane-heading"><span>INSPECTOR</span><span className="inspector-state">LIVE COPY</span></div>
+          <div className="pane-heading"><span>INSPECTOR</span><button className="teaching-toggle" type="button" aria-pressed={teachingEnabled} onClick={toggleTeaching}>LEARN {teachingEnabled ? 'ON' : 'OFF'}</button></div>
           {selectedNode ? (
             <div className="inspector-content" key={selectedNode.id}>
               <div className="selection-kicker">SELECTED BLOCK</div>
@@ -338,6 +370,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <button type="button" disabled={!redoStack.length} onClick={redo}>REDO</button>
               </div>
               <div className="selection-note">Live value from native DSP runtime contract v{snapshot.contractVersion}.</div>
+              {showTeaching ? <TeachingCard topic={teachingTopicFor(selectedNode.id)} onDismiss={() => setDismissedTeaching(teachingKey)} onResearch={() => setResearchOpen(true)} /> : null}
             </div>
           ) : selectedEdge ? (
             <div className="inspector-content">
@@ -358,10 +391,19 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <kbd>TAB</kbd><span>focus graph elements</span>
               <kbd>ENTER</kbd><span>select focused item</span>
               <kbd>DELETE</kbd><span>remove from UI copy</span>
+              {showTeaching ? <TeachingCard topic={teachingTopicFor()} onDismiss={() => setDismissedTeaching(teachingKey)} onResearch={() => setResearchOpen(true)} /> : null}
             </div>
           )}
         </aside>
       </section>
+      {researchOpen ? (
+        <div className="research-backdrop" role="presentation" onMouseDown={() => setResearchOpen(false)}>
+          <section className="research-reader" role="dialog" aria-modal="true" aria-label="Keith Barr architecture research" onMouseDown={(event) => event.stopPropagation()}>
+            <header><div><span>OFFLINE RESEARCH / DOCUMENTED SOURCES</span><h2>Keith Barr reverb architectures</h2></div><button type="button" aria-label="Close architecture research" onClick={() => setResearchOpen(false)}>CLOSE ×</button></header>
+            <pre>{researchText}</pre>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }

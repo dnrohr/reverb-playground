@@ -18,6 +18,7 @@ Last updated: 2026-08-08
 | M2.2 Bind visible nodes to the fixed runtime | Complete | Native runtime snapshot; single-source identities/values; live inspector; mismatch detection |
 | M2.3 Implement continuous parameter editing | Complete | Lock-free live parameters; smoothing/crossfade tests; exact undo/redo; screenshot/video evidence |
 | M2.4 Save and reload the reference patch | Complete | Schema-v1 files; atomic validation; exact layout/viewport restore; invalid-load diagnostics |
+| M2.5 Add contextual teaching affordances | Complete | Dismissible learn cards; evidence/implementation labels; offline research reader; milestone demo |
 
 ## M0.2 verification
 
@@ -182,3 +183,17 @@ Results:
 - Successful restore screenshot: [`artifacts/ui/m2-4-patch-persistence/successful-patch-load.png`](../artifacts/ui/m2-4-patch-persistence/successful-patch-load.png).
 - Atomic invalid-load screenshot: [`artifacts/ui/m2-4-patch-persistence/invalid-load-preserves-patch.png`](../artifacts/ui/m2-4-patch-persistence/invalid-load-preserves-patch.png).
 - Save/load/rejection video: [`artifacts/ui/m2-4-patch-persistence/save-load-invalid.mp4`](../artifacts/ui/m2-4-patch-persistence/save-load-invalid.mp4).
+
+## M2.5 verification
+
+- Learn cards live below normal inspector controls and can be dismissed per context or disabled globally; the preference persisted across editor reload during interactive QA.
+- Every card separates `DOCUMENTED BARR / MIDIVERB` from `THIS RECONSTRUCTION` and adds a concrete `LISTEN / NOTICE` prompt.
+- Mono Sum explains the historical mono-summed input and this plugin's explicit 0.5 left/right sum.
+- Left and Right Tap explain distinct stereo views of the same Tank 2 field; tests cover both branches.
+- Tank explanations describe Barr's recirculating vocabulary while explicitly disclosing that the M2 reference omits its outer feedback cable.
+- The complete [Keith Barr architecture research](keith-barr-reverb-architectures.md) is bundled into a local modal reader with no network dependency.
+- Web tests cover the required content distinctions; interaction QA covers context switching, dismissal, disable/persistence, and research opening.
+- Mono-sum screenshot: [`artifacts/ui/m2-5-contextual-teaching/mono-sum-teaching.png`](../artifacts/ui/m2-5-contextual-teaching/mono-sum-teaching.png).
+- Offline research screenshot: [`artifacts/ui/m2-5-contextual-teaching/offline-research-reader.png`](../artifacts/ui/m2-5-contextual-teaching/offline-research-reader.png).
+- Context switching/research video: [`artifacts/ui/m2-5-contextual-teaching/contextual-teaching.mp4`](../artifacts/ui/m2-5-contextual-teaching/contextual-teaching.mp4).
+- M2 exit demonstration covering audition controls, continuous editing/undo, save/load validation, and contextual teaching: [`artifacts/ui/m2-5-contextual-teaching/m2-first-vertical-slice.mp4`](../artifacts/ui/m2-5-contextual-teaching/m2-first-vertical-slice.mp4).
