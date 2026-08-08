@@ -12,6 +12,7 @@ The project is in the foundation milestone. Production code has not been scaffol
 
 - [Product specification](docs/visual-reverb-constructor-spec.md)
 - [Execution roadmap](docs/roadmap.md)
+- [Current progress](docs/progress.md)
 - [Architecture decisions](docs/adr/README.md)
 - [Keith Barr reverb architecture research](docs/keith-barr-reverb-architectures.md)
 - [BarrVerb code review](docs/barrverb-code-review.md)
@@ -26,3 +27,7 @@ The project is in the foundation milestone. Production code has not been scaffol
 - React Flow interaction prototype with a host-compatibility checkpoint before the production UI is fixed
 
 No transformed MIDIVerb ROM data is part of this repository. The first distributable Barr-inspired patch must be implemented from documented primitives and legally redistributable parameters or generated fixtures.
+
+## Building
+
+The production scaffold uses pinned source dependencies and a Visual Studio 2022 CMake preset. See the [development guide](docs/development.md) for prerequisites and verified commands.

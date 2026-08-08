@@ -14,6 +14,8 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Visual reverb constructor specification](visual-reverb-constructor-spec.md) - product definition, interaction model, technical architecture, risks, and open decisions.
 - [Architecture decision records](adr/README.md) - accepted implementation, licensing, platform, and distribution choices.
 - [Execution roadmap](roadmap.md) - ordered milestones, tasks, acceptance criteria, and delivery policy.
+- [Development guide](development.md) - supported toolchain, source layout, build/test commands, and artifact conventions.
+- [Progress log](progress.md) - completed roadmap tasks and verification evidence.
 
 ## Local source tree
 
