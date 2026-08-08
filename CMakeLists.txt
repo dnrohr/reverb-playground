@@ -28,9 +28,9 @@ add_library(reverb_project_options INTERFACE)
 target_compile_features(reverb_project_options INTERFACE cxx_std_20)
 
 if(MSVC)
-    target_compile_options(reverb_project_options INTERFACE /W4 /permissive- /Zc:__cplusplus)
+    target_compile_options(reverb_project_options INTERFACE /W4 /WX /permissive- /Zc:__cplusplus)
 else()
-    target_compile_options(reverb_project_options INTERFACE -Wall -Wextra -Wpedantic)
+    target_compile_options(reverb_project_options INTERFACE -Wall -Wextra -Wpedantic -Werror)
 endif()
 
 add_subdirectory(src/dsp)

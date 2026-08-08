@@ -15,6 +15,16 @@ The repository was first verified with CMake 4.4.2 and Visual Studio 2022 Build 
 
 ## Configure, build, and test
 
+The required local verification command is the same command used by CI:
+
+```powershell
+./scripts/verify.ps1 -Configuration Debug
+```
+
+It checks tracked repository text and documentation, rejects ROM-derived filenames and developer-local paths, configures the pinned dependencies, builds the standalone/VST3 and test targets, and runs the native tests.
+
+The equivalent individual commands are:
+
 From a Developer PowerShell or any shell where CMake is available:
 
 ```powershell
@@ -56,6 +66,14 @@ JUCE and Catch2 are declared with pinned release tags in the root `CMakeLists.tx
 3. recording material compatibility changes in documentation or an ADR.
 
 Do not introduce a dependency on local research clones, ROM images, developer home-directory files, or environment-specific absolute paths.
+
+## Warning and formatting policy
+
+- Project-owned C++ targets compile with `/W4 /WX /permissive-` on MSVC and `-Wall -Wextra -Wpedantic -Werror` on supported Clang/GCC builds.
+- Tracked text is UTF-8, LF-terminated, has a final newline, and contains no trailing whitespace.
+- CMake, native tests, repository checks, and Markdown link checks are required CI gates.
+- Third-party dependencies are built from pinned sources. Warnings originating entirely inside dependency targets are addressed through upgrades or narrowly documented upstream-compatible workarounds, not broad suppression of project warnings.
+- Formatting automation will be introduced with the first non-trivial DSP/schema implementation. Until then, repository checks enforce deterministic whitespace and line-ending rules.
 
 ## UI evidence
 
