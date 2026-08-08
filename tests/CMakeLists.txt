@@ -1,5 +1,6 @@
 add_executable(reverb_tests
     DspGainTests.cpp
+    NumericalSafetyGuardTests.cpp
     GraphDocumentTests.cpp)
 
 target_link_libraries(reverb_tests

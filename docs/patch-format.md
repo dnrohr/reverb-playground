@@ -1,5 +1,7 @@
 # Patch format v1
 
+Runtime acceptance also follows the versioned [real-time and safety contract](real-time-safety-contract-v1.md), including the rule that every feedback cycle contains an explicit stateful delay.
+
 The authoritative machine-readable definition is [`schemas/patch-v1.schema.json`](../schemas/patch-v1.schema.json). The framework-light C++ representation and semantic validator live in `src/graph/`.
 
 ## Design goals

@@ -17,6 +17,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Development guide](development.md) - supported toolchain, source layout, build/test commands, and artifact conventions.
 - [Progress log](progress.md) - completed roadmap tasks and verification evidence.
 - [Patch format v1](patch-format.md) - versioned semantic graph, editor layout, typed ports, units, validation, and migration policy.
+- [Real-time and safety contract v1](real-time-safety-contract-v1.md) - feedback legality, audio-thread rules, resource bounds, numerical containment, and runtime publication.
 
 ## Local source tree
 

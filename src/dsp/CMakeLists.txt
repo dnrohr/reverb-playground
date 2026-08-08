@@ -1,5 +1,6 @@
 add_library(reverb_dsp STATIC
-    Source/Gain.cpp)
+    Source/Gain.cpp
+    Source/NumericalSafetyGuard.cpp)
 
 target_include_directories(reverb_dsp
     PUBLIC

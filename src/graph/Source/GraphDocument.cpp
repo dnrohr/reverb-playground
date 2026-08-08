@@ -22,12 +22,36 @@ void requireNonEmpty(const std::string& value, const std::string& label, Validat
         result.errors.push_back(label + " must not be empty");
 }
 
+bool containsDelayFreeCycle(
+    const std::string& nodeId,
+    const std::unordered_map<std::string, std::vector<std::string>>& adjacency,
+    std::unordered_set<std::string>& visiting,
+    std::unordered_set<std::string>& visited)
+{
+    if (visiting.contains(nodeId))
+        return true;
+    if (visited.contains(nodeId))
+        return false;
+
+    visiting.insert(nodeId);
+    if (const auto edges = adjacency.find(nodeId); edges != adjacency.end()) {
+        for (const auto& target : edges->second) {
+            if (containsDelayFreeCycle(target, adjacency, visiting, visited))
+                return true;
+        }
+    }
+    visiting.erase(nodeId);
+    visited.insert(nodeId);
+    return false;
+}
+
 } // namespace
 
 ValidationResult validate(const GraphDocument& document)
 {
     ValidationResult result;
     std::unordered_set<std::string> nodeIds;
+    std::unordered_set<std::string> delayNodeIds;
     std::unordered_map<std::string, LocatedPort> ports;
 
     requireNonEmpty(document.engineVersion, "engineVersion", result);
@@ -38,6 +62,8 @@ ValidationResult validate(const GraphDocument& document)
 
         if (!nodeIds.insert(node.id).second)
             result.errors.push_back("duplicate node id '" + node.id + "'");
+        if (node.type == "delay")
+            delayNodeIds.insert(node.id);
 
         std::unordered_set<std::string> localPortIds;
         for (const auto& port : node.ports) {
@@ -57,6 +83,7 @@ ValidationResult validate(const GraphDocument& document)
     }
 
     std::unordered_set<std::string> connectionIds;
+    std::unordered_map<std::string, std::vector<std::string>> delayFreeAdjacency;
     for (const auto& connection : document.connections) {
         requireNonEmpty(connection.id, "connection id", result);
         if (!connectionIds.insert(connection.id).second)
@@ -79,6 +106,18 @@ ValidationResult validate(const GraphDocument& document)
             result.errors.push_back("connection '" + connection.id + "' target is not an input");
         if (source->second.port->signal != target->second.port->signal)
             result.errors.push_back("connection '" + connection.id + "' mixes audio and control signals");
+        if (!delayNodeIds.contains(connection.from.nodeId) && !delayNodeIds.contains(connection.to.nodeId))
+            delayFreeAdjacency[connection.from.nodeId].push_back(connection.to.nodeId);
+    }
+
+    std::unordered_set<std::string> visiting;
+    std::unordered_set<std::string> visited;
+    for (const auto& node : document.nodes) {
+        if (!delayNodeIds.contains(node.id)
+            && containsDelayFreeCycle(node.id, delayFreeAdjacency, visiting, visited)) {
+            result.errors.push_back("directed cycles must contain an explicit delay node");
+            break;
+        }
     }
 
     std::unordered_set<std::string> positionedNodeIds;

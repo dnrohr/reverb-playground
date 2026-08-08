@@ -87,3 +87,29 @@ TEST_CASE("Patch schema is valid JSON Schema metadata")
     REQUIRE(schema.at("properties").at("schemaVersion").at("const") == 1);
     REQUIRE(schema.at("required").size() == 4);
 }
+
+TEST_CASE("Validator rejects zero-delay cycles and accepts delayed feedback")
+{
+    using namespace reverb::graph;
+    const Port input { "in", SignalType::audio, PortDirection::input };
+    const Port output { "out", SignalType::audio, PortDirection::output };
+
+    GraphDocument graph;
+    graph.nodes = {
+        Node { "sum", "sum", { input, output }, {} },
+        Node { "gain", "gain", { input, output }, {} },
+    };
+    graph.connections = {
+        Connection { "a", { "sum", "out" }, { "gain", "in" } },
+        Connection { "b", { "gain", "out" }, { "sum", "in" } },
+    };
+
+    const auto invalid = validate(graph);
+    REQUIRE_FALSE(invalid.valid());
+    REQUIRE(std::ranges::any_of(invalid.errors, [](const auto& error) {
+        return error.find("explicit delay") != std::string::npos;
+    }));
+
+    graph.nodes[1].type = "delay";
+    REQUIRE(validate(graph).valid());
+}
