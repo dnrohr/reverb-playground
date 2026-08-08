@@ -20,6 +20,7 @@ Last updated: 2026-08-08
 | M2.4 Save and reload the reference patch | Complete | Schema-v1 files; atomic validation; exact layout/viewport restore; invalid-load diagnostics |
 | M2.5 Add contextual teaching affordances | Complete | Dismissible learn cards; evidence/implementation labels; offline research reader; milestone demo |
 | M3.1 Implement editable node creation and deletion | Complete | Seven schema-backed primitives; stable IDs; atomic delete/undo; required I/O; supported-node round trip; screenshot/video |
+| M3.2 Implement typed connection editing | Complete | Mono branching; endpoint/type validation; replace/automatic Sum choices; structural undo; minimum-zoom hit target; video |
 
 ## M0.2 verification
 
@@ -207,3 +208,13 @@ Results:
 - Supported created/deleted nodes, parameters, positions, cables, and viewport serialize and round-trip. Draft nodes do not publish values into the fixed native runtime.
 - Primitive screenshot: [`artifacts/ui/m3-1-editable-node-creation/all-primitives.jpg`](../artifacts/ui/m3-1-editable-node-creation/all-primitives.jpg).
 - Create/delete/undo video: [`artifacts/ui/m3-1-editable-node-creation/create-delete-undo.mp4`](../artifacts/ui/m3-1-editable-node-creation/create-delete-undo.mp4).
+
+## M3.2 verification
+
+- Real handle drags created two branches from the same Stereo Input output to different draft inputs.
+- A second cable to the occupied Delay input was rejected without mutation and displayed Replace Cable, Insert `+`, and Cancel choices.
+- Insert `+` atomically created a Sum block and three correctly typed replacement cables. Undo Structure restored the exact pre-insertion graph.
+- Direction, endpoint, and signal-type validation prevents invalid connections from entering the editable graph. Schema-v1 loading also rejects multiple cables on one input; cycle legality remains the compiler's responsibility.
+- A 24-unit invisible interaction stroke kept a cable selectable at the documented 40% minimum zoom.
+- Occupied-input screenshot: [`artifacts/ui/m3-2-typed-connections/02-occupied-offer.jpg`](../artifacts/ui/m3-2-typed-connections/02-occupied-offer.jpg).
+- Interaction video: [`artifacts/ui/m3-2-typed-connections/typed-connection-editing.mp4`](../artifacts/ui/m3-2-typed-connections/typed-connection-editing.mp4).

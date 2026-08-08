@@ -132,6 +132,7 @@ export function createFlowModel(snapshot: RuntimeSnapshot): { nodes: Node<PatchN
       type: 'smoothstep',
       className: `signal-edge signal-${connection.signal}`,
       data: { signal: connection.signal },
+      interactionWidth: 24,
     })),
   };
 }

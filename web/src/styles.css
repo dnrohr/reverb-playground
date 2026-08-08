@@ -86,6 +86,13 @@ button { font: inherit; }
 .file-status { position: absolute; z-index: 8; top: 48px; right: 12px; display: flex; align-items: center; gap: 12px; max-width: min(560px, calc(100% - 24px)); padding: 8px 10px; border: 1px solid var(--cyan); border-radius: 4px; background: rgba(18, 26, 31, .96); color: var(--cyan); font: 9px ui-monospace, Consolas, monospace; letter-spacing: .05em; }
 .file-status-error { border-color: var(--danger); color: #ff8c91; }
 .file-status button { border: 0; color: inherit; background: transparent; font-size: 16px; line-height: 1; }
+.connection-offer { position: absolute; z-index: 9; top: 86px; right: 12px; width: 330px; padding: 12px; border: 1px solid var(--amber); border-radius: 5px; background: rgba(25, 29, 31, .98); box-shadow: 0 12px 30px rgba(0,0,0,.4); }
+.connection-offer strong, .connection-offer span { display: block; }
+.connection-offer strong { color: var(--amber); font-size: 10px; letter-spacing: .08em; }
+.connection-offer span { margin: 6px 0 10px; color: #b5c0c6; font-size: 10px; line-height: 1.45; }
+.connection-offer div { display: flex; gap: 7px; }
+.connection-offer button { padding: 6px 8px; border: 1px solid #56656e; border-radius: 3px; color: #d6dfe3; background: #1b242a; font-size: 8px; }
+.connection-offer button:first-child { border-color: var(--amber); color: var(--amber); }
 .flow-wrap { min-width: 0; min-height: 0; position: relative; }
 .react-flow { background: #0b1013; }
 .react-flow__pane:focus-visible { outline: 2px solid var(--cyan); outline-offset: -3px; }
@@ -108,6 +115,7 @@ button { font: inherit; }
 .port { width: 11px; height: 11px; border: 2px solid #091014; background: var(--cyan); }
 .port-control { border-radius: 1px; background: var(--violet); transform: translate(-50%, -50%) rotate(45deg); }
 .signal-edge path { stroke-width: 2.4; }
+.react-flow__edge-interaction { stroke-width: 24; }
 .signal-audio path { stroke: var(--cyan); }
 .signal-control path { stroke: var(--violet); stroke-dasharray: 7 5; }
 .react-flow__edge.selected path, .react-flow__edge:focus-visible path { stroke: var(--amber); stroke-width: 4; }

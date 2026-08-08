@@ -59,4 +59,15 @@ describe('patch persistence', () => {
     const withoutInput = flow.nodes.filter((node) => node.data.type !== 'stereo-input');
     expect(() => parsePatchJson(writePatchJson(withoutInput, [], { x: 0, y: 0, zoom: 1 }), reference)).toThrow(/exactly one Stereo Input/);
   });
+
+  it('rejects persisted graphs with multiple cables on one input', () => {
+    const input = createModuleNode('stereo-input', 'stereo-input-1', { x: 0, y: 0 });
+    const delay = createModuleNode('delay', 'delay-1', { x: 200, y: 0 });
+    const output = createModuleNode('stereo-output', 'stereo-output-1', { x: 400, y: 0 });
+    const edges = [
+      { id: 'left', source: input.id, sourceHandle: 'out-l', target: delay.id, targetHandle: 'in' },
+      { id: 'right', source: input.id, sourceHandle: 'out-r', target: delay.id, targetHandle: 'in' },
+    ];
+    expect(() => parsePatchJson(writePatchJson([input, delay, output], edges, { x: 0, y: 0, zoom: 1 }), reference)).toThrow(/more than one cable; insert Sum/);
+  });
 });

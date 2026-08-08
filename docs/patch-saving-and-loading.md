@@ -23,7 +23,7 @@ Schema v1 is closed: unknown fields are rejected at every defined object boundar
 
 ## Editable-graph boundary
 
-M3.1 extends schema-v1 persistence to supported created and deleted nodes while requiring exactly one stereo input and output. Ports, parameter units/ranges, endpoints, IDs, layout, and viewport are validated before replacement. User-created topology remains a saved draft until graph compilation is implemented; only known Barr-reference identities publish parameter values to the current DSP runtime.
+M3.1 extends schema-v1 persistence to supported created and deleted nodes while requiring exactly one stereo input and output. M3.2 permits arbitrary valid mono branches while rejecting invalid endpoint direction/type, direct self-connections, and multiple cables on one ordinary input. Ports, parameter units/ranges, endpoints, IDs, layout, and viewport are validated before replacement. User-created topology remains a saved draft until graph compilation is implemented; only known Barr-reference identities publish parameter values to the current DSP runtime.
 
 ## Verification
 

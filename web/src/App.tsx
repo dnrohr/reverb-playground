@@ -10,6 +10,7 @@ import {
   useNodesState,
   useReactFlow,
   type Edge,
+  type Connection,
   type Node,
   type OnSelectionChangeParams,
   type Viewport,
@@ -17,6 +18,7 @@ import {
 import { createFlowModel, deleteSelected, parseRuntimeSnapshot, type PatchNodeData, type RuntimeSnapshot } from './graph';
 import { createModuleNode, moduleDefinitions, nextNodeId, type ModuleType } from './modules';
 import { commitGraphEdit, emptyGraphHistory, redoGraphEdit, undoGraphEdit } from './graphHistory';
+import { connectGraph, decideConnection, insertSumForOccupiedInput } from './connectionEditing';
 import { PatchNode } from './PatchNode';
 import { callNative } from './nativeBridge';
 import { parsePatchJson, writePatchJson } from './patchPersistence';
@@ -75,6 +77,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [researchOpen, setResearchOpen] = useState(false);
   const [graphHistory, setGraphHistory] = useState(emptyGraphHistory);
   const [graphStatus, setGraphStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
+  const [pendingConnection, setPendingConnection] = useState<Connection | null>(null);
 
   const applyGraph = useCallback((state: { nodes: Node<PatchNodeData>[]; edges: Edge[] }) => {
     setNodes(state.nodes); setEdges(state.edges); setSelectedNode(null); setSelectedEdge(null);
@@ -100,6 +103,23 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
   const undoGraph = useCallback(() => { const result = undoGraphEdit(graphHistory); if (!result.edit) return; applyGraph(result.edit.before); setGraphHistory(result.history); setGraphStatus({ kind: 'ok', message: `UNDID ${result.edit.label.toUpperCase()}` }); }, [applyGraph, graphHistory]);
   const redoGraph = useCallback(() => { const result = redoGraphEdit(graphHistory); if (!result.edit) return; applyGraph(result.edit.after); setGraphHistory(result.history); setGraphStatus({ kind: 'ok', message: `REDID ${result.edit.label.toUpperCase()}` }); }, [applyGraph, graphHistory]);
+
+  const commitConnection = useCallback((connection: Connection) => {
+    const before = { nodes, edges }; const decision = decideConnection(nodes, edges, connection);
+    if (decision.kind === 'invalid') { setGraphStatus({ kind: 'error', message: decision.message }); return; }
+    if (decision.kind === 'occupied') {
+      setPendingConnection(connection); setGraphStatus({ kind: 'error', message: 'INPUT OCCUPIED / REPLACE ITS CABLE OR INSERT +' }); return;
+    }
+    const after = connectGraph(before, connection); applyGraph(after);
+    setGraphHistory((history) => commitGraphEdit(history, 'Create cable', before, after)); setGraphStatus({ kind: 'ok', message: 'CONNECTED MONO AUDIO CABLE' });
+  }, [applyGraph, edges, nodes]);
+
+  const resolveOccupied = useCallback((action: 'replace' | 'sum' | 'cancel') => {
+    const connection = pendingConnection; setPendingConnection(null); if (!connection || action === 'cancel') { setGraphStatus(null); return; }
+    const before = { nodes, edges }; const after = action === 'replace' ? connectGraph(before, connection, true) : insertSumForOccupiedInput(before, connection);
+    applyGraph(after); setGraphHistory((history) => commitGraphEdit(history, action === 'replace' ? 'Replace cable' : 'Insert +', before, after));
+    setGraphStatus({ kind: 'ok', message: action === 'replace' ? 'REPLACED OCCUPIED INPUT CABLE' : 'INSERTED + AND REWIRED BOTH SOURCES' });
+  }, [applyGraph, edges, nodes, pendingConnection]);
 
   const applyParameter = useCallback((nodeId: string, parameterId: string, value: number) => {
     const update = (node: Node<PatchNodeData>) => node.id !== nodeId ? node : {
@@ -141,6 +161,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     setUndoStack([]);
     setRedoStack([]);
     setGraphHistory(emptyGraphHistory());
+    setPendingConnection(null);
     requestAnimationFrame(() => void fitView({ padding: 0.16, minZoom: 0.58, maxZoom: 1.1 }));
   }, [fitView, setEdges, setNodes, snapshot]);
 
@@ -222,6 +243,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       setUndoStack([]);
       setRedoStack([]);
       setGraphHistory(emptyGraphHistory());
+      setPendingConnection(null);
       setFileStatus({ kind: 'ok', message: `LOADED ${file.name.toUpperCase()} / SCHEMA V1` });
     } catch (reason) {
       setFileStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Patch load failed' });
@@ -315,6 +337,13 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <button type="button" aria-label="Dismiss graph status" onClick={() => setGraphStatus(null)}>×</button>
             </div>
           ) : null}
+          {pendingConnection ? (
+            <div className="connection-offer" role="dialog" aria-label="Occupied input options">
+              <strong>INPUT ALREADY HAS A CABLE</strong>
+              <span>Replace it, or insert an explicit Sum (+) block to preserve both sources.</span>
+              <div><button type="button" onClick={() => resolveOccupied('sum')}>INSERT +</button><button type="button" onClick={() => resolveOccupied('replace')}>REPLACE CABLE</button><button type="button" onClick={() => resolveOccupied('cancel')}>CANCEL</button></div>
+            </div>
+          ) : null}
           <div className="flow-wrap">
             <ReactFlow
               nodes={nodes}
@@ -322,6 +351,9 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               nodeTypes={{ patchNode: PatchNode }}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
+              onConnect={commitConnection}
+              isValidConnection={(connection) => decideConnection(nodes, edges, { source: connection.source, sourceHandle: connection.sourceHandle ?? null, target: connection.target, targetHandle: connection.targetHandle ?? null }).kind !== 'invalid'}
+              defaultEdgeOptions={{ interactionWidth: 24 }}
               onSelectionChange={handleSelection}
               onViewportChange={setViewport}
               fitView

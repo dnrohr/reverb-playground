@@ -26,6 +26,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Schematic editor interactions](schematic-editor-interactions.md) - three-pane layout, pointer and keyboard controls, signal semantics, and scaling contract.
 - [Runtime graph binding](runtime-graph-binding.md) - native snapshot contract, identity validation, live inspector values, and processing boundaries.
 - [Editable node creation](editable-node-creation.md) - primitive defaults, stable IDs, required I/O, structural undo, and draft/runtime boundaries.
+- [Typed connection editing](typed-connection-editing.md) - mono branching, endpoint validation, occupied-input choices, automatic Sum insertion, and cable hit targets.
 
 ## Local source tree
 
