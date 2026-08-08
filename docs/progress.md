@@ -21,6 +21,7 @@ Last updated: 2026-08-08
 | M2.5 Add contextual teaching affordances | Complete | Dismissible learn cards; evidence/implementation labels; offline research reader; milestone demo |
 | M3.1 Implement editable node creation and deletion | Complete | Seven schema-backed primitives; stable IDs; atomic delete/undo; required I/O; supported-node round trip; screenshot/video |
 | M3.2 Implement typed connection editing | Complete | Mono branching; endpoint/type validation; replace/automatic Sum choices; structural undo; minimum-zoom hit target; video |
+| M3.3 Compile acyclic graphs | Complete | Deterministic topological schedule; prepared immutable topology; reachability warnings; direct DSP comparisons; last-valid publication |
 
 ## M0.2 verification
 
@@ -218,3 +219,12 @@ Results:
 - A 24-unit invisible interaction stroke kept a cable selectable at the documented 40% minimum zoom.
 - Occupied-input screenshot: [`artifacts/ui/m3-2-typed-connections/02-occupied-offer.jpg`](../artifacts/ui/m3-2-typed-connections/02-occupied-offer.jpg).
 - Interaction video: [`artifacts/ui/m3-2-typed-connections/typed-connection-editing.mp4`](../artifacts/ui/m3-2-typed-connections/typed-connection-editing.mp4).
+
+## M3.3 verification
+
+- Lexicographically tie-broken topological scheduling is identical when semantic node and connection arrays are reversed.
+- Disconnected, input-unreachable, and output-unreachable nodes have documented deterministic warnings and defined silence/discard behavior.
+- Compilation prepares all graph signal buffers and primitive state off-thread; bounded `noexcept` processing does not resize storage and rejects oversized blocks with silence.
+- Constructed Gain/Sum and Delay graphs match direct calculations. The complete acyclic Barr primitive graph matches `BarrReference` sample-for-sample.
+- Failed validation/preparation does not exchange the active runtime pointer; a test confirms the last valid graph continues processing audio.
+- UI unchanged; no screenshot or video was required.

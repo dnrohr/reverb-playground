@@ -1,0 +1,168 @@
+#include <catch2/catch_test_macros.hpp>
+
+#include <reverb/graph/AcyclicRuntime.h>
+#include <reverb/graph/BarrReferenceGraph.h>
+#include <reverb/dsp/BarrReference.h>
+
+#include <algorithm>
+#include <array>
+#include <string>
+#include <vector>
+
+namespace {
+using namespace reverb::graph;
+
+Port inputPort(std::string id = "in") { return { std::move(id), SignalType::audio, PortDirection::input }; }
+Port outputPort(std::string id = "out") { return { std::move(id), SignalType::audio, PortDirection::output }; }
+Node stereoInput() { return { "input", "stereo-input", { outputPort("out-l"), outputPort("out-r") }, {} }; }
+Node stereoOutput() { return { "output", "stereo-output", { inputPort("in-l"), inputPort("in-r") }, {} }; }
+Connection cable(std::string id, std::string fromNode, std::string fromPort, std::string toNode, std::string toPort)
+{
+    return { std::move(id), { std::move(fromNode), std::move(fromPort) }, { std::move(toNode), std::move(toPort) } };
+}
+
+GraphDocument gainSumGraph()
+{
+    GraphDocument graph;
+    graph.nodes = {
+        stereoInput(),
+        { "gain", "gain", { inputPort(), outputPort() }, { { "gain", 0.25, "linear" } } },
+        { "sum", "sum", { inputPort("in-a"), inputPort("in-b"), outputPort() }, {} },
+        stereoOutput(),
+    };
+    graph.connections = {
+        cable("left-gain", "input", "out-l", "gain", "in"),
+        cable("gain-sum", "gain", "out", "sum", "in-a"),
+        cable("right-sum", "input", "out-r", "sum", "in-b"),
+        cable("sum-left", "sum", "out", "output", "in-l"),
+        cable("right-right", "input", "out-r", "output", "in-r"),
+    };
+    return graph;
+}
+}
+
+TEST_CASE("Acyclic scheduling is deterministic across document ordering")
+{
+    auto first = gainSumGraph();
+    auto second = first;
+    std::ranges::reverse(second.nodes);
+    std::ranges::reverse(second.connections);
+    const auto firstResult = compileAcyclicGraph(first, 48'000.0, 64);
+    const auto secondResult = compileAcyclicGraph(second, 48'000.0, 64);
+    REQUIRE(firstResult.valid());
+    REQUIRE(secondResult.valid());
+    REQUIRE(firstResult.schedule == std::vector<std::string> { "input", "gain", "sum", "output" });
+    REQUIRE(secondResult.schedule == firstResult.schedule);
+}
+
+TEST_CASE("Constructed gain and sum graph matches direct reference calculation")
+{
+    auto compiled = compileAcyclicGraph(gainSumGraph(), 48'000.0, 8);
+    REQUIRE(compiled.valid());
+    const std::array left { 1.0F, -0.5F, 0.25F, 0.0F };
+    const std::array right { 0.5F, 0.25F, -0.5F, 1.0F };
+    std::array<float, 4> outputLeft {}; std::array<float, 4> outputRight {};
+    compiled.runtime->process(left, right, outputLeft, outputRight);
+    for (std::size_t index = 0; index < left.size(); ++index) {
+        REQUIRE(outputLeft[index] == left[index] * 0.25F + right[index]);
+        REQUIRE(outputRight[index] == right[index]);
+    }
+}
+
+TEST_CASE("Constructed delay graph matches a direct one-sample shift")
+{
+    GraphDocument graph;
+    graph.nodes = { stereoInput(), { "delay", "delay", { inputPort(), outputPort() }, { { "delay", 1.0, "milliseconds" } } }, stereoOutput() };
+    graph.connections = {
+        cable("into-delay", "input", "out-l", "delay", "in"),
+        cable("delay-left", "delay", "out", "output", "in-l"),
+        cable("right", "input", "out-r", "output", "in-r"),
+    };
+    auto compiled = compileAcyclicGraph(graph, 1'000.0, 8);
+    REQUIRE(compiled.valid());
+    const std::array left { 1.0F, 2.0F, 3.0F, 4.0F }; const std::array right { 4.0F, 3.0F, 2.0F, 1.0F };
+    std::array<float, 4> outputLeft {}; std::array<float, 4> outputRight {};
+    compiled.runtime->process(left, right, outputLeft, outputRight);
+    REQUIRE(outputLeft == std::array { 0.0F, 1.0F, 2.0F, 3.0F });
+    REQUIRE(outputRight == right);
+}
+
+TEST_CASE("Compiled Barr primitive graph matches its direct DSP reference")
+{
+    constexpr std::size_t count = 8'192;
+    auto compiled = reverb::graph::compileAcyclicGraph(reverb::graph::makeBarrReferenceGraph(), 48'000.0, count);
+    REQUIRE(compiled.valid());
+    reverb::dsp::BarrReference direct; direct.prepare(48'000.0);
+    std::vector<float> inputLeft(count, 0.0F); std::vector<float> inputRight(count, 0.0F);
+    std::vector<float> compiledLeft(count); std::vector<float> compiledRight(count);
+    std::vector<float> directLeft(count); std::vector<float> directRight(count);
+    inputLeft.front() = 1.0F;
+    compiled.runtime->process(inputLeft, inputRight, compiledLeft, compiledRight);
+    direct.process(inputLeft, inputRight, directLeft, directRight);
+    for (std::size_t index = 0; index < count; ++index) {
+        REQUIRE(std::abs(compiledLeft[index] - directLeft[index]) < 1.0e-6F);
+        REQUIRE(std::abs(compiledRight[index] - directRight[index]) < 1.0e-6F);
+    }
+}
+
+TEST_CASE("Disconnected and unreachable nodes produce deterministic warnings")
+{
+    auto graph = gainSumGraph();
+    graph.nodes.push_back({ "orphan", "gain", { inputPort(), outputPort() }, { { "gain", 1.0, "linear" } } });
+    graph.nodes.push_back({ "dead-end", "gain", { inputPort(), outputPort() }, { { "gain", 1.0, "linear" } } });
+    graph.connections.push_back(cable("dead-branch", "input", "out-l", "dead-end", "in"));
+    const auto compiled = compileAcyclicGraph(graph, 48'000.0, 64);
+    REQUIRE(compiled.valid());
+    REQUIRE(compiled.warnings == std::vector<std::string> {
+        "node 'dead-end' cannot reach stereo output and is discarded",
+        "disconnected node 'orphan' processes silence and its output is discarded",
+    });
+}
+
+TEST_CASE("Runtime storage is prepared before bounded noexcept processing")
+{
+    auto compiled = compileAcyclicGraph(gainSumGraph(), 48'000.0, 4);
+    REQUIRE(compiled.valid());
+    const auto storage = compiled.runtime->preparedStorageBytes();
+    std::array<float, 4> input {}; std::array<float, 4> outputLeft {}; std::array<float, 4> outputRight {};
+    compiled.runtime->process(input, input, outputLeft, outputRight);
+    REQUIRE(compiled.runtime->preparedStorageBytes() == storage);
+    std::array<float, 5> oversizedInput { 1, 1, 1, 1, 1 };
+    std::array<float, 5> oversizedLeft { 1, 1, 1, 1, 1 }; std::array<float, 5> oversizedRight { 1, 1, 1, 1, 1 };
+    compiled.runtime->process(oversizedInput, oversizedInput, oversizedLeft, oversizedRight);
+    REQUIRE(std::ranges::all_of(oversizedLeft, [](const float sample) { return sample == 0.0F; }));
+    REQUIRE(std::ranges::all_of(oversizedRight, [](const float sample) { return sample == 0.0F; }));
+}
+
+TEST_CASE("Invalid compilation leaves the last valid runtime audible")
+{
+    AcyclicRuntimeHost host;
+    const auto published = host.compileAndPublish(gainSumGraph(), 48'000.0, 8);
+    REQUIRE(published.valid());
+    REQUIRE(host.hasRuntime());
+    auto invalid = gainSumGraph(); invalid.nodes[1].type = "unknown";
+    const auto rejected = host.compileAndPublish(invalid, 48'000.0, 8);
+    REQUIRE_FALSE(rejected.valid());
+    const std::array left { 1.0F }; const std::array right { 0.5F };
+    std::array<float, 1> outputLeft {}; std::array<float, 1> outputRight {};
+    host.process(left, right, outputLeft, outputRight);
+    REQUIRE(outputLeft[0] == 0.75F);
+    REQUIRE(outputRight[0] == 0.5F);
+}
+
+TEST_CASE("Acyclic compiler reserves delay-containing cycles for feedback compilation")
+{
+    GraphDocument graph;
+    graph.nodes = { stereoInput(), { "delay", "delay", { inputPort(), outputPort() }, { { "delay", 10.0, "milliseconds" } } }, stereoOutput() };
+    graph.connections = {
+        cable("self", "delay", "out", "delay", "in"),
+        cable("left", "delay", "out", "output", "in-l"),
+        cable("right", "input", "out-r", "output", "in-r"),
+    };
+    REQUIRE(validate(graph).valid());
+    const auto compiled = compileAcyclicGraph(graph, 48'000.0, 64);
+    REQUIRE_FALSE(compiled.valid());
+    REQUIRE(compiled.errors == std::vector<std::string> {
+        "acyclic compiler rejected a directed cycle; feedback compilation is provided by M3.4",
+    });
+}

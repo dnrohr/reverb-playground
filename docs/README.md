@@ -27,6 +27,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Runtime graph binding](runtime-graph-binding.md) - native snapshot contract, identity validation, live inspector values, and processing boundaries.
 - [Editable node creation](editable-node-creation.md) - primitive defaults, stable IDs, required I/O, structural undo, and draft/runtime boundaries.
 - [Typed connection editing](typed-connection-editing.md) - mono branching, endpoint validation, occupied-input choices, automatic Sum insertion, and cable hit targets.
+- [Acyclic graph compilation](acyclic-graph-compilation.md) - deterministic scheduling, prepared native runtimes, reachability warnings, and last-valid publication.
 
 ## Local source tree
 
