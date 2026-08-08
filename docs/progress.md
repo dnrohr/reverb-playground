@@ -10,6 +10,7 @@ Last updated: 2026-08-08
 | M0.4 Define the graph schema v1 | Complete | JSON Schema; typed C++ graph; deterministic serialization; valid/invalid fixtures; 4/4 tests; commit `29491a1` on `origin/main` |
 | M0.5 Define real-time and safety contracts | Complete | Versioned contract; executable cycle validation; latched numerical guard; native tests |
 | M1.1 Implement core DSP primitives | Complete | Mono gain/invert, sum, delay, allpass, and low-pass; multi-rate timing, energy, polarity, and reset tests |
+| M1.2 Implement the fixed Barr reference graph | Complete | Stable serialized graph; public-primitive DSP; mono input sum; distinct finite stereo impulse output |
 
 ## M0.2 verification
 
@@ -86,4 +87,14 @@ Results:
 - One-pole low-pass step response is monotonic and bounded.
 - Stateful primitives produce deterministic silence after reset.
 - Allocation and validation occur in `prepare`; `process` and `reset` are bounded and `noexcept`.
+- UI unchanged; no screenshot or video required.
+
+## M1.2 verification
+
+- The graph has stable IDs and round-trips through patch JSON deterministically.
+- Stereo inputs reach an explicit mono sum, followed by input filtering and shared diffuser/tank stages.
+- Separate left/right terminal allpasses create distinct mono output branches.
+- A two-second impulse render produces finite, nonzero, non-identical wet channels.
+- Reset followed by silent input produces deterministic stereo silence.
+- Floating-point arithmetic, representative delay choices, absent outer feedback, filtering, and sample-rate departures are documented explicitly.
 - UI unchanged; no screenshot or video required.

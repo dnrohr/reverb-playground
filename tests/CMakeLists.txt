@@ -1,4 +1,5 @@
 add_executable(reverb_tests
+    BarrReferenceTests.cpp
     DspGainTests.cpp
     DspPrimitivesTests.cpp
     NumericalSafetyGuardTests.cpp

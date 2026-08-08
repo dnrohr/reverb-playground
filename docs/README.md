@@ -19,6 +19,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Patch format v1](patch-format.md) - versioned semantic graph, editor layout, typed ports, units, validation, and migration policy.
 - [Real-time and safety contract v1](real-time-safety-contract-v1.md) - feedback legality, audio-thread rules, resource bounds, numerical containment, and runtime publication.
 - [DSP primitives](dsp-primitives.md) - equations, units, preparation/processing lifetime, and deterministic test tolerances.
+- [Barr reference implementation](barr-reference-implementation.md) - fixed stereo/mono channel plan, public-primitive topology, and explicit departures from original hardware.
 
 ## Local source tree
 

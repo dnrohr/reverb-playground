@@ -1,5 +1,6 @@
 add_library(reverb_dsp STATIC
     Source/Allpass.cpp
+    Source/BarrReference.cpp
     Source/Delay.cpp
     Source/Gain.cpp
     Source/NumericalSafetyGuard.cpp

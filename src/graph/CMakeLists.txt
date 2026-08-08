@@ -1,4 +1,5 @@
 add_library(reverb_graph STATIC
+    Source/BarrReferenceGraph.cpp
     Source/GraphDocument.cpp
     Source/PatchJson.cpp)
 
