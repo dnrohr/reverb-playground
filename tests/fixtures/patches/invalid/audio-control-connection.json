@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "engineVersion": "0.1",
+  "semantic": {
+    "nodes": [
+      {
+        "id": "lfo",
+        "type": "lfo",
+        "ports": [
+          { "id": "out", "signal": "control", "direction": "output" }
+        ],
+        "parameters": [
+          { "id": "rate", "value": 0.25, "unit": "hertz" }
+        ]
+      },
+      {
+        "id": "output",
+        "type": "stereo-output",
+        "ports": [
+          { "id": "in-l", "signal": "audio", "direction": "input" },
+          { "id": "in-r", "signal": "audio", "direction": "input" }
+        ],
+        "parameters": []
+      }
+    ],
+    "connections": [
+      {
+        "id": "invalid-control-to-audio",
+        "from": { "nodeId": "lfo", "portId": "out" },
+        "to": { "nodeId": "output", "portId": "in-l" }
+      }
+    ]
+  },
+  "layout": {
+    "nodes": [
+      { "nodeId": "lfo", "x": 100.0, "y": 100.0 },
+      { "nodeId": "output", "x": 400.0, "y": 100.0 }
+    ],
+    "viewport": { "x": 0.0, "y": 0.0, "zoom": 1.0 }
+  }
+}

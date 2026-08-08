@@ -14,6 +14,7 @@ The project is in the foundation milestone. Production code has not been scaffol
 - [Execution roadmap](docs/roadmap.md)
 - [Current progress](docs/progress.md)
 - [Architecture decisions](docs/adr/README.md)
+- [Patch format v1](docs/patch-format.md)
 - [Keith Barr reverb architecture research](docs/keith-barr-reverb-architectures.md)
 - [BarrVerb code review](docs/barrverb-code-review.md)
 - [Research source map](docs/sources.md)

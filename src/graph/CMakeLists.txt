@@ -1,5 +1,6 @@
 add_library(reverb_graph STATIC
-    Source/GraphDocument.cpp)
+    Source/GraphDocument.cpp
+    Source/PatchJson.cpp)
 
 target_include_directories(reverb_graph
     PUBLIC
@@ -8,7 +9,8 @@ target_include_directories(reverb_graph
 target_link_libraries(reverb_graph
     PUBLIC
         reverb_project_options
-        reverb_dsp)
+        reverb_dsp
+        nlohmann_json::nlohmann_json)
 
 set_target_properties(reverb_graph PROPERTIES
     POSITION_INDEPENDENT_CODE ON)

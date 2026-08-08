@@ -6,22 +6,97 @@
 
 namespace reverb::graph {
 
+enum class SignalType {
+    audio,
+    control,
+};
+
+enum class PortDirection {
+    input,
+    output,
+};
+
+struct Port final {
+    std::string id;
+    SignalType signal { SignalType::audio };
+    PortDirection direction { PortDirection::input };
+
+    friend bool operator==(const Port&, const Port&) = default;
+};
+
+struct Parameter final {
+    std::string id;
+    double value { 0.0 };
+    std::string unit { "unitless" };
+
+    friend bool operator==(const Parameter&, const Parameter&) = default;
+};
+
 struct Node final {
     std::string id;
     std::string type;
+    std::vector<Port> ports;
+    std::vector<Parameter> parameters;
 
     friend bool operator==(const Node&, const Node&) = default;
+};
+
+struct PortReference final {
+    std::string nodeId;
+    std::string portId;
+
+    friend bool operator==(const PortReference&, const PortReference&) = default;
+};
+
+struct Connection final {
+    std::string id;
+    PortReference from;
+    PortReference to;
+
+    friend bool operator==(const Connection&, const Connection&) = default;
+};
+
+struct NodePosition final {
+    std::string nodeId;
+    double x { 0.0 };
+    double y { 0.0 };
+
+    friend bool operator==(const NodePosition&, const NodePosition&) = default;
+};
+
+struct Viewport final {
+    double x { 0.0 };
+    double y { 0.0 };
+    double zoom { 1.0 };
+
+    friend bool operator==(const Viewport&, const Viewport&) = default;
+};
+
+struct Layout final {
+    std::vector<NodePosition> nodes;
+    Viewport viewport;
+
+    friend bool operator==(const Layout&, const Layout&) = default;
 };
 
 class GraphDocument final {
 public:
     static constexpr std::uint32_t schemaVersion = 1;
 
-    void addNode(Node node);
-    [[nodiscard]] const std::vector<Node>& nodes() const noexcept;
+    std::string engineVersion { "0.1" };
+    std::vector<Node> nodes;
+    std::vector<Connection> connections;
+    Layout layout;
 
-private:
-    std::vector<Node> nodes_;
+    friend bool operator==(const GraphDocument&, const GraphDocument&) = default;
 };
+
+struct ValidationResult final {
+    std::vector<std::string> errors;
+
+    [[nodiscard]] bool valid() const noexcept { return errors.empty(); }
+};
+
+[[nodiscard]] ValidationResult validate(const GraphDocument& document);
 
 } // namespace reverb::graph

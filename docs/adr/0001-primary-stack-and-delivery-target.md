@@ -75,6 +75,7 @@ macOS/AU, Linux/CLAP/LV2, and AAX are deferred until the Windows standalone/VST3
 - Commit lockfiles for JavaScript tooling and pin the package-manager version.
 - Keep production dependencies minimal and list their license and purpose.
 - Use Catch2 for native tests under its Boost Software License 1.0 unless M0.2 finds a smaller justified alternative.
+- Use nlohmann/json for framework-light patch serialization under its MIT license.
 - Do not download code, models, ROMs, fonts, or media during a release build unless the exact source and integrity check are declared.
 - Never require MIDIVerb ROM data, the local BarrVerb clone, or the MIDIVerb_RE research checkout to configure, build, test, or package the project.
 
@@ -147,6 +148,7 @@ Costs and risks:
 - JUCE 8 EULA: <https://juce.com/legal/juce-8-licence/>
 - React Flow: <https://reactflow.dev/>
 - Catch2: <https://github.com/catchorg/Catch2>
+- JSON for Modern C++: <https://github.com/nlohmann/json>
 - DPF: <https://github.com/DISTRHO/DPF>
 - Tracktion Engine: <https://github.com/Tracktion/tracktion_engine>
 

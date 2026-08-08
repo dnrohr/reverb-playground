@@ -59,7 +59,7 @@ Keep reusable DSP fixtures under `tests/fixtures/` once required. Fixtures must 
 
 ## Dependency policy
 
-JUCE and Catch2 are declared with pinned release tags in the root `CMakeLists.txt`. Changing a revision requires:
+JUCE, nlohmann/json, and Catch2 are declared with pinned release tags in the root `CMakeLists.txt`. Changing a revision requires:
 
 1. reviewing upstream release notes and license changes;
 2. running a clean configure, build, and test;

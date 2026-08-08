@@ -7,7 +7,8 @@ Last updated: 2026-08-08
 | M0.1 Select the primary implementation stack | Complete | ADR 0001; Markdown links verified; commit `e913f5a` on `origin/main` |
 | M0.2 Create the project skeleton | Complete | Windows Debug and Release standalone/VST3 builds; Debug and Release native tests; standalone smoke launch and screenshot |
 | M0.3 Establish continuous integration and quality checks | Complete | Shared local/CI verifier; warnings-as-errors; repository checks; deliberate failing-test proof |
-| M0.4 Define the graph schema v1 | Next | Not started |
+| M0.4 Define the graph schema v1 | Complete | JSON Schema; typed C++ graph; deterministic serialization; valid/invalid fixtures; 4/4 tests |
+| M0.5 Define real-time and safety contracts | Next | Not started |
 
 ## M0.2 verification
 
@@ -55,3 +56,14 @@ Results:
 - A temporary `REQUIRE_FALSE` assertion was added to `DspGainTests.cpp`; CTest failed 1/2 with exit code 8, proving the test gate rejects failures. The assertion was removed before the final passing verification.
 - CI uses the same `scripts/verify.ps1` entry point on pushes to `main` and pull requests.
 - UI unchanged; no new screenshot or video required.
+
+## M0.4 verification
+
+- JSON Schema Draft 2020-12 document added at `schemas/patch-v1.schema.json`.
+- Semantic nodes/connections and editor layout are separate top-level structures.
+- Stereo fixture I/O uses explicit `out-l`/`out-r` and `in-l`/`in-r` mono audio ports.
+- Ports carry `audio` or `control` signal types and `input` or `output` direction.
+- The invalid fixture connects control to audio; semantic validation rejects it with a specific diagnostic.
+- The valid fixture preserves stable node/connection IDs, layout positions, and a `13.725` millisecond delay through deterministic JSON write/read cycles.
+- Shared Debug verification passed 4/4 native tests with warnings-as-errors.
+- UI unchanged; no screenshot or video required.

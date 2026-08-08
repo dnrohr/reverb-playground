@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "engineVersion": "0.1",
+  "semantic": {
+    "nodes": [
+      {
+        "id": "input",
+        "type": "stereo-input",
+        "ports": [
+          { "id": "out-l", "signal": "audio", "direction": "output" },
+          { "id": "out-r", "signal": "audio", "direction": "output" }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "mono-sum",
+        "type": "sum",
+        "ports": [
+          { "id": "in-l", "signal": "audio", "direction": "input" },
+          { "id": "in-r", "signal": "audio", "direction": "input" },
+          { "id": "out", "signal": "audio", "direction": "output" }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "allpass-1",
+        "type": "allpass",
+        "ports": [
+          { "id": "in", "signal": "audio", "direction": "input" },
+          { "id": "out", "signal": "audio", "direction": "output" },
+          { "id": "delay-mod", "signal": "control", "direction": "input" }
+        ],
+        "parameters": [
+          { "id": "delay", "value": 13.725, "unit": "milliseconds" },
+          { "id": "coefficient", "value": 0.5, "unit": "coefficient" }
+        ]
+      },
+      {
+        "id": "output",
+        "type": "stereo-output",
+        "ports": [
+          { "id": "in-l", "signal": "audio", "direction": "input" },
+          { "id": "in-r", "signal": "audio", "direction": "input" }
+        ],
+        "parameters": []
+      }
+    ],
+    "connections": [
+      {
+        "id": "input-l-to-sum",
+        "from": { "nodeId": "input", "portId": "out-l" },
+        "to": { "nodeId": "mono-sum", "portId": "in-l" }
+      },
+      {
+        "id": "input-r-to-sum",
+        "from": { "nodeId": "input", "portId": "out-r" },
+        "to": { "nodeId": "mono-sum", "portId": "in-r" }
+      },
+      {
+        "id": "sum-to-allpass",
+        "from": { "nodeId": "mono-sum", "portId": "out" },
+        "to": { "nodeId": "allpass-1", "portId": "in" }
+      },
+      {
+        "id": "allpass-to-output-l",
+        "from": { "nodeId": "allpass-1", "portId": "out" },
+        "to": { "nodeId": "output", "portId": "in-l" }
+      },
+      {
+        "id": "allpass-to-output-r",
+        "from": { "nodeId": "allpass-1", "portId": "out" },
+        "to": { "nodeId": "output", "portId": "in-r" }
+      }
+    ]
+  },
+  "layout": {
+    "nodes": [
+      { "nodeId": "input", "x": 80.0, "y": 180.0 },
+      { "nodeId": "mono-sum", "x": 300.0, "y": 180.0 },
+      { "nodeId": "allpass-1", "x": 500.0, "y": 180.0 },
+      { "nodeId": "output", "x": 740.0, "y": 180.0 }
+    ],
+    "viewport": { "x": 0.0, "y": 0.0, "zoom": 1.0 }
+  }
+}
