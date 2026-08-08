@@ -1,0 +1,636 @@
+# Visual Reverb Constructor / Inspector Roadmap
+
+Status: initial execution roadmap
+Date: 2026-08-08
+Product definition: [visual-reverb-constructor-spec.md](visual-reverb-constructor-spec.md)
+
+## Delivery policy
+
+Every task is completed with the `$complete-project-task` skill. A task is done only when its acceptance criteria, relevant tests, documentation, and UI evidence requirements pass, and the resulting commit is verified on `origin/main`.
+
+UI tasks require a current screenshot. Interactive, animated, audio-reactive, or real-time UI tasks also require a short video. Evidence is stored under `artifacts/ui/<task-slug>/`.
+
+## Milestone summary
+
+| Milestone | Outcome | Exit demonstration |
+|---|---|---|
+| M0. Foundation | Reproducible open-source project skeleton and engineering contracts | Clean checkout builds and tests on the primary platform |
+| M1. Audible Barr reference | Tested fixed MIDIVerb-I/Barr-inspired DSP reference | Stereo audio and impulses render deterministically through the reference graph |
+| M2. First vertical slice | Fixed Barr graph is visible, editable, and audible | Change a displayed parameter continuously and hear/see the result |
+| M3. General graph runtime | Users can construct legal reverb graphs from primitives | Build, connect, save, reload, and render a custom feedback reverb |
+| M4. Inspector | Topology and measured behavior explain one another | Highlight a loop, excite it, and inspect stereo IR/decay/energy |
+| M5. Modulation and live editing | Modulated delays/allpasses and safe topology edits work in real time | Patch an LFO, edit a live graph, and remain click-safe/stable |
+| M6. Reverse reverb | Reverse/gated envelope structures are constructible and teachable | Build and audition a reverse-style patch from visible primitives |
+| M7. Open-source alpha | A documented standalone/plugin release is usable by others | Download, install/build, create a patch, save it, and reopen it in a host |
+
+---
+
+## M0. Foundation
+
+Goal: establish a buildable repository, a stable graph vocabulary, and the quality gates that every later milestone relies on.
+
+### M0.1 Select the primary implementation stack
+
+Decide the C++ plugin/runtime framework, UI prototype stack, primary operating system, first plugin format, build system, and dependency policy. Record evaluated alternatives and licensing consequences.
+
+Acceptance criteria:
+
+- An architecture decision record selects the runtime/plugin framework and UI prototyping approach.
+- The selected licenses are compatible with an open-source project and the intended distribution model.
+- Primary development OS and first deliverables are explicit; recommended initial target is standalone plus VST3 on Windows.
+- The decision explains whether the production UI may use a webview and identifies the checkpoint for revisiting it.
+- No transformed MIDIVerb ROM is committed until its redistribution status is resolved.
+
+### M0.2 Create the project skeleton
+
+Create the production source layout, build configuration, dependency declarations, test targets, documentation index, and artifact directories.
+
+Acceptance criteria:
+
+- A clean checkout configures and builds without undocumented manual file placement.
+- Separate targets or modules exist for DSP, graph model/compiler, application/plugin wrapper, UI, and tests.
+- `artifacts/ui/` and test-fixture conventions are documented without committing unnecessary generated output.
+- The build contains a minimal standalone executable or plugin smoke target.
+- Repository instructions identify supported toolchain versions.
+
+### M0.3 Establish continuous integration and quality checks
+
+Add deterministic build, unit-test, lint/format, and artifact checks for the primary platform.
+
+Acceptance criteria:
+
+- CI runs on pushes to `main` and fails on compilation or test failure.
+- A local documented command reproduces the required CI checks.
+- At least one deliberately failing test has been used locally to prove the test step is enforced, then restored.
+- Compiler warnings are elevated according to a documented policy.
+- CI does not require copyrighted ROM data or developer-local files.
+
+### M0.4 Define the graph schema v1
+
+Specify node identity, typed ports, parameters, audio/control connections, layout data, units, schema versioning, and migration rules.
+
+Acceptance criteria:
+
+- A JSON schema or equivalently testable definition exists.
+- Semantic graph data and editor layout are distinguishable.
+- Stereo I/O is represented as explicit mono ports.
+- Audio and control connections are type-checked.
+- Delay values use milliseconds by default and preserve enough precision for round trips.
+- Valid and invalid example patches exist as fixtures.
+- Serialization round-trip tests preserve all semantic data and stable IDs.
+
+### M0.5 Define real-time and safety contracts
+
+Document what the audio thread may do, legal feedback-cycle rules, numerical safety behavior, maximum resource policies, and runtime publication semantics.
+
+Acceptance criteria:
+
+- Zero-delay algebraic cycles are explicitly illegal.
+- Every legal directed cycle contains an explicit stateful delay element.
+- Audio-thread allocation, blocking, filesystem/network access, and unbounded work are prohibited.
+- NaN, infinity, runaway level, and emergency mute behaviors are specified.
+- Parameter smoothing and topology-swap behavior are specified separately.
+- Tests can observe violations of the numerical safety contract.
+
+Milestone exit criteria:
+
+- A clean primary-platform checkout builds and passes all checks.
+- Schema and safety contracts are versioned and linked from the documentation index.
+- The repository is ready to accept DSP work without revisiting foundational layout.
+
+---
+
+## M1. Audible Barr reference
+
+Goal: establish a deterministic, testable sonic reference before making the graph editable.
+
+### M1.1 Implement core DSP primitives
+
+Implement mono gain/invert, explicit sum, delay, coefficient-0.5/general allpass, and low-pass primitives with preparation/reset/process APIs suitable for offline and real-time use.
+
+Acceptance criteria:
+
+- Each primitive has deterministic unit tests.
+- Delay timing is correct at two or more sample rates.
+- Allpass magnitude response is flat within a documented tolerance for stable coefficients.
+- Sum and polarity behavior match signed reference vectors.
+- No primitive allocates during processing.
+- Reset produces deterministic silence and clears documented state.
+
+### M1.2 Implement the fixed Barr reference graph
+
+Construct a legal graph reflecting the MIDIVerb-I/BarrVerb channel plan: stereo input to mono, input filtering, diffuser/tank stages, and distinct left/right output branches.
+
+Acceptance criteria:
+
+- The graph is built from the same primitives intended for user patches.
+- The signal path visibly/documentarily distinguishes mono input summing from stereo output tapping.
+- An impulse produces non-identical left and right wet outputs.
+- The graph remains finite for the full reference test duration.
+- Node and connection identities are stable and serializable.
+- Any departure from the original BarrVerb arithmetic/filtering is documented.
+
+### M1.3 Add offline rendering and golden tests
+
+Create a headless renderer for impulses and short audio fixtures, with machine-readable analysis output.
+
+Acceptance criteria:
+
+- A command renders a patch to stereo WAV without opening a UI.
+- Fixed input, graph, sample rate, and engine version produce deterministic output within documented platform tolerances.
+- Golden tests cover silence, impulse, bounded noise, reset, and program/state reload.
+- Failures report useful sample/channel differences rather than only a boolean mismatch.
+- Golden files are small, documented, and legally redistributable.
+
+### M1.4 Add reference measurements
+
+Measure impulse length, onset, stereo difference, peak level, decay curve, and approximate RT60 for the reference patch.
+
+Acceptance criteria:
+
+- Measurement code is automated and tested on synthetic known responses.
+- Reference measurements are written to a versioned machine-readable artifact.
+- Documentation explains which metrics are exact, estimated, or heuristic.
+- The RT60 estimator declines to report a value when decay range or noise floor is insufficient.
+
+### M1.5 Create the audible reference harness
+
+Provide a minimal standalone interface or CLI playback path for live input and impulse audition.
+
+Acceptance criteria:
+
+- A user can select an audio device or use a documented default, hear the reference wet output, and trigger an impulse.
+- Master audition gain and emergency mute are available.
+- Device/sample-rate changes reprepare the engine safely.
+- A smoke test covers application startup without audio hardware where practical.
+- UI evidence shows the harness; video demonstrates impulse audition and emergency mute.
+
+Milestone exit criteria:
+
+- The fixed reference renders offline and runs live.
+- DSP primitives and safety behavior pass automated tests.
+- The reference has documented measurements and known differences from BarrVerb/MIDIVerb hardware.
+
+---
+
+## M2. First vertical slice
+
+Goal: prove the central experience with a fixed Barr graph that is simultaneously visible, editable, audible, and saved.
+
+### M2.1 Prototype the schematic editor shell
+
+Build the three-pane editor: module library, patch canvas, and inspector, plus transport/audition status.
+
+Acceptance criteria:
+
+- The Barr reference graph renders legibly at the default window size.
+- Pan, zoom, selection, focus, and keyboard deletion follow documented interactions.
+- Audio and control styling is distinguishable without color alone.
+- Nodes remain readable at supported display scaling values.
+- Screenshot evidence covers default, selected-node, and zoomed states.
+- Video evidence covers pan, zoom, selection, and inspector updates.
+
+### M2.2 Bind visible nodes to the fixed runtime
+
+Connect the displayed reference graph to the actual DSP node identities and parameters.
+
+Acceptance criteria:
+
+- Every visible DSP block corresponds to the node that processes audio.
+- Selecting a node shows its live parameter values and units.
+- No hidden summing, polarity inversion, channel conversion, or delay exists inside the reference patch except documented engine safety output.
+- A debug assertion or test detects UI/runtime identity mismatch.
+
+### M2.3 Implement continuous parameter editing
+
+Allow gain, allpass coefficient, delay milliseconds, and low-pass settings to update during pointer drag.
+
+Acceptance criteria:
+
+- Changes are audible before pointer release.
+- Gain/filter changes are smoothed without zipper noise under the defined test signal.
+- Delay changes use the documented clean crossfade policy and remain finite.
+- Undo/redo restores exact parameter values.
+- Host/UI thread edits do not block or allocate on the audio thread.
+- Video evidence demonstrates continuous editing while audio or repeated impulses play.
+
+### M2.4 Save and reload the reference patch
+
+Persist graph semantics, parameters, positions, viewport, and schema version.
+
+Acceptance criteria:
+
+- Saving then loading restores identical graph semantics and parameters.
+- Node positions and viewport restore within UI-coordinate tolerance.
+- Loading an invalid fixture shows actionable diagnostics without replacing the current valid graph.
+- Unknown future fields are handled according to the schema policy.
+- Round-trip and invalid-load tests pass.
+
+### M2.5 Add contextual teaching affordances
+
+Provide concise on-demand explanations for the reference patch, selected module, mono-to-stereo structure, and feedback path.
+
+Acceptance criteria:
+
+- Explanations do not obstruct normal patching and can be dismissed/disabled.
+- Text distinguishes documented Barr/MIDIVerb facts from this implementation's choices.
+- Selecting the input sum explains why the historical reference becomes mono.
+- Selecting left/right output branches explains stereo tapping from one tank.
+- Documentation links to the longer architecture research without requiring internet access.
+
+Milestone exit criteria:
+
+- A user can hear the fixed reference, understand its visible structure, continuously edit core parameters, undo, save, and reopen it.
+- The exit demonstration is captured in a short video.
+
+---
+
+## M3. General graph runtime and construction
+
+Goal: turn the fixed reference into a small reverb construction environment without becoming a general modular platform.
+
+### M3.1 Implement editable node creation and deletion
+
+Add Input, Output, Delay, Allpass, Gain, `+`, and Low-pass modules from the library.
+
+Acceptance criteria:
+
+- Dragging/clicking from the library creates a node with stable ID and safe defaults.
+- Deleting a node removes its connections atomically and is undoable.
+- Required I/O invariants are enforced with useful messages.
+- Create/delete operations serialize and round-trip.
+- UI evidence demonstrates every primitive's default appearance.
+
+### M3.2 Implement typed connection editing
+
+Create, replace, branch, and delete mono audio connections with explicit occupied-input behavior.
+
+Acceptance criteria:
+
+- One output can branch to several inputs.
+- A single-input port rejects an unintended second cable and offers to insert `+`.
+- Invalid direction/type connections cannot enter the semantic graph.
+- Connection creation/deletion is undoable.
+- Cable hit targets work at minimum supported zoom and scaling.
+- Video evidence covers connection, branching, rejection, and automatic `+` offer.
+
+### M3.3 Compile acyclic graphs
+
+Validate and schedule arbitrary legal acyclic graphs into immutable runtime graphs.
+
+Acceptance criteria:
+
+- Topological scheduling is deterministic for the same semantic graph.
+- Disconnected and unreachable nodes receive documented warnings or treatment.
+- Runtime memory is prepared off the audio thread.
+- Offline tests compare representative constructed graphs with direct reference calculations.
+- Invalid compilation leaves the last valid runtime audible.
+
+### M3.4 Compile feedback graphs
+
+Detect strongly connected components and schedule legal cycles containing explicit delay state.
+
+Acceptance criteria:
+
+- Legal delay-containing feedback cycles compile and render deterministically.
+- Zero-delay algebraic cycles fail with the exact offending loop highlighted.
+- Nested and multiple feedback loops have automated tests.
+- Execution order and state-update semantics are documented.
+- Compile time and memory remain within defined budgets for the MVP graph limit.
+
+### M3.5 Plan and limit delay memory
+
+Allocate delay state in prepared arenas and enforce a visible project budget.
+
+Acceptance criteria:
+
+- Processing performs no dynamic allocation.
+- Patch inspection reports total requested and allocated delay memory.
+- Over-budget graphs fail safely before runtime publication.
+- Sample-rate changes recalculate memory without corrupting the active runtime.
+- Boundary tests cover zero, minimum, maximum, and over-limit delays.
+
+### M3.6 Complete graph undo/redo and clipboard behavior
+
+Support atomic history for node, connection, layout, and parameter operations.
+
+Acceptance criteria:
+
+- Undo/redo returns semantic graph hashes to prior values across mixed operations.
+- A compound operation such as inserting a sum node is one undo step.
+- Copy/paste generates new IDs while preserving internal connections and parameters.
+- History has a documented memory limit and clean-state marker.
+- Save does not unexpectedly clear or alter graph semantics.
+
+Milestone exit criteria:
+
+- Starting from an empty canvas, a user can construct, hear, save, reload, and safely edit a custom feedback reverb using the core primitives.
+
+---
+
+## M4. Inspector
+
+Goal: make the relationship between topology and sound immediately understandable.
+
+### M4.1 Implement feedback-loop highlighting
+
+Find and present directed loops containing a selected node or cable.
+
+Acceptance criteria:
+
+- Selecting part of a loop highlights the complete loop without changing the graph.
+- Multiple loops can be cycled or distinguished.
+- The inspector lists constituent nodes, nominal total delay, polarity/gain elements, and filters.
+- Results are correct for nested and shared-edge fixtures.
+- Highlighting remains responsive at the supported node/edge limit.
+
+### M4.2 Implement impulse audition and capture
+
+Excite the active graph with a controlled impulse and capture a bounded stereo response for analysis.
+
+Acceptance criteria:
+
+- Audition level is safe and independent of patch input gain.
+- Capture length and stop threshold are user-visible and bounded.
+- Live input can be muted during measurement.
+- Capture never blocks the audio thread.
+- Repeated measurements of an unmodulated graph are deterministic.
+
+### M4.3 Implement stereo impulse and decay view
+
+Display left/right waveforms, smoothed energy decay, and defensible decay estimates.
+
+Acceptance criteria:
+
+- Zoom and pan reveal early samples and the full tail.
+- Channels are distinguishable without color alone.
+- Decay smoothing and RT60 estimation match tested synthetic fixtures.
+- Insufficient decay range produces an explanation rather than a misleading number.
+- Screenshot evidence includes a short reverb, Barr reference, and long/bloom-like response.
+- Video evidence demonstrates measurement and navigation.
+
+### M4.4 Implement live energy glow
+
+Send bounded, decimated telemetry from runtime nodes to the UI and illuminate active nodes/cables.
+
+Acceptance criteria:
+
+- Telemetry uses fixed-size, non-blocking communication.
+- Disabling animation removes its measurable UI/runtime overhead within tolerance.
+- Glow follows measured signal energy and decays smoothly.
+- Dropped telemetry frames do not affect audio.
+- Accessibility/reduced-motion mode is supported.
+- Video evidence shows an impulse entering, diffusing, and recirculating.
+
+### M4.5 Add resource and safety diagnostics
+
+Show CPU estimate/use, delay memory, clipping/runaway events, and active emergency mute.
+
+Acceptance criteria:
+
+- Diagnostics distinguish estimates from live measurements.
+- Runaway protection identifies the last active graph revision.
+- The user can undo or reduce gain while muted, then explicitly recover.
+- Synthetic NaN/infinity/runaway tests exercise the complete diagnostic path.
+- Diagnostic rendering never exposes stale pointers or audio-thread state directly.
+
+Milestone exit criteria:
+
+- A user can select a feedback path, understand its composition, excite it, compare stereo behavior, see its decay, and watch measured energy recirculate.
+
+---
+
+## M5. Modulation and safe live editing
+
+Goal: add movement and expressive editing without compromising real-time safety or schematic clarity.
+
+### M5.1 Implement control-rate graph semantics
+
+Add typed control ports, parameter sockets, update rate, scaling, clamping, and base-plus-modulation behavior.
+
+Acceptance criteria:
+
+- Audio/control type mismatches are rejected.
+- Control rate and interpolation into audio processing are documented and tested.
+- Base value, modulation amount, polarity, and clamping are visible in the inspector.
+- Control graphs cannot create unbounded per-block work.
+- Saved patches preserve mappings exactly.
+
+### M5.2 Implement LFO and modulation mapping blocks
+
+Provide sine and triangle LFOs initially, plus explicit scale/offset/bipolar mapping.
+
+Acceptance criteria:
+
+- Frequency, phase, waveform, and restart/free-run semantics are tested.
+- One control output can modulate multiple parameter sockets.
+- Mapping displays the resulting parameter range before connection.
+- Modulation nodes and cables are visually distinguishable without color alone.
+- UI evidence demonstrates creation and mapping; video shows live modulation.
+
+### M5.3 Add modulated Delay and Allpass parameters
+
+Allow delay time and allpass delay/coefficient modulation within safe documented ranges.
+
+Acceptance criteria:
+
+- Delay modulation uses a selected interpolation method without invalid memory reads.
+- Parameter-rate limits prevent alias-prone or unsafe settings, or label advanced behavior accurately.
+- Constant control produces the same output as the equivalent static parameter within tolerance.
+- Stress tests cover minimum/maximum time and modulation depth.
+- Barr-style moving diffusion can be constructed from visible modules.
+
+### M5.4 Implement runtime topology publication
+
+Compile topology changes off-thread and publish immutable runtimes at block boundaries.
+
+Acceptance criteria:
+
+- The audio thread performs an O(1) or documented bounded swap.
+- Old runtime state is reclaimed off-thread.
+- Failed compilation leaves the previous runtime active.
+- Rapid edit stress tests produce no crash, deadlock, invalid output, or unbounded queue growth.
+- Diagnostics show pending, active, and failed graph revisions.
+
+### M5.5 Add short topology-change crossfades
+
+Suppress clicks during completed node/connection changes without preserving abandoned tails indefinitely.
+
+Acceptance criteria:
+
+- Crossfade duration is bounded and documented.
+- Output remains finite when changing a legal feedback path under signal.
+- CPU/memory cost is bounded to at most two active runtimes during transition.
+- Rapid edits coalesce or queue according to a tested policy.
+- Video evidence demonstrates audible/visible live patch edits.
+
+### M5.6 Finalize runaway-feedback UX
+
+Make instability safe, understandable, and recoverable.
+
+Acceptance criteria:
+
+- Sustained over-threshold, NaN, and infinity paths trigger emergency mute deterministically.
+- The graph and most relevant loop are highlighted when possible.
+- Undo remains operational while muted.
+- Recovery requires an explicit safe action and does not automatically re-excite the bad graph.
+- Automated end-to-end tests cover detection, mute, edit/undo, and recovery.
+
+Milestone exit criteria:
+
+- A user can patch an LFO into delay/allpass parameters and structurally edit a sounding feedback graph without audio-thread violations, crashes, or dangerous output.
+
+---
+
+## M6. Reverse and gated reverb
+
+Goal: expand the instrument by constructing reverse/gated behavior from understandable modules and measurements.
+
+### M6.1 Define reverse-reverb architecture requirements
+
+Separate true time reversal, reverse-envelope approximation, gated reverb, and Bloom-like slow attack in product language and DSP requirements.
+
+Acceptance criteria:
+
+- Documentation gives audible and impulse-response distinctions between the four concepts.
+- The chosen first reverse method is real-time feasible and clearly named.
+- Required new primitives are identified before implementation.
+- No factory patch is labeled “reverse” solely because it has a long diffuse attack.
+
+### M6.2 Implement the minimum envelope/gate primitives
+
+Add only the modules required by the chosen reverse/gated construction, such as envelope shaping, hold/gate, or tapped-delay weighting.
+
+Acceptance criteria:
+
+- Each new primitive has deterministic DSP tests and visible signal semantics.
+- The modules remain reverb-specific rather than opening an unrestricted modular environment.
+- Timing uses milliseconds and behaves consistently across sample rates.
+- New feedback/nonlinearity risks are included in safety tests.
+
+### M6.3 Build reverse and gated factory patches
+
+Create at least one reverse-style and one gated patch from visible public primitives.
+
+Acceptance criteria:
+
+- Both patches load without hidden DSP modules.
+- Their impulse envelopes are visibly and measurably distinct.
+- Parameters expose musically meaningful time, diffusion, tone, and level controls.
+- Patches remain finite across supported sample rates and stress inputs.
+- Audio fixtures, screenshots, and demonstration video are captured.
+
+### M6.4 Add visualization teaching overlays
+
+Explain how envelope shape, diffusion, and truncation create the effect.
+
+Acceptance criteria:
+
+- The impulse/decay view marks rise, peak, gate/hold, and cutoff regions where applicable.
+- Contextual explanations distinguish the construction from literal offline reversal.
+- Users can compare the reverse/gated patch against the Barr reference in an A/B workflow.
+- Explanations are available offline and can be disabled.
+
+Milestone exit criteria:
+
+- Users can load, inspect, modify, and reconstruct distinct reverse-style and gated reverbs from visible modules.
+
+---
+
+## M7. Open-source alpha
+
+Goal: make the instrument reproducibly usable outside the development workspace.
+
+### M7.1 Finalize project licensing and provenance
+
+Select the project license and audit code, dependencies, fixtures, presets, ROM-derived material, fonts, and media.
+
+Acceptance criteria:
+
+- The root license and dependency notices are complete.
+- Every shipped binary/data asset has documented provenance and redistribution terms.
+- The Barr reference uses only material the project is authorized to distribute.
+- Contributor expectations and certificate/DCO policy are documented.
+- A clean source archive contains no accidental research ROM or unrelated cloned repositories.
+
+### M7.2 Package standalone and first plugin format
+
+Produce reproducible artifacts for the primary OS and validate them in representative hosts.
+
+Acceptance criteria:
+
+- Clean machines can install/run the standalone application using documented steps.
+- The plugin scans, opens, processes audio, saves state, and restores state in at least two named hosts.
+- Scaling, focus, keyboard input, and window reopening are tested.
+- Plugin validation tooling passes or every exception is documented and release-blocking status decided.
+- Packaged artifacts report version and commit identity.
+
+### M7.3 Complete user and developer documentation
+
+Document installation, first patch, feedback safety, modules, modulation, inspection, patch schema, build/test workflow, and architecture.
+
+Acceptance criteria:
+
+- A new user can reproduce the Barr reference tutorial from a clean install.
+- A new contributor can build and run tests from a clean checkout.
+- Every shipped module and visualization is documented with units and constraints.
+- Screenshots match the released UI.
+- Broken-link and documentation command checks pass.
+
+### M7.4 Add factory patch and compatibility tests
+
+Treat shipped patches as versioned product assets.
+
+Acceptance criteria:
+
+- Every factory patch loads, validates, renders finite audio, and round-trips in CI.
+- Barr, short room/baseline, Bloom-like, reverse-style, and gated families are represented only if complete.
+- Schema migration tests cover every released schema version.
+- Factory patches declare engine/schema version and license/provenance metadata.
+
+### M7.5 Run alpha usability and safety validation
+
+Exercise the complete first-run and patch-building journeys with users other than the implementer.
+
+Acceptance criteria:
+
+- A written protocol covers installation, Barr tutorial, building a loop, causing/fixing an invalid cycle, modulation, save/reload, and inspection.
+- Findings are recorded without personal data and prioritized.
+- No known crash, data-loss, dangerous-output, or audio-thread violation remains open at release.
+- Accessibility checks cover keyboard access, contrast, non-color distinctions, scaling, and reduced motion.
+
+### M7.6 Publish alpha release
+
+Tag, build, publish checksummed artifacts, and provide release notes with known limitations.
+
+Acceptance criteria:
+
+- The release commit is on `main`, tagged, and reproduced by CI.
+- Artifacts and checksums are downloadable.
+- Release notes enumerate supported OS/formats, major capabilities, known limitations, and feedback channel.
+- The repository landing page links directly to installation, tutorial, roadmap, and issue reporting.
+- A release demonstration video shows the Barr reference, construction, modulation, and inspection workflow.
+
+Milestone exit criteria:
+
+- An external user can obtain the project, build or install it, construct and inspect a safe reverb, save it, and reopen it in the supported environment.
+
+---
+
+## Recommended first execution sequence
+
+1. M0.1 - select the stack and primary targets.
+2. M0.4 - freeze enough schema to describe the Barr reference.
+3. M0.5 - define real-time and safety contracts.
+4. M0.2/M0.3 - build skeleton and CI around those decisions.
+5. M1.1-M1.3 - create tested primitives, reference graph, and offline renderer.
+6. M2.1-M2.3 - build the first audible visual slice before general graph editing.
+
+This order deliberately reaches the central product experience early while keeping the DSP reference deterministic and testable.
+
+## Roadmap change policy
+
+- Milestone outcomes are stable product commitments; task implementation details may change as evidence accumulates.
+- A task may be split when its acceptance criteria cannot be demonstrated coherently in one commit.
+- New scope enters the backlog or a later milestone unless it is required to satisfy current acceptance criteria safely.
+- Completed acceptance criteria are changed only with an explicit rationale and migration note.

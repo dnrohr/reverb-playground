@@ -1,0 +1,17 @@
+# Local research checkouts and extracted copyrighted material
+/BarrVerb/
+/research/sources/
+
+# Temporary analysis and rendering output
+/tmp/
+
+# Build and dependency output (conventions finalized in M0.2)
+/build/
+/out/
+/node_modules/
+
+# Local editor and operating-system state
+.DS_Store
+Thumbs.db
+.vs/
+.vscode/
