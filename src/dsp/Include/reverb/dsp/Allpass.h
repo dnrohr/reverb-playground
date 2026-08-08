@@ -8,16 +8,28 @@ namespace reverb::dsp {
 
 class Allpass final {
 public:
-    void prepare(double sampleRate, double delayMilliseconds, float coefficient);
+    void prepare(double sampleRate, double delayMilliseconds, float coefficient, double maximumDelayMilliseconds = 100.0);
     void reset() noexcept;
     void process(std::span<float> samples) noexcept;
 
     [[nodiscard]] float coefficient() const noexcept;
+    [[nodiscard]] double delayMilliseconds() const noexcept;
+    void setCoefficient(float coefficient) noexcept;
+    void setDelayMilliseconds(double delayMilliseconds) noexcept;
 
 private:
     std::vector<float> buffer_;
-    std::size_t index_ {};
+    std::size_t writeIndex_ {};
+    std::size_t delaySamples_ { 1 };
+    std::size_t oldDelaySamples_ { 1 };
+    std::size_t targetDelaySamples_ { 1 };
+    std::size_t crossfadeSamples_ { 1 };
+    std::size_t crossfadeRemaining_ {};
+    double sampleRate_ {};
+    double delayMilliseconds_ { 1.0 };
     float coefficient_ { 0.5F };
+    float targetCoefficient_ { 0.5F };
+    float coefficientSmoothing_ { 1.0F };
 };
 
 } // namespace reverb::dsp

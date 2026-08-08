@@ -2,6 +2,7 @@
 
 #include <span>
 #include <string_view>
+#include <optional>
 
 namespace reverb::dsp {
 
@@ -11,10 +12,32 @@ struct RuntimePortDefinition final {
     std::string_view direction;
 };
 
+enum class BarrParameterId {
+    sumGain,
+    filterCutoff,
+    diffuserOneDelay,
+    diffuserOneCoefficient,
+    diffuserTwoDelay,
+    diffuserTwoCoefficient,
+    tankOneDelay,
+    tankOneCoefficient,
+    tankTwoDelay,
+    tankTwoCoefficient,
+    leftTapDelay,
+    leftTapCoefficient,
+    rightTapDelay,
+    rightTapCoefficient,
+    count,
+};
+
 struct RuntimeParameterDefinition final {
+    BarrParameterId runtimeId;
     std::string_view id;
     double value;
     std::string_view unit;
+    double minimum;
+    double maximum;
+    double step;
 };
 
 struct RuntimeNodeDefinition final {
@@ -37,5 +60,8 @@ struct RuntimeConnectionDefinition final {
 [[nodiscard]] std::span<const RuntimeNodeDefinition> barrReferenceRuntimeNodes() noexcept;
 [[nodiscard]] std::span<const RuntimeConnectionDefinition> barrReferenceRuntimeConnections() noexcept;
 [[nodiscard]] double barrReferenceParameter(std::string_view nodeId, std::string_view parameterId);
+[[nodiscard]] const RuntimeParameterDefinition& barrReferenceParameterDefinition(BarrParameterId id);
+[[nodiscard]] std::optional<BarrParameterId> findBarrReferenceParameter(
+    std::string_view nodeId, std::string_view parameterId) noexcept;
 
 } // namespace reverb::dsp

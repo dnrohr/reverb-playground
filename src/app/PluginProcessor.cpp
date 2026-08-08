@@ -5,6 +5,8 @@
 #include <reverb/graph/BarrReferenceGraph.h>
 #include <reverb/graph/RuntimeSnapshot.h>
 
+#include <array>
+
 ReverbPlaygroundProcessor::ReverbPlaygroundProcessor()
     : AudioProcessor(BusesProperties()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
@@ -99,8 +101,27 @@ juce::String ReverbPlaygroundProcessor::runtimeSnapshotJson() const
     const auto identityErrors = reverb::graph::validateBarrRuntimeIdentity(
         reverb::graph::makeBarrReferenceGraph());
     jassert(identityErrors.empty());
-    const auto json = reverb::graph::writeBarrRuntimeSnapshotJson(activeSampleRate());
+    constexpr auto count = static_cast<std::size_t>(reverb::dsp::BarrParameterId::count);
+    std::array<double, count> values {};
+    for (std::size_t index = 0; index < values.size(); ++index)
+        values[index] = harness_.runtimeParameter(static_cast<reverb::dsp::BarrParameterId>(index));
+    const auto json = reverb::graph::writeBarrRuntimeSnapshotJson(activeSampleRate(), values);
     return juce::String::fromUTF8(json.data(), static_cast<int>(json.size()));
+}
+
+double ReverbPlaygroundProcessor::setRuntimeParameter(
+    const juce::String& nodeId,
+    const juce::String& parameterId,
+    const double value) noexcept
+{
+    const auto id = reverb::dsp::findBarrReferenceParameter(
+        nodeId.toStdString(), parameterId.toStdString());
+    if (!id.has_value()) {
+        jassertfalse;
+        return value;
+    }
+    harness_.setRuntimeParameter(*id, value);
+    return harness_.runtimeParameter(*id);
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

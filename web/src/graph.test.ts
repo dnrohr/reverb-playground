@@ -13,8 +13,8 @@ const snapshot: RuntimeSnapshot = {
         { id: 'out', signal: 'audio', direction: 'output' },
       ],
       parameters: [
-        { id: 'delay', value: 19.91, unit: 'milliseconds' },
-        { id: 'coefficient', value: -0.5, unit: 'unitless' },
+        { id: 'delay', value: 19.91, unit: 'milliseconds', minimum: 0.1, maximum: 100, step: 0.01 },
+        { id: 'coefficient', value: -0.5, unit: 'unitless', minimum: -0.95, maximum: 0.95, step: 0.001 },
       ],
     },
     {
@@ -23,7 +23,7 @@ const snapshot: RuntimeSnapshot = {
         { id: 'in', signal: 'audio', direction: 'input' },
         { id: 'out', signal: 'audio', direction: 'output' },
       ],
-      parameters: [{ id: 'delay', value: 29.71, unit: 'milliseconds' }],
+      parameters: [{ id: 'delay', value: 29.71, unit: 'milliseconds', minimum: 0.1, maximum: 100, step: 0.01 }],
     },
   ],
   connections: [
@@ -41,7 +41,9 @@ describe('native runtime graph presentation model', () => {
     const model = createFlowModel(parsed);
     expect(model.nodes.map((node) => node.id)).toEqual(['tank-2', 'left-tap']);
     expect(model.edges.map((edge) => edge.id)).toEqual(['tank-to-left']);
-    expect(model.nodes[0]?.data.parameters[0]).toEqual({ id: 'delay', value: 19.91, unit: 'milliseconds' });
+    expect(model.nodes[0]?.data.parameters[0]).toEqual({
+      id: 'delay', value: 19.91, unit: 'milliseconds', minimum: 0.1, maximum: 100, step: 0.01,
+    });
   });
 
   it('rejects contract and runtime identity mismatches before rendering', () => {

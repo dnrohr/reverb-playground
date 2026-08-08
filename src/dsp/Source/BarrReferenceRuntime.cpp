@@ -18,29 +18,40 @@ constexpr std::array sumPorts { audioInput("in-l"), audioInput("in-r"), audioOut
 constexpr std::array monoPorts { audioInput("in"), audioOutput("out") };
 constexpr std::array outputPorts { audioInput("in-l"), audioInput("in-r") };
 constexpr std::span<const Parameter> noParameters {};
-constexpr std::array filterParameters { Parameter { "cutoff", 7'000.0, "hertz" } };
+constexpr std::array sumParameters {
+    Parameter { BarrParameterId::sumGain, "gain", 0.5, "linear", 0.0, 1.0, 0.001 }
+};
+constexpr std::array filterParameters {
+    Parameter { BarrParameterId::filterCutoff, "cutoff", 7'000.0, "hertz", 100.0, 20'000.0, 1.0 }
+};
 constexpr std::array diffuserOneParameters {
-    Parameter { "delay", 4.31, "milliseconds" }, Parameter { "coefficient", 0.5, "unitless" }
+    Parameter { BarrParameterId::diffuserOneDelay, "delay", 4.31, "milliseconds", 0.1, 100.0, 0.01 },
+    Parameter { BarrParameterId::diffuserOneCoefficient, "coefficient", 0.5, "unitless", -0.95, 0.95, 0.001 }
 };
 constexpr std::array diffuserTwoParameters {
-    Parameter { "delay", 7.13, "milliseconds" }, Parameter { "coefficient", 0.5, "unitless" }
+    Parameter { BarrParameterId::diffuserTwoDelay, "delay", 7.13, "milliseconds", 0.1, 100.0, 0.01 },
+    Parameter { BarrParameterId::diffuserTwoCoefficient, "coefficient", 0.5, "unitless", -0.95, 0.95, 0.001 }
 };
 constexpr std::array tankOneParameters {
-    Parameter { "delay", 13.73, "milliseconds" }, Parameter { "coefficient", 0.5, "unitless" }
+    Parameter { BarrParameterId::tankOneDelay, "delay", 13.73, "milliseconds", 0.1, 100.0, 0.01 },
+    Parameter { BarrParameterId::tankOneCoefficient, "coefficient", 0.5, "unitless", -0.95, 0.95, 0.001 }
 };
 constexpr std::array tankTwoParameters {
-    Parameter { "delay", 19.91, "milliseconds" }, Parameter { "coefficient", -0.5, "unitless" }
+    Parameter { BarrParameterId::tankTwoDelay, "delay", 19.91, "milliseconds", 0.1, 100.0, 0.01 },
+    Parameter { BarrParameterId::tankTwoCoefficient, "coefficient", -0.5, "unitless", -0.95, 0.95, 0.001 }
 };
 constexpr std::array leftTapParameters {
-    Parameter { "delay", 29.71, "milliseconds" }, Parameter { "coefficient", 0.5, "unitless" }
+    Parameter { BarrParameterId::leftTapDelay, "delay", 29.71, "milliseconds", 0.1, 100.0, 0.01 },
+    Parameter { BarrParameterId::leftTapCoefficient, "coefficient", 0.5, "unitless", -0.95, 0.95, 0.001 }
 };
 constexpr std::array rightTapParameters {
-    Parameter { "delay", 37.11, "milliseconds" }, Parameter { "coefficient", 0.5, "unitless" }
+    Parameter { BarrParameterId::rightTapDelay, "delay", 37.11, "milliseconds", 0.1, 100.0, 0.01 },
+    Parameter { BarrParameterId::rightTapCoefficient, "coefficient", 0.5, "unitless", -0.95, 0.95, 0.001 }
 };
 
 constexpr std::array nodes {
     RuntimeNodeDefinition { "input", "stereo-input", "Stereo Input", "io", inputPorts, noParameters },
-    RuntimeNodeDefinition { "sum", "sum", "Mono Sum", "routing", sumPorts, noParameters },
+    RuntimeNodeDefinition { "sum", "sum", "Mono Sum", "routing", sumPorts, sumParameters },
     RuntimeNodeDefinition { "input-filter", "lowpass", "Input Low-pass", "filter", monoPorts, filterParameters },
     RuntimeNodeDefinition { "diffuser-1", "allpass", "Diffuser 1", "diffusion", monoPorts, diffuserOneParameters },
     RuntimeNodeDefinition { "diffuser-2", "allpass", "Diffuser 2", "diffusion", monoPorts, diffuserTwoParameters },
@@ -82,6 +93,31 @@ double barrReferenceParameter(const std::string_view nodeId, const std::string_v
     }
     throw std::invalid_argument(
         "unknown Barr runtime parameter '" + std::string(nodeId) + "." + std::string(parameterId) + "'");
+}
+
+const RuntimeParameterDefinition& barrReferenceParameterDefinition(const BarrParameterId id)
+{
+    for (const auto& node : nodes) {
+        for (const auto& parameter : node.parameters) {
+            if (parameter.runtimeId == id)
+                return parameter;
+        }
+    }
+    throw std::invalid_argument("unknown Barr runtime parameter enum");
+}
+
+std::optional<BarrParameterId> findBarrReferenceParameter(
+    const std::string_view nodeId, const std::string_view parameterId) noexcept
+{
+    for (const auto& node : nodes) {
+        if (node.id != nodeId)
+            continue;
+        for (const auto& parameter : node.parameters) {
+            if (parameter.id == parameterId)
+                return parameter.runtimeId;
+        }
+    }
+    return std::nullopt;
 }
 
 } // namespace reverb::dsp

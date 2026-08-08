@@ -71,7 +71,18 @@ EditorShell::EditorShell(Callbacks callbacks)
         .withBackend(juce::WebBrowserComponent::Options::Backend::webview2)
         .withWinWebView2Options(juce::WebBrowserComponent::Options::WinWebView2 {}
             .withUserDataFolder(juce::File::getSpecialLocation(juce::File::tempDirectory)
-                .getChildFile("reverb-playground-webview-m2-1-c")))
+                .getChildFile("reverb-playground-webview-m2-3")))
+        .withNativeIntegrationEnabled()
+        .withNativeFunction("setRuntimeParameter", [this](const auto& arguments, auto complete) {
+            if (arguments.size() != 3) {
+                complete(juce::var());
+                return;
+            }
+            complete(callbacks_.setRuntimeParameter(
+                arguments[0].toString(),
+                arguments[1].toString(),
+                static_cast<double>(arguments[2])));
+        })
         .withResourceProvider([this](const auto& path) { return getWebResource(path); });
     browser_ = std::make_unique<juce::WebBrowserComponent>(std::move(options));
     addAndMakeVisible(*browser_);

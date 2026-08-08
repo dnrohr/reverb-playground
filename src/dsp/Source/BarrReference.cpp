@@ -15,7 +15,7 @@ void BarrReference::prepare(const double sampleRate)
             barrReferenceParameter(nodeId, "delay"),
             static_cast<float>(barrReferenceParameter(nodeId, "coefficient")));
     };
-    inputGain_.setLinear(0.5F);
+    inputGain_.prepare(sampleRate, static_cast<float>(barrReferenceParameter("sum", "gain")));
     inputFilter_.prepare(sampleRate, barrReferenceParameter("input-filter", "cutoff"));
     prepareAllpass(diffuserOne_, "diffuser-1");
     prepareAllpass(diffuserTwo_, "diffuser-2");
@@ -23,6 +23,27 @@ void BarrReference::prepare(const double sampleRate)
     prepareAllpass(tankTwo_, "tank-2");
     prepareAllpass(leftTap_, "left-tap");
     prepareAllpass(rightTap_, "right-tap");
+}
+
+void BarrReference::setParameterTarget(const BarrParameterId id, const double value) noexcept
+{
+    switch (id) {
+    case BarrParameterId::sumGain: inputGain_.setTargetLinear(static_cast<float>(value)); break;
+    case BarrParameterId::filterCutoff: inputFilter_.setCutoffHertz(value); break;
+    case BarrParameterId::diffuserOneDelay: diffuserOne_.setDelayMilliseconds(value); break;
+    case BarrParameterId::diffuserOneCoefficient: diffuserOne_.setCoefficient(static_cast<float>(value)); break;
+    case BarrParameterId::diffuserTwoDelay: diffuserTwo_.setDelayMilliseconds(value); break;
+    case BarrParameterId::diffuserTwoCoefficient: diffuserTwo_.setCoefficient(static_cast<float>(value)); break;
+    case BarrParameterId::tankOneDelay: tankOne_.setDelayMilliseconds(value); break;
+    case BarrParameterId::tankOneCoefficient: tankOne_.setCoefficient(static_cast<float>(value)); break;
+    case BarrParameterId::tankTwoDelay: tankTwo_.setDelayMilliseconds(value); break;
+    case BarrParameterId::tankTwoCoefficient: tankTwo_.setCoefficient(static_cast<float>(value)); break;
+    case BarrParameterId::leftTapDelay: leftTap_.setDelayMilliseconds(value); break;
+    case BarrParameterId::leftTapCoefficient: leftTap_.setCoefficient(static_cast<float>(value)); break;
+    case BarrParameterId::rightTapDelay: rightTap_.setDelayMilliseconds(value); break;
+    case BarrParameterId::rightTapCoefficient: rightTap_.setCoefficient(static_cast<float>(value)); break;
+    case BarrParameterId::count: break;
+    }
 }
 
 void BarrReference::reset() noexcept

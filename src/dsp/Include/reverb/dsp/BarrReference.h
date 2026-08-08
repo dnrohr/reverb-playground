@@ -3,6 +3,7 @@
 #include <reverb/dsp/Allpass.h>
 #include <reverb/dsp/Gain.h>
 #include <reverb/dsp/OnePoleLowPass.h>
+#include <reverb/dsp/BarrReferenceRuntime.h>
 
 #include <span>
 
@@ -12,6 +13,7 @@ class BarrReference final {
 public:
     void prepare(double sampleRate);
     void reset() noexcept;
+    void setParameterTarget(BarrParameterId id, double value) noexcept;
     void process(
         std::span<const float> inputLeft,
         std::span<const float> inputRight,

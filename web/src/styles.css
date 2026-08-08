@@ -118,10 +118,19 @@ button { font: inherit; }
 .property-list dt { color: #74838d; font-size: 9px; font-weight: 700; letter-spacing: .09em; }
 .property-list dd { margin: 0; color: #d3dce1; font: 10px ui-monospace, Consolas, monospace; text-align: right; }
 .inspector-content h3 { margin-top: 20px; color: #74838d; font-size: 9px; letter-spacing: .12em; }
-.parameter-card { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; margin: 7px 0; padding: 10px; border: 1px solid #3c4951; border-radius: 6px; background: #1a2228; }
+.parameter-card { display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; margin: 7px 0; padding: 10px; border: 1px solid #3c4951; border-radius: 6px; background: #1a2228; }
 .parameter-card span { color: #94a2ab; font-size: 9px; }
 .parameter-card strong { color: var(--text); font: 12px ui-monospace, Consolas, monospace; }
 .parameter-card small { grid-column: 1 / -1; color: #667680; font-size: 8px; }
+.parameter-card input[type="range"] { grid-column: 1 / -1; width: 100%; margin: 5px 0 0; accent-color: var(--cyan); }
+.parameter-value { display: flex; align-items: baseline; justify-content: flex-end; gap: 4px; }
+.parameter-number { width: 82px; border: 0; background: transparent; color: var(--text); font: 700 12px/1 ui-monospace, Consolas, monospace; text-align: right; }
+.parameter-number:focus { outline: 1px solid var(--cyan); outline-offset: 2px; }
+.parameter-value strong { font-size: 11px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.history-actions { display: flex; gap: 8px; margin-top: 12px; }
+.history-actions button { flex: 1; padding: 7px; border: 1px solid var(--line); border-radius: 4px; color: var(--text); background: #1a2228; font-size: 9px; }
+.history-actions button:disabled { color: #596872; }
 .empty-parameters, .selection-note { color: var(--muted); font-size: 10px; line-height: 1.5; }
 .selection-note { margin-top: 20px; padding: 10px; border-left: 2px solid var(--amber); background: rgba(242, 180, 78, .06); }
 .inspector-empty { display: grid; grid-template-columns: 40px 1fr; align-items: center; gap: 8px; padding: 34px 18px; color: var(--muted); }

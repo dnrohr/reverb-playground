@@ -40,6 +40,7 @@ public:
     [[nodiscard]] bool isSafetyLatched() const noexcept;
     [[nodiscard]] double activeSampleRate() const noexcept;
     [[nodiscard]] juce::String runtimeSnapshotJson() const;
+    double setRuntimeParameter(const juce::String& nodeId, const juce::String& parameterId, double value) noexcept;
 
 private:
     reverb::dsp::LiveReferenceHarness harness_;

@@ -106,3 +106,23 @@ TEST_CASE("Live harness without a prepared audio device emits deterministic sile
     REQUIRE(std::ranges::all_of(block.outputLeft, [](const float sample) { return sample == 0.0F; }));
     REQUIRE(std::ranges::all_of(block.outputRight, [](const float sample) { return sample == 0.0F; }));
 }
+
+TEST_CASE("Runtime parameter edits publish lock-free and affect the next audio block")
+{
+    reverb::dsp::LiveReferenceHarness original;
+    reverb::dsp::LiveReferenceHarness edited;
+    original.prepare(48'000.0);
+    edited.prepare(48'000.0);
+    edited.setRuntimeParameter(reverb::dsp::BarrParameterId::diffuserOneCoefficient, -0.8);
+    REQUIRE(edited.runtimeParameter(reverb::dsp::BarrParameterId::diffuserOneCoefficient) == -0.8);
+    original.triggerImpulse();
+    edited.triggerImpulse();
+    StereoBlock originalBlock;
+    StereoBlock editedBlock;
+    process(original, originalBlock);
+    process(edited, editedBlock);
+
+    REQUIRE(originalBlock.outputLeft != editedBlock.outputLeft);
+    REQUIRE(std::ranges::all_of(editedBlock.outputLeft, [](const float sample) { return std::isfinite(sample); }));
+    REQUIRE(std::ranges::all_of(editedBlock.outputRight, [](const float sample) { return std::isfinite(sample); }));
+}

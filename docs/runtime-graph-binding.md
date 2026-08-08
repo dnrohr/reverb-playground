@@ -36,4 +36,4 @@ The audition impulse is a test stimulus at the normalized sum boundary. Master a
 
 ## Update behavior
 
-The snapshot is loaded when the editor opens. Selecting a node reads the values and units supplied by the native snapshot. M2.3 will add continuous bidirectional parameter messages; until then the fixed runtime is immutable after preparation except for its sample rate and external audition controls.
+The snapshot is loaded when the editor opens. Selecting a node reads the values, ranges, steps, and units supplied by the native snapshot. Continuous editor changes return through the stable node/parameter bridge and update the prepared runtime as described in [Continuous parameter editing](continuous-parameter-editing.md).

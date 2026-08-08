@@ -6,7 +6,7 @@ The project begins with a visible reconstruction of the Keith Barr/Alesis MIDIVe
 
 ## Project status
 
-The project has a deterministic Barr-inspired DSP reference and an embedded schematic-editor prototype. Runtime binding between the visible graph and DSP begins in M2.2.
+The project has a deterministic Barr-inspired DSP reference and an embedded schematic editor whose visible parameters continuously control the native runtime with smoothing, delay crossfades, and undo/redo.
 
 ## Documentation
 
@@ -14,6 +14,7 @@ The project has a deterministic Barr-inspired DSP reference and an embedded sche
 - [Execution roadmap](docs/roadmap.md)
 - [Current progress](docs/progress.md)
 - [Schematic editor interactions](docs/schematic-editor-interactions.md)
+- [Continuous parameter editing](docs/continuous-parameter-editing.md)
 - [Architecture decisions](docs/adr/README.md)
 - [Patch format v1](docs/patch-format.md)
 - [Keith Barr reverb architecture research](docs/keith-barr-reverb-architectures.md)

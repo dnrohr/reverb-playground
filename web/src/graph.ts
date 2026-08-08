@@ -14,6 +14,9 @@ export interface PatchParameter {
   id: string;
   value: number;
   unit: string;
+  minimum: number;
+  maximum: number;
+  step: number;
 }
 
 export interface PatchNodeData extends Record<string, unknown> {
@@ -89,6 +92,8 @@ export function parseRuntimeSnapshot(input: unknown): RuntimeSnapshot {
     for (const parameter of node.parameters) {
       requireCondition(typeof parameter.id === 'string' && Number.isFinite(parameter.value), `invalid parameter on ${node.id}`);
       requireCondition(typeof parameter.unit === 'string' && parameter.unit.length > 0, `missing unit on ${node.id}.${parameter.id}`);
+      requireCondition(Number.isFinite(parameter.minimum) && Number.isFinite(parameter.maximum) && parameter.minimum < parameter.maximum, `invalid range on ${node.id}.${parameter.id}`);
+      requireCondition(Number.isFinite(parameter.step) && parameter.step > 0, `invalid step on ${node.id}.${parameter.id}`);
     }
   }
   for (const connection of snapshot.connections) {

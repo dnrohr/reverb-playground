@@ -19,6 +19,7 @@ public:
         std::function<bool()> emergencyMuted;
         std::function<bool()> isSafetyLatched;
         std::function<juce::String()> runtimeSnapshotJson;
+        std::function<double(const juce::String&, const juce::String&, double)> setRuntimeParameter;
     };
 
     explicit EditorShell(Callbacks callbacks);

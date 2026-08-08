@@ -4,6 +4,17 @@
 
 namespace reverb::dsp {
 
+static_assert(std::atomic<double>::is_always_lock_free);
+
+LiveReferenceHarness::LiveReferenceHarness()
+{
+    for (std::size_t index = 0; index < parameterTargets_.size(); ++index) {
+        const auto id = static_cast<BarrParameterId>(index);
+        parameterTargets_[index].store(
+            barrReferenceParameterDefinition(id).value, std::memory_order_relaxed);
+    }
+}
+
 void LiveReferenceHarness::prepare(const double sampleRate)
 {
     reference_.prepare(sampleRate);
@@ -36,6 +47,12 @@ void LiveReferenceHarness::process(
         std::ranges::fill(outputLeft, 0.0F);
         std::ranges::fill(outputRight, 0.0F);
         return;
+    }
+
+    for (std::size_t index = 0; index < parameterTargets_.size(); ++index) {
+        reference_.setParameterTarget(
+            static_cast<BarrParameterId>(index),
+            parameterTargets_[index].load(std::memory_order_relaxed));
     }
 
     const auto impulse = impulsePending_.exchange(false, std::memory_order_acq_rel) ? 1.0F : 0.0F;
@@ -75,9 +92,21 @@ void LiveReferenceHarness::requestSafetyReset() noexcept
     safetyResetPending_.store(true, std::memory_order_release);
 }
 
+void LiveReferenceHarness::setRuntimeParameter(const BarrParameterId id, const double value) noexcept
+{
+    const auto& definition = barrReferenceParameterDefinition(id);
+    parameterTargets_[static_cast<std::size_t>(id)].store(
+        std::clamp(value, definition.minimum, definition.maximum),
+        std::memory_order_release);
+}
+
 float LiveReferenceHarness::masterGain() const noexcept { return masterGain_.load(std::memory_order_acquire); }
 bool LiveReferenceHarness::isEmergencyMuted() const noexcept { return emergencyMuted_.load(std::memory_order_acquire); }
 bool LiveReferenceHarness::isSafetyLatched() const noexcept { return safetyLatched_.load(std::memory_order_acquire); }
 double LiveReferenceHarness::sampleRate() const noexcept { return sampleRate_.load(std::memory_order_acquire); }
+double LiveReferenceHarness::runtimeParameter(const BarrParameterId id) const noexcept
+{
+    return parameterTargets_[static_cast<std::size_t>(id)].load(std::memory_order_acquire);
+}
 
 } // namespace reverb::dsp

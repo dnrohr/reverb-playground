@@ -16,6 +16,7 @@ Last updated: 2026-08-08
 | M1.5 Create the audible reference harness | Complete | Live wet processor; device/default status; impulse/gain/mute/safety controls; startup tests; screenshot/video |
 | M2.1 Prototype the schematic editor shell | Complete | Embedded three-pane React Flow shell; documented navigation; scaling check; screenshot/video evidence |
 | M2.2 Bind visible nodes to the fixed runtime | Complete | Native runtime snapshot; single-source identities/values; live inspector; mismatch detection |
+| M2.3 Implement continuous parameter editing | Complete | Lock-free live parameters; smoothing/crossfade tests; exact undo/redo; screenshot/video evidence |
 
 ## M0.2 verification
 
@@ -158,3 +159,13 @@ Results:
 - Shared Debug verification passes 4/4 web tests and 27/27 native tests, including Standalone and VST3 builds.
 - Bound graph screenshot: [`artifacts/ui/m2-2-runtime-binding/runtime-bound-default.png`](../artifacts/ui/m2-2-runtime-binding/runtime-bound-default.png).
 - Live inspector screenshot: [`artifacts/ui/m2-2-runtime-binding/runtime-bound-inspector.png`](../artifacts/ui/m2-2-runtime-binding/runtime-bound-inspector.png).
+
+## M2.3 verification
+
+- Every inspector slider sends intermediate values to the native runtime before pointer release; release commits one history transaction.
+- The native bridge resolves stable identities off-thread and writes 14 fixed always-lock-free atomic lanes; audio processing performs a bounded 14 loads with no allocation or blocking.
+- Gain, low-pass, and allpass-coefficient targets smooth over 20 milliseconds. Allpass delay edits crossfade old/new taps over 20 milliseconds in a preallocated 100-millisecond ring buffer.
+- Native tests cover smoothing, finite bounded delay transitions, and live harness application. Web tests cover exact undo/redo values, no-op edits, and redo invalidation.
+- Continuous editing design: [Continuous parameter editing](continuous-parameter-editing.md).
+- Inspector screenshot: [`artifacts/ui/m2-3-continuous-parameter-editing/continuous-parameter-inspector.png`](../artifacts/ui/m2-3-continuous-parameter-editing/continuous-parameter-inspector.png).
+- Intermediate live values and undo/redo video: [`artifacts/ui/m2-3-continuous-parameter-editing/continuous-parameter-editing.mp4`](../artifacts/ui/m2-3-continuous-parameter-editing/continuous-parameter-editing.mp4). The native next-block test provides deterministic audio-side evidence while the UI capture makes the continuous transaction visible.

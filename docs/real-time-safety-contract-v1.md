@@ -41,6 +41,8 @@ Parameter changes and topology changes use different publication paths.
 
 The initial topology transition emits one safety-muted block. A later click-safe crossfade may replace that policy only when both graphs and all temporary memory are prepared off-thread and CPU cost remains bounded. Parameter smoothing must not be used to disguise a topology swap.
 
+The fixed Barr runtime implements the first parameter path as 14 always-lock-free atomic value lanes. Each block performs a fixed 14 loads. Gain and filter/coefficient targets smooth over 20 milliseconds; allpass delay targets crossfade preallocated read taps over 20 milliseconds. The detailed policy and editor transaction semantics are documented in [Continuous parameter editing](continuous-parameter-editing.md).
+
 ## Verification obligations
 
 - Graph tests cover a rejected delay-free cycle and an accepted feedback loop containing `delay`.

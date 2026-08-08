@@ -21,7 +21,8 @@ auto findById(const Range& values, const std::string_view id, GetId getId)
 
 } // namespace
 
-std::string writeBarrRuntimeSnapshotJson(const double sampleRate)
+std::string writeBarrRuntimeSnapshotJson(
+    const double sampleRate, const std::span<const double> parameterValues)
 {
     const auto graph = makeBarrReferenceGraph();
     std::unordered_map<std::string, NodePosition> positions;
@@ -38,8 +39,11 @@ std::string writeBarrRuntimeSnapshotJson(const double sampleRate)
         }
         Json parameters = Json::array();
         for (const auto& parameter : definition.parameters) {
+            const auto index = static_cast<std::size_t>(parameter.runtimeId);
+            const auto value = index < parameterValues.size() ? parameterValues[index] : parameter.value;
             parameters.push_back({
-                { "id", parameter.id }, { "value", parameter.value }, { "unit", parameter.unit },
+                { "id", parameter.id }, { "value", value }, { "unit", parameter.unit },
+                { "minimum", parameter.minimum }, { "maximum", parameter.maximum }, { "step", parameter.step },
             });
         }
         const auto& position = positions.at(std::string(definition.id));

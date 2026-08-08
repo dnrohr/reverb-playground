@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Background,
   BackgroundVariant,
@@ -16,6 +16,13 @@ import {
 } from '@xyflow/react';
 import { createFlowModel, parseRuntimeSnapshot, type PatchNodeData, type RuntimeSnapshot } from './graph';
 import { PatchNode } from './PatchNode';
+import { callNative } from './nativeBridge';
+import {
+  commitParameterEdit as commitHistoryEdit,
+  redoParameterEdit as takeRedo,
+  undoParameterEdit as takeUndo,
+  type ParameterEdit,
+} from './parameterHistory';
 
 const modules = [
   { group: 'I/O', items: ['Stereo Input', 'Stereo Output'] },
@@ -37,6 +44,40 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [selectedNode, setSelectedNode] = useState<Node<PatchNodeData> | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 });
+  const [undoStack, setUndoStack] = useState<ParameterEdit[]>([]);
+  const [redoStack, setRedoStack] = useState<ParameterEdit[]>([]);
+  const activeEdit = useRef<ParameterEdit | null>(null);
+
+  const applyParameter = useCallback((nodeId: string, parameterId: string, value: number) => {
+    const update = (node: Node<PatchNodeData>) => node.id !== nodeId ? node : {
+      ...node,
+      data: {
+        ...node.data,
+        parameters: node.data.parameters.map((parameter) => parameter.id === parameterId ? { ...parameter, value } : parameter),
+      },
+    };
+    setNodes((current) => current.map(update));
+    setSelectedNode((current) => current ? update(current) : null);
+    void callNative('setRuntimeParameter', nodeId, parameterId, value);
+  }, [setNodes]);
+
+  const undo = useCallback(() => {
+    const result = takeUndo({ undo: undoStack, redo: redoStack });
+    const edit = result.edit;
+    if (!edit) return;
+    applyParameter(edit.nodeId, edit.parameterId, edit.before);
+    setUndoStack(result.history.undo);
+    setRedoStack(result.history.redo);
+  }, [applyParameter, redoStack, undoStack]);
+
+  const redo = useCallback(() => {
+    const result = takeRedo({ undo: undoStack, redo: redoStack });
+    const edit = result.edit;
+    if (!edit) return;
+    applyParameter(edit.nodeId, edit.parameterId, edit.after);
+    setUndoStack(result.history.undo);
+    setRedoStack(result.history.redo);
+  }, [applyParameter, redoStack, undoStack]);
 
   const resetReference = useCallback(() => {
     const fresh = createFlowModel(snapshot);
@@ -44,6 +85,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     setEdges(fresh.edges);
     setSelectedNode(null);
     setSelectedEdge(null);
+    setUndoStack([]);
+    setRedoStack([]);
     requestAnimationFrame(() => void fitView({ padding: 0.16, minZoom: 0.58, maxZoom: 1.1 }));
   }, [fitView, setEdges, setNodes, snapshot]);
 
@@ -54,12 +97,41 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) redo(); else undo();
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') {
+        event.preventDefault();
+        redo();
+        return;
+      }
       if (event.key.toLowerCase() === 'r' && !(event.target instanceof HTMLInputElement))
         resetReference();
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [resetReference]);
+  }, [redo, resetReference, undo]);
+
+  const beginParameterEdit = useCallback((nodeId: string, parameterId: string, before: number) => {
+    activeEdit.current = { nodeId, parameterId, before, after: before };
+  }, []);
+
+  const changeParameter = useCallback((nodeId: string, parameterId: string, value: number) => {
+    applyParameter(nodeId, parameterId, value);
+    if (activeEdit.current?.nodeId === nodeId && activeEdit.current.parameterId === parameterId)
+      activeEdit.current.after = value;
+  }, [applyParameter]);
+
+  const commitParameterEdit = useCallback(() => {
+    const edit = activeEdit.current;
+    activeEdit.current = null;
+    if (!edit) return;
+    const result = commitHistoryEdit({ undo: undoStack, redo: redoStack }, edit);
+    setUndoStack(result.undo);
+    setRedoStack(result.redo);
+  }, [redoStack, undoStack]);
 
   return (
     <main className="editor-shell">
@@ -164,10 +236,45 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               {selectedNode.data.parameters.length ? selectedNode.data.parameters.map((parameter) => (
                 <div className="parameter-card" key={parameter.id}>
                   <span>{parameter.id.toUpperCase()}</span>
-                  <strong>{formatValue(parameter.value, parameter.unit)}</strong>
+                  <label className="parameter-value">
+                    <span className="sr-only">{`${selectedNode.data.label} ${parameter.id} numeric value`}</span>
+                    <input
+                      className="parameter-number"
+                      type="number"
+                      min={parameter.minimum}
+                      max={parameter.maximum}
+                      step={parameter.step}
+                      value={parameter.value}
+                      onFocus={() => beginParameterEdit(selectedNode.id, parameter.id, parameter.value)}
+                      onChange={(event) => changeParameter(selectedNode.id, parameter.id, Number(event.target.value))}
+                      onKeyDown={(event) => { if (event.key === 'Enter') commitParameterEdit(); }}
+                      onBlur={commitParameterEdit}
+                    />
+                    <strong>{parameter.unit === 'milliseconds' ? 'ms' : parameter.unit === 'hertz' ? 'Hz' : ''}</strong>
+                  </label>
                   <small>{parameter.unit}</small>
+                  <input
+                    aria-label={`${selectedNode.data.label} ${parameter.id}`}
+                    type="range"
+                    min={parameter.minimum}
+                    max={parameter.maximum}
+                    step={parameter.step}
+                    value={parameter.value}
+                    onPointerDown={() => beginParameterEdit(selectedNode.id, parameter.id, parameter.value)}
+                    onChange={(event) => changeParameter(selectedNode.id, parameter.id, Number(event.target.value))}
+                    onPointerUp={commitParameterEdit}
+                    onKeyDown={(event) => {
+                      if (!activeEdit.current) beginParameterEdit(selectedNode.id, parameter.id, parameter.value);
+                      if (event.key === 'Enter') commitParameterEdit();
+                    }}
+                    onBlur={commitParameterEdit}
+                  />
                 </div>
               )) : <p className="empty-parameters">No editable parameters.</p>}
+              <div className="history-actions">
+                <button type="button" disabled={!undoStack.length} onClick={undo}>UNDO</button>
+                <button type="button" disabled={!redoStack.length} onClick={redo}>REDO</button>
+              </div>
               <div className="selection-note">Live value from native DSP runtime contract v{snapshot.contractVersion}.</div>
             </div>
           ) : selectedEdge ? (
