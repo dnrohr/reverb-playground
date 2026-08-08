@@ -2,6 +2,7 @@ add_executable(reverb_tests
     BarrReferenceTests.cpp
     DspGainTests.cpp
     DspPrimitivesTests.cpp
+    LiveReferenceHarnessTests.cpp
     OfflineRendererTests.cpp
     ResponseMeasurementsTests.cpp
     NumericalSafetyGuardTests.cpp

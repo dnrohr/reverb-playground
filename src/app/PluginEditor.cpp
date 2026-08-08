@@ -1,7 +1,42 @@
 #include "PluginEditor.h"
 
+#include <juce_audio_utils/juce_audio_utils.h>
+#include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
+
 ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& processor)
     : AudioProcessorEditor(processor)
+    , shell_({
+          [&processor] { processor.triggerImpulse(); },
+          [&processor](const float gain) { processor.setMasterGain(gain); },
+          [&processor](const bool muted) { processor.setEmergencyMuted(muted); },
+          [&processor] { processor.requestSafetyReset(); },
+          [] {
+              if (auto* holder = juce::StandalonePluginHolder::getInstance()) {
+                  holder->showAudioSettingsDialog();
+                  return;
+              }
+              juce::AlertWindow::showMessageBoxAsync(
+                  juce::MessageBoxIconType::InfoIcon,
+                  "Audio device",
+                  "Audio device selection is managed by the plugin host.");
+          },
+          [&processor] {
+              const auto rate = processor.activeSampleRate();
+              if (auto* holder = juce::StandalonePluginHolder::getInstance()) {
+                  if (const auto* device = holder->deviceManager.getCurrentAudioDevice()) {
+                      return juce::String::fromUTF8("\xe2\x97\x8f  AUDIO ONLINE  /  ") + device->getName()
+                          + "  /  " + juce::String(rate / 1000.0, 1) + " kHz";
+                  }
+                  return juce::String::fromUTF8("\xe2\x97\x8b  NO AUDIO DEVICE  /  UI READY");
+              }
+              return rate > 0.0
+                  ? juce::String::fromUTF8("\xe2\x97\x8f  HOST AUDIO  /  ") + juce::String(rate / 1000.0, 1) + " kHz"
+                  : juce::String::fromUTF8("\xe2\x97\x8b  WAITING FOR HOST AUDIO");
+          },
+          [&processor] { return processor.masterGain(); },
+          [&processor] { return processor.isEmergencyMuted(); },
+          [&processor] { return processor.isSafetyLatched(); },
+      })
 {
     addAndMakeVisible(shell_);
     setResizable(true, true);

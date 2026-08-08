@@ -9,8 +9,9 @@ ReverbPlaygroundProcessor::ReverbPlaygroundProcessor()
 {
 }
 
-void ReverbPlaygroundProcessor::prepareToPlay(double, int)
+void ReverbPlaygroundProcessor::prepareToPlay(const double sampleRate, int)
 {
+    harness_.prepare(sampleRate);
 }
 
 void ReverbPlaygroundProcessor::releaseResources()
@@ -26,11 +27,17 @@ bool ReverbPlaygroundProcessor::isBusesLayoutSupported(const BusesLayout& layout
 void ReverbPlaygroundProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&)
 {
     juce::ScopedNoDenormals noDenormals;
-    const auto inputChannels = getTotalNumInputChannels();
-    const auto outputChannels = getTotalNumOutputChannels();
+    if (buffer.getNumChannels() < 2) {
+        buffer.clear();
+        return;
+    }
 
-    for (auto channel = inputChannels; channel < outputChannels; ++channel)
-        buffer.clear(channel, 0, buffer.getNumSamples());
+    const auto sampleCount = static_cast<std::size_t>(buffer.getNumSamples());
+    const std::span<const float> inputLeft { buffer.getReadPointer(0), sampleCount };
+    const std::span<const float> inputRight { buffer.getReadPointer(1), sampleCount };
+    const std::span<float> outputLeft { buffer.getWritePointer(0), sampleCount };
+    const std::span<float> outputRight { buffer.getWritePointer(1), sampleCount };
+    harness_.process(inputLeft, inputRight, outputLeft, outputRight);
 }
 
 juce::AudioProcessorEditor* ReverbPlaygroundProcessor::createEditor()
@@ -51,14 +58,38 @@ const juce::String ReverbPlaygroundProcessor::getName() const
 bool ReverbPlaygroundProcessor::acceptsMidi() const { return false; }
 bool ReverbPlaygroundProcessor::producesMidi() const { return false; }
 bool ReverbPlaygroundProcessor::isMidiEffect() const { return false; }
-double ReverbPlaygroundProcessor::getTailLengthSeconds() const { return 0.0; }
+double ReverbPlaygroundProcessor::getTailLengthSeconds() const { return 2.0; }
 int ReverbPlaygroundProcessor::getNumPrograms() { return 1; }
 int ReverbPlaygroundProcessor::getCurrentProgram() { return 0; }
 void ReverbPlaygroundProcessor::setCurrentProgram(int) {}
 const juce::String ReverbPlaygroundProcessor::getProgramName(int) { return {}; }
 void ReverbPlaygroundProcessor::changeProgramName(int, const juce::String&) {}
-void ReverbPlaygroundProcessor::getStateInformation(juce::MemoryBlock&) {}
-void ReverbPlaygroundProcessor::setStateInformation(const void*, int) {}
+void ReverbPlaygroundProcessor::getStateInformation(juce::MemoryBlock& destinationData)
+{
+    juce::ValueTree state("ReverbPlayground");
+    state.setProperty("masterGain", harness_.masterGain(), nullptr);
+    state.setProperty("emergencyMuted", harness_.isEmergencyMuted(), nullptr);
+    juce::MemoryOutputStream stream(destinationData, false);
+    state.writeToStream(stream);
+}
+
+void ReverbPlaygroundProcessor::setStateInformation(const void* data, const int sizeInBytes)
+{
+    const auto state = juce::ValueTree::readFromData(data, static_cast<std::size_t>(sizeInBytes));
+    if (!state.isValid() || !state.hasType("ReverbPlayground"))
+        return;
+    harness_.setMasterGain(static_cast<float>(state.getProperty("masterGain", 0.5F)));
+    harness_.setEmergencyMuted(static_cast<bool>(state.getProperty("emergencyMuted", false)));
+}
+
+void ReverbPlaygroundProcessor::triggerImpulse() noexcept { harness_.triggerImpulse(); }
+void ReverbPlaygroundProcessor::setMasterGain(const float value) noexcept { harness_.setMasterGain(value); }
+void ReverbPlaygroundProcessor::setEmergencyMuted(const bool muted) noexcept { harness_.setEmergencyMuted(muted); }
+void ReverbPlaygroundProcessor::requestSafetyReset() noexcept { harness_.requestSafetyReset(); }
+float ReverbPlaygroundProcessor::masterGain() const noexcept { return harness_.masterGain(); }
+bool ReverbPlaygroundProcessor::isEmergencyMuted() const noexcept { return harness_.isEmergencyMuted(); }
+bool ReverbPlaygroundProcessor::isSafetyLatched() const noexcept { return harness_.isSafetyLatched(); }
+double ReverbPlaygroundProcessor::activeSampleRate() const noexcept { return harness_.sampleRate(); }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {

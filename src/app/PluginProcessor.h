@@ -2,6 +2,8 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
+#include <reverb/dsp/LiveReferenceHarness.h>
+
 class ReverbPlaygroundProcessor final : public juce::AudioProcessor {
 public:
     ReverbPlaygroundProcessor();
@@ -28,4 +30,16 @@ public:
 
     void getStateInformation(juce::MemoryBlock& destinationData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
+
+    void triggerImpulse() noexcept;
+    void setMasterGain(float linearGain) noexcept;
+    void setEmergencyMuted(bool muted) noexcept;
+    void requestSafetyReset() noexcept;
+    [[nodiscard]] float masterGain() const noexcept;
+    [[nodiscard]] bool isEmergencyMuted() const noexcept;
+    [[nodiscard]] bool isSafetyLatched() const noexcept;
+    [[nodiscard]] double activeSampleRate() const noexcept;
+
+private:
+    reverb::dsp::LiveReferenceHarness harness_;
 };

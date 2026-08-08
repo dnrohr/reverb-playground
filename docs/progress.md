@@ -13,6 +13,7 @@ Last updated: 2026-08-08
 | M1.2 Implement the fixed Barr reference graph | Complete | Stable serialized graph; public-primitive DSP; mono input sum; distinct finite stereo impulse output |
 | M1.3 Add offline rendering and golden tests | Complete | Headless PCM16 WAV CLI; JSON analysis; silence/impulse/noise goldens; reset/reload diagnostics |
 | M1.4 Add reference measurements | Complete | Automated onset/length/peak/stereo/Schroeder/RT60 metrics; synthetic estimator tests; versioned artifact |
+| M1.5 Create the audible reference harness | Complete | Live wet processor; device/default status; impulse/gain/mute/safety controls; startup tests; screenshot/video |
 
 ## M0.2 verification
 
@@ -120,3 +121,13 @@ Results:
 - The two-second 48 kHz Barr reference measurement is stored as a versioned JSON artifact and checked against a fresh render.
 - Documentation labels direct observations, threshold-dependent values, derived curves, and estimated RT60 separately.
 - UI unchanged; no screenshot or video required.
+
+## M1.5 verification
+
+- Standalone and VST3 processing replace stereo output with the fixed wet reference path.
+- The standalone uses JUCE's restored/default output and opens its Audio/MIDI Settings dialog from the in-editor Audio Device button.
+- Impulse injection, master linear gain, emergency mute, numerical safety latch/reset, and no-device silence have native tests.
+- Repreparing from 44.1 to 96 kHz clears state and updates the active sample rate safely.
+- The standalone built, launched, reported the default 48 kHz Windows device, opened/closed device settings, and remained responsive.
+- Current screenshot: [`artifacts/ui/m1-5-audible-reference-harness/audible-reference-harness.png`](../artifacts/ui/m1-5-audible-reference-harness/audible-reference-harness.png).
+- Interaction video: [`artifacts/ui/m1-5-audible-reference-harness/audible-reference-controls.mp4`](../artifacts/ui/m1-5-audible-reference-harness/audible-reference-controls.mp4).

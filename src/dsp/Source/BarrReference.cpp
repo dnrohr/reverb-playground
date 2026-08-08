@@ -33,13 +33,16 @@ void BarrReference::process(
     const std::span<const float> inputLeft,
     const std::span<const float> inputRight,
     const std::span<float> outputLeft,
-    const std::span<float> outputRight) noexcept
+    const std::span<float> outputRight,
+    const float impulse) noexcept
 {
     const auto count = std::min({ inputLeft.size(), inputRight.size(), outputLeft.size(), outputRight.size() });
     const auto left = outputLeft.first(count);
     const auto right = outputRight.first(count);
 
     Sum::process(inputLeft.first(count), inputRight.first(count), left);
+    if (!left.empty())
+        left.front() += impulse;
     inputGain_.process(left);
     inputFilter_.process(left);
     diffuserOne_.process(left);

@@ -16,7 +16,8 @@ public:
         std::span<const float> inputLeft,
         std::span<const float> inputRight,
         std::span<float> outputLeft,
-        std::span<float> outputRight) noexcept;
+        std::span<float> outputRight,
+        float impulse = 0.0F) noexcept;
 
 private:
     Gain inputGain_;
