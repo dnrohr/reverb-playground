@@ -12,6 +12,7 @@ Last updated: 2026-08-08
 | M1.1 Implement core DSP primitives | Complete | Mono gain/invert, sum, delay, allpass, and low-pass; multi-rate timing, energy, polarity, and reset tests |
 | M1.2 Implement the fixed Barr reference graph | Complete | Stable serialized graph; public-primitive DSP; mono input sum; distinct finite stereo impulse output |
 | M1.3 Add offline rendering and golden tests | Complete | Headless PCM16 WAV CLI; JSON analysis; silence/impulse/noise goldens; reset/reload diagnostics |
+| M1.4 Add reference measurements | Complete | Automated onset/length/peak/stereo/Schroeder/RT60 metrics; synthetic estimator tests; versioned artifact |
 
 ## M0.2 verification
 
@@ -109,4 +110,13 @@ Results:
 - Analysis JSON records engine version, input, sample rate, frame count, per-channel peak/onset, and stable PCM16 FNV-1a hashes.
 - Shared Debug verification passes 17/17 tests, including a CLI output smoke test.
 - Fixtures are locally synthesized, documented, approximately 141 KiB total, and contain no third-party audio or ROM-derived data.
+- UI unchanged; no screenshot or video required.
+
+## M1.4 verification
+
+- Automated metrics cover thresholded onset and impulse length, per-channel peak, stereo-difference RMS, decimated Schroeder energy decay, and T30-style RT60 extrapolation.
+- A synthetic 0.75-second exponential response is recovered within one percent.
+- RT60 returns null for silence, insufficient decay range, and excessive tail noise.
+- The two-second 48 kHz Barr reference measurement is stored as a versioned JSON artifact and checked against a fresh render.
+- Documentation labels direct observations, threshold-dependent values, derived curves, and estimated RT60 separately.
 - UI unchanged; no screenshot or video required.

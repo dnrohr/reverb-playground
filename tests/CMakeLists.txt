@@ -3,6 +3,7 @@ add_executable(reverb_tests
     DspGainTests.cpp
     DspPrimitivesTests.cpp
     OfflineRendererTests.cpp
+    ResponseMeasurementsTests.cpp
     NumericalSafetyGuardTests.cpp
     GraphDocumentTests.cpp)
 
@@ -28,4 +29,5 @@ add_test(
         --sample-rate 48000
         --duration-ms 50
         --output ${CMAKE_CURRENT_BINARY_DIR}/cli-smoke.wav
-        --analysis ${CMAKE_CURRENT_BINARY_DIR}/cli-smoke.json)
+        --analysis ${CMAKE_CURRENT_BINARY_DIR}/cli-smoke.json
+        --measurements ${CMAKE_CURRENT_BINARY_DIR}/cli-smoke-measurements.json)

@@ -35,6 +35,8 @@ The optional `--analysis` file, or standard output when it is omitted, contains:
 - first nonzero frame per channel (equal to frame count for silence);
 - an unsigned decimal FNV-1a hash of each channel after PCM16 quantization.
 
+`--measurements <path>` additionally writes the versioned impulse-response metrics described in [Response measurements](response-measurements.md).
+
 The WAV writer emits canonical little-endian stereo PCM16 with no metadata or timestamps, so a fixed patch, input, sample rate, duration, and engine version are byte-stable on the primary Windows/MSVC toolchain.
 
 ## Golden policy and tolerances

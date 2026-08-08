@@ -21,6 +21,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [DSP primitives](dsp-primitives.md) - equations, units, preparation/processing lifetime, and deterministic test tolerances.
 - [Barr reference implementation](barr-reference-implementation.md) - fixed stereo/mono channel plan, public-primitive topology, and explicit departures from original hardware.
 - [Offline rendering](offline-rendering.md) - headless WAV command, analysis JSON, deterministic inputs, tolerances, and golden-fixture policy.
+- [Response measurements](response-measurements.md) - onset, length, peaks, stereo difference, Schroeder decay, RT60 estimation, and refusal rules.
 
 ## Local source tree
 

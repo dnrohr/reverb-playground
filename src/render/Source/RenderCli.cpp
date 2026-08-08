@@ -1,6 +1,7 @@
 #include <reverb/graph/BarrReferenceGraph.h>
 #include <reverb/graph/PatchJson.h>
 #include <reverb/render/OfflineRenderer.h>
+#include <reverb/render/ResponseMeasurements.h>
 #include <reverb/render/WavWriter.h>
 
 #include <cmath>
@@ -16,6 +17,7 @@ struct Options final {
     std::string outputPath;
     std::string analysisPath;
     std::string exportPatchPath;
+    std::string measurementsPath;
     reverb::render::InputKind input { reverb::render::InputKind::impulse };
     double sampleRate { 48'000.0 };
     double durationMilliseconds { 1'000.0 };
@@ -39,6 +41,8 @@ Options parseOptions(const int argc, char** argv)
             options.outputPath = requireValue(argc, argv, index);
         else if (argument == "--analysis")
             options.analysisPath = requireValue(argc, argv, index);
+        else if (argument == "--measurements")
+            options.measurementsPath = requireValue(argc, argv, index);
         else if (argument == "--input")
             options.input = reverb::render::parseInputKind(requireValue(argc, argv, index));
         else if (argument == "--sample-rate")
@@ -101,6 +105,13 @@ int main(const int argc, char** argv)
             std::cout << analysisJson;
         else
             writeFile(options.analysisPath, analysisJson);
+        if (!options.measurementsPath.empty()) {
+            auto measurements = reverb::render::measureResponse(
+                result.left, result.right, request.sampleRate);
+            measurements.engineVersion = request.patch.engineVersion;
+            measurements.patchId = "barr-reference";
+            writeFile(options.measurementsPath, reverb::render::writeMeasurementsJson(measurements));
+        }
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "render failed: " << error.what() << '\n';
