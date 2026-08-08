@@ -15,6 +15,7 @@ The project has a deterministic Barr-inspired DSP reference and an embedded sche
 - [Current progress](docs/progress.md)
 - [Schematic editor interactions](docs/schematic-editor-interactions.md)
 - [Continuous parameter editing](docs/continuous-parameter-editing.md)
+- [Saving and loading patches](docs/patch-saving-and-loading.md)
 - [Architecture decisions](docs/adr/README.md)
 - [Patch format v1](docs/patch-format.md)
 - [Keith Barr reverb architecture research](docs/keith-barr-reverb-architectures.md)

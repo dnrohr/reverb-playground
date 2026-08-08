@@ -17,6 +17,7 @@ Last updated: 2026-08-08
 | M2.1 Prototype the schematic editor shell | Complete | Embedded three-pane React Flow shell; documented navigation; scaling check; screenshot/video evidence |
 | M2.2 Bind visible nodes to the fixed runtime | Complete | Native runtime snapshot; single-source identities/values; live inspector; mismatch detection |
 | M2.3 Implement continuous parameter editing | Complete | Lock-free live parameters; smoothing/crossfade tests; exact undo/redo; screenshot/video evidence |
+| M2.4 Save and reload the reference patch | Complete | Schema-v1 files; atomic validation; exact layout/viewport restore; invalid-load diagnostics |
 
 ## M0.2 verification
 
@@ -169,3 +170,15 @@ Results:
 - Continuous editing design: [Continuous parameter editing](continuous-parameter-editing.md).
 - Inspector screenshot: [`artifacts/ui/m2-3-continuous-parameter-editing/continuous-parameter-inspector.png`](../artifacts/ui/m2-3-continuous-parameter-editing/continuous-parameter-inspector.png).
 - Intermediate live values and undo/redo video: [`artifacts/ui/m2-3-continuous-parameter-editing/continuous-parameter-editing.mp4`](../artifacts/ui/m2-3-continuous-parameter-editing/continuous-parameter-editing.mp4). The native next-block test provides deterministic audio-side evidence while the UI capture makes the continuous transaction visible.
+
+## M2.4 verification
+
+- Save Patch writes the fixed reference as deterministic schema-v1 JSON containing semantics, current parameters, node positions, and viewport pan/zoom.
+- Load Patch parses and validates the entire temporary document before replacing UI state or publishing any runtime parameter.
+- A successful interaction restored Tank 2 to `70` milliseconds, its moved node position, and a `72%` viewport from a file.
+- An unknown `futureField` produced an actionable schema-policy diagnostic while the restored `70` millisecond graph and `72%` viewport remained unchanged.
+- Web tests cover deterministic round trip, exact parameter/position/viewport values, malformed JSON, unsupported schema, out-of-range parameters, and future-field rejection.
+- Design and user behavior: [Saving and loading patches](patch-saving-and-loading.md).
+- Successful restore screenshot: [`artifacts/ui/m2-4-patch-persistence/successful-patch-load.png`](../artifacts/ui/m2-4-patch-persistence/successful-patch-load.png).
+- Atomic invalid-load screenshot: [`artifacts/ui/m2-4-patch-persistence/invalid-load-preserves-patch.png`](../artifacts/ui/m2-4-patch-persistence/invalid-load-preserves-patch.png).
+- Save/load/rejection video: [`artifacts/ui/m2-4-patch-persistence/save-load-invalid.mp4`](../artifacts/ui/m2-4-patch-persistence/save-load-invalid.mp4).

@@ -74,13 +74,17 @@ button { font: inherit; }
 .audio-line { border-top: 2px solid var(--cyan); }
 .control-line { border-top: 2px dashed var(--violet); }
 
-.canvas-pane { min-width: 0; min-height: 0; display: grid; grid-template-rows: 42px minmax(0, 1fr); background: #0b1013; }
+.canvas-pane { min-width: 0; min-height: 0; position: relative; display: grid; grid-template-rows: 42px minmax(0, 1fr); background: #0b1013; }
 .canvas-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; border-bottom: 1px solid #2b363e; background: #12181d; color: #cbd5da; font-size: 11px; }
 .canvas-toolbar strong { margin-right: 12px; color: var(--text); }
 .canvas-toolbar span { color: var(--muted); }
 .canvas-actions { display: flex; align-items: center; gap: 12px; font-family: ui-monospace, Consolas, monospace; }
 .canvas-actions button { padding: 5px 8px; border: 1px solid var(--line); border-radius: 4px; background: transparent; color: #c8d2d7; font-size: 9px; letter-spacing: .08em; }
 .canvas-actions button:hover, .canvas-actions button:focus-visible { border-color: var(--cyan); outline: none; }
+.file-input { display: none; }
+.file-status { position: absolute; z-index: 8; top: 48px; right: 12px; display: flex; align-items: center; gap: 12px; max-width: min(560px, calc(100% - 24px)); padding: 8px 10px; border: 1px solid var(--cyan); border-radius: 4px; background: rgba(18, 26, 31, .96); color: var(--cyan); font: 9px ui-monospace, Consolas, monospace; letter-spacing: .05em; }
+.file-status-error { border-color: var(--danger); color: #ff8c91; }
+.file-status button { border: 0; color: inherit; background: transparent; font-size: 16px; line-height: 1; }
 .flow-wrap { min-width: 0; min-height: 0; position: relative; }
 .react-flow { background: #0b1013; }
 .react-flow__pane:focus-visible { outline: 2px solid var(--cyan); outline-offset: -3px; }

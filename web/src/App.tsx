@@ -17,6 +17,7 @@ import {
 import { createFlowModel, parseRuntimeSnapshot, type PatchNodeData, type RuntimeSnapshot } from './graph';
 import { PatchNode } from './PatchNode';
 import { callNative } from './nativeBridge';
+import { parsePatchJson, writePatchJson } from './patchPersistence';
 import {
   commitParameterEdit as commitHistoryEdit,
   redoParameterEdit as takeRedo,
@@ -37,7 +38,7 @@ function formatValue(value: number, unit: string) {
 }
 
 function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
-  const { fitView } = useReactFlow();
+  const { fitView, setViewport: setFlowViewport } = useReactFlow();
   const initial = useMemo(() => createFlowModel(snapshot), [snapshot]);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<PatchNodeData>>(initial.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initial.edges);
@@ -47,6 +48,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [undoStack, setUndoStack] = useState<ParameterEdit[]>([]);
   const [redoStack, setRedoStack] = useState<ParameterEdit[]>([]);
   const activeEdit = useRef<ParameterEdit | null>(null);
+  const loadInput = useRef<HTMLInputElement | null>(null);
+  const [fileStatus, setFileStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
 
   const applyParameter = useCallback((nodeId: string, parameterId: string, value: number) => {
     const update = (node: Node<PatchNodeData>) => node.id !== nodeId ? node : {
@@ -133,6 +136,45 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     setRedoStack(result.redo);
   }, [redoStack, undoStack]);
 
+  const savePatch = useCallback(() => {
+    try {
+      const json = writePatchJson(nodes, edges, viewport);
+      parsePatchJson(json, snapshot);
+      const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'barr-reference.rvp.json';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+      setFileStatus({ kind: 'ok', message: 'SAVED BARR-REFERENCE.RVP.JSON / SCHEMA V1' });
+    } catch (reason) {
+      setFileStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Patch save failed' });
+    }
+  }, [edges, nodes, snapshot, viewport]);
+
+  const loadPatch = useCallback(async (file: File) => {
+    try {
+      const loaded = parsePatchJson(await file.text(), snapshot);
+      setNodes(loaded.nodes);
+      setEdges(loaded.edges);
+      setViewport(loaded.viewport);
+      await setFlowViewport(loaded.viewport);
+      for (const node of loaded.nodes) {
+        for (const parameter of node.data.parameters)
+          await callNative('setRuntimeParameter', node.id, parameter.id, parameter.value);
+      }
+      setSelectedNode(null);
+      setSelectedEdge(null);
+      setUndoStack([]);
+      setRedoStack([]);
+      setFileStatus({ kind: 'ok', message: `LOADED ${file.name.toUpperCase()} / SCHEMA V1` });
+    } catch (reason) {
+      setFileStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Patch load failed' });
+    }
+  }, [setEdges, setFlowViewport, setNodes, snapshot]);
+
   return (
     <main className="editor-shell">
       <header className="editor-header">
@@ -178,9 +220,29 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
             </div>
             <div className="canvas-actions">
               <span>{Math.round(viewport.zoom * 100)}%</span>
+              <button type="button" onClick={savePatch}>SAVE PATCH</button>
+              <button type="button" onClick={() => loadInput.current?.click()}>LOAD PATCH</button>
               <button type="button" onClick={resetReference}>RESET VIEW COPY</button>
+              <input
+                ref={loadInput}
+                className="file-input"
+                aria-label="Load patch file"
+                type="file"
+                accept=".json,application/json"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void loadPatch(file);
+                  event.target.value = '';
+                }}
+              />
             </div>
           </div>
+          {fileStatus ? (
+            <div className={`file-status file-status-${fileStatus.kind}`} role={fileStatus.kind === 'error' ? 'alert' : 'status'}>
+              <span>{fileStatus.message}</span>
+              <button type="button" aria-label="Dismiss file status" onClick={() => setFileStatus(null)}>×</button>
+            </div>
+          ) : null}
           <div className="flow-wrap">
             <ReactFlow
               nodes={nodes}
