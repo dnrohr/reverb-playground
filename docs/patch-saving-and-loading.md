@@ -9,7 +9,7 @@ M2.4 adds explicit **Save Patch** and **Load Patch** actions to the Barr referen
 - every node's schematic coordinates;
 - viewport pan and zoom.
 
-Runtime presentation metadata—labels, teaching roles, slider ranges/steps, and native descriptor identity—is not duplicated in the file. Loading merges validated values and layout into the current native-owned reference description.
+Runtime presentation metadata—labels, teaching roles, slider ranges/steps, and native descriptor identity—is not duplicated in the file. Loading reconstructs known reference nodes from the native descriptor and user-created nodes from the versioned module registry.
 
 ## Atomic load behavior
 
@@ -21,9 +21,9 @@ After a successful load, selection and undo/redo history are cleared because the
 
 Schema v1 is closed: unknown fields are rejected at every defined object boundary. An unknown top-level field therefore produces a diagnostic such as `document contains unknown field 'futureField' (schema v1 rejects future fields)`. Unsupported schema or engine versions are also rejected. Forward compatibility will use explicit, tested migrations rather than silently discarding data from a newer author.
 
-## Fixed-reference boundary
+## Editable-graph boundary
 
-M2.4 saves and restores the fixed Barr reference, not arbitrary construction. The loader requires the complete known node, port, parameter, and connection identities. If a user deletes part of the temporary UI copy, Save Patch reports that mismatch instead of creating a file the current runtime cannot reproduce. General graph persistence enters with the M3 runtime.
+M3.1 extends schema-v1 persistence to supported created and deleted nodes while requiring exactly one stereo input and output. Ports, parameter units/ranges, endpoints, IDs, layout, and viewport are validated before replacement. User-created topology remains a saved draft until graph compilation is implemented; only known Barr-reference identities publish parameter values to the current DSP runtime.
 
 ## Verification
 

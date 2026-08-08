@@ -19,6 +19,7 @@ Last updated: 2026-08-08
 | M2.3 Implement continuous parameter editing | Complete | Lock-free live parameters; smoothing/crossfade tests; exact undo/redo; screenshot/video evidence |
 | M2.4 Save and reload the reference patch | Complete | Schema-v1 files; atomic validation; exact layout/viewport restore; invalid-load diagnostics |
 | M2.5 Add contextual teaching affordances | Complete | Dismissible learn cards; evidence/implementation labels; offline research reader; milestone demo |
+| M3.1 Implement editable node creation and deletion | Complete | Seven schema-backed primitives; stable IDs; atomic delete/undo; required I/O; supported-node round trip; screenshot/video |
 
 ## M0.2 verification
 
@@ -197,3 +198,12 @@ Results:
 - Offline research screenshot: [`artifacts/ui/m2-5-contextual-teaching/offline-research-reader.png`](../artifacts/ui/m2-5-contextual-teaching/offline-research-reader.png).
 - Context switching/research video: [`artifacts/ui/m2-5-contextual-teaching/contextual-teaching.mp4`](../artifacts/ui/m2-5-contextual-teaching/contextual-teaching.mp4).
 - M2 exit demonstration covering audition controls, continuous editing/undo, save/load validation, and contextual teaching: [`artifacts/ui/m2-5-contextual-teaching/m2-first-vertical-slice.mp4`](../artifacts/ui/m2-5-contextual-teaching/m2-first-vertical-slice.mp4).
+
+## M3.1 verification
+
+- Clicking the library creates Gain / Invert, Sum (`+`), Delay, Allpass, and Low-pass beside the required Stereo Input/Output blocks; all seven definitions have stable readable IDs and range-safe defaults.
+- Duplicate required I/O and deletion of required I/O produce useful diagnostics. Schema-v1 loading independently requires exactly one of each.
+- Selected-node deletion removes incident edges in the same immutable graph transaction. Undo Structure restores the exact node/edge snapshot; redo reapplies it.
+- Supported created/deleted nodes, parameters, positions, cables, and viewport serialize and round-trip. Draft nodes do not publish values into the fixed native runtime.
+- Primitive screenshot: [`artifacts/ui/m3-1-editable-node-creation/all-primitives.jpg`](../artifacts/ui/m3-1-editable-node-creation/all-primitives.jpg).
+- Create/delete/undo video: [`artifacts/ui/m3-1-editable-node-creation/create-delete-undo.mp4`](../artifacts/ui/m3-1-editable-node-creation/create-delete-undo.mp4).

@@ -25,6 +25,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Audible reference harness](audible-reference-harness.md) - standalone/plugin audition controls, device behavior, live safety, and UI evidence.
 - [Schematic editor interactions](schematic-editor-interactions.md) - three-pane layout, pointer and keyboard controls, signal semantics, and scaling contract.
 - [Runtime graph binding](runtime-graph-binding.md) - native snapshot contract, identity validation, live inspector values, and processing boundaries.
+- [Editable node creation](editable-node-creation.md) - primitive defaults, stable IDs, required I/O, structural undo, and draft/runtime boundaries.
 
 ## Local source tree
 

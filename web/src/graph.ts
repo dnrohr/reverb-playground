@@ -2,7 +2,7 @@ import type { Edge, Node } from '@xyflow/react';
 
 export type SignalType = 'audio' | 'control';
 export type PortDirection = 'input' | 'output';
-export type NodeRole = 'io' | 'routing' | 'filter' | 'diffusion' | 'tank' | 'tap';
+export type NodeRole = 'io' | 'routing' | 'filter' | 'delay' | 'diffusion' | 'tank' | 'tap';
 
 export interface PatchPort {
   id: string;
@@ -25,6 +25,7 @@ export interface PatchNodeData extends Record<string, unknown> {
   ports: PatchPort[];
   parameters: PatchParameter[];
   role: NodeRole;
+  runtimeBound: boolean;
 }
 
 export interface RuntimeNode {
@@ -55,7 +56,7 @@ export interface RuntimeSnapshot {
   outsidePatch: { id: string; purpose: string }[];
 }
 
-const nodeRoles = new Set<NodeRole>(['io', 'routing', 'filter', 'diffusion', 'tank', 'tap']);
+const nodeRoles = new Set<NodeRole>(['io', 'routing', 'filter', 'delay', 'diffusion', 'tank', 'tap']);
 const nodeTypes = new Set(['stereo-input', 'stereo-output', 'sum', 'lowpass', 'allpass']);
 
 function requireCondition(condition: unknown, message: string): asserts condition {
@@ -119,6 +120,7 @@ export function createFlowModel(snapshot: RuntimeSnapshot): { nodes: Node<PatchN
         role: node.role,
         ports: node.ports.map((port) => ({ ...port })),
         parameters: node.parameters.map((parameter) => ({ ...parameter })),
+        runtimeBound: true,
       },
     })),
     edges: snapshot.connections.map((connection) => ({
@@ -132,6 +134,20 @@ export function createFlowModel(snapshot: RuntimeSnapshot): { nodes: Node<PatchN
       data: { signal: connection.signal },
     })),
   };
+}
+
+export interface GraphState { nodes: Node<PatchNodeData>[]; edges: Edge[] }
+
+export function cloneGraph(state: GraphState): GraphState {
+  return structuredClone(state);
+}
+
+export function requiredIoError(nodes: Node<PatchNodeData>[]): string | null {
+  const inputs = nodes.filter((node) => node.data.type === 'stereo-input').length;
+  const outputs = nodes.filter((node) => node.data.type === 'stereo-output').length;
+  if (inputs !== 1) return `Patch requires exactly one Stereo Input (found ${inputs}).`;
+  if (outputs !== 1) return `Patch requires exactly one Stereo Output (found ${outputs}).`;
+  return null;
 }
 
 export function deleteSelected(nodes: Node<PatchNodeData>[], edges: Edge[]): { nodes: Node<PatchNodeData>[]; edges: Edge[] } {

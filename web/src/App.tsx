@@ -14,7 +14,9 @@ import {
   type OnSelectionChangeParams,
   type Viewport,
 } from '@xyflow/react';
-import { createFlowModel, parseRuntimeSnapshot, type PatchNodeData, type RuntimeSnapshot } from './graph';
+import { createFlowModel, deleteSelected, parseRuntimeSnapshot, type PatchNodeData, type RuntimeSnapshot } from './graph';
+import { createModuleNode, moduleDefinitions, nextNodeId, type ModuleType } from './modules';
+import { commitGraphEdit, emptyGraphHistory, redoGraphEdit, undoGraphEdit } from './graphHistory';
 import { PatchNode } from './PatchNode';
 import { callNative } from './nativeBridge';
 import { parsePatchJson, writePatchJson } from './patchPersistence';
@@ -28,9 +30,8 @@ import {
 } from './parameterHistory';
 
 const modules = [
-  { group: 'I/O', items: ['Stereo Input', 'Stereo Output'] },
-  { group: 'SIGNAL', items: ['Gain / Invert', 'Sum', 'Delay', 'Allpass', 'Low-pass'] },
-  { group: 'MODULATION', items: ['LFO', 'Scale + Offset'] },
+  { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
+  { group: 'SIGNAL', items: moduleDefinitions.filter((item) => item.role !== 'io') },
 ];
 
 function formatValue(value: number, unit: string) {
@@ -55,7 +56,7 @@ function TeachingCard({ topic, onDismiss, onResearch }: {
 }
 
 function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
-  const { fitView, setViewport: setFlowViewport } = useReactFlow();
+  const { fitView, setViewport: setFlowViewport, screenToFlowPosition } = useReactFlow();
   const initial = useMemo(() => createFlowModel(snapshot), [snapshot]);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<PatchNodeData>>(initial.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initial.edges);
@@ -72,6 +73,33 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   });
   const [dismissedTeaching, setDismissedTeaching] = useState<string | null>(null);
   const [researchOpen, setResearchOpen] = useState(false);
+  const [graphHistory, setGraphHistory] = useState(emptyGraphHistory);
+  const [graphStatus, setGraphStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
+
+  const applyGraph = useCallback((state: { nodes: Node<PatchNodeData>[]; edges: Edge[] }) => {
+    setNodes(state.nodes); setEdges(state.edges); setSelectedNode(null); setSelectedEdge(null);
+  }, [setEdges, setNodes]);
+
+  const addModule = useCallback((type: ModuleType) => {
+    if ((type === 'stereo-input' || type === 'stereo-output') && nodes.some((node) => node.data.type === type)) {
+      setGraphStatus({ kind: 'error', message: `Exactly one ${type === 'stereo-input' ? 'Stereo Input' : 'Stereo Output'} is required and already exists.` }); return;
+    }
+    const before = { nodes, edges }; const draftCount = nodes.filter((item) => !item.data.runtimeBound).length;
+    const center = screenToFlowPosition({ x: window.innerWidth * .5, y: window.innerHeight * .5 });
+    const node = createModuleNode(type, nextNodeId(type, nodes), { x: center.x - 190 + (draftCount % 3) * 190, y: center.y - 100 + Math.floor(draftCount / 3) * 130 });
+    const after = { nodes: [...nodes.map((item) => ({ ...item, selected: false })), { ...node, selected: true }], edges };
+    applyGraph(after); setSelectedNode(node); setGraphHistory((history) => commitGraphEdit(history, `Create ${node.data.label}`, before, after)); setGraphStatus({ kind: 'ok', message: `CREATED ${node.id} / DRAFT GRAPH` });
+  }, [applyGraph, edges, nodes, screenToFlowPosition]);
+
+  const removeSelection = useCallback(() => {
+    const protectedNode = nodes.find((node) => node.selected && (node.data.type === 'stereo-input' || node.data.type === 'stereo-output'));
+    if (protectedNode) { setGraphStatus({ kind: 'error', message: `${protectedNode.data.label} is required and cannot be deleted.` }); return; }
+    const before = { nodes, edges }; const after = deleteSelected(nodes, edges); if (after.nodes.length === nodes.length && after.edges.length === edges.length) return;
+    applyGraph(after); setGraphHistory((history) => commitGraphEdit(history, 'Delete selection', before, after)); setGraphStatus({ kind: 'ok', message: 'DELETED SELECTION + INCIDENT CABLES / UNDO AVAILABLE' });
+  }, [applyGraph, edges, nodes]);
+
+  const undoGraph = useCallback(() => { const result = undoGraphEdit(graphHistory); if (!result.edit) return; applyGraph(result.edit.before); setGraphHistory(result.history); setGraphStatus({ kind: 'ok', message: `UNDID ${result.edit.label.toUpperCase()}` }); }, [applyGraph, graphHistory]);
+  const redoGraph = useCallback(() => { const result = redoGraphEdit(graphHistory); if (!result.edit) return; applyGraph(result.edit.after); setGraphHistory(result.history); setGraphStatus({ kind: 'ok', message: `REDID ${result.edit.label.toUpperCase()}` }); }, [applyGraph, graphHistory]);
 
   const applyParameter = useCallback((nodeId: string, parameterId: string, value: number) => {
     const update = (node: Node<PatchNodeData>) => node.id !== nodeId ? node : {
@@ -83,8 +111,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     };
     setNodes((current) => current.map(update));
     setSelectedNode((current) => current ? update(current) : null);
-    void callNative('setRuntimeParameter', nodeId, parameterId, value);
-  }, [setNodes]);
+    if (nodes.find((node) => node.id === nodeId)?.data.runtimeBound) void callNative('setRuntimeParameter', nodeId, parameterId, value);
+  }, [nodes, setNodes]);
 
   const undo = useCallback(() => {
     const result = takeUndo({ undo: undoStack, redo: redoStack });
@@ -112,6 +140,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     setSelectedEdge(null);
     setUndoStack([]);
     setRedoStack([]);
+    setGraphHistory(emptyGraphHistory());
     requestAnimationFrame(() => void fitView({ padding: 0.16, minZoom: 0.58, maxZoom: 1.1 }));
   }, [fitView, setEdges, setNodes, snapshot]);
 
@@ -132,12 +161,13 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         redo();
         return;
       }
+      if ((event.key === 'Delete' || event.key === 'Backspace') && !(event.target instanceof HTMLInputElement)) { event.preventDefault(); removeSelection(); return; }
       if (event.key.toLowerCase() === 'r' && !(event.target instanceof HTMLInputElement))
         resetReference();
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [redo, resetReference, undo]);
+  }, [redo, removeSelection, resetReference, undo]);
 
   const beginParameterEdit = useCallback((nodeId: string, parameterId: string, before: number) => {
     activeEdit.current = { nodeId, parameterId, before, after: before };
@@ -185,12 +215,13 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       await setFlowViewport(loaded.viewport);
       for (const node of loaded.nodes) {
         for (const parameter of node.data.parameters)
-          await callNative('setRuntimeParameter', node.id, parameter.id, parameter.value);
+          if (node.data.runtimeBound) await callNative('setRuntimeParameter', node.id, parameter.id, parameter.value);
       }
       setSelectedNode(null);
       setSelectedEdge(null);
       setUndoStack([]);
       setRedoStack([]);
+      setGraphHistory(emptyGraphHistory());
       setFileStatus({ kind: 'ok', message: `LOADED ${file.name.toUpperCase()} / SCHEMA V1` });
     } catch (reason) {
       setFileStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Patch load failed' });
@@ -224,16 +255,16 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         <aside className="module-library" aria-label="Module library">
           <div className="pane-heading">
             <span>MODULES</span>
-            <span className="pane-count">9</span>
+            <span className="pane-count">{moduleDefinitions.length}</span>
           </div>
-          <p className="pane-help">Curated reverb vocabulary. Construction unlocks in M3.</p>
+          <p className="pane-help">Click a primitive to place it near the canvas center. Audio cables are mono.</p>
           {modules.map((section) => (
             <section className="module-group" key={section.group}>
               <h2>{section.group}</h2>
               {section.items.map((item) => (
-                <button className={`module-item${section.group === 'MODULATION' ? ' module-control' : ''}`} key={item} type="button">
+                <button className="module-item" key={item.type} type="button" onClick={() => addModule(item.type)}>
                   <span className="module-glyph" aria-hidden="true" />
-                  <span>{item}</span>
+                  <span>{item.label}</span>
                 </button>
               ))}
             </section>
@@ -248,12 +279,15 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           <div className="canvas-toolbar">
             <div>
               <strong>REFERENCE.graph</strong>
-              <span>{snapshot.nodes.length} blocks / {snapshot.connections.length} cables</span>
+              <span>{nodes.length} blocks / {edges.length} cables</span>
             </div>
             <div className="canvas-actions">
               <span>{Math.round(viewport.zoom * 100)}%</span>
               <button type="button" onClick={savePatch}>SAVE PATCH</button>
               <button type="button" onClick={() => loadInput.current?.click()}>LOAD PATCH</button>
+              <button type="button" disabled={!graphHistory.undo.length} onClick={undoGraph}>UNDO STRUCTURE</button>
+              <button type="button" disabled={!graphHistory.redo.length} onClick={redoGraph}>REDO</button>
+              <button type="button" onClick={removeSelection}>DELETE</button>
               <button type="button" onClick={resetReference}>RESET VIEW COPY</button>
               <input
                 ref={loadInput}
@@ -275,6 +309,12 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <button type="button" aria-label="Dismiss file status" onClick={() => setFileStatus(null)}>×</button>
             </div>
           ) : null}
+          {graphStatus ? (
+            <div className={`file-status file-status-${graphStatus.kind}`} role={graphStatus.kind === 'error' ? 'alert' : 'status'}>
+              <span>{graphStatus.message}</span>
+              <button type="button" aria-label="Dismiss graph status" onClick={() => setGraphStatus(null)}>×</button>
+            </div>
+          ) : null}
           <div className="flow-wrap">
             <ReactFlow
               nodes={nodes}
@@ -288,7 +328,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               fitViewOptions={{ padding: 0.16, minZoom: 0.58, maxZoom: 1.1 }}
               minZoom={0.4}
               maxZoom={1.8}
-              deleteKeyCode={['Backspace', 'Delete']}
+              deleteKeyCode={null}
               selectionKeyCode="Shift"
               multiSelectionKeyCode="Shift"
               panActivationKeyCode="Space"
@@ -369,7 +409,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <button type="button" disabled={!undoStack.length} onClick={undo}>UNDO</button>
                 <button type="button" disabled={!redoStack.length} onClick={redo}>REDO</button>
               </div>
-              <div className="selection-note">Live value from native DSP runtime contract v{snapshot.contractVersion}.</div>
+              <div className="selection-note">{selectedNode.data.runtimeBound ? `Live value from native DSP runtime contract v${snapshot.contractVersion}.` : 'Draft graph block. Saved values are editable; audio compilation arrives in a later milestone.'}</div>
               {showTeaching ? <TeachingCard topic={teachingTopicFor(selectedNode.id)} onDismiss={() => setDismissedTeaching(teachingKey)} onResearch={() => setResearchOpen(true)} /> : null}
             </div>
           ) : selectedEdge ? (

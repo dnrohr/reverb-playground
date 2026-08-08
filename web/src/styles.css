@@ -63,7 +63,7 @@ button { font: inherit; }
 .pane-help { color: var(--muted); font-size: 11px; line-height: 1.45; margin: 12px 0 18px; }
 .module-group { margin-top: 18px; }
 .module-group h2 { margin: 0 0 7px 4px; color: #697983; font-size: 9px; letter-spacing: .16em; }
-.module-item { width: 100%; height: 34px; display: flex; align-items: center; gap: 10px; margin: 5px 0; padding: 0 10px; border: 1px solid transparent; border-radius: 6px; color: #d5dde1; background: #1a2228; text-align: left; font-size: 11px; cursor: default; }
+.module-item { width: 100%; height: 34px; display: flex; align-items: center; gap: 10px; margin: 5px 0; padding: 0 10px; border: 1px solid transparent; border-radius: 6px; color: #d5dde1; background: #1a2228; text-align: left; font-size: 11px; cursor: pointer; }
 .module-item:hover, .module-item:focus-visible { outline: none; border-color: #60707a; background: #202a31; }
 .module-glyph { width: 13px; height: 13px; border: 2px solid var(--cyan); border-radius: 50%; }
 .module-control .module-glyph { border-color: var(--violet); border-radius: 1px; transform: rotate(45deg); }
@@ -81,6 +81,7 @@ button { font: inherit; }
 .canvas-actions { display: flex; align-items: center; gap: 12px; font-family: ui-monospace, Consolas, monospace; }
 .canvas-actions button { padding: 5px 8px; border: 1px solid var(--line); border-radius: 4px; background: transparent; color: #c8d2d7; font-size: 9px; letter-spacing: .08em; }
 .canvas-actions button:hover, .canvas-actions button:focus-visible { border-color: var(--cyan); outline: none; }
+.canvas-actions button:disabled { color: #53616b; border-color: #29343b; }
 .file-input { display: none; }
 .file-status { position: absolute; z-index: 8; top: 48px; right: 12px; display: flex; align-items: center; gap: 12px; max-width: min(560px, calc(100% - 24px)); padding: 8px 10px; border: 1px solid var(--cyan); border-radius: 4px; background: rgba(18, 26, 31, .96); color: var(--cyan); font: 9px ui-monospace, Consolas, monospace; letter-spacing: .05em; }
 .file-status-error { border-color: var(--danger); color: #ff8c91; }
