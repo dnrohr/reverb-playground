@@ -27,6 +27,20 @@ try {
         throw 'Python 3 was not found. It is required for repository checks.'
     }
 
+    $pnpm = Get-Command pnpm -ErrorAction SilentlyContinue
+    if (-not $pnpm) {
+        throw 'pnpm 11.16.0 was not found. Install pnpm and add it to PATH.'
+    }
+
+    & $pnpm.Source --dir web install --frozen-lockfile
+    if ($LASTEXITCODE -ne 0) { throw 'Web dependency installation failed.' }
+    & $pnpm.Source --dir web typecheck
+    if ($LASTEXITCODE -ne 0) { throw 'Web type checking failed.' }
+    & $pnpm.Source --dir web test
+    if ($LASTEXITCODE -ne 0) { throw 'Web tests failed.' }
+    & $pnpm.Source --dir web build
+    if ($LASTEXITCODE -ne 0) { throw 'Web asset build failed.' }
+
     & $python.Source scripts/check_repository.py
     if ($LASTEXITCODE -ne 0) { throw 'Repository checks failed.' }
 

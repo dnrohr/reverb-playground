@@ -14,6 +14,7 @@ Last updated: 2026-08-08
 | M1.3 Add offline rendering and golden tests | Complete | Headless PCM16 WAV CLI; JSON analysis; silence/impulse/noise goldens; reset/reload diagnostics |
 | M1.4 Add reference measurements | Complete | Automated onset/length/peak/stereo/Schroeder/RT60 metrics; synthetic estimator tests; versioned artifact |
 | M1.5 Create the audible reference harness | Complete | Live wet processor; device/default status; impulse/gain/mute/safety controls; startup tests; screenshot/video |
+| M2.1 Prototype the schematic editor shell | Complete | Embedded three-pane React Flow shell; documented navigation; scaling check; screenshot/video evidence |
 
 ## M0.2 verification
 
@@ -131,3 +132,16 @@ Results:
 - The standalone built, launched, reported the default 48 kHz Windows device, opened/closed device settings, and remained responsive.
 - Current screenshot: [`artifacts/ui/m1-5-audible-reference-harness/audible-reference-harness.png`](../artifacts/ui/m1-5-audible-reference-harness/audible-reference-harness.png).
 - Interaction video: [`artifacts/ui/m1-5-audible-reference-harness/audible-reference-controls.mp4`](../artifacts/ui/m1-5-audible-reference-harness/audible-reference-controls.mp4).
+
+## M2.1 verification
+
+- The JUCE editor embeds pinned React, TypeScript, and React Flow assets from the binary; it has no localhost or network dependency at runtime.
+- The left library, central Barr reference graph, right inspector, and native audition strip remain visible at the default 1280 by 800 editor size.
+- Pointer/keyboard selection, deletion/reset, inspector updates, and wheel/control zoom were exercised in the browser prototype and embedded standalone.
+- Audio uses solid cables and circular ports; control uses dashed cables and diamond ports, with a textual legend.
+- The embedded standalone was visually checked at 125% Windows display scaling. The browser layout uses bounded responsive columns and fit/zoom controls for the documented 100%, 125%, and 150% range.
+- Web unit tests cover stable graph identity, UI-copy deletion isolation, and signal-semantic classes.
+- Default screenshot: [`artifacts/ui/m2-1-schematic-editor/default.png`](../artifacts/ui/m2-1-schematic-editor/default.png).
+- Selected-node screenshot: [`artifacts/ui/m2-1-schematic-editor/selected-node.png`](../artifacts/ui/m2-1-schematic-editor/selected-node.png).
+- Zoomed screenshot: [`artifacts/ui/m2-1-schematic-editor/zoomed.png`](../artifacts/ui/m2-1-schematic-editor/zoomed.png).
+- Pan/zoom/selection/inspector video: [`artifacts/ui/m2-1-schematic-editor/schematic-interactions.mp4`](../artifacts/ui/m2-1-schematic-editor/schematic-interactions.mp4).

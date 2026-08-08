@@ -1,6 +1,6 @@
 #pragma once
 
-#include <juce_gui_basics/juce_gui_basics.h>
+#include <juce_gui_extra/juce_gui_extra.h>
 
 #include <functional>
 
@@ -27,12 +27,9 @@ public:
 
 private:
     void timerCallback() override;
-    void drawSignalChain(juce::Graphics& graphics, juce::Rectangle<float> bounds);
+    static std::optional<juce::WebBrowserComponent::Resource> getWebResource(const juce::String& path);
 
     Callbacks callbacks_;
-    juce::Label eyebrow_;
-    juce::Label title_;
-    juce::Label subtitle_;
     juce::Label status_;
     juce::Label gainLabel_;
     juce::TextButton deviceButton_ { "AUDIO DEVICE..." };
@@ -40,6 +37,7 @@ private:
     juce::TextButton muteButton_ { "EMERGENCY MUTE" };
     juce::TextButton resetButton_ { "RESET SAFETY" };
     juce::Slider gain_;
+    std::unique_ptr<juce::WebBrowserComponent> browser_;
     int impulseFlashTicks_ {};
 };
 

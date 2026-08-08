@@ -17,6 +17,16 @@ include(FetchContent)
 option(REVERB_BUILD_APP "Build the standalone application and plugin" ON)
 option(REVERB_BUILD_TESTS "Build native tests" ${BUILD_TESTING})
 
+if(WIN32)
+    FetchContent_Declare(
+        MicrosoftWebView2
+        URL https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/1.0.4078.44
+        URL_HASH SHA256=dc4d1d9168df26b830398303e50210b6e1729f6ce5a7ac69d2c766852f489962
+        SOURCE_DIR ${FETCHCONTENT_BASE_DIR}/Microsoft.Web.WebView2.1.0.4078.44)
+    FetchContent_MakeAvailable(MicrosoftWebView2)
+    set(JUCE_WEBVIEW2_PACKAGE_LOCATION ${FETCHCONTENT_BASE_DIR})
+endif()
+
 FetchContent_Declare(
     JUCE
     GIT_REPOSITORY https://github.com/juce-framework/JUCE.git

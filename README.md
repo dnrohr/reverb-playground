@@ -6,13 +6,14 @@ The project begins with a visible reconstruction of the Keith Barr/Alesis MIDIVe
 
 ## Project status
 
-The project is in the foundation milestone. Production code has not been scaffolded yet.
+The project has a deterministic Barr-inspired DSP reference and an embedded schematic-editor prototype. Runtime binding between the visible graph and DSP begins in M2.2.
 
 ## Documentation
 
 - [Product specification](docs/visual-reverb-constructor-spec.md)
 - [Execution roadmap](docs/roadmap.md)
 - [Current progress](docs/progress.md)
+- [Schematic editor interactions](docs/schematic-editor-interactions.md)
 - [Architecture decisions](docs/adr/README.md)
 - [Patch format v1](docs/patch-format.md)
 - [Keith Barr reverb architecture research](docs/keith-barr-reverb-architectures.md)

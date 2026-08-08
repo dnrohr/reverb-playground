@@ -9,6 +9,8 @@
 /build/
 /out/
 /node_modules/
+**/node_modules/
+**/*.tsbuildinfo
 
 # Local editor and operating-system state
 .DS_Store

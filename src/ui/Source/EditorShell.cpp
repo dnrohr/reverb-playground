@@ -1,4 +1,5 @@
 #include <reverb/ui/EditorShell.h>
+#include <BinaryData.h>
 
 #include <array>
 
@@ -25,19 +26,13 @@ void styleLabel(juce::Label& label, const juce::Colour colour, const float heigh
 EditorShell::EditorShell(Callbacks callbacks)
     : callbacks_(std::move(callbacks))
 {
-    eyebrow_.setText("AUDIBLE REFERENCE  /  ENGINE 0.1", juce::dontSendNotification);
-    styleLabel(eyebrow_, cyan, 13.0F, juce::Font::bold);
-    title_.setText("Barr architecture, made audible.", juce::dontSendNotification);
-    styleLabel(title_, text, 32.0F, juce::Font::bold);
-    subtitle_.setText("Live stereo input enters a shared mono diffusion path, then opens into distinct wet outputs.", juce::dontSendNotification);
-    styleLabel(subtitle_, mutedText, 15.0F, juce::Font::plain);
     status_.setJustificationType(juce::Justification::centredLeft);
     styleLabel(status_, text, 13.0F, juce::Font::plain);
     gainLabel_.setText("MASTER AUDITION GAIN", juce::dontSendNotification);
     styleLabel(gainLabel_, mutedText, 12.0F, juce::Font::bold);
 
-    const std::array<juce::Component*, 10> components {
-        &eyebrow_, &title_, &subtitle_, &status_, &gainLabel_,
+    const std::array<juce::Component*, 7> components {
+        &status_, &gainLabel_,
         &deviceButton_, &impulseButton_, &muteButton_, &resetButton_, &gain_,
     };
     for (auto* component : components)
@@ -71,78 +66,77 @@ EditorShell::EditorShell(Callbacks callbacks)
     muteButton_.setColour(juce::TextButton::buttonOnColourId, danger);
     resetButton_.setColour(juce::TextButton::buttonColourId, amber.darker(0.55F));
     deviceButton_.setColour(juce::TextButton::buttonColourId, panel.brighter(0.08F));
+
+    auto options = juce::WebBrowserComponent::Options {}
+        .withBackend(juce::WebBrowserComponent::Options::Backend::webview2)
+        .withWinWebView2Options(juce::WebBrowserComponent::Options::WinWebView2 {}
+            .withUserDataFolder(juce::File::getSpecialLocation(juce::File::tempDirectory)
+                .getChildFile("reverb-playground-webview-m2-1-c")))
+        .withResourceProvider([](const auto& path) { return getWebResource(path); });
+    browser_ = std::make_unique<juce::WebBrowserComponent>(std::move(options));
+    addAndMakeVisible(*browser_);
+    browser_->goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
     startTimerHz(10);
 }
 
 void EditorShell::paint(juce::Graphics& graphics)
 {
     graphics.fillAll(background);
-    auto bounds = getLocalBounds().toFloat().reduced(32.0F);
-    bounds.removeFromTop(142.0F);
-    auto signalBounds = bounds.removeFromTop(180.0F);
+    auto controls = getLocalBounds().toFloat().removeFromTop(88.0F);
     graphics.setColour(panel);
-    graphics.fillRoundedRectangle(signalBounds, 14.0F);
+    graphics.fillRect(controls);
     graphics.setColour(border);
-    graphics.drawRoundedRectangle(signalBounds, 14.0F, 1.0F);
-    drawSignalChain(graphics, signalBounds.reduced(22.0F));
-
-    auto controls = bounds.reduced(0.0F, 18.0F);
-    graphics.setColour(panel);
-    graphics.fillRoundedRectangle(controls, 14.0F);
-    graphics.setColour(border);
-    graphics.drawRoundedRectangle(controls, 14.0F, 1.0F);
+    graphics.drawLine(0.0F, controls.getBottom() - 1.0F, controls.getRight(), controls.getBottom() - 1.0F);
 }
 
-void EditorShell::drawSignalChain(juce::Graphics& graphics, const juce::Rectangle<float> bounds)
+std::optional<juce::WebBrowserComponent::Resource> EditorShell::getWebResource(const juce::String& path)
 {
-    constexpr std::array labels { "STEREO IN", "MONO SUM", "LOW-PASS", "4x ALLPASS", "STEREO OUT" };
-    const auto gap = 18.0F;
-    const auto boxWidth = (bounds.getWidth() - gap * static_cast<float>(labels.size() - 1))
-        / static_cast<float>(labels.size());
-    auto x = bounds.getX();
-    for (std::size_t index = 0; index < labels.size(); ++index) {
-        const juce::Rectangle<float> box { x, bounds.getCentreY() - 31.0F, boxWidth, 62.0F };
-        if (index > 0) {
-            graphics.setColour(index == labels.size() - 1 ? amber : cyan.withAlpha(0.72F));
-            graphics.drawLine(x - gap, bounds.getCentreY(), x, bounds.getCentreY(), 2.0F);
-        }
-        graphics.setColour(index == 0 || index == labels.size() - 1 ? border.brighter(0.25F) : border);
-        graphics.fillRoundedRectangle(box, 8.0F);
-        graphics.setColour(text);
-        graphics.setFont(juce::Font(juce::FontOptions(12.0F, juce::Font::bold)));
-        graphics.drawText(labels[index], box, juce::Justification::centred);
-        x += boxWidth + gap;
-    }
+    const auto requested = path == "/" ? juce::String("index.html") : path.trimCharactersAtStart("/");
+    const char* data = nullptr;
+    int size = 0;
+    juce::String mime;
+    if (requested == "index.html") { data = BinaryData::index_html; size = BinaryData::index_htmlSize; mime = "text/html"; }
+    else if (requested == "editor.css") { data = BinaryData::editor_css; size = BinaryData::editor_cssSize; mime = "text/css"; }
+    else if (requested == "editor.js") { data = BinaryData::editor_js; size = BinaryData::editor_jsSize; mime = "text/javascript"; }
+    else return std::nullopt;
 
-    graphics.setColour(mutedText);
-    graphics.setFont(juce::Font(juce::FontOptions(11.0F)));
-    graphics.drawText(
-        "MONO CABLES  /  DELAYS IN MILLISECONDS  /  WET ONLY",
-        bounds.withTop(bounds.getBottom() - 22.0F),
-        juce::Justification::centred);
+    std::vector<std::byte> bytes(static_cast<std::size_t>(size));
+    std::memcpy(bytes.data(), data, static_cast<std::size_t>(size));
+    return juce::WebBrowserComponent::Resource { std::move(bytes), std::move(mime) };
 }
 
 void EditorShell::resized()
 {
-    auto bounds = getLocalBounds().reduced(32);
-    eyebrow_.setBounds(bounds.removeFromTop(22));
-    title_.setBounds(bounds.removeFromTop(46));
-    subtitle_.setBounds(bounds.removeFromTop(34));
-    status_.setBounds(bounds.removeFromTop(34));
-    bounds.removeFromTop(186);
-
-    auto controls = bounds.reduced(22, 24);
-    auto topRow = controls.removeFromTop(44);
-    deviceButton_.setBounds(topRow.removeFromLeft(180));
-    topRow.removeFromLeft(12);
-    impulseButton_.setBounds(topRow.removeFromLeft(180));
-    topRow.removeFromLeft(12);
-    muteButton_.setBounds(topRow.removeFromLeft(180));
-    topRow.removeFromLeft(12);
-    resetButton_.setBounds(topRow.removeFromLeft(150));
-    controls.removeFromTop(18);
-    gainLabel_.setBounds(controls.removeFromTop(20));
-    gain_.setBounds(controls.removeFromTop(40));
+    auto bounds = getLocalBounds();
+    auto controls = bounds.removeFromTop(88).reduced(14, 10);
+    auto topRow = controls.removeFromTop(31);
+    status_.setBounds(topRow.removeFromLeft(300));
+    deviceButton_.setBounds(topRow.removeFromLeft(145));
+    topRow.removeFromLeft(8);
+    impulseButton_.setBounds(topRow.removeFromLeft(145));
+    topRow.removeFromLeft(8);
+    muteButton_.setBounds(topRow.removeFromLeft(145));
+    topRow.removeFromLeft(8);
+    resetButton_.setBounds(topRow.removeFromLeft(125));
+    auto gainRow = controls.removeFromTop(34);
+    gainLabel_.setBounds(gainRow.removeFromLeft(190));
+    gain_.setBounds(gainRow.removeFromLeft(340));
+    if (browser_ != nullptr) {
+#if JUCE_WINDOWS
+        if (const auto* display = juce::Desktop::getInstance().getDisplays()
+                .getDisplayForPoint(localPointToGlobal(bounds.getCentre()).toFloat())) {
+            // WebView2 applies the monitor scale to its child HWND after JUCE has supplied
+            // logical bounds. Compensate once so the child is not clipped by its parent.
+            const auto scale = static_cast<float>(display->scale);
+            browser_->setBounds(bounds.withSizeKeepingCentre(
+                juce::roundToInt(static_cast<float>(bounds.getWidth()) / scale),
+                juce::roundToInt(static_cast<float>(bounds.getHeight()) / scale))
+                .withPosition(bounds.getPosition()));
+            return;
+        }
+#endif
+        browser_->setBounds(bounds);
+    }
 }
 
 void EditorShell::timerCallback()

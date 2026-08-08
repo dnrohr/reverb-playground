@@ -23,6 +23,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Offline rendering](offline-rendering.md) - headless WAV command, analysis JSON, deterministic inputs, tolerances, and golden-fixture policy.
 - [Response measurements](response-measurements.md) - onset, length, peaks, stereo difference, Schroeder decay, RT60 estimation, and refusal rules.
 - [Audible reference harness](audible-reference-harness.md) - standalone/plugin audition controls, device behavior, live safety, and UI evidence.
+- [Schematic editor interactions](schematic-editor-interactions.md) - three-pane layout, pointer and keyboard controls, signal semantics, and scaling contract.
 
 ## Local source tree
 

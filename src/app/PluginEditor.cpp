@@ -41,7 +41,7 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
     addAndMakeVisible(shell_);
     setResizable(true, true);
     setResizeLimits(640, 400, 1920, 1200);
-    setSize(960, 600);
+    setSize(1280, 800);
 }
 
 void ReverbPlaygroundEditor::resized()
