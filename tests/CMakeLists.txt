@@ -2,6 +2,7 @@ add_executable(reverb_tests
     BarrReferenceTests.cpp
     DspGainTests.cpp
     DspPrimitivesTests.cpp
+    OfflineRendererTests.cpp
     NumericalSafetyGuardTests.cpp
     GraphDocumentTests.cpp)
 
@@ -10,6 +11,7 @@ target_link_libraries(reverb_tests
         reverb_project_options
         reverb_dsp
         reverb_graph
+        reverb_render
         Catch2::Catch2WithMain)
 
 target_compile_definitions(reverb_tests
@@ -18,3 +20,12 @@ target_compile_definitions(reverb_tests
 
 include(Catch)
 catch_discover_tests(reverb_tests)
+
+add_test(
+    NAME "Offline renderer CLI writes WAV and analysis"
+    COMMAND reverb_render_cli
+        --input impulse
+        --sample-rate 48000
+        --duration-ms 50
+        --output ${CMAKE_CURRENT_BINARY_DIR}/cli-smoke.wav
+        --analysis ${CMAKE_CURRENT_BINARY_DIR}/cli-smoke.json)

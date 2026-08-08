@@ -11,6 +11,7 @@ Last updated: 2026-08-08
 | M0.5 Define real-time and safety contracts | Complete | Versioned contract; executable cycle validation; latched numerical guard; native tests |
 | M1.1 Implement core DSP primitives | Complete | Mono gain/invert, sum, delay, allpass, and low-pass; multi-rate timing, energy, polarity, and reset tests |
 | M1.2 Implement the fixed Barr reference graph | Complete | Stable serialized graph; public-primitive DSP; mono input sum; distinct finite stereo impulse output |
+| M1.3 Add offline rendering and golden tests | Complete | Headless PCM16 WAV CLI; JSON analysis; silence/impulse/noise goldens; reset/reload diagnostics |
 
 ## M0.2 verification
 
@@ -97,4 +98,15 @@ Results:
 - A two-second impulse render produces finite, nonzero, non-identical wet channels.
 - Reset followed by silent input produces deterministic stereo silence.
 - Floating-point arithmetic, representative delay choices, absent outer feedback, filtering, and sample-rate departures are documented explicitly.
+- UI unchanged; no screenshot or video required.
+
+## M1.3 verification
+
+- `reverb_render_cli` renders the canonical patch to stereo PCM16 WAV without creating a UI.
+- Silence, impulse, and fixed-seed bounded-noise renders compare every PCM16 channel/sample against compact committed goldens with a one-LSB portable tolerance.
+- Golden mismatches identify the first frame and channel plus expected, actual, and difference values.
+- Same-engine reset/rerender and serialized patch reload reproduce identical floating-point channels on the primary toolchain.
+- Analysis JSON records engine version, input, sample rate, frame count, per-channel peak/onset, and stable PCM16 FNV-1a hashes.
+- Shared Debug verification passes 17/17 tests, including a CLI output smoke test.
+- Fixtures are locally synthesized, documented, approximately 141 KiB total, and contain no third-party audio or ROM-derived data.
 - UI unchanged; no screenshot or video required.

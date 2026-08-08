@@ -49,6 +49,7 @@ The application/plugin currently passes stereo audio through unchanged and displ
 |---|---|
 | `src/dsp/` | Framework-light, real-time-safe DSP primitives |
 | `src/graph/` | Semantic graph model, validation, compilation, and serialization |
+| `src/render/` | Headless rendering, deterministic analysis, WAV output, and renderer CLI |
 | `src/ui/` | Editor components and schema/command presentation |
 | `src/app/` | JUCE standalone/plugin wrapper and integration boundaries |
 | `tests/` | Native deterministic tests and test-only fixtures |

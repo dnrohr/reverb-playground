@@ -42,6 +42,7 @@ endif()
 
 add_subdirectory(src/dsp)
 add_subdirectory(src/graph)
+add_subdirectory(src/render)
 add_subdirectory(src/ui)
 
 if(REVERB_BUILD_APP)
