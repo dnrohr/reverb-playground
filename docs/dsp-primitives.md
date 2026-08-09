@@ -14,6 +14,8 @@ The first engine vocabulary is deliberately small and mono. Stereo behavior is a
 
 `prepare` validates configuration and owns every allocation. It is a control-thread operation. `reset` and `process` are `noexcept`, bounded by the supplied span, and perform no allocation, locking, I/O, or topology work. Delay and allpass return silence if processed before preparation. Reset clears all delay/filter state and makes subsequent silent input deterministically silent.
 
+Delay also exposes split-phase `readSample` and `writeSample` operations for compiled feedback. Reading never advances state; writing stores the completed current input and advances exactly once. Block `process` uses the same pair internally, so feed-forward and feedback timing remain identical.
+
 Times presented or serialized by the product remain milliseconds. Integer delay conversion is deliberately defined here so offline and real-time renders agree at every sample rate. The editable allpass preallocates its declared maximum delay and crossfades integer read taps; fractional and continuously modulated delay interpolation is later M5 scope.
 
 ## Test tolerances

@@ -22,6 +22,7 @@ Last updated: 2026-08-08
 | M3.1 Implement editable node creation and deletion | Complete | Seven schema-backed primitives; stable IDs; atomic delete/undo; required I/O; supported-node round trip; screenshot/video |
 | M3.2 Implement typed connection editing | Complete | Mono branching; endpoint/type validation; replace/automatic Sum choices; structural undo; minimum-zoom hit target; video |
 | M3.3 Compile acyclic graphs | Complete | Deterministic topological schedule; prepared immutable topology; reachability warnings; direct DSP comparisons; last-valid publication |
+| M3.4 Compile feedback graphs | Complete | Deterministic SCC analysis; split-phase Delay execution; exact algebraic-loop paths; nested/multiple-loop tests; bounded compile fixture |
 
 ## M0.2 verification
 
@@ -227,4 +228,14 @@ Results:
 - Compilation prepares all graph signal buffers and primitive state off-thread; bounded `noexcept` processing does not resize storage and rejects oversized blocks with silence.
 - Constructed Gain/Sum and Delay graphs match direct calculations. The complete acyclic Barr primitive graph matches `BarrReference` sample-for-sample.
 - Failed validation/preparation does not exchange the active runtime pointer; a test confirms the last valid graph continues processing audio.
+- UI unchanged; no screenshot or video was required.
+
+## M3.4 verification
+
+- Full-graph SCCs identify deterministic feedback components; cutting current-sample dependencies into Delay nodes produces a deterministic executable schedule.
+- A one-sample Delay/Gain loop matches the direct `0, 0.5, 0.25, ...` recurrence and produces identical samples across host block partitions.
+- A zero-delay two-Gain loop fails with the exact `gain-a -> gain-b -> gain-a` path. Algebraic sub-loops remain invalid even when another path in the SCC contains Delay state.
+- Tests compile and render a nested two-loop component plus a separate independent feedback loop deterministically.
+- Failed feedback publication leaves the running loop state audible and continuous.
+- A 256-node graph with 64 feedback loops compiles below one second and uses less than 8 MiB of prepared routing/short-delay storage.
 - UI unchanged; no screenshot or video was required.

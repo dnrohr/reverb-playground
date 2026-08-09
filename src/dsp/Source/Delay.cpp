@@ -31,10 +31,21 @@ void Delay::process(const std::span<float> samples) noexcept
 
     for (auto& sample : samples) {
         const auto input = sample;
-        sample = buffer_[writeIndex_];
-        buffer_[writeIndex_] = input;
-        writeIndex_ = (writeIndex_ + 1) % buffer_.size();
+        sample = readSample();
+        writeSample(input);
     }
+}
+
+float Delay::readSample() const noexcept
+{
+    return buffer_.empty() ? 0.0F : buffer_[writeIndex_];
+}
+
+void Delay::writeSample(const float sample) noexcept
+{
+    if (buffer_.empty()) return;
+    buffer_[writeIndex_] = sample;
+    writeIndex_ = (writeIndex_ + 1) % buffer_.size();
 }
 
 std::size_t Delay::delaySamples() const noexcept
