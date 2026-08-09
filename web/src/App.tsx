@@ -28,6 +28,8 @@ import researchText from '../../docs/keith-barr-reverb-architectures.md?raw';
 import { teachingTopicFor, type TeachingTopic } from './teaching';
 import { parseImpulseCaptureResult, parseImpulseCaptureStatus, type ImpulseCaptureResult, type ImpulseCaptureStatus } from './impulseCapture';
 import { analyseResponse, decayPoints, frameWindow, rt60Explanation, waveformBuckets } from './responseAnalysis';
+import { decorateEnergy } from './energyDecoration';
+import { parseEnergyTelemetry, shouldRunEnergyTelemetry, smoothEnergy, type EnergyLevels } from './energyTelemetry';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -203,13 +205,62 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [activeLoopIndex, setActiveLoopIndex] = useState(0);
   const [responseCapture, setResponseCapture] = useState<ImpulseCaptureResult | null>(null);
   const receiveCapture = useCallback((capture: ImpulseCaptureResult) => setResponseCapture(capture), []);
+  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const [energyEnabled, setEnergyEnabled] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const [energyLevels, setEnergyLevels] = useState<EnergyLevels>({});
 
   const loopInspection = useMemo(() => selectedNode
     ? inspectFeedbackLoops(nodes, edges, { nodeId: selectedNode.id })
     : selectedEdge ? inspectFeedbackLoops(nodes, edges, { edgeId: selectedEdge.id }) : null,
   [edges, nodes, selectedEdge, selectedNode]);
   const normalizedLoopIndex = loopInspection?.loops.length ? activeLoopIndex % loopInspection.loops.length : 0;
-  const displayedGraph = useMemo(() => decorateFeedbackLoops(nodes, edges, loopInspection, normalizedLoopIndex), [edges, loopInspection, nodes, normalizedLoopIndex]);
+  const loopDecoratedGraph = useMemo(() => decorateFeedbackLoops(nodes, edges, loopInspection, normalizedLoopIndex), [edges, loopInspection, nodes, normalizedLoopIndex]);
+  const displayedGraph = useMemo(() => decorateEnergy(loopDecoratedGraph.nodes, loopDecoratedGraph.edges, energyLevels), [energyLevels, loopDecoratedGraph]);
+
+  useEffect(() => {
+    const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => { setReducedMotion(preference.matches); if (preference.matches) setEnergyEnabled(false); };
+    preference.addEventListener('change', update);
+    return () => preference.removeEventListener('change', update);
+  }, []);
+
+  useEffect(() => {
+    if (!shouldRunEnergyTelemetry(energyEnabled, reducedMotion)) {
+      setEnergyLevels({});
+      void callNative('setEnergyTelemetryEnabled', false).catch(() => undefined);
+      return;
+    }
+    let cancelled = false;
+    let polling = false;
+    let lastUpdate = performance.now();
+    let lastGeneration = -1;
+    let lastGenerationAt = lastUpdate;
+    void callNative('setEnergyTelemetryEnabled', true).catch(() => undefined);
+    const poll = async () => {
+      if (polling) return;
+      polling = true;
+      try {
+        let frame = parseEnergyTelemetry(await callNative('getEnergyTelemetry'));
+        const now = performance.now();
+        if (frame.generation !== lastGeneration) {
+          lastGeneration = frame.generation;
+          lastGenerationAt = now;
+        } else if (now - lastGenerationAt > 100) {
+          frame = { ...frame, nodes: frame.nodes.map((node) => ({ ...node, rms: 0 })) };
+        }
+        if (!cancelled) setEnergyLevels((previous) => smoothEnergy(previous, frame, now - lastUpdate));
+        lastUpdate = now;
+      } catch { /* development browser and dropped native frames retain the last coherent view */ }
+      finally { polling = false; }
+    };
+    void poll();
+    const timer = window.setInterval(() => void poll(), 33);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      void callNative('setEnergyTelemetryEnabled', false).catch(() => undefined);
+    };
+  }, [energyEnabled, reducedMotion]);
 
   const applyGraph = useCallback((state: { nodes: Node<PatchNodeData>[]; edges: Edge[] }) => {
     setNodes(state.nodes); setEdges(state.edges); setSelectedNode(null); setSelectedEdge(null);
@@ -403,9 +454,14 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           <div className="eyebrow">SCHEMATIC EDITOR / BARR REFERENCE</div>
           <h1>Patch architecture</h1>
         </div>
-        <div className="header-status" aria-label="Audition status">
-          <span className="status-dot" aria-hidden="true" />
-          <span>RUNTIME BOUND / {snapshot.sampleRate > 0 ? `${(snapshot.sampleRate / 1000).toFixed(1)} kHz` : 'awaiting audio'}</span>
+        <div className="header-runtime">
+          <button className="energy-toggle" type="button" aria-pressed={energyEnabled} disabled={reducedMotion} onClick={() => setEnergyEnabled((value) => !value)} title={reducedMotion ? 'Disabled by the operating-system reduced-motion preference' : 'Toggle measured node and cable energy'}>
+            ENERGY {reducedMotion ? 'REDUCED' : energyEnabled ? 'ON' : 'OFF'}
+          </button>
+          <div className="header-status" aria-label="Audition status">
+            <span className="status-dot" aria-hidden="true" />
+            <span>RUNTIME BOUND / {snapshot.sampleRate > 0 ? `${(snapshot.sampleRate / 1000).toFixed(1)} kHz` : 'awaiting audio'}</span>
+          </div>
         </div>
       </header>
 

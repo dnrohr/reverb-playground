@@ -96,6 +96,13 @@ EditorShell::EditorShell(Callbacks callbacks)
         .withNativeFunction("getImpulseCapture", [this](const auto&, auto complete) {
             complete(callbacks_.impulseCaptureJson());
         })
+        .withNativeFunction("setEnergyTelemetryEnabled", [this](const auto& arguments, auto complete) {
+            if (arguments.size() != 1) { complete(false); return; }
+            complete(callbacks_.setEnergyTelemetryEnabled(static_cast<bool>(arguments[0])));
+        })
+        .withNativeFunction("getEnergyTelemetry", [this](const auto&, auto complete) {
+            complete(callbacks_.energyTelemetryJson());
+        })
         .withResourceProvider([this](const auto& path) { return getWebResource(path); });
     browser_ = std::make_unique<juce::WebBrowserComponent>(std::move(options));
     addAndMakeVisible(*browser_);

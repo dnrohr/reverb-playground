@@ -2,6 +2,7 @@
 
 #include <reverb/dsp/BarrReference.h>
 #include <reverb/dsp/ImpulseCapture.h>
+#include <reverb/dsp/EnergyTelemetry.h>
 #include <reverb/dsp/NumericalSafetyGuard.h>
 
 #include <atomic>
@@ -27,6 +28,7 @@ public:
     void setEmergencyMuted(bool muted) noexcept;
     void requestSafetyReset() noexcept;
     void setRuntimeParameter(BarrParameterId id, double value) noexcept;
+    void setEnergyTelemetryEnabled(bool enabled) noexcept;
 
     [[nodiscard]] float masterGain() const noexcept;
     [[nodiscard]] bool isEmergencyMuted() const noexcept;
@@ -37,9 +39,11 @@ public:
     [[nodiscard]] std::uint64_t captureGeneration() const noexcept;
     [[nodiscard]] std::size_t capturedFrames() const noexcept;
     [[nodiscard]] ImpulseCaptureResult copyLatestCapture() const;
+    [[nodiscard]] EnergyTelemetrySnapshot energyTelemetrySnapshot() const noexcept;
 
 private:
     BarrReference reference_;
+    EnergyTelemetry energyTelemetry_;
     ImpulseCapture capture_;
     NumericalSafetyGuard leftGuard_;
     NumericalSafetyGuard rightGuard_;

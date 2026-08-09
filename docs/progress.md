@@ -28,6 +28,7 @@ Last updated: 2026-08-08
 | M4.1 Implement feedback-loop highlighting | Complete | Selected node/cable cycles; active/alternate styling; loop delay/elements; nested/shared fixtures; bounded maximum graph |
 | M4.2 Implement impulse audition and capture | Complete | Safe 0.1 impulse; visible length/threshold/input policy; pre-gain stereo capture; prepared lock-free publication; deterministic repeats; screenshot/video |
 | M4.3 Implement stereo impulse and decay view | Complete | Solid/dashed stereo lanes; Schroeder decay; bounded 1-256x zoom/pan; tested T30/refusal rules; short/Barr/bloom screenshots; video |
+| M4.4 Implement live energy glow | Complete | Ten fixed 30 Hz RMS lanes; atomic seqlock snapshot; tested disable/drop safety; segmented node meters; width/glow cables; reduced motion; video |
 
 ## M0.2 verification
 
@@ -299,3 +300,16 @@ Results:
 - Runtime Barr early/panned screenshots: [`03-barr-early-16x.png`](../artifacts/ui/m4-3-stereo-impulse-decay/03-barr-early-16x.png) and [`04-barr-panned-16x.png`](../artifacts/ui/m4-3-stereo-impulse-decay/04-barr-panned-16x.png).
 - Long/bloom full-tail and early screenshots: [`05-long-bloom-full-tail.jpg`](../artifacts/ui/m4-3-stereo-impulse-decay/05-long-bloom-full-tail.jpg) and [`06-long-bloom-early.jpg`](../artifacts/ui/m4-3-stereo-impulse-decay/06-long-bloom-early.jpg).
 - Measurement/navigation video: [`stereo-response-measurement-and-navigation.mp4`](../artifacts/ui/m4-3-stereo-impulse-decay/stereo-response-measurement-and-navigation.mp4).
+
+## M4.4 verification
+
+- Ten fixed prepared lanes measure runtime-bound stereo I/O, Sum, Low-pass, and six Allpass outputs. The audio thread peak-holds block RMS and publishes at 30 Hz through atomic values guarded by a sequence lock; it never allocates, locks, serializes, or waits.
+- Disabled telemetry performs one relaxed flag read per audio block, scans zero sample values, and publishes nothing. The UI simultaneously removes its polling timer and clears presentation decorations.
+- Native tests compare a polled runtime with one whose snapshots are dropped and require every rendered sample to remain identical. A bounded message-thread copy is the only state exposed to JSON serialization.
+- RMS maps logarithmically over -72 through 0 dBFS. Tested 42 millisecond attack, 260 millisecond release, and stale-generation decay produce responsive but stable activity.
+- Five-segment node meters and increasing cable width encode intensity without color alone. Energy styling preserves amber selected-loop styling.
+- The operating-system reduced-motion preference disables telemetry/animation and locks the explicit header toggle in **Energy Reduced** state.
+- Idle screenshot: [`artifacts/ui/m4-4-live-energy-glow/01-energy-idle.png`](../artifacts/ui/m4-4-live-energy-glow/01-energy-idle.png).
+- Entering, diffusing, and tail screenshots: [`02-impulse-entering.png`](../artifacts/ui/m4-4-live-energy-glow/02-impulse-entering.png), [`03-energy-diffusing.png`](../artifacts/ui/m4-4-live-energy-glow/03-energy-diffusing.png), and [`04-energy-tail.png`](../artifacts/ui/m4-4-live-energy-glow/04-energy-tail.png).
+- Disabled screenshot: [`05-energy-off.png`](../artifacts/ui/m4-4-live-energy-glow/05-energy-off.png).
+- Actual runtime impulse/video evidence: [`live-energy-impulse-recirculation.mp4`](../artifacts/ui/m4-4-live-energy-glow/live-energy-impulse-recirculation.mp4).

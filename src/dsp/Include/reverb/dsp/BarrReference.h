@@ -4,6 +4,7 @@
 #include <reverb/dsp/Gain.h>
 #include <reverb/dsp/OnePoleLowPass.h>
 #include <reverb/dsp/BarrReferenceRuntime.h>
+#include <reverb/dsp/EnergyTelemetry.h>
 
 #include <span>
 
@@ -21,7 +22,8 @@ public:
         std::span<float> outputLeft,
         std::span<float> outputRight,
         float impulse = 0.0F,
-        bool muteLiveInput = false) noexcept;
+        bool muteLiveInput = false,
+        EnergyTelemetry* telemetry = nullptr) noexcept;
 
 private:
     Gain inputGain_;

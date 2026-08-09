@@ -51,6 +51,9 @@ button { font: inherit; }
 
 .editor-header h1 { margin: 3px 0 0; font-size: 24px; line-height: 1; letter-spacing: -.02em; }
 .header-status { display: flex; align-items: center; gap: 9px; color: #b9c4cb; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; }
+.header-runtime { display: flex; align-items: center; gap: 12px; }
+.energy-toggle { padding: 6px 8px; border: 1px solid var(--cyan); border-radius: 3px; color: var(--cyan); background: rgba(69, 208, 204, .06); font: 8px ui-monospace, Consolas, monospace; letter-spacing: .08em; }
+.energy-toggle[aria-pressed="false"], .energy-toggle:disabled { border-color: #52616a; color: #829099; background: transparent; }
 .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 12px rgba(69, 208, 204, .7); }
 .status-divider { color: #53616b; }
 
@@ -157,6 +160,8 @@ button { font: inherit; }
 .patch-node h3 { margin: 2px 0; color: var(--text); font-size: 13px; line-height: 1.2; }
 .node-kicker { color: #8f9da6; font-size: 8px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
 .node-type { color: #98a6af; font: 8px ui-monospace, Consolas, monospace; }
+.energy-meter { display: flex; gap: 2px; height: 3px; margin-top: 7px; }
+.energy-meter i { flex: 1; border-radius: 1px; background: #34434b; transition: background 70ms linear, box-shadow 120ms linear; }
 .node-parameter { margin-top: 7px; padding-top: 6px; border-top: 1px solid #3b4851; color: var(--cyan); font: 10px ui-monospace, Consolas, monospace; }
 .role-io { border-left-color: var(--amber); }
 .role-diffusion, .role-tank, .role-tap { border-left-color: var(--cyan); }
@@ -173,6 +178,25 @@ button { font: inherit; }
 .react-flow__node.loop-related .patch-node { border-color: var(--violet); box-shadow: 0 0 18px rgba(171, 128, 255, .18); }
 .react-flow__edge.loop-active path { stroke: var(--amber); stroke-width: 4; filter: drop-shadow(0 0 4px rgba(242, 180, 78, .65)); }
 .react-flow__edge.loop-related path { stroke: var(--violet); stroke-width: 3; stroke-dasharray: 7 4; opacity: .82; }
+.react-flow__node[class*="energy-level-"] .patch-node { transition: border-color 45ms linear, box-shadow 110ms linear; }
+.react-flow__node.energy-level-1 .patch-node { box-shadow: 0 0 8px rgba(69, 208, 204, .12); }
+.react-flow__node.energy-level-2 .patch-node { box-shadow: 0 0 12px rgba(69, 208, 204, .2); }
+.react-flow__node.energy-level-3 .patch-node { box-shadow: 0 0 17px rgba(69, 208, 204, .3); }
+.react-flow__node.energy-level-4 .patch-node { border-color: #55d8d3; box-shadow: 0 0 23px rgba(69, 208, 204, .43); }
+.react-flow__node.energy-level-5 .patch-node { border-color: #e7ffff; box-shadow: 0 0 30px rgba(69, 208, 204, .62); }
+.react-flow__node.energy-level-1 .energy-meter i:nth-child(-n+1),
+.react-flow__node.energy-level-2 .energy-meter i:nth-child(-n+2),
+.react-flow__node.energy-level-3 .energy-meter i:nth-child(-n+3),
+.react-flow__node.energy-level-4 .energy-meter i:nth-child(-n+4),
+.react-flow__node.energy-level-5 .energy-meter i:nth-child(-n+5) { background: var(--cyan); box-shadow: 0 0 5px rgba(69, 208, 204, .6); }
+.react-flow__edge[class*="energy-level-"] path { transition: stroke-width 45ms linear, filter 110ms linear, opacity 110ms linear; }
+.react-flow__edge.energy-level-1 path { stroke-width: 2.7; filter: drop-shadow(0 0 1px rgba(69, 208, 204, .25)); }
+.react-flow__edge.energy-level-2 path { stroke-width: 3; filter: drop-shadow(0 0 2px rgba(69, 208, 204, .35)); }
+.react-flow__edge.energy-level-3 path { stroke-width: 3.4; filter: drop-shadow(0 0 3px rgba(69, 208, 204, .48)); }
+.react-flow__edge.energy-level-4 path { stroke-width: 3.8; filter: drop-shadow(0 0 4px rgba(69, 208, 204, .62)); }
+.react-flow__edge.energy-level-5 path { stroke: #e7ffff; stroke-width: 4.3; filter: drop-shadow(0 0 6px rgba(69, 208, 204, .82)); }
+.react-flow__node.loop-active.energy-level-1 .patch-node, .react-flow__node.loop-active.energy-level-2 .patch-node, .react-flow__node.loop-active.energy-level-3 .patch-node, .react-flow__node.loop-active.energy-level-4 .patch-node, .react-flow__node.loop-active.energy-level-5 .patch-node { border-color: var(--amber); outline: 2px solid rgba(242, 180, 78, .55); box-shadow: 0 0 18px rgba(242, 180, 78, .35), 0 0 30px rgba(69, 208, 204, .3); }
+.react-flow__edge.loop-active.energy-level-1 path, .react-flow__edge.loop-active.energy-level-2 path, .react-flow__edge.loop-active.energy-level-3 path, .react-flow__edge.loop-active.energy-level-4 path, .react-flow__edge.loop-active.energy-level-5 path { stroke: var(--amber); filter: drop-shadow(0 0 4px rgba(242, 180, 78, .65)); }
 
 .inspector .pane-heading { height: 42px; padding: 0 16px; border-bottom: 1px solid var(--line); }
 .inspector-state { color: #73828b; font-size: 8px; }

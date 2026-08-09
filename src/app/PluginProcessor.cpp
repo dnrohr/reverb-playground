@@ -184,6 +184,33 @@ juce::String ReverbPlaygroundProcessor::impulseCaptureJson() const
     return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
 }
 
+bool ReverbPlaygroundProcessor::setEnergyTelemetryEnabled(const bool enabled) noexcept
+{
+    harness_.setEnergyTelemetryEnabled(enabled);
+    return enabled;
+}
+
+juce::String ReverbPlaygroundProcessor::energyTelemetryJson() const
+{
+    const auto snapshot = harness_.energyTelemetrySnapshot();
+    auto nodes = nlohmann::ordered_json::array();
+    for (std::size_t index = 0; index < snapshot.rms.size(); ++index) {
+        const auto id = reverb::dsp::barrEnergyLaneNodeId(
+            static_cast<reverb::dsp::BarrEnergyLane>(index));
+        nodes.push_back({ { "nodeId", std::string(id) }, { "rms", snapshot.rms[index] } });
+    }
+    const nlohmann::ordered_json json {
+        { "formatVersion", 1 },
+        { "enabled", snapshot.enabled },
+        { "coherent", snapshot.coherent },
+        { "generation", snapshot.generation },
+        { "observedSampleValues", snapshot.observedSampleValues },
+        { "nodes", std::move(nodes) },
+    };
+    const auto text = json.dump();
+    return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
+}
+
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new ReverbPlaygroundProcessor();

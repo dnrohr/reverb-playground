@@ -10,6 +10,8 @@ The web editor's measurement strip exposes a separate controlled impulse capture
 
 A completed capture opens the response viewer above the schematic. Left/right waveforms use separate lanes and solid/dashed styles, with combined Schroeder decay below. Early, zoom, full-tail, wheel, and pan controls change only the analysis viewport; they never change the graph or captured samples.
 
+The **Energy On/Off** control enables measured activity on runtime-bound blocks and their outgoing cables. Five filled meter segments and increasing cable width carry intensity without relying on glow color alone. Energy is presentation-only, preserves loop-selection styling, and stops polling and native sample scans when disabled. The operating-system reduced-motion preference starts it disabled and locks the control in **Energy Reduced** state.
+
 The reference patch opens fitted to the available canvas. Blocks retain stable IDs and use a compact snake layout so the complete signal path is readable at the default 1280 by 800 editor size.
 
 ## Pointer and keyboard contract

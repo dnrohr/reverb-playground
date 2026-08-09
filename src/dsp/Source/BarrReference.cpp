@@ -76,11 +76,15 @@ void BarrReference::process(
     const std::span<float> outputLeft,
     const std::span<float> outputRight,
     const float impulse,
-    const bool muteLiveInput) noexcept
+    const bool muteLiveInput,
+    EnergyTelemetry* const telemetry) noexcept
 {
     const auto count = std::min({ inputLeft.size(), inputRight.size(), outputLeft.size(), outputRight.size() });
     const auto left = outputLeft.first(count);
     const auto right = outputRight.first(count);
+    const auto instrument = telemetry != nullptr && telemetry->beginBlock();
+    if (instrument)
+        telemetry->observeStereo(BarrEnergyLane::input, inputLeft.first(count), inputRight.first(count));
 
     if (muteLiveInput)
         std::ranges::fill(left, 0.0F);
@@ -89,15 +93,34 @@ void BarrReference::process(
     if (!left.empty())
         left.front() += impulse;
     inputGain_.process(left);
+    if (instrument)
+        telemetry->observeMono(BarrEnergyLane::sum, left);
     inputFilter_.process(left);
+    if (instrument)
+        telemetry->observeMono(BarrEnergyLane::inputFilter, left);
     diffuserOne_.process(left);
+    if (instrument)
+        telemetry->observeMono(BarrEnergyLane::diffuserOne, left);
     diffuserTwo_.process(left);
+    if (instrument)
+        telemetry->observeMono(BarrEnergyLane::diffuserTwo, left);
     tankOne_.process(left);
+    if (instrument)
+        telemetry->observeMono(BarrEnergyLane::tankOne, left);
     tankTwo_.process(left);
+    if (instrument)
+        telemetry->observeMono(BarrEnergyLane::tankTwo, left);
 
     std::ranges::copy(left, right.begin());
     leftTap_.process(left);
+    if (instrument)
+        telemetry->observeMono(BarrEnergyLane::leftTap, left);
     rightTap_.process(right);
+    if (instrument) {
+        telemetry->observeMono(BarrEnergyLane::rightTap, right);
+        telemetry->observeStereo(BarrEnergyLane::output, left, right);
+        telemetry->endBlock(count);
+    }
     std::fill(outputLeft.begin() + static_cast<std::ptrdiff_t>(count), outputLeft.end(), 0.0F);
     std::fill(outputRight.begin() + static_cast<std::ptrdiff_t>(count), outputRight.end(), 0.0F);
 }

@@ -4,6 +4,7 @@ add_executable(reverb_tests
     DelayMemoryPlanTests.cpp
     DspGainTests.cpp
     DspPrimitivesTests.cpp
+    EnergyTelemetryTests.cpp
     FeedbackRuntimeTests.cpp
     ImpulseCaptureTests.cpp
     LiveReferenceHarnessTests.cpp

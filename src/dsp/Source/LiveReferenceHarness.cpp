@@ -18,6 +18,7 @@ LiveReferenceHarness::LiveReferenceHarness()
 void LiveReferenceHarness::prepare(const double sampleRate)
 {
     reference_.prepare(sampleRate);
+    energyTelemetry_.prepare(sampleRate);
     capture_.prepare(sampleRate);
     leftGuard_.reset();
     rightGuard_.reset();
@@ -70,7 +71,8 @@ void LiveReferenceHarness::process(
         : impulsePending_.exchange(false, std::memory_order_acq_rel) ? 1.0F : 0.0F;
     reference_.process(
         inputLeft, inputRight, outputLeft, outputRight, impulse,
-        capture_.state() == ImpulseCaptureState::capturing && captureConfig.muteLiveInput);
+        capture_.state() == ImpulseCaptureState::capturing && captureConfig.muteLiveInput,
+        &energyTelemetry_);
     capture_.append(outputLeft, outputRight);
     if (emergencyMuted_.load(std::memory_order_acquire)) {
         std::ranges::fill(outputLeft, 0.0F);
@@ -125,6 +127,11 @@ void LiveReferenceHarness::setRuntimeParameter(const BarrParameterId id, const d
         std::memory_order_release);
 }
 
+void LiveReferenceHarness::setEnergyTelemetryEnabled(const bool enabled) noexcept
+{
+    energyTelemetry_.setEnabled(enabled);
+}
+
 float LiveReferenceHarness::masterGain() const noexcept { return masterGain_.load(std::memory_order_acquire); }
 bool LiveReferenceHarness::isEmergencyMuted() const noexcept { return emergencyMuted_.load(std::memory_order_acquire); }
 bool LiveReferenceHarness::isSafetyLatched() const noexcept { return safetyLatched_.load(std::memory_order_acquire); }
@@ -137,5 +144,9 @@ ImpulseCaptureState LiveReferenceHarness::captureState() const noexcept { return
 std::uint64_t LiveReferenceHarness::captureGeneration() const noexcept { return capture_.generation(); }
 std::size_t LiveReferenceHarness::capturedFrames() const noexcept { return capture_.capturedFrames(); }
 ImpulseCaptureResult LiveReferenceHarness::copyLatestCapture() const { return capture_.copyLatest(); }
+EnergyTelemetrySnapshot LiveReferenceHarness::energyTelemetrySnapshot() const noexcept
+{
+    return energyTelemetry_.snapshot();
+}
 
 } // namespace reverb::dsp

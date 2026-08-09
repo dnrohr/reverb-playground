@@ -34,6 +34,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Feedback-loop highlighting](feedback-loop-highlighting.md) - bounded directed-cycle analysis, active/alternate styling, and topology-derived loop facts.
 - [Impulse audition and capture](impulse-audition-and-capture.md) - safe stimulus, visible bounds, live-input isolation, lock-free capture publication, and deterministic repeats.
 - [Stereo impulse and decay view](stereo-impulse-and-decay-view.md) - accessible channel waveforms, Schroeder decay, bounded zoom/pan, T30 estimates, and refusal explanations.
+- [Live energy telemetry](live-energy-telemetry.md) - fixed, non-blocking RMS snapshots; smoothed node/cable activity; disable and reduced-motion behavior.
 
 ## Local source tree
 

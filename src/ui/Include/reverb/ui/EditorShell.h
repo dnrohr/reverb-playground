@@ -23,6 +23,8 @@ public:
         std::function<juce::String(double, double, bool)> startImpulseCapture;
         std::function<juce::String()> impulseCaptureStatusJson;
         std::function<juce::String()> impulseCaptureJson;
+        std::function<bool(bool)> setEnergyTelemetryEnabled;
+        std::function<juce::String()> energyTelemetryJson;
     };
 
     explicit EditorShell(Callbacks callbacks);

@@ -23,6 +23,7 @@ export function PatchNode({ data, selected }: NodeProps & { data: PatchNodeData 
       <div className="node-kicker">{data.role}</div>
       <h3>{data.label}</h3>
       <div className="node-type">{data.type}</div>
+      <div className="energy-meter" aria-hidden="true"><i /><i /><i /><i /><i /></div>
       {data.parameters.length > 0 && (
         <div className="node-parameter">
           {data.parameters[0].value.toLocaleString(undefined, { maximumFractionDigits: 2 })} {prettyUnit(data.parameters[0].unit)}

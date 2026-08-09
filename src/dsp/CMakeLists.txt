@@ -3,6 +3,7 @@ add_library(reverb_dsp STATIC
     Source/BarrReference.cpp
     Source/BarrReferenceRuntime.cpp
     Source/Delay.cpp
+    Source/EnergyTelemetry.cpp
     Source/Gain.cpp
     Source/ImpulseCapture.cpp
     Source/LiveReferenceHarness.cpp
