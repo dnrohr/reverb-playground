@@ -29,7 +29,7 @@ This rule is invariant to host block partitioning. A one-sample Delay in a gain-
 
 Feedback compilation and Delay allocation occur on the control thread. Processing uses the same atomic raw-pointer publication protocol as the acyclic runtime; an invalid edit does not replace or reset the active graph.
 
-The automated budget fixture uses 256 nodes, 64 independent feedback loops, and a 1,024-sample prepared block. Its contract is compilation below one second and prepared routing plus short-delay storage below 8 MiB on CI. M3.5 adds user-facing planning for worst-case long-delay memory.
+The automated compiler budget fixture uses 256 nodes, 64 independent feedback loops, and a 1,024-sample prepared block. Its contract is compilation below one second and prepared routing plus short-delay storage below 8 MiB on CI. The separate [delay-memory plan](delay-memory-planning.md) now reports exact requested/allocated totals and rejects graphs above the 64 MiB project budget before publication.
 
 Tests cover direct recurrence, block-partition invariance, exact algebraic-loop paths, nested and independent components, deterministic rendering, invalid-publication continuity, and the maximum-size budget fixture.
 

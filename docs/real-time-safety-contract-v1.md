@@ -18,7 +18,7 @@ The processing callback may perform only bounded computation over already-owned 
 - parse JSON, compile a graph, discover topology, or perform work whose bound depends on user interaction;
 - throw an exception.
 
-DSP state, scratch buffers, schedules, and parameter lanes are prepared off-thread to fixed capacities. The initial limits are 256 nodes, 512 connections, 64 delay lines, 10 seconds per delay at 192 kHz, 64 control updates per audio block, and the host's prepared maximum block size. A document outside those limits is rejected with a diagnostic; it is not partially compiled.
+DSP state, scratch buffers, schedules, and parameter lanes are prepared off-thread to fixed capacities. The initial limits are 256 nodes, 512 connections, 64 delay lines, 10 seconds per delay, 64 MiB of aggregate prepared delay memory, 192 kHz maximum sample rate, 64 control updates per audio block, and the host's prepared maximum block size. A document outside those limits is rejected with a diagnostic; it is not partially compiled. Compiled Delay and Allpass state is carved from one control-thread-prepared arena; the audio thread holds only fixed spans into it.
 
 ## Numerical safety
 

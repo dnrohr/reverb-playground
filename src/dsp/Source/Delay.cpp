@@ -12,7 +12,23 @@ void Delay::prepare(const double sampleRate, const double delayMilliseconds)
         throw std::invalid_argument("delay preparation requires positive sample rate and time");
 
     const auto samples = static_cast<std::size_t>(std::llround(sampleRate * delayMilliseconds / 1000.0));
-    buffer_.assign(std::max<std::size_t>(1, samples), 0.0F);
+    ownedBuffer_.assign(std::max<std::size_t>(1, samples), 0.0F);
+    buffer_ = ownedBuffer_;
+    writeIndex_ = 0;
+}
+
+void Delay::prepare(
+    const double sampleRate, const double delayMilliseconds, const std::span<float> preparedStorage)
+{
+    if (sampleRate <= 0.0 || delayMilliseconds <= 0.0)
+        throw std::invalid_argument("delay preparation requires positive sample rate and time");
+    const auto samples = std::max<std::size_t>(1,
+        static_cast<std::size_t>(std::llround(sampleRate * delayMilliseconds / 1000.0)));
+    if (preparedStorage.size() != samples)
+        throw std::invalid_argument("prepared delay storage does not match the requested time");
+    ownedBuffer_.clear();
+    buffer_ = preparedStorage;
+    std::ranges::fill(buffer_, 0.0F);
     writeIndex_ = 0;
 }
 

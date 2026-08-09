@@ -171,7 +171,8 @@ std::string loopMessage(const std::vector<std::string>& loop)
 
 struct PreparedAcyclicRuntime::Impl final {
     std::size_t maximumBlockSize {};
-    std::size_t delayStorageBytes {};
+    DelayMemoryPlan delayMemory;
+    std::vector<float> delayArena;
     bool feedbackMode {};
     std::size_t silenceBuffer {};
     std::size_t inputLeftBuffer {};
@@ -194,8 +195,9 @@ std::size_t PreparedAcyclicRuntime::maximumBlockSize() const noexcept { return i
 std::size_t PreparedAcyclicRuntime::preparedStorageBytes() const noexcept
 {
     return implementation_->buffers.size() * implementation_->maximumBlockSize * sizeof(float)
-        + implementation_->delayStorageBytes;
+        + implementation_->delayMemory.allocatedBytes;
 }
+const DelayMemoryPlan& PreparedAcyclicRuntime::delayMemoryPlan() const noexcept { return implementation_->delayMemory; }
 
 void PreparedAcyclicRuntime::process(
     const std::span<const float> inputLeft, const std::span<const float> inputRight,
@@ -293,6 +295,7 @@ AcyclicCompileResult compileAcyclicGraph(
     std::unordered_set<std::string> incidentNodes;
     std::size_t inputs = 0; std::size_t outputs = 0;
     std::size_t delayLines = 0;
+    std::unordered_map<std::string, std::pair<std::size_t, std::size_t>> delaySamplePlans;
     for (const auto& node : document.nodes) {
         nodes.emplace(node.id, &node); indegree[node.id] = 0; addNodeContractErrors(node, result.errors);
         for (const auto& value : node.parameters) if (!std::isfinite(value.value))
@@ -300,11 +303,32 @@ AcyclicCompileResult compileAcyclicGraph(
         inputs += node.type == "stereo-input"; outputs += node.type == "stereo-output";
         if (node.type == "delay" || node.type == "allpass") {
             ++delayLines;
-            if (const auto* delay = parameter(node, "delay"); delay != nullptr && delay->value > 10'000.0)
-                result.errors.push_back("node '" + node.id + "' exceeds the 10-second delay limit");
+            if (const auto* delay = parameter(node, "delay"); delay != nullptr) {
+                if (delay->value <= 0.0)
+                    result.errors.push_back("node '" + node.id + "' delay must be greater than zero milliseconds");
+                else if (delay->value > 10'000.0)
+                    result.errors.push_back("node '" + node.id + "' exceeds the 10-second delay limit");
+                else if (sampleRate > 0.0 && sampleRate <= 192'000.0 && std::isfinite(delay->value)) {
+                    const auto requested = std::max<std::size_t>(1,
+                        static_cast<std::size_t>(std::llround(sampleRate * delay->value / 1000.0)));
+                    const auto allocated = node.type == "allpass"
+                        ? std::max<std::size_t>(2, static_cast<std::size_t>(
+                            std::ceil(sampleRate * std::max(100.0, delay->value) / 1000.0)) + 1)
+                        : requested;
+                    delaySamplePlans[node.id] = { requested, allocated };
+                    result.delayMemory.requestedSamples += requested;
+                    result.delayMemory.allocatedSamples += allocated;
+                }
+            }
         }
     }
+    result.delayMemory.lineCount = delayLines;
+    result.delayMemory.requestedBytes = result.delayMemory.requestedSamples * sizeof(float);
+    result.delayMemory.allocatedBytes = result.delayMemory.allocatedSamples * sizeof(float);
     if (delayLines > 64) result.errors.push_back("patch exceeds the 64-delay-line runtime limit");
+    if (!result.delayMemory.withinBudget())
+        result.errors.push_back("patch requires " + std::to_string(result.delayMemory.allocatedBytes)
+            + " bytes of delay memory; project budget is " + std::to_string(result.delayMemory.budgetBytes) + " bytes");
     if (inputs != 1) result.errors.push_back("acyclic runtime requires exactly one stereo-input");
     if (outputs != 1) result.errors.push_back("acyclic runtime requires exactly one stereo-output");
     for (const auto& connection : document.connections) {
@@ -363,9 +387,12 @@ AcyclicCompileResult compileAcyclicGraph(
     try {
         auto implementation = std::make_unique<PreparedAcyclicRuntime::Impl>();
         implementation->maximumBlockSize = maximumBlockSize; implementation->schedule = result.schedule;
+        implementation->delayMemory = result.delayMemory;
+        implementation->delayArena.assign(result.delayMemory.allocatedSamples, 0.0F);
         implementation->feedbackMode = allowFeedback && !result.feedbackComponents.empty();
         implementation->buffers.emplace_back(maximumBlockSize, 0.0F); implementation->silenceBuffer = 0;
         std::unordered_map<std::string, std::size_t> outputBuffers;
+        std::size_t delayArenaOffset = 0;
         for (const auto& id : result.schedule) {
             for (const auto& port : nodes.at(id)->ports) if (port.direction == PortDirection::output) {
                 outputBuffers[portKey(id, port.id)] = implementation->buffers.size();
@@ -392,10 +419,17 @@ AcyclicCompileResult compileAcyclicGraph(
             if (operation.kind == OperationKind::gain) {
                 reverb::dsp::Gain processor; processor.prepare(sampleRate, static_cast<float>(parameter(node, "gain")->value), 0.0); operation.processor = std::move(processor);
             } else if (operation.kind == OperationKind::delay) {
-                reverb::dsp::Delay processor; processor.prepare(sampleRate, parameter(node, "delay")->value);
-                implementation->delayStorageBytes += processor.delaySamples() * sizeof(float); operation.processor = std::move(processor);
+                reverb::dsp::Delay processor;
+                const auto samples = delaySamplePlans.at(id).second;
+                processor.prepare(sampleRate, parameter(node, "delay")->value,
+                    std::span(implementation->delayArena).subspan(delayArenaOffset, samples));
+                delayArenaOffset += samples; operation.processor = std::move(processor);
             } else if (operation.kind == OperationKind::allpass) {
-                reverb::dsp::Allpass processor; const auto delay = parameter(node, "delay")->value; processor.prepare(sampleRate, delay, static_cast<float>(parameter(node, "coefficient")->value), std::max(100.0, delay)); operation.processor = std::move(processor);
+                reverb::dsp::Allpass processor; const auto delay = parameter(node, "delay")->value;
+                const auto samples = delaySamplePlans.at(id).second;
+                processor.prepare(sampleRate, delay, static_cast<float>(parameter(node, "coefficient")->value),
+                    std::max(100.0, delay), std::span(implementation->delayArena).subspan(delayArenaOffset, samples));
+                delayArenaOffset += samples; operation.processor = std::move(processor);
             } else if (operation.kind == OperationKind::lowpass) {
                 reverb::dsp::OnePoleLowPass processor; processor.prepare(sampleRate, parameter(node, "cutoff")->value); operation.processor = std::move(processor);
             } else if (operation.kind == OperationKind::sum) {
@@ -421,7 +455,7 @@ AcyclicPublishResult AcyclicRuntimeHost::compileAndPublish(
     const GraphDocument& document, const double sampleRate, const std::size_t maximumBlockSize)
 {
     auto result = compileAcyclicGraph(document, sampleRate, maximumBlockSize);
-    AcyclicPublishResult publication { result.schedule, result.warnings, result.errors };
+    AcyclicPublishResult publication { result.schedule, result.warnings, result.errors, result.delayMemory };
     if (!result.valid()) return publication;
     std::scoped_lock lock(publicationMutex_);
     auto next = std::move(result.runtime);
@@ -437,7 +471,7 @@ AcyclicPublishResult AcyclicRuntimeHost::compileFeedbackAndPublish(
     const GraphDocument& document, const double sampleRate, const std::size_t maximumBlockSize)
 {
     auto result = compileFeedbackGraph(document, sampleRate, maximumBlockSize);
-    AcyclicPublishResult publication { result.schedule, result.warnings, result.errors };
+    AcyclicPublishResult publication { result.schedule, result.warnings, result.errors, result.delayMemory };
     if (!result.valid()) return publication;
     std::scoped_lock lock(publicationMutex_);
     auto next = std::move(result.runtime);

@@ -15,6 +15,19 @@ namespace reverb::graph {
 
 struct AcyclicCompileResult;
 
+inline constexpr std::size_t delayMemoryBudgetBytes = 64U * 1024U * 1024U;
+
+struct DelayMemoryPlan final {
+    std::size_t lineCount {};
+    std::size_t requestedSamples {};
+    std::size_t allocatedSamples {};
+    std::size_t requestedBytes {};
+    std::size_t allocatedBytes {};
+    std::size_t budgetBytes { delayMemoryBudgetBytes };
+
+    [[nodiscard]] bool withinBudget() const noexcept { return allocatedBytes <= budgetBytes; }
+};
+
 class PreparedAcyclicRuntime final {
 public:
     ~PreparedAcyclicRuntime();
@@ -32,6 +45,7 @@ public:
     [[nodiscard]] const std::vector<std::string>& schedule() const noexcept;
     [[nodiscard]] std::size_t maximumBlockSize() const noexcept;
     [[nodiscard]] std::size_t preparedStorageBytes() const noexcept;
+    [[nodiscard]] const DelayMemoryPlan& delayMemoryPlan() const noexcept;
 
 private:
     struct Impl;
@@ -49,6 +63,7 @@ struct AcyclicCompileResult final {
     std::vector<std::vector<std::string>> feedbackComponents;
     std::vector<std::vector<std::string>> offendingLoops;
     std::uint64_t compileMicroseconds {};
+    DelayMemoryPlan delayMemory;
 
     [[nodiscard]] bool valid() const noexcept { return runtime != nullptr && errors.empty(); }
 };
@@ -57,6 +72,7 @@ struct AcyclicPublishResult final {
     std::vector<std::string> schedule;
     std::vector<std::string> warnings;
     std::vector<std::string> errors;
+    DelayMemoryPlan delayMemory;
     [[nodiscard]] bool valid() const noexcept { return errors.empty(); }
 };
 

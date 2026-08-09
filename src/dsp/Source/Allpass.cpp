@@ -20,7 +20,29 @@ void Allpass::prepare(
     sampleRate_ = sampleRate;
     const auto capacity = static_cast<std::size_t>(
         std::ceil(sampleRate * maximumDelayMilliseconds / 1000.0)) + 1;
-    buffer_.assign(std::max<std::size_t>(2, capacity), 0.0F);
+    ownedBuffer_.assign(std::max<std::size_t>(2, capacity), 0.0F);
+    buffer_ = ownedBuffer_;
+    prepare(sampleRate, delayMilliseconds, coefficient, maximumDelayMilliseconds, buffer_);
+}
+
+void Allpass::prepare(
+    const double sampleRate,
+    const double delayMilliseconds,
+    const float coefficient,
+    const double maximumDelayMilliseconds,
+    const std::span<float> preparedStorage)
+{
+    if (sampleRate <= 0.0 || delayMilliseconds <= 0.0)
+        throw std::invalid_argument("allpass preparation requires positive sample rate and time");
+    if (std::abs(coefficient) >= 1.0F)
+        throw std::invalid_argument("allpass coefficient magnitude must be below one");
+    const auto capacity = std::max<std::size_t>(2,
+        static_cast<std::size_t>(std::ceil(sampleRate * maximumDelayMilliseconds / 1000.0)) + 1);
+    if (preparedStorage.size() != capacity)
+        throw std::invalid_argument("prepared allpass storage does not match the declared maximum time");
+    if (preparedStorage.data() != buffer_.data()) ownedBuffer_.clear();
+    buffer_ = preparedStorage;
+    std::ranges::fill(buffer_, 0.0F);
     writeIndex_ = 0;
     delayMilliseconds_ = delayMilliseconds;
     delaySamples_ = std::clamp<std::size_t>(
@@ -68,6 +90,7 @@ void Allpass::process(const std::span<float> samples) noexcept
 }
 
 double Allpass::delayMilliseconds() const noexcept { return delayMilliseconds_; }
+std::size_t Allpass::storageSamples() const noexcept { return buffer_.size(); }
 
 void Allpass::setCoefficient(const float coefficient) noexcept
 {

@@ -239,3 +239,13 @@ Results:
 - Failed feedback publication leaves the running loop state audible and continuous.
 - A 256-node graph with 64 feedback loops compiles below one second and uses less than 8 MiB of prepared routing/short-delay storage.
 - UI unchanged; no screenshot or video was required.
+
+## M3.5 verification
+
+- Every compile result and publication result reports delay-line count, requested/allocated samples and bytes, and the 64 MiB project budget, including rejected plans.
+- Delay and Allpass nodes use non-owning slices of one exactly sized runtime-owned arena. Repeated processing keeps arena and prepared-storage accounting fixed and performs no storage operation.
+- Zero/negative delays fail, positive sub-sample values use the one-sample minimum, exactly 10 seconds succeeds, and values above 10 seconds fail before preparation.
+- Allpass plans distinguish logical delay from the at-least-100-millisecond allocation required for continuous read-tap editing.
+- A nine-by-ten-second graph fits and publishes at 44.1 kHz, recalculates above budget at 192 kHz, fails without allocating a new runtime, and leaves the preceding runtime active.
+- Design and inspection contract: [Delay-memory planning](delay-memory-planning.md).
+- UI unchanged; no screenshot or video was required.

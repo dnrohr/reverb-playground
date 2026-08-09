@@ -6,7 +6,7 @@ M3.3 introduces the first general native runtime for user-constructed patches. `
 
 The compiler uses Kahn topological sorting with node ID as the stable tie-breaker. Node and connection array order therefore cannot change the schedule for the same semantic graph. This entry point intentionally rejects every directed cycle, including delay-containing cycles; the companion [feedback compiler](feedback-graph-compilation.md) applies split-phase Delay semantics.
 
-Exactly one Stereo Input and Stereo Output are required. Node port/parameter contracts, connection endpoints and types, and one-cable-per-input occupancy are checked before preparation. Current safety limits are also enforced: 256 nodes, 512 connections, 64 delay-bearing primitives, 10 seconds per delay, and 192 kHz maximum sample rate.
+Exactly one Stereo Input and Stereo Output are required. Node port/parameter contracts, connection endpoints and types, and one-cable-per-input occupancy are checked before preparation. Current safety limits are also enforced: 256 nodes, 512 connections, 64 delay-bearing primitives, 10 seconds per delay, 192 kHz maximum sample rate, and the [64 MiB prepared delay-memory budget](delay-memory-planning.md).
 
 ## Disconnected and unreachable nodes
 
@@ -20,7 +20,7 @@ Warnings do not prevent publication. Errors do.
 
 ## Preparation, processing, and publication
 
-Compilation and DSP preparation run entirely on the caller/control thread. The prepared runtime owns fixed-capacity signal buffers sized to the host's maximum block, plus each primitive's state. `process` is `noexcept`, performs no topology discovery or container resizing, and returns silence for an oversized or inconsistent block.
+Compilation and DSP preparation run entirely on the caller/control thread. The prepared runtime owns fixed-capacity signal buffers sized to the host's maximum block, one planned arena for every Delay/Allpass buffer, and the remaining primitive state. `process` is `noexcept`, performs no topology discovery or container resizing, and returns silence for an oversized or inconsistent block.
 
 `AcyclicRuntimeHost` publishes a fully prepared pointer atomically. The audio callback marks its bounded processing interval with an atomic flag; publication may wait on the control thread before reclaiming the retired runtime. The audio thread never waits, locks, allocates, or destroys a runtime. A compilation error does not exchange the active pointer, so the last valid runtime remains audible.
 

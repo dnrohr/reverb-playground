@@ -12,7 +12,7 @@ The first engine vocabulary is deliberately small and mono. Stereo behavior is a
 
 ## Lifetime and real-time behavior
 
-`prepare` validates configuration and owns every allocation. It is a control-thread operation. `reset` and `process` are `noexcept`, bounded by the supplied span, and perform no allocation, locking, I/O, or topology work. Delay and allpass return silence if processed before preparation. Reset clears all delay/filter state and makes subsequent silent input deterministically silent.
+`prepare` validates configuration and owns every allocation. It is a control-thread operation. Standalone primitives may own their buffers; compiled Delay and Allpass nodes instead receive slices of the runtime's single [prepared delay arena](delay-memory-planning.md). `reset` and `process` are `noexcept`, bounded by the supplied span, and perform no allocation, locking, I/O, or topology work. Delay and allpass return silence if processed before preparation. Reset clears all delay/filter state and makes subsequent silent input deterministically silent.
 
 Delay also exposes split-phase `readSample` and `writeSample` operations for compiled feedback. Reading never advances state; writing stores the completed current input and advances exactly once. Block `process` uses the same pair internally, so feed-forward and feedback timing remain identical.
 
