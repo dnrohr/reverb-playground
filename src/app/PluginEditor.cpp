@@ -40,6 +40,11 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
           [&processor](const auto& node, const auto& parameter, const double value) {
               return processor.setRuntimeParameter(node, parameter, value);
           },
+          [&processor](const double length, const double threshold, const bool muteInput) {
+              return processor.startImpulseCapture(length, threshold, muteInput);
+          },
+          [&processor] { return processor.impulseCaptureStatusJson(); },
+          [&processor] { return processor.impulseCaptureJson(); },
       })
 {
     addAndMakeVisible(shell_);

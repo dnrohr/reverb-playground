@@ -8,6 +8,7 @@ class OnePoleLowPass final {
 public:
     void prepare(double sampleRate, double cutoffHertz);
     void reset() noexcept;
+    void settleParameters() noexcept;
     void process(std::span<float> samples) noexcept;
     void setCutoffHertz(double cutoffHertz) noexcept;
     [[nodiscard]] double cutoffHertz() const noexcept;

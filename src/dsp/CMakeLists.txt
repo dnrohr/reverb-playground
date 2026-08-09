@@ -4,6 +4,7 @@ add_library(reverb_dsp STATIC
     Source/BarrReferenceRuntime.cpp
     Source/Delay.cpp
     Source/Gain.cpp
+    Source/ImpulseCapture.cpp
     Source/LiveReferenceHarness.cpp
     Source/NumericalSafetyGuard.cpp
     Source/OnePoleLowPass.cpp

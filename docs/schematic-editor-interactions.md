@@ -6,6 +6,8 @@ M2.1 established the presentation and navigation contract for the Barr reference
 
 The module library is on the left, the patch canvas occupies the centre, and the contextual inspector is on the right. The native audition strip remains above the web editor in the plugin so an impulse, device selection, gain, mute, and safety reset stay reachable.
 
+The web editor's measurement strip exposes a separate controlled impulse capture. Maximum length and silence threshold are visible, live input can be suppressed for the measurement, and the result reports captured frames, elapsed milliseconds, and whether threshold or maximum length stopped it. Capture samples are intentionally taken before master audition gain.
+
 The reference patch opens fitted to the available canvas. Blocks retain stable IDs and use a compact snake layout so the complete signal path is readable at the default 1280 by 800 editor size.
 
 ## Pointer and keyboard contract

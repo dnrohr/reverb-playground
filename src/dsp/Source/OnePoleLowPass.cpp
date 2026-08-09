@@ -27,6 +27,12 @@ void OnePoleLowPass::reset() noexcept
     state_ = 0.0F;
 }
 
+void OnePoleLowPass::settleParameters() noexcept
+{
+    feedback_ = targetFeedback_;
+    feed_ = targetFeed_;
+}
+
 void OnePoleLowPass::process(const std::span<float> samples) noexcept
 {
     for (auto& sample : samples) {

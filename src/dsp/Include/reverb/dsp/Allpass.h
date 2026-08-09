@@ -12,6 +12,7 @@ public:
     void prepare(double sampleRate, double delayMilliseconds, float coefficient,
         double maximumDelayMilliseconds, std::span<float> preparedStorage);
     void reset() noexcept;
+    void settleParameters() noexcept;
     void process(std::span<float> samples) noexcept;
 
     [[nodiscard]] float coefficient() const noexcept;

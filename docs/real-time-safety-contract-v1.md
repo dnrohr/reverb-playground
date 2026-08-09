@@ -51,5 +51,6 @@ The fixed Barr runtime implements the first parameter path as 14 always-lock-fre
 - Numerical tests inject NaN and excessive finite level, observe the violation, verify immediate full-block silence, verify the mute latch, and verify explicit reset.
 - Each processing primitive documents and tests that preparation owns allocation while `process` is `noexcept` and allocation-free.
 - Stress tests added with the graph runtime exercise supported sample rates, maximum block size, silence, impulses, sustained full-scale input, and long feedback renders.
+- Impulse-response recording uses storage allocated during prepare. The audio callback only writes into a bounded slot and atomically publishes completion; copying and JSON serialization occur on the message thread.
 
 This document is the normative foundation contract. Implementation-specific thresholds may become patch-independent engine settings, but may not exceed a safe finite range or disable non-finite detection.

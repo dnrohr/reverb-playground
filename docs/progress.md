@@ -26,6 +26,7 @@ Last updated: 2026-08-08
 | M3.5 Plan and limit delay memory | Complete | Single prepared arena; exact requested/allocated inspection; 64 MiB budget; sample-rate republish safety; boundary tests |
 | M3.6 Complete graph undo/redo and clipboard behavior | Complete | Unified 100-entry/8 MiB history; semantic/document hashes; clean marker; fresh-ID subgraph paste; screenshot/video |
 | M4.1 Implement feedback-loop highlighting | Complete | Selected node/cable cycles; active/alternate styling; loop delay/elements; nested/shared fixtures; bounded maximum graph |
+| M4.2 Implement impulse audition and capture | Complete | Safe 0.1 impulse; visible length/threshold/input policy; pre-gain stereo capture; prepared lock-free publication; deterministic repeats; screenshot/video |
 
 ## M0.2 verification
 
@@ -274,3 +275,13 @@ Results:
 - Long-loop screenshot: [`artifacts/ui/m4-1-feedback-loop-highlighting/01-long-loop.png`](../artifacts/ui/m4-1-feedback-loop-highlighting/01-long-loop.png).
 - Short-loop screenshot: [`artifacts/ui/m4-1-feedback-loop-highlighting/02-short-loop.png`](../artifacts/ui/m4-1-feedback-loop-highlighting/02-short-loop.png).
 - Selection/cycling video: [`artifacts/ui/m4-1-feedback-loop-highlighting/loop-selection-and-cycling.mp4`](../artifacts/ui/m4-1-feedback-loop-highlighting/loop-selection-and-cycling.mp4).
+
+## M4.2 verification
+
+- The measurement strip exposes 500-10,000 millisecond maximum lengths, -60 through -120 dBFS stop thresholds, and an explicit live-input mute. Native callers are independently clamped to the documented safe finite bounds.
+- A fixed 0.1-peak stimulus enters the normalized-sum boundary. Raw stereo capture occurs before master audition gain, while audible output still passes through gain, emergency mute, and numerical guards.
+- Threshold completion requires an observed response followed by 100 milliseconds of continuous quiet; the maximum frame count is always a hard stop.
+- Three fixed stereo slots are allocated during prepare. The audio callback writes and atomically publishes only; message-thread copying and JSON serialization cannot block it.
+- Native tests repeat an unmodulated measurement with different live input and master gain and compare both channels sample-for-sample. Bridge tests reject non-finite or unequal channel payloads.
+- Completed-capture screenshot: [`artifacts/ui/m4-2-impulse-audition-capture/03-complete.jpg`](../artifacts/ui/m4-2-impulse-audition-capture/03-complete.jpg).
+- Ready/capturing/completed interaction evidence: [`artifacts/ui/m4-2-impulse-audition-capture/impulse-capture-interaction.mp4`](../artifacts/ui/m4-2-impulse-audition-capture/impulse-capture-interaction.mp4).

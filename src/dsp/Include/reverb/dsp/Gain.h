@@ -9,6 +9,7 @@ public:
     void prepare(double sampleRate, float initialValue, double smoothingMilliseconds = 20.0);
     void setLinear(float value) noexcept;
     void setTargetLinear(float value) noexcept;
+    void settleTarget() noexcept;
     [[nodiscard]] float getLinear() const noexcept;
     void process(std::span<float> samples) noexcept;
 

@@ -20,6 +20,9 @@ public:
         std::function<bool()> isSafetyLatched;
         std::function<juce::String()> runtimeSnapshotJson;
         std::function<double(const juce::String&, const juce::String&, double)> setRuntimeParameter;
+        std::function<juce::String(double, double, bool)> startImpulseCapture;
+        std::function<juce::String()> impulseCaptureStatusJson;
+        std::function<juce::String()> impulseCaptureJson;
     };
 
     explicit EditorShell(Callbacks callbacks);

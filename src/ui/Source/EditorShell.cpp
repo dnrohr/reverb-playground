@@ -83,6 +83,19 @@ EditorShell::EditorShell(Callbacks callbacks)
                 arguments[1].toString(),
                 static_cast<double>(arguments[2])));
         })
+        .withNativeFunction("startImpulseCapture", [this](const auto& arguments, auto complete) {
+            if (arguments.size() != 3) { complete(juce::var()); return; }
+            complete(callbacks_.startImpulseCapture(
+                static_cast<double>(arguments[0]),
+                static_cast<double>(arguments[1]),
+                static_cast<bool>(arguments[2])));
+        })
+        .withNativeFunction("getImpulseCaptureStatus", [this](const auto&, auto complete) {
+            complete(callbacks_.impulseCaptureStatusJson());
+        })
+        .withNativeFunction("getImpulseCapture", [this](const auto&, auto complete) {
+            complete(callbacks_.impulseCaptureJson());
+        })
         .withResourceProvider([this](const auto& path) { return getWebResource(path); });
     browser_ = std::make_unique<juce::WebBrowserComponent>(std::move(options));
     addAndMakeVisible(*browser_);

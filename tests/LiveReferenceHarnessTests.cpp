@@ -126,3 +126,63 @@ TEST_CASE("Runtime parameter edits publish lock-free and affect the next audio b
     REQUIRE(std::ranges::all_of(editedBlock.outputLeft, [](const float sample) { return std::isfinite(sample); }));
     REQUIRE(std::ranges::all_of(editedBlock.outputRight, [](const float sample) { return std::isfinite(sample); }));
 }
+
+TEST_CASE("Impulse capture is bounded, quiet, deterministic, and independent of audition gain")
+{
+    const reverb::dsp::ImpulseCaptureConfig config {
+        .maximumLengthMilliseconds = 250.0,
+        .stopThresholdDb = -120.0,
+        .muteLiveInput = true,
+        .impulseLevel = 0.1F,
+    };
+    reverb::dsp::LiveReferenceHarness first;
+    reverb::dsp::LiveReferenceHarness second;
+    first.prepare(48'000.0);
+    second.prepare(48'000.0);
+    first.setMasterGain(0.1F);
+    second.setMasterGain(1.0F);
+    REQUIRE(first.requestImpulseCapture(config).maximumLengthMilliseconds == 250.0);
+    REQUIRE(second.requestImpulseCapture(config).maximumLengthMilliseconds == 250.0);
+
+    StereoBlock firstBlock;
+    StereoBlock secondBlock;
+    std::ranges::fill(firstBlock.inputLeft, 1.0F);
+    std::ranges::fill(firstBlock.inputRight, -1.0F);
+    process(first, firstBlock);
+    process(second, secondBlock);
+
+    REQUIRE(first.captureState() == reverb::dsp::ImpulseCaptureState::complete);
+    REQUIRE(second.captureState() == reverb::dsp::ImpulseCaptureState::complete);
+    const auto firstCapture = first.copyLatestCapture();
+    const auto secondCapture = second.copyLatestCapture();
+    REQUIRE(firstCapture.left == secondCapture.left);
+    REQUIRE(firstCapture.right == secondCapture.right);
+    REQUIRE(firstCapture.left.size() <= 12'000);
+    REQUIRE(firstCapture.left.size() == firstCapture.right.size());
+    REQUIRE(std::ranges::any_of(firstCapture.left, [](const float sample) { return sample != 0.0F; }));
+    REQUIRE(firstBlock.outputLeft != firstCapture.left);
+
+    REQUIRE(first.requestImpulseCapture(config).maximumLengthMilliseconds == 250.0);
+    std::ranges::fill(firstBlock.inputLeft, -0.75F);
+    std::ranges::fill(firstBlock.inputRight, 0.25F);
+    process(first, firstBlock);
+    const auto repeatedCapture = first.copyLatestCapture();
+    REQUIRE(repeatedCapture.generation == firstCapture.generation + 1);
+    REQUIRE(repeatedCapture.left == firstCapture.left);
+    REQUIRE(repeatedCapture.right == firstCapture.right);
+}
+
+TEST_CASE("Impulse capture clamps visible controls to safe finite bounds")
+{
+    reverb::dsp::LiveReferenceHarness harness;
+    harness.prepare(48'000.0);
+    const auto bounded = harness.requestImpulseCapture({
+        .maximumLengthMilliseconds = 99'000.0,
+        .stopThresholdDb = 12.0,
+        .muteLiveInput = false,
+        .impulseLevel = 1.0F,
+    });
+    REQUIRE(bounded.maximumLengthMilliseconds == reverb::dsp::ImpulseCapture::maximumLengthMilliseconds);
+    REQUIRE(bounded.stopThresholdDb == reverb::dsp::ImpulseCapture::maximumStopThresholdDb);
+    REQUIRE(bounded.impulseLevel == reverb::dsp::ImpulseCapture::maximumImpulseLevel);
+}

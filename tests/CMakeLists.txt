@@ -5,6 +5,7 @@ add_executable(reverb_tests
     DspGainTests.cpp
     DspPrimitivesTests.cpp
     FeedbackRuntimeTests.cpp
+    ImpulseCaptureTests.cpp
     LiveReferenceHarnessTests.cpp
     OfflineRendererTests.cpp
     ResponseMeasurementsTests.cpp

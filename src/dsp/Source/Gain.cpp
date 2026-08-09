@@ -29,6 +29,13 @@ void Gain::setTargetLinear(const float value) noexcept
     step_ = (target_ - linear_) / static_cast<float>(remaining_);
 }
 
+void Gain::settleTarget() noexcept
+{
+    linear_ = target_;
+    remaining_ = 0;
+    step_ = 0.0F;
+}
+
 float Gain::getLinear() const noexcept
 {
     return linear_;

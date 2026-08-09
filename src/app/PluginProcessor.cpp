@@ -6,6 +6,7 @@
 #include <reverb/graph/RuntimeSnapshot.h>
 
 #include <array>
+#include <nlohmann/json.hpp>
 
 ReverbPlaygroundProcessor::ReverbPlaygroundProcessor()
     : AudioProcessor(BusesProperties()
@@ -122,6 +123,65 @@ double ReverbPlaygroundProcessor::setRuntimeParameter(
     }
     harness_.setRuntimeParameter(*id, value);
     return harness_.runtimeParameter(*id);
+}
+
+juce::String ReverbPlaygroundProcessor::startImpulseCapture(
+    const double lengthMilliseconds,
+    const double stopThresholdDb,
+    const bool muteLiveInput)
+{
+    const auto bounded = harness_.requestImpulseCapture({
+        .maximumLengthMilliseconds = lengthMilliseconds,
+        .stopThresholdDb = stopThresholdDb,
+        .muteLiveInput = muteLiveInput,
+        .impulseLevel = 0.1F,
+    });
+    captureLengthMilliseconds_.store(bounded.maximumLengthMilliseconds, std::memory_order_release);
+    captureStopThresholdDb_.store(bounded.stopThresholdDb, std::memory_order_release);
+    captureMutesLiveInput_.store(bounded.muteLiveInput, std::memory_order_release);
+    return impulseCaptureStatusJson();
+}
+
+juce::String ReverbPlaygroundProcessor::impulseCaptureStatusJson() const
+{
+    const auto state = harness_.captureState();
+    const auto stateName = state == reverb::dsp::ImpulseCaptureState::armed ? "armed"
+        : state == reverb::dsp::ImpulseCaptureState::capturing ? "capturing"
+        : state == reverb::dsp::ImpulseCaptureState::complete ? "complete" : "idle";
+    const auto sampleRate = activeSampleRate();
+    const auto frames = harness_.capturedFrames();
+    const nlohmann::ordered_json json {
+        { "state", stateName },
+        { "generation", harness_.captureGeneration() },
+        { "capturedFrames", frames },
+        { "capturedMilliseconds", sampleRate > 0.0 ? 1'000.0 * static_cast<double>(frames) / sampleRate : 0.0 },
+        { "maximumLengthMilliseconds", captureLengthMilliseconds_.load(std::memory_order_acquire) },
+        { "stopThresholdDb", captureStopThresholdDb_.load(std::memory_order_acquire) },
+        { "muteLiveInput", captureMutesLiveInput_.load(std::memory_order_acquire) },
+        { "impulseLevel", 0.1 },
+    };
+    const auto text = json.dump();
+    return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
+}
+
+juce::String ReverbPlaygroundProcessor::impulseCaptureJson() const
+{
+    const auto capture = harness_.copyLatestCapture();
+    const nlohmann::ordered_json json {
+        { "formatVersion", 1 },
+        { "generation", capture.generation },
+        { "sampleRate", capture.sampleRate },
+        { "frameCount", capture.left.size() },
+        { "maximumLengthMilliseconds", capture.config.maximumLengthMilliseconds },
+        { "stopThresholdDb", capture.config.stopThresholdDb },
+        { "muteLiveInput", capture.config.muteLiveInput },
+        { "impulseLevel", capture.config.impulseLevel },
+        { "stopReason", capture.stoppedAtThreshold ? "threshold" : "maximum-length" },
+        { "left", capture.left },
+        { "right", capture.right },
+    };
+    const auto text = json.dump();
+    return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

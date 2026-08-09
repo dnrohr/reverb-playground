@@ -32,6 +32,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Delay-memory planning](delay-memory-planning.md) - requested/allocated inspection, prepared arenas, project budget, boundaries, and safe sample-rate recalculation.
 - [Unified graph history and clipboard](unified-graph-history-and-clipboard.md) - mixed-operation undo/redo, bounded history, clean-state identity, and subgraph copy/paste.
 - [Feedback-loop highlighting](feedback-loop-highlighting.md) - bounded directed-cycle analysis, active/alternate styling, and topology-derived loop facts.
+- [Impulse audition and capture](impulse-audition-and-capture.md) - safe stimulus, visible bounds, live-input isolation, lock-free capture publication, and deterministic repeats.
 
 ## Local source tree
 

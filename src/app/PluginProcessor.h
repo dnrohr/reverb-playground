@@ -40,8 +40,14 @@ public:
     [[nodiscard]] bool isSafetyLatched() const noexcept;
     [[nodiscard]] double activeSampleRate() const noexcept;
     [[nodiscard]] juce::String runtimeSnapshotJson() const;
+    [[nodiscard]] juce::String impulseCaptureStatusJson() const;
+    [[nodiscard]] juce::String impulseCaptureJson() const;
+    juce::String startImpulseCapture(double lengthMilliseconds, double stopThresholdDb, bool muteLiveInput);
     double setRuntimeParameter(const juce::String& nodeId, const juce::String& parameterId, double value) noexcept;
 
 private:
     reverb::dsp::LiveReferenceHarness harness_;
+    std::atomic<double> captureLengthMilliseconds_ { 2'000.0 };
+    std::atomic<double> captureStopThresholdDb_ { -80.0 };
+    std::atomic<bool> captureMutesLiveInput_ { true };
 };

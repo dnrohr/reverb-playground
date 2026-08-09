@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reverb/dsp/BarrReference.h>
+#include <reverb/dsp/ImpulseCapture.h>
 #include <reverb/dsp/NumericalSafetyGuard.h>
 
 #include <atomic>
@@ -21,6 +22,7 @@ public:
         std::span<float> outputRight) noexcept;
 
     void triggerImpulse() noexcept;
+    ImpulseCaptureConfig requestImpulseCapture(ImpulseCaptureConfig config) noexcept;
     void setMasterGain(float linearGain) noexcept;
     void setEmergencyMuted(bool muted) noexcept;
     void requestSafetyReset() noexcept;
@@ -31,9 +33,14 @@ public:
     [[nodiscard]] bool isSafetyLatched() const noexcept;
     [[nodiscard]] double sampleRate() const noexcept;
     [[nodiscard]] double runtimeParameter(BarrParameterId id) const noexcept;
+    [[nodiscard]] ImpulseCaptureState captureState() const noexcept;
+    [[nodiscard]] std::uint64_t captureGeneration() const noexcept;
+    [[nodiscard]] std::size_t capturedFrames() const noexcept;
+    [[nodiscard]] ImpulseCaptureResult copyLatestCapture() const;
 
 private:
     BarrReference reference_;
+    ImpulseCapture capture_;
     NumericalSafetyGuard leftGuard_;
     NumericalSafetyGuard rightGuard_;
     std::atomic<float> masterGain_ { 0.5F };

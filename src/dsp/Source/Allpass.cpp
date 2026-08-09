@@ -62,6 +62,14 @@ void Allpass::reset() noexcept
     writeIndex_ = 0;
 }
 
+void Allpass::settleParameters() noexcept
+{
+    coefficient_ = targetCoefficient_;
+    delaySamples_ = targetDelaySamples_;
+    oldDelaySamples_ = targetDelaySamples_;
+    crossfadeRemaining_ = 0;
+}
+
 void Allpass::process(const std::span<float> samples) noexcept
 {
     if (buffer_.empty()) {

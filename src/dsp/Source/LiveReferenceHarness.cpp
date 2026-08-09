@@ -18,6 +18,7 @@ LiveReferenceHarness::LiveReferenceHarness()
 void LiveReferenceHarness::prepare(const double sampleRate)
 {
     reference_.prepare(sampleRate);
+    capture_.prepare(sampleRate);
     leftGuard_.reset();
     rightGuard_.reset();
     safetyLatched_.store(false, std::memory_order_release);
@@ -42,7 +43,6 @@ void LiveReferenceHarness::process(
         reset();
 
     if (sampleRate_.load(std::memory_order_acquire) <= 0.0
-        || emergencyMuted_.load(std::memory_order_acquire)
         || safetyLatched_.load(std::memory_order_acquire)) {
         std::ranges::fill(outputLeft, 0.0F);
         std::ranges::fill(outputRight, 0.0F);
@@ -55,8 +55,28 @@ void LiveReferenceHarness::process(
             parameterTargets_[index].load(std::memory_order_relaxed));
     }
 
-    const auto impulse = impulsePending_.exchange(false, std::memory_order_acq_rel) ? 1.0F : 0.0F;
-    reference_.process(inputLeft, inputRight, outputLeft, outputRight, impulse);
+    const auto captureStarted = capture_.beginIfRequested();
+    if (captureStarted)
+        reference_.resetForMeasurement();
+    if (emergencyMuted_.load(std::memory_order_acquire)
+        && capture_.state() != ImpulseCaptureState::capturing) {
+        std::ranges::fill(outputLeft, 0.0F);
+        std::ranges::fill(outputRight, 0.0F);
+        return;
+    }
+    const auto captureConfig = capture_.activeConfig();
+    const auto impulse = captureStarted
+        ? captureConfig.impulseLevel
+        : impulsePending_.exchange(false, std::memory_order_acq_rel) ? 1.0F : 0.0F;
+    reference_.process(
+        inputLeft, inputRight, outputLeft, outputRight, impulse,
+        capture_.state() == ImpulseCaptureState::capturing && captureConfig.muteLiveInput);
+    capture_.append(outputLeft, outputRight);
+    if (emergencyMuted_.load(std::memory_order_acquire)) {
+        std::ranges::fill(outputLeft, 0.0F);
+        std::ranges::fill(outputRight, 0.0F);
+        return;
+    }
     const auto gain = masterGain_.load(std::memory_order_relaxed);
     for (auto& sample : outputLeft)
         sample *= gain;
@@ -75,6 +95,11 @@ void LiveReferenceHarness::process(
 void LiveReferenceHarness::triggerImpulse() noexcept
 {
     impulsePending_.store(true, std::memory_order_release);
+}
+
+ImpulseCaptureConfig LiveReferenceHarness::requestImpulseCapture(ImpulseCaptureConfig config) noexcept
+{
+    return capture_.request(config);
 }
 
 void LiveReferenceHarness::setMasterGain(const float linearGain) noexcept
@@ -108,5 +133,9 @@ double LiveReferenceHarness::runtimeParameter(const BarrParameterId id) const no
 {
     return parameterTargets_[static_cast<std::size_t>(id)].load(std::memory_order_acquire);
 }
+ImpulseCaptureState LiveReferenceHarness::captureState() const noexcept { return capture_.state(); }
+std::uint64_t LiveReferenceHarness::captureGeneration() const noexcept { return capture_.generation(); }
+std::size_t LiveReferenceHarness::capturedFrames() const noexcept { return capture_.capturedFrames(); }
+ImpulseCaptureResult LiveReferenceHarness::copyLatestCapture() const { return capture_.copyLatest(); }
 
 } // namespace reverb::dsp
