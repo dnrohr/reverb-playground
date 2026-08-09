@@ -211,6 +211,64 @@ juce::String ReverbPlaygroundProcessor::energyTelemetryJson() const
     return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
 }
 
+juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
+{
+    const auto snapshot = harness_.runtimeDiagnosticsSnapshot();
+    const auto violationName = snapshot.lastViolation == reverb::dsp::SafetyViolation::nonFinite
+        ? "non-finite"
+        : snapshot.lastViolation == reverb::dsp::SafetyViolation::runawayLevel ? "runaway" : "none";
+    const auto channelName = snapshot.lastViolationChannel == reverb::dsp::SafetyChannel::left
+        ? "left"
+        : snapshot.lastViolationChannel == reverb::dsp::SafetyChannel::right ? "right" : "none";
+    nlohmann::ordered_json safetyEvent = nullptr;
+    if (snapshot.safetyEventCoherent && snapshot.lastViolation != reverb::dsp::SafetyViolation::none) {
+        safetyEvent = {
+            { "generation", snapshot.safetyEventGeneration },
+            { "kind", violationName },
+            { "channel", channelName },
+            { "sampleIndex", snapshot.lastViolationSampleIndex },
+            { "graphRevision", snapshot.lastViolationRevision },
+        };
+    }
+    const auto sampleRate = activeSampleRate();
+    const nlohmann::ordered_json json {
+        { "formatVersion", 1 },
+        { "activeGraphRevision", snapshot.activeRevision },
+        { "workloadEstimate", {
+            { "basis", "static-estimate" },
+            { "scalarOperationsPerSample", reverb::dsp::RuntimeDiagnostics::estimatedScalarOperationsPerSample },
+            { "scalarOperationsPerSecond", sampleRate > 0.0
+                ? reverb::dsp::RuntimeDiagnostics::estimatedScalarOperationsPerSample * sampleRate : 0.0 },
+        } },
+        { "liveCpu", {
+            { "basis", "measured" },
+            { "processedBlocks", snapshot.processedBlocks },
+            { "loadPercent", snapshot.liveLoadPercent },
+            { "peakLoadPercent", snapshot.peakLoadPercent },
+        } },
+        { "delayMemory", {
+            { "basis", "prepared-allocation" },
+            { "lineCount", snapshot.delayLineCount },
+            { "bytes", snapshot.delayMemoryBytes },
+        } },
+        { "clipping", {
+            { "basis", "measured" },
+            { "samples", snapshot.clippedSamples },
+            { "blocks", snapshot.clippedBlocks },
+        } },
+        { "mute", {
+            { "manual", isEmergencyMuted() },
+            { "safetyLatched", isSafetyLatched() },
+            { "active", isEmergencyMuted() || isSafetyLatched() },
+        } },
+        { "safetyEventCoherent", snapshot.safetyEventCoherent },
+        { "lastSafetyEvent", std::move(safetyEvent) },
+        { "recoveryCount", snapshot.recoveryCount },
+    };
+    const auto text = json.dump();
+    return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
+}
+
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new ReverbPlaygroundProcessor();

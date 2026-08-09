@@ -17,20 +17,29 @@ SafetyStatus NumericalSafetyGuard::inspectAndMute(const std::span<float> samples
         return {};
     }
 
+    SafetyStatus status;
     for (std::size_t index = 0; index < samples.size(); ++index) {
         const auto sample = samples[index];
+        const auto absolute = std::abs(sample);
+        if (std::isfinite(absolute)) {
+            status.peakAbsoluteSample = std::max(status.peakAbsoluteSample, absolute);
+            if (absolute > 1.0F)
+                ++status.clippedSamples;
+        }
         const auto violation = !std::isfinite(sample)
             ? SafetyViolation::nonFinite
-            : (std::abs(sample) > maximumAbsoluteSample_ ? SafetyViolation::runawayLevel : SafetyViolation::none);
+            : (absolute > maximumAbsoluteSample_ ? SafetyViolation::runawayLevel : SafetyViolation::none);
 
         if (violation != SafetyViolation::none) {
             muted_ = true;
             std::ranges::fill(samples, 0.0F);
-            return { violation, index };
+            status.violation = violation;
+            status.sampleIndex = index;
+            return status;
         }
     }
 
-    return {};
+    return status;
 }
 
 bool NumericalSafetyGuard::isMuted() const noexcept

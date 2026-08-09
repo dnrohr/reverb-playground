@@ -16,6 +16,8 @@ public:
     void reset() noexcept;
     void resetForMeasurement() noexcept;
     void setParameterTarget(BarrParameterId id, double value) noexcept;
+    [[nodiscard]] std::size_t delayStorageSamples() const noexcept;
+    [[nodiscard]] static constexpr std::size_t delayLineCount() noexcept { return 6; }
     void process(
         std::span<const float> inputLeft,
         std::span<const float> inputRight,

@@ -46,6 +46,13 @@ void BarrReference::setParameterTarget(const BarrParameterId id, const double va
     }
 }
 
+std::size_t BarrReference::delayStorageSamples() const noexcept
+{
+    return diffuserOne_.storageSamples() + diffuserTwo_.storageSamples()
+        + tankOne_.storageSamples() + tankTwo_.storageSamples()
+        + leftTap_.storageSamples() + rightTap_.storageSamples();
+}
+
 void BarrReference::reset() noexcept
 {
     inputFilter_.reset();

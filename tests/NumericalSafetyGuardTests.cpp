@@ -14,6 +14,7 @@ TEST_CASE("Numerical safety guard latches mute on non-finite output")
 
     REQUIRE(status.violation == reverb::dsp::SafetyViolation::nonFinite);
     REQUIRE(status.sampleIndex == 1);
+    REQUIRE(status.peakAbsoluteSample == 0.25F);
     REQUIRE(guard.isMuted());
     REQUIRE(samples == std::array { 0.0F, 0.0F, 0.0F });
 
@@ -27,7 +28,10 @@ TEST_CASE("Numerical safety guard latches mute on runaway output until reset")
 {
     reverb::dsp::NumericalSafetyGuard guard { 4.0F };
     std::array runaway { 0.5F, -4.25F };
-    REQUIRE(guard.inspectAndMute(runaway).violation == reverb::dsp::SafetyViolation::runawayLevel);
+    const auto status = guard.inspectAndMute(runaway);
+    REQUIRE(status.violation == reverb::dsp::SafetyViolation::runawayLevel);
+    REQUIRE(status.clippedSamples == 1);
+    REQUIRE(status.peakAbsoluteSample == 4.25F);
 
     std::array later { 0.25F, -0.25F };
     REQUIRE(guard.inspectAndMute(later).violation == reverb::dsp::SafetyViolation::none);

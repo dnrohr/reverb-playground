@@ -25,6 +25,7 @@ public:
         std::function<juce::String()> impulseCaptureJson;
         std::function<bool(bool)> setEnergyTelemetryEnabled;
         std::function<juce::String()> energyTelemetryJson;
+        std::function<juce::String()> runtimeDiagnosticsJson;
     };
 
     explicit EditorShell(Callbacks callbacks);

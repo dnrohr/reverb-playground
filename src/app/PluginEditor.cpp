@@ -47,6 +47,7 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
           [&processor] { return processor.impulseCaptureJson(); },
           [&processor](const bool enabled) { return processor.setEnergyTelemetryEnabled(enabled); },
           [&processor] { return processor.energyTelemetryJson(); },
+          [&processor] { return processor.runtimeDiagnosticsJson(); },
       })
 {
     addAndMakeVisible(shell_);

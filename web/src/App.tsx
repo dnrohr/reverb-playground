@@ -30,6 +30,7 @@ import { parseImpulseCaptureResult, parseImpulseCaptureStatus, type ImpulseCaptu
 import { analyseResponse, decayPoints, frameWindow, rt60Explanation, waveformBuckets } from './responseAnalysis';
 import { decorateEnergy } from './energyDecoration';
 import { parseEnergyTelemetry, shouldRunEnergyTelemetry, smoothEnergy, type EnergyLevels } from './energyTelemetry';
+import { formatBytes, parseRuntimeDiagnostics, type RuntimeDiagnostics } from './runtimeDiagnostics';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -180,6 +181,27 @@ function ResponseViewer({ capture, onClose }: { capture: ImpulseCaptureResult; o
   </section>;
 }
 
+function DiagnosticsPanel({ diagnostics, canUndo, onUndo, onRecover, onClose }: { diagnostics: RuntimeDiagnostics | null; canUndo: boolean; onUndo: () => void; onRecover: () => void; onClose: () => void }) {
+  return <aside className={`diagnostics-panel ${diagnostics?.mute.safetyLatched ? 'has-safety-latch' : ''}`} aria-label="Runtime resource and safety diagnostics">
+    <header><div><span>RUNTIME DIAGNOSTICS</span><h2>Resources and safety</h2></div><button type="button" onClick={onClose}>CLOSE ×</button></header>
+    {!diagnostics ? <p className="diagnostics-waiting">Waiting for a coherent native snapshot…</p> : <>
+      <div className={`mute-diagnostic ${diagnostics.mute.active ? 'is-muted' : ''}`} role={diagnostics.mute.safetyLatched ? 'alert' : 'status'}>
+        <strong>{diagnostics.mute.safetyLatched ? 'SAFETY MUTE LATCHED' : diagnostics.mute.manual ? 'MANUAL MUTE ACTIVE' : 'AUDIO SAFETY READY'}</strong>
+        <span>{diagnostics.mute.safetyLatched ? 'Editing and Undo remain available. Reduce gain or undo the risky edit, then recover explicitly.' : 'No numerical safety latch is active.'}</span>
+      </div>
+      <div className="diagnostic-grid">
+        <section><span>ESTIMATE / STATIC</span><strong>{diagnostics.workloadEstimate.scalarOperationsPerSample} ops/sample</strong><small>{(diagnostics.workloadEstimate.scalarOperationsPerSecond / 1_000_000).toFixed(2)} M scalar ops/s</small></section>
+        <section><span>LIVE / MEASURED</span><strong>{diagnostics.liveCpu.loadPercent.toFixed(2)}% CPU</strong><small>{diagnostics.liveCpu.peakLoadPercent.toFixed(2)}% peak · {diagnostics.liveCpu.processedBlocks.toLocaleString()} blocks</small></section>
+        <section><span>MEMORY / PREPARED</span><strong>{formatBytes(diagnostics.delayMemory.bytes)}</strong><small>{diagnostics.delayMemory.lineCount} delay-bearing lines</small></section>
+        <section><span>CLIPPING / MEASURED</span><strong>{diagnostics.clipping.samples.toLocaleString()} samples</strong><small>{diagnostics.clipping.blocks.toLocaleString()} affected blocks</small></section>
+      </div>
+      <dl className="revision-diagnostic"><div><dt>ACTIVE GRAPH REVISION</dt><dd>#{diagnostics.activeGraphRevision}</dd></div><div><dt>SUCCESSFUL RECOVERIES</dt><dd>{diagnostics.recoveryCount}</dd></div></dl>
+      {diagnostics.lastSafetyEvent ? <section className="safety-event"><span>LAST SAFETY EVENT #{diagnostics.lastSafetyEvent.generation}</span><strong>{diagnostics.lastSafetyEvent.kind.toUpperCase()} / {diagnostics.lastSafetyEvent.channel.toUpperCase()}</strong><p>Sample {diagnostics.lastSafetyEvent.sampleIndex.toLocaleString()} of graph revision <b>#{diagnostics.lastSafetyEvent.graphRevision}</b>. This identity remains fixed when later edits change the active revision.</p></section> : <p className="no-safety-event">No NaN, infinity, or runaway event recorded.</p>}
+      <div className="diagnostic-actions"><button type="button" disabled={!canUndo} onClick={onUndo}>UNDO LAST EDIT</button><button type="button" disabled={!diagnostics.mute.safetyLatched} onClick={onRecover}>RECOVER AUDIO</button></div>
+    </>}
+  </aside>;
+}
+
 function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const { fitView, setViewport: setFlowViewport, screenToFlowPosition } = useReactFlow();
   const initial = useMemo(() => createFlowModel(snapshot), [snapshot]);
@@ -208,6 +230,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [energyEnabled, setEnergyEnabled] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [energyLevels, setEnergyLevels] = useState<EnergyLevels>({});
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
+  const [diagnostics, setDiagnostics] = useState<RuntimeDiagnostics | null>(null);
 
   const loopInspection = useMemo(() => selectedNode
     ? inspectFeedbackLoops(nodes, edges, { nodeId: selectedNode.id })
@@ -261,6 +285,26 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       void callNative('setEnergyTelemetryEnabled', false).catch(() => undefined);
     };
   }, [energyEnabled, reducedMotion]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let polling = false;
+    const poll = async () => {
+      if (polling) return;
+      polling = true;
+      try {
+        const next = parseRuntimeDiagnostics(await callNative('getRuntimeDiagnostics'));
+        if (!cancelled) {
+          setDiagnostics(next);
+          if (next.mute.safetyLatched) setDiagnosticsOpen(true);
+        }
+      } catch { /* native snapshot may not be available in the development browser */ }
+      finally { polling = false; }
+    };
+    void poll();
+    const timer = window.setInterval(() => void poll(), 250);
+    return () => { cancelled = true; window.clearInterval(timer); };
+  }, []);
 
   const applyGraph = useCallback((state: { nodes: Node<PatchNodeData>[]; edges: Edge[] }) => {
     setNodes(state.nodes); setEdges(state.edges); setSelectedNode(null); setSelectedEdge(null);
@@ -458,6 +502,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           <button className="energy-toggle" type="button" aria-pressed={energyEnabled} disabled={reducedMotion} onClick={() => setEnergyEnabled((value) => !value)} title={reducedMotion ? 'Disabled by the operating-system reduced-motion preference' : 'Toggle measured node and cable energy'}>
             ENERGY {reducedMotion ? 'REDUCED' : energyEnabled ? 'ON' : 'OFF'}
           </button>
+          <button className="diagnostics-toggle" type="button" aria-expanded={diagnosticsOpen} onClick={() => setDiagnosticsOpen((value) => !value)}>DIAGNOSTICS</button>
           <div className="header-status" aria-label="Audition status">
             <span className="status-dot" aria-hidden="true" />
             <span>RUNTIME BOUND / {snapshot.sampleRate > 0 ? `${(snapshot.sampleRate / 1000).toFixed(1)} kHz` : 'awaiting audio'}</span>
@@ -468,6 +513,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       <MeasurementBar sampleRate={snapshot.sampleRate} onCapture={receiveCapture} />
 
       {responseCapture ? <ResponseViewer key={responseCapture.generation} capture={responseCapture} onClose={() => setResponseCapture(null)} /> : null}
+      {diagnosticsOpen ? <DiagnosticsPanel diagnostics={diagnostics} canUndo={graphHistory.undo.length > 0} onUndo={undoGraph} onRecover={() => { void callNative('resetSafety').catch(() => undefined); }} onClose={() => setDiagnosticsOpen(false)} /> : null}
 
       <section className="workspace">
         <aside className="module-library" aria-label="Module library">

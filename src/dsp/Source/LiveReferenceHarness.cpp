@@ -19,6 +19,10 @@ void LiveReferenceHarness::prepare(const double sampleRate)
 {
     reference_.prepare(sampleRate);
     energyTelemetry_.prepare(sampleRate);
+    diagnostics_.prepare(
+        sampleRate,
+        BarrReference::delayLineCount(),
+        reference_.delayStorageSamples() * sizeof(float));
     capture_.prepare(sampleRate);
     leftGuard_.reset();
     rightGuard_.reset();
@@ -31,7 +35,8 @@ void LiveReferenceHarness::reset() noexcept
     reference_.reset();
     leftGuard_.reset();
     rightGuard_.reset();
-    safetyLatched_.store(false, std::memory_order_release);
+    if (safetyLatched_.exchange(false, std::memory_order_acq_rel))
+        diagnostics_.recordRecovery();
 }
 
 void LiveReferenceHarness::process(
@@ -40,6 +45,10 @@ void LiveReferenceHarness::process(
     const std::span<float> outputLeft,
     const std::span<float> outputRight) noexcept
 {
+    const auto diagnosticsStart = diagnostics_.beginBlock();
+    const auto finishDiagnostics = [this, diagnosticsStart, frames = outputLeft.size()](const std::size_t clips = 0) {
+        diagnostics_.endBlock(diagnosticsStart, frames, clips);
+    };
     if (safetyResetPending_.exchange(false, std::memory_order_acq_rel))
         reset();
 
@@ -47,6 +56,7 @@ void LiveReferenceHarness::process(
         || safetyLatched_.load(std::memory_order_acquire)) {
         std::ranges::fill(outputLeft, 0.0F);
         std::ranges::fill(outputRight, 0.0F);
+        finishDiagnostics();
         return;
     }
 
@@ -63,6 +73,7 @@ void LiveReferenceHarness::process(
         && capture_.state() != ImpulseCaptureState::capturing) {
         std::ranges::fill(outputLeft, 0.0F);
         std::ranges::fill(outputRight, 0.0F);
+        finishDiagnostics();
         return;
     }
     const auto captureConfig = capture_.activeConfig();
@@ -77,6 +88,7 @@ void LiveReferenceHarness::process(
     if (emergencyMuted_.load(std::memory_order_acquire)) {
         std::ranges::fill(outputLeft, 0.0F);
         std::ranges::fill(outputRight, 0.0F);
+        finishDiagnostics();
         return;
     }
     const auto gain = masterGain_.load(std::memory_order_relaxed);
@@ -88,10 +100,15 @@ void LiveReferenceHarness::process(
     const auto leftStatus = leftGuard_.inspectAndMute(outputLeft);
     const auto rightStatus = rightGuard_.inspectAndMute(outputRight);
     if (leftStatus.violation != SafetyViolation::none || rightStatus.violation != SafetyViolation::none) {
+        if (leftStatus.violation != SafetyViolation::none)
+            diagnostics_.recordSafety(leftStatus, SafetyChannel::left);
+        else
+            diagnostics_.recordSafety(rightStatus, SafetyChannel::right);
         safetyLatched_.store(true, std::memory_order_release);
         std::ranges::fill(outputLeft, 0.0F);
         std::ranges::fill(outputRight, 0.0F);
     }
+    finishDiagnostics(leftStatus.clippedSamples + rightStatus.clippedSamples);
 }
 
 void LiveReferenceHarness::triggerImpulse() noexcept
@@ -122,9 +139,11 @@ void LiveReferenceHarness::requestSafetyReset() noexcept
 void LiveReferenceHarness::setRuntimeParameter(const BarrParameterId id, const double value) noexcept
 {
     const auto& definition = barrReferenceParameterDefinition(id);
-    parameterTargets_[static_cast<std::size_t>(id)].store(
-        std::clamp(value, definition.minimum, definition.maximum),
-        std::memory_order_release);
+    const auto bounded = std::clamp(value, definition.minimum, definition.maximum);
+    const auto previous = parameterTargets_[static_cast<std::size_t>(id)].exchange(
+        bounded, std::memory_order_acq_rel);
+    if (previous != bounded)
+        static_cast<void>(diagnostics_.advanceRevision());
 }
 
 void LiveReferenceHarness::setEnergyTelemetryEnabled(const bool enabled) noexcept
@@ -147,6 +166,10 @@ ImpulseCaptureResult LiveReferenceHarness::copyLatestCapture() const { return ca
 EnergyTelemetrySnapshot LiveReferenceHarness::energyTelemetrySnapshot() const noexcept
 {
     return energyTelemetry_.snapshot();
+}
+RuntimeDiagnosticsSnapshot LiveReferenceHarness::runtimeDiagnosticsSnapshot() const noexcept
+{
+    return diagnostics_.snapshot();
 }
 
 } // namespace reverb::dsp

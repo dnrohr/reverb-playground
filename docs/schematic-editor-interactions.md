@@ -12,6 +12,8 @@ A completed capture opens the response viewer above the schematic. Left/right wa
 
 The **Energy On/Off** control enables measured activity on runtime-bound blocks and their outgoing cables. Five filled meter segments and increasing cable width carry intensity without relying on glow color alone. Energy is presentation-only, preserves loop-selection styling, and stops polling and native sample scans when disabled. The operating-system reduced-motion preference starts it disabled and locks the control in **Energy Reduced** state.
 
+**Diagnostics** opens a resource/safety panel without covering graph controls. Static workload estimates, measured live CPU/clipping, and exact prepared delay memory are labeled by evidence type. A numerical safety latch opens the panel automatically, identifies the immutable offending graph revision, and leaves editing plus Undo available. **Recover Audio** is enabled only while safety-muted and clears the latch explicitly after the user has reduced or undone the risky setting.
+
 The reference patch opens fitted to the available canvas. Blocks retain stable IDs and use a compact snake layout so the complete signal path is readable at the default 1280 by 800 editor size.
 
 ## Pointer and keyboard contract

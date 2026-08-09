@@ -29,6 +29,7 @@ Last updated: 2026-08-08
 | M4.2 Implement impulse audition and capture | Complete | Safe 0.1 impulse; visible length/threshold/input policy; pre-gain stereo capture; prepared lock-free publication; deterministic repeats; screenshot/video |
 | M4.3 Implement stereo impulse and decay view | Complete | Solid/dashed stereo lanes; Schroeder decay; bounded 1-256x zoom/pan; tested T30/refusal rules; short/Barr/bloom screenshots; video |
 | M4.4 Implement live energy glow | Complete | Ten fixed 30 Hz RMS lanes; atomic seqlock snapshot; tested disable/drop safety; segmented node meters; width/glow cables; reduced motion; video |
+| M4.5 Add resource and safety diagnostics | Complete | Static/live/prepared labels; callback timing; exact delay memory; clip counts; revision-bound safety events; edit/undo/recover workflow; complete synthetic violations |
 
 ## M0.2 verification
 
@@ -313,3 +314,16 @@ Results:
 - Entering, diffusing, and tail screenshots: [`02-impulse-entering.png`](../artifacts/ui/m4-4-live-energy-glow/02-impulse-entering.png), [`03-energy-diffusing.png`](../artifacts/ui/m4-4-live-energy-glow/03-energy-diffusing.png), and [`04-energy-tail.png`](../artifacts/ui/m4-4-live-energy-glow/04-energy-tail.png).
 - Disabled screenshot: [`05-energy-off.png`](../artifacts/ui/m4-4-live-energy-glow/05-energy-off.png).
 - Actual runtime impulse/video evidence: [`live-energy-impulse-recirculation.mp4`](../artifacts/ui/m4-4-live-energy-glow/live-energy-impulse-recirculation.mp4).
+
+## M4.5 verification
+
+- The diagnostics contract labels topology workload as `static-estimate`, callback CPU and clipping as `measured`, and delay storage as `prepared-allocation`; the UI repeats those evidence bases instead of presenting unlike values as equivalent measurements.
+- Live CPU is measured against each audio block's deadline with bounded monotonic timestamps and lock-free scalar publication. Prepared memory is read from the six actual Allpass allocations; the browser never recomputes it.
+- NaN, positive infinity, and finite runaway signals traverse the complete live harness in native tests. Both outputs mute, the event snapshot coherently records kind/channel/sample and the exact active graph revision, and no unsafe sample escapes.
+- Runtime parameter edits advance native revision while safety-muted. Tests prove the event keeps its original revision, later edits remain accepted, and only an explicit reset clears state/latch and increments recovery count.
+- The browser receives message-thread JSON made from atomic value copies, never a runtime pointer, span, mutable audio buffer, or stale object reference. Its parser rejects non-finite values, inconsistent mute state, and incoherent event exposure.
+- Real native resource panel: [`artifacts/ui/m4-5-resource-safety-diagnostics/01-live-resource-panel.png`](../artifacts/ui/m4-5-resource-safety-diagnostics/01-live-resource-panel.png).
+- Safety-latched edit/Undo state: [`02-safety-latched-editable.png`](../artifacts/ui/m4-5-resource-safety-diagnostics/02-safety-latched-editable.png) and [`03-safety-after-undo.png`](../artifacts/ui/m4-5-resource-safety-diagnostics/03-safety-after-undo.png).
+- Explicit recovered state, with active revision advanced and event revision retained: [`04-recovered-revision.png`](../artifacts/ui/m4-5-resource-safety-diagnostics/04-recovered-revision.png).
+- Native 125%-scale window with the schematic filling the complete embedded-browser bounds: [`05-full-window-125-percent.png`](../artifacts/ui/m4-5-resource-safety-diagnostics/05-full-window-125-percent.png).
+- Resource/safety/Undo/recovery video: [`diagnostics-undo-and-recovery.mp4`](../artifacts/ui/m4-5-resource-safety-diagnostics/diagnostics-undo-and-recovery.mp4).

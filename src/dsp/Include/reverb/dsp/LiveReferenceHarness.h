@@ -4,6 +4,7 @@
 #include <reverb/dsp/ImpulseCapture.h>
 #include <reverb/dsp/EnergyTelemetry.h>
 #include <reverb/dsp/NumericalSafetyGuard.h>
+#include <reverb/dsp/RuntimeDiagnostics.h>
 
 #include <atomic>
 #include <array>
@@ -40,10 +41,12 @@ public:
     [[nodiscard]] std::size_t capturedFrames() const noexcept;
     [[nodiscard]] ImpulseCaptureResult copyLatestCapture() const;
     [[nodiscard]] EnergyTelemetrySnapshot energyTelemetrySnapshot() const noexcept;
+    [[nodiscard]] RuntimeDiagnosticsSnapshot runtimeDiagnosticsSnapshot() const noexcept;
 
 private:
     BarrReference reference_;
     EnergyTelemetry energyTelemetry_;
+    RuntimeDiagnostics diagnostics_;
     ImpulseCapture capture_;
     NumericalSafetyGuard leftGuard_;
     NumericalSafetyGuard rightGuard_;

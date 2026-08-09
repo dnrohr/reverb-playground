@@ -43,6 +43,7 @@ public:
     [[nodiscard]] juce::String impulseCaptureStatusJson() const;
     [[nodiscard]] juce::String impulseCaptureJson() const;
     [[nodiscard]] juce::String energyTelemetryJson() const;
+    [[nodiscard]] juce::String runtimeDiagnosticsJson() const;
     juce::String startImpulseCapture(double lengthMilliseconds, double stopThresholdDb, bool muteLiveInput);
     bool setEnergyTelemetryEnabled(bool enabled) noexcept;
     double setRuntimeParameter(const juce::String& nodeId, const juce::String& parameterId, double value) noexcept;

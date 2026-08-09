@@ -54,6 +54,8 @@ button { font: inherit; }
 .header-runtime { display: flex; align-items: center; gap: 12px; }
 .energy-toggle { padding: 6px 8px; border: 1px solid var(--cyan); border-radius: 3px; color: var(--cyan); background: rgba(69, 208, 204, .06); font: 8px ui-monospace, Consolas, monospace; letter-spacing: .08em; }
 .energy-toggle[aria-pressed="false"], .energy-toggle:disabled { border-color: #52616a; color: #829099; background: transparent; }
+.diagnostics-toggle { padding: 6px 8px; border: 1px solid #596872; border-radius: 3px; color: #aebac0; background: #182127; font: 8px ui-monospace, Consolas, monospace; letter-spacing: .08em; }
+.diagnostics-toggle[aria-expanded="true"] { border-color: var(--amber); color: var(--amber); }
 .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 12px rgba(69, 208, 204, .7); }
 .status-divider { color: #53616b; }
 
@@ -103,6 +105,35 @@ button { font: inherit; }
 .rt60-refusal strong { color: var(--amber); white-space: nowrap; }
 .rt60-method { border-left-color: var(--violet); background: rgba(189, 156, 255, .06); }
 .rt60-method strong { color: var(--violet); white-space: nowrap; }
+
+.diagnostics-panel { position: fixed; z-index: 28; top: 132px; right: 18px; width: min(360px, calc(100vw - 36px)); max-height: calc(100vh - 150px); overflow: auto; padding: 15px; border: 1px solid #52636d; border-top: 3px solid var(--amber); border-radius: 6px; background: rgba(14, 19, 23, .985); box-shadow: 0 20px 60px rgba(0, 0, 0, .62); }
+.diagnostics-panel.has-safety-latch { border-color: var(--danger); border-top-color: var(--danger); }
+.diagnostics-panel > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.diagnostics-panel > header span, .diagnostic-grid span, .safety-event > span { color: var(--amber); font: 800 8px ui-monospace, Consolas, monospace; letter-spacing: .1em; }
+.diagnostics-panel > header h2 { margin: 3px 0 0; font-size: 18px; }
+.diagnostics-panel > header button { padding: 5px 7px; border: 1px solid #52636d; border-radius: 3px; color: #b8c3c9; background: #182127; font-size: 8px; }
+.diagnostics-waiting, .no-safety-event { color: var(--muted); font-size: 10px; }
+.mute-diagnostic { display: grid; gap: 4px; margin: 12px 0 9px; padding: 9px 10px; border-left: 3px solid var(--cyan); background: rgba(69, 208, 204, .06); }
+.mute-diagnostic strong { color: var(--cyan); font: 800 9px ui-monospace, Consolas, monospace; }
+.mute-diagnostic span { color: #aeb9bf; font-size: 9px; line-height: 1.4; }
+.mute-diagnostic.is-muted { border-left-color: var(--danger); background: rgba(226, 78, 83, .08); }
+.mute-diagnostic.is-muted strong { color: var(--danger); }
+.diagnostic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.diagnostic-grid section { display: grid; gap: 4px; min-width: 0; padding: 9px; border: 1px solid #303c44; background: #151c21; }
+.diagnostic-grid strong { color: var(--text); font: 12px ui-monospace, Consolas, monospace; }
+.diagnostic-grid small { overflow: hidden; color: #82919a; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.revision-diagnostic { margin: 9px 0; border-top: 1px solid #303c44; }
+.revision-diagnostic div { display: flex; justify-content: space-between; padding: 7px 2px; border-bottom: 1px solid #303c44; }
+.revision-diagnostic dt { color: #82919a; font-size: 8px; font-weight: 800; letter-spacing: .07em; }
+.revision-diagnostic dd { margin: 0; color: var(--text); font: 10px ui-monospace, Consolas, monospace; }
+.safety-event { padding: 10px; border: 1px solid rgba(226, 78, 83, .55); border-left: 3px solid var(--danger); background: rgba(226, 78, 83, .07); }
+.safety-event > span { color: var(--danger); }
+.safety-event strong { display: block; margin-top: 4px; color: #ffd9da; font: 12px ui-monospace, Consolas, monospace; }
+.safety-event p { margin: 5px 0 0; color: #adb8be; font-size: 9px; line-height: 1.45; }
+.diagnostic-actions { display: flex; gap: 7px; margin-top: 10px; }
+.diagnostic-actions button { flex: 1; padding: 7px; border: 1px solid #596872; border-radius: 3px; color: #c8d1d6; background: #1a2329; font-size: 8px; }
+.diagnostic-actions button:last-child { border-color: var(--danger); color: #ffb9bc; }
+.diagnostic-actions button:disabled { border-color: #303c43; color: #53616a; }
 
 .workspace { min-width: 0; min-height: 0; display: grid; grid-template-columns: clamp(150px, 16vw, 202px) minmax(0, 1fr) clamp(190px, 20vw, 258px); }
 .module-library, .inspector { min-height: 0; overflow: auto; background: var(--surface); }

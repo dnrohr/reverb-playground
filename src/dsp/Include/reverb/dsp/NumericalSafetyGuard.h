@@ -14,6 +14,8 @@ enum class SafetyViolation {
 struct SafetyStatus {
     SafetyViolation violation { SafetyViolation::none };
     std::size_t sampleIndex {};
+    std::size_t clippedSamples {};
+    float peakAbsoluteSample {};
 };
 
 class NumericalSafetyGuard final {

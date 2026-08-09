@@ -103,6 +103,13 @@ EditorShell::EditorShell(Callbacks callbacks)
         .withNativeFunction("getEnergyTelemetry", [this](const auto&, auto complete) {
             complete(callbacks_.energyTelemetryJson());
         })
+        .withNativeFunction("getRuntimeDiagnostics", [this](const auto&, auto complete) {
+            complete(callbacks_.runtimeDiagnosticsJson());
+        })
+        .withNativeFunction("resetSafety", [this](const auto&, auto complete) {
+            callbacks_.resetSafety();
+            complete(true);
+        })
         .withResourceProvider([this](const auto& path) { return getWebResource(path); });
     browser_ = std::make_unique<juce::WebBrowserComponent>(std::move(options));
     addAndMakeVisible(*browser_);
@@ -158,22 +165,8 @@ void EditorShell::resized()
     auto gainRow = controls.removeFromTop(34);
     gainLabel_.setBounds(gainRow.removeFromLeft(190));
     gain_.setBounds(gainRow.removeFromLeft(340));
-    if (browser_ != nullptr) {
-#if JUCE_WINDOWS
-        if (const auto* display = juce::Desktop::getInstance().getDisplays()
-                .getDisplayForPoint(localPointToGlobal(bounds.getCentre()).toFloat())) {
-            // WebView2 applies the monitor scale to its child HWND after JUCE has supplied
-            // logical bounds. Compensate once so the child is not clipped by its parent.
-            const auto scale = static_cast<float>(display->scale);
-            browser_->setBounds(bounds.withSizeKeepingCentre(
-                juce::roundToInt(static_cast<float>(bounds.getWidth()) / scale),
-                juce::roundToInt(static_cast<float>(bounds.getHeight()) / scale))
-                .withPosition(bounds.getPosition()));
-            return;
-        }
-#endif
+    if (browser_ != nullptr)
         browser_->setBounds(bounds);
-    }
 }
 
 void EditorShell::timerCallback()
