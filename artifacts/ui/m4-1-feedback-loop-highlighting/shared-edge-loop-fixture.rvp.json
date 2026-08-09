@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "engineVersion": "0.1",
+  "semantic": {
+    "nodes": [
+      { "id": "stereo-input-1", "type": "stereo-input", "ports": [{ "id": "out-l", "signal": "audio", "direction": "output" }, { "id": "out-r", "signal": "audio", "direction": "output" }], "parameters": [] },
+      { "id": "root-sum", "type": "sum", "ports": [{ "id": "in-a", "signal": "audio", "direction": "input" }, { "id": "in-b", "signal": "audio", "direction": "input" }, { "id": "out", "signal": "audio", "direction": "output" }], "parameters": [] },
+      { "id": "delay-short", "type": "delay", "ports": [{ "id": "in", "signal": "audio", "direction": "input" }, { "id": "out", "signal": "audio", "direction": "output" }], "parameters": [{ "id": "delay", "value": 12.5, "unit": "milliseconds" }] },
+      { "id": "loop-gain", "type": "gain", "ports": [{ "id": "in", "signal": "audio", "direction": "input" }, { "id": "out", "signal": "audio", "direction": "output" }], "parameters": [{ "id": "gain", "value": -0.6, "unit": "linear" }] },
+      { "id": "loop-filter", "type": "lowpass", "ports": [{ "id": "in", "signal": "audio", "direction": "input" }, { "id": "out", "signal": "audio", "direction": "output" }], "parameters": [{ "id": "cutoff", "value": 6400, "unit": "hertz" }] },
+      { "id": "delay-long", "type": "delay", "ports": [{ "id": "in", "signal": "audio", "direction": "input" }, { "id": "out", "signal": "audio", "direction": "output" }], "parameters": [{ "id": "delay", "value": 30, "unit": "milliseconds" }] },
+      { "id": "return-sum", "type": "sum", "ports": [{ "id": "in-a", "signal": "audio", "direction": "input" }, { "id": "in-b", "signal": "audio", "direction": "input" }, { "id": "out", "signal": "audio", "direction": "output" }], "parameters": [] },
+      { "id": "stereo-output-1", "type": "stereo-output", "ports": [{ "id": "in-l", "signal": "audio", "direction": "input" }, { "id": "in-r", "signal": "audio", "direction": "input" }], "parameters": [] }
+    ],
+    "connections": [
+      { "id": "input-root", "from": { "nodeId": "stereo-input-1", "portId": "out-l" }, "to": { "nodeId": "root-sum", "portId": "in-a" } },
+      { "id": "root-short", "from": { "nodeId": "root-sum", "portId": "out" }, "to": { "nodeId": "delay-short", "portId": "in" } },
+      { "id": "short-return", "from": { "nodeId": "delay-short", "portId": "out" }, "to": { "nodeId": "return-sum", "portId": "in-a" } },
+      { "id": "root-gain", "from": { "nodeId": "root-sum", "portId": "out" }, "to": { "nodeId": "loop-gain", "portId": "in" } },
+      { "id": "gain-filter", "from": { "nodeId": "loop-gain", "portId": "out" }, "to": { "nodeId": "loop-filter", "portId": "in" } },
+      { "id": "filter-long", "from": { "nodeId": "loop-filter", "portId": "out" }, "to": { "nodeId": "delay-long", "portId": "in" } },
+      { "id": "long-return", "from": { "nodeId": "delay-long", "portId": "out" }, "to": { "nodeId": "return-sum", "portId": "in-b" } },
+      { "id": "return-root", "from": { "nodeId": "return-sum", "portId": "out" }, "to": { "nodeId": "root-sum", "portId": "in-b" } },
+      { "id": "return-left", "from": { "nodeId": "return-sum", "portId": "out" }, "to": { "nodeId": "stereo-output-1", "portId": "in-l" } },
+      { "id": "input-right", "from": { "nodeId": "stereo-input-1", "portId": "out-r" }, "to": { "nodeId": "stereo-output-1", "portId": "in-r" } }
+    ]
+  },
+  "layout": {
+    "nodes": [
+      { "nodeId": "stereo-input-1", "x": 0, "y": 120 },
+      { "nodeId": "root-sum", "x": 210, "y": 120 },
+      { "nodeId": "delay-short", "x": 430, "y": 10 },
+      { "nodeId": "loop-gain", "x": 420, "y": 230 },
+      { "nodeId": "loop-filter", "x": 620, "y": 230 },
+      { "nodeId": "delay-long", "x": 820, "y": 230 },
+      { "nodeId": "return-sum", "x": 850, "y": 70 },
+      { "nodeId": "stereo-output-1", "x": 1080, "y": 70 }
+    ],
+    "viewport": { "x": 40, "y": 120, "zoom": 0.72 }
+  }
+}

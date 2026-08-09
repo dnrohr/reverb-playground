@@ -31,6 +31,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Feedback graph compilation](feedback-graph-compilation.md) - SCC analysis, exact algebraic-loop diagnostics, split-phase Delay semantics, and compiler budgets.
 - [Delay-memory planning](delay-memory-planning.md) - requested/allocated inspection, prepared arenas, project budget, boundaries, and safe sample-rate recalculation.
 - [Unified graph history and clipboard](unified-graph-history-and-clipboard.md) - mixed-operation undo/redo, bounded history, clean-state identity, and subgraph copy/paste.
+- [Feedback-loop highlighting](feedback-loop-highlighting.md) - bounded directed-cycle analysis, active/alternate styling, and topology-derived loop facts.
 
 ## Local source tree
 

@@ -3,6 +3,7 @@ import { createFlowModel, type RuntimeSnapshot } from './graph';
 import { parsePatchJson, writePatchJson } from './patchPersistence';
 import { createModuleNode } from './modules';
 import { semanticGraphHash } from './graphHistory';
+import sharedEdgeLoopFixture from '../../artifacts/ui/m4-1-feedback-loop-highlighting/shared-edge-loop-fixture.rvp.json?raw';
 
 const reference: RuntimeSnapshot = {
   contractVersion: 1, engineId: 'barr-reference', sampleRate: 48000, outsidePatch: [],
@@ -72,5 +73,12 @@ describe('patch persistence', () => {
       { id: 'right', source: input.id, sourceHandle: 'out-r', target: delay.id, targetHandle: 'in' },
     ];
     expect(() => parsePatchJson(writePatchJson([input, delay, output], edges, { x: 0, y: 0, zoom: 1 }), reference)).toThrow(/more than one cable; insert Sum/);
+  });
+
+  it('loads the M4.1 shared-edge loop evidence fixture through schema v1', () => {
+    const loaded = parsePatchJson(sharedEdgeLoopFixture, reference);
+    expect(loaded.nodes).toHaveLength(8);
+    expect(loaded.edges).toHaveLength(10);
+    expect(loaded.edges.find((edge) => edge.id === 'return-root')).toMatchObject({ source: 'return-sum', target: 'root-sum' });
   });
 });

@@ -25,6 +25,7 @@ Last updated: 2026-08-08
 | M3.4 Compile feedback graphs | Complete | Deterministic SCC analysis; split-phase Delay execution; exact algebraic-loop paths; nested/multiple-loop tests; bounded compile fixture |
 | M3.5 Plan and limit delay memory | Complete | Single prepared arena; exact requested/allocated inspection; 64 MiB budget; sample-rate republish safety; boundary tests |
 | M3.6 Complete graph undo/redo and clipboard behavior | Complete | Unified 100-entry/8 MiB history; semantic/document hashes; clean marker; fresh-ID subgraph paste; screenshot/video |
+| M4.1 Implement feedback-loop highlighting | Complete | Selected node/cable cycles; active/alternate styling; loop delay/elements; nested/shared fixtures; bounded maximum graph |
 
 ## M0.2 verification
 
@@ -261,3 +262,15 @@ Results:
 - The Saved/Unsaved marker uses semantic-plus-layout document identity. Successful save moves the marker without clearing history or mutating the semantic hash; load creates a new clean baseline.
 - Screenshot: [`artifacts/ui/m3-6-unified-history/clipboard-paste.png`](../artifacts/ui/m3-6-unified-history/clipboard-paste.png).
 - Copy/paste/undo/redo video: [`artifacts/ui/m3-6-unified-history/copy-paste-undo-redo.mp4`](../artifacts/ui/m3-6-unified-history/copy-paste-undo-redo.mp4).
+
+## M4.1 verification
+
+- Selecting a block finds simple directed cycles containing it; selecting a cable restricts results to cycles containing that exact edge. Acyclic selections report no loop.
+- The active complete loop is solid amber. Other matching loops remain distinguishable in violet/dashed styling, and Previous/Next cycles the active result without changing graph semantics or history.
+- The inspector lists directed constituent IDs, nominal total Delay/Allpass time, Gain/Sum/Allpass polarity and gain parameters, and Low-pass cutoff elements.
+- Automated fixtures cover nested alternatives and two loops sharing a selected edge. Decoration tests prove source nodes/cables are unchanged.
+- Inspection is capped at 64 results and 100,000 traversed transitions. A 256-block/512-cable stress fixture completes within the 250 ms test budget.
+- Reproducible patch: [`artifacts/ui/m4-1-feedback-loop-highlighting/shared-edge-loop-fixture.rvp.json`](../artifacts/ui/m4-1-feedback-loop-highlighting/shared-edge-loop-fixture.rvp.json).
+- Long-loop screenshot: [`artifacts/ui/m4-1-feedback-loop-highlighting/01-long-loop.png`](../artifacts/ui/m4-1-feedback-loop-highlighting/01-long-loop.png).
+- Short-loop screenshot: [`artifacts/ui/m4-1-feedback-loop-highlighting/02-short-loop.png`](../artifacts/ui/m4-1-feedback-loop-highlighting/02-short-loop.png).
+- Selection/cycling video: [`artifacts/ui/m4-1-feedback-loop-highlighting/loop-selection-and-cycling.mp4`](../artifacts/ui/m4-1-feedback-loop-highlighting/loop-selection-and-cycling.mp4).

@@ -19,6 +19,7 @@ import { createFlowModel, deleteSelected, parseRuntimeSnapshot, type PatchNodeDa
 import { createModuleNode, moduleDefinitions, nextNodeId, type ModuleType } from './modules';
 import { commitGraphEdit, emptyGraphHistory, isHistoryClean, markHistoryClean, redoGraphEdit, snapshotGraph, undoGraphEdit } from './graphHistory';
 import { copySelectedGraph, pasteGraph, type GraphClipboard } from './graphClipboard';
+import { decorateFeedbackLoops, inspectFeedbackLoops, type FeedbackLoopInspection } from './loopInspection';
 import { connectGraph, decideConnection, insertSumForOccupiedInput } from './connectionEditing';
 import { PatchNode } from './PatchNode';
 import { callNative } from './nativeBridge';
@@ -52,6 +53,38 @@ function TeachingCard({ topic, onDismiss, onResearch }: {
   );
 }
 
+function LoopInspector({ inspection, activeIndex, onActiveIndex }: {
+  inspection: FeedbackLoopInspection; activeIndex: number; onActiveIndex: (index: number) => void;
+}) {
+  const loop = inspection.loops[activeIndex];
+  if (!loop) return (
+    <section className="loop-inspector loop-empty" aria-label="Feedback loop inspection">
+      <div className="loop-heading"><span>FEEDBACK LOOPS</span><strong>NONE</strong></div>
+      <p>No directed feedback loop contains this selection.</p>
+    </section>
+  );
+  return (
+    <section className="loop-inspector" aria-label="Feedback loop inspection">
+      <div className="loop-heading"><span>FEEDBACK LOOP</span><strong>{activeIndex + 1} / {inspection.loops.length}</strong></div>
+      {inspection.loops.length > 1 ? <div className="loop-navigation">
+        <button type="button" aria-label="Previous feedback loop" onClick={() => onActiveIndex((activeIndex + inspection.loops.length - 1) % inspection.loops.length)}>PREV</button>
+        <button type="button" aria-label="Next feedback loop" onClick={() => onActiveIndex((activeIndex + 1) % inspection.loops.length)}>NEXT</button>
+      </div> : null}
+      <dl className="loop-facts">
+        <div><dt>NOMINAL DELAY</dt><dd>{loop.nominalDelayMilliseconds.toFixed(2)} ms</dd></div>
+        <div><dt>BLOCKS</dt><dd>{loop.nodeIds.length}</dd></div>
+      </dl>
+      <h3>CONSTITUENT BLOCKS</h3>
+      <code className="loop-path">{[...loop.nodeIds, loop.nodeIds[0]].join(' → ')}</code>
+      <h3>POLARITY / GAIN</h3>
+      {loop.gainElements.length ? <ul>{loop.gainElements.map((element) => <li key={`${element.nodeId}.${element.parameter}`}><code>{element.nodeId}</code><span>{element.parameter} {element.value.toLocaleString()}</span></li>)}</ul> : <p>None in this loop.</p>}
+      <h3>FILTERS</h3>
+      {loop.filters.length ? <ul>{loop.filters.map((element) => <li key={`${element.nodeId}.${element.parameter}`}><code>{element.nodeId}</code><span>{element.value.toLocaleString()} Hz</span></li>)}</ul> : <p>None in this loop.</p>}
+      {inspection.truncated ? <p className="loop-truncated">Additional loops omitted at the bounded inspection limit.</p> : null}
+    </section>
+  );
+}
+
 function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const { fitView, setViewport: setFlowViewport, screenToFlowPosition } = useReactFlow();
   const initial = useMemo(() => createFlowModel(snapshot), [snapshot]);
@@ -74,6 +107,14 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [graphHistory, setGraphHistory] = useState(() => emptyGraphHistory(initial));
   const [graphStatus, setGraphStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
   const [pendingConnection, setPendingConnection] = useState<Connection | null>(null);
+  const [activeLoopIndex, setActiveLoopIndex] = useState(0);
+
+  const loopInspection = useMemo(() => selectedNode
+    ? inspectFeedbackLoops(nodes, edges, { nodeId: selectedNode.id })
+    : selectedEdge ? inspectFeedbackLoops(nodes, edges, { edgeId: selectedEdge.id }) : null,
+  [edges, nodes, selectedEdge, selectedNode]);
+  const normalizedLoopIndex = loopInspection?.loops.length ? activeLoopIndex % loopInspection.loops.length : 0;
+  const displayedGraph = useMemo(() => decorateFeedbackLoops(nodes, edges, loopInspection, normalizedLoopIndex), [edges, loopInspection, nodes, normalizedLoopIndex]);
 
   const applyGraph = useCallback((state: { nodes: Node<PatchNodeData>[]; edges: Edge[] }) => {
     setNodes(state.nodes); setEdges(state.edges); setSelectedNode(null); setSelectedEdge(null);
@@ -170,6 +211,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const handleSelection = useCallback(({ nodes: selectedNodes, edges: selectedEdges }: OnSelectionChangeParams) => {
     setSelectedNode((selectedNodes[0] as Node<PatchNodeData> | undefined) ?? null);
     setSelectedEdge(selectedEdges[0] ?? null);
+    setActiveLoopIndex(0);
   }, []);
 
   useEffect(() => {
@@ -350,8 +392,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           ) : null}
           <div className="flow-wrap">
             <ReactFlow
-              nodes={nodes}
-              edges={edges}
+              nodes={displayedGraph.nodes}
+              edges={displayedGraph.edges}
               nodeTypes={{ patchNode: PatchNode }}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
@@ -405,6 +447,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <div className="selection-kicker">SELECTED BLOCK</div>
               <h2>{selectedNode.data.label}</h2>
               <code>{selectedNode.id}</code>
+              {loopInspection ? <LoopInspector inspection={loopInspection} activeIndex={normalizedLoopIndex} onActiveIndex={setActiveLoopIndex} /> : null}
               <dl className="property-list">
                 <div><dt>TYPE</dt><dd>{selectedNode.data.type}</dd></div>
                 <div><dt>ROLE</dt><dd>{selectedNode.data.role}</dd></div>
@@ -461,6 +504,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <div className="selection-kicker">SELECTED CABLE</div>
               <h2>Audio connection</h2>
               <code>{selectedEdge.id}</code>
+              {loopInspection ? <LoopInspector inspection={loopInspection} activeIndex={normalizedLoopIndex} onActiveIndex={setActiveLoopIndex} /> : null}
               <dl className="property-list">
                 <div><dt>FROM</dt><dd>{selectedEdge.source}</dd></div>
                 <div><dt>TO</dt><dd>{selectedEdge.target}</dd></div>

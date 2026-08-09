@@ -24,6 +24,8 @@ Deletion affects only the current presentation copy. **Reset view copy** reconst
 
 The toolbar's **Saved/Unsaved** badge compares the current semantic-plus-layout document identity with the most recent successful save/load baseline. See [Unified graph history and clipboard](unified-graph-history-and-clipboard.md).
 
+Selecting a block or cable also inspects directed feedback. The active complete loop is amber, alternate matching loops are violet/dashed, and Previous/Next cycles shared or nested results. The inspector reports nominal delay and constituent gain/polarity/filter elements. See [Feedback-loop highlighting](feedback-loop-highlighting.md).
+
 ## Learn mode
 
 The inspector's **Learn On/Off** control reveals or hides contextual explanations without changing the graph or selected parameters. A card can also be dismissed for its current context. Cards distinguish documented Barr/MIDIVerb evidence from choices in this reconstruction and link to the complete architecture research bundled into an offline reader. See [Contextual teaching](contextual-teaching.md).
