@@ -27,6 +27,7 @@ import { parsePatchJson, writePatchJson } from './patchPersistence';
 import researchText from '../../docs/keith-barr-reverb-architectures.md?raw';
 import { teachingTopicFor, type TeachingTopic } from './teaching';
 import { parseImpulseCaptureResult, parseImpulseCaptureStatus, type ImpulseCaptureResult, type ImpulseCaptureStatus } from './impulseCapture';
+import { analyseResponse, decayPoints, frameWindow, rt60Explanation, waveformBuckets } from './responseAnalysis';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -86,7 +87,7 @@ function LoopInspector({ inspection, activeIndex, onActiveIndex }: {
   );
 }
 
-function MeasurementBar({ sampleRate }: { sampleRate: number }) {
+function MeasurementBar({ sampleRate, onCapture }: { sampleRate: number; onCapture: (capture: ImpulseCaptureResult) => void }) {
   const [length, setLength] = useState(2000);
   const [threshold, setThreshold] = useState(-80);
   const [muteInput, setMuteInput] = useState(true);
@@ -111,12 +112,14 @@ function MeasurementBar({ sampleRate }: { sampleRate: number }) {
         setStatus(next);
         if (next.state === 'complete') {
           window.clearInterval(timer);
-          return callNative('getImpulseCapture').then((capture) => setResult(parseImpulseCaptureResult(capture)));
+          return callNative('getImpulseCapture').then((capture) => {
+            const parsed = parseImpulseCaptureResult(capture); setResult(parsed); onCapture(parsed);
+          });
         }
       }).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'Capture status failed'));
     }, 100);
     return () => window.clearInterval(timer);
-  }, [status?.state]);
+  }, [onCapture, status?.state]);
 
   const busy = status?.state === 'armed' || status?.state === 'capturing';
   return <section className={`measurement-bar ${busy ? 'is-capturing' : ''}`} aria-label="Impulse response capture">
@@ -128,6 +131,50 @@ function MeasurementBar({ sampleRate }: { sampleRate: number }) {
     <div className="measurement-readout" role="status">
       {error || (sampleRate <= 0 ? 'WAITING FOR AUDIO DEVICE' : result ? `${result.frameCount.toLocaleString()} FRAMES / ${(result.frameCount / result.sampleRate * 1000).toFixed(1)} ms / STOP: ${result.stopReason === 'threshold' ? `${result.stopThresholdDb} dBFS` : 'MAX LENGTH'}` : busy && status ? `${status.capturedMilliseconds.toFixed(1)} / ${status.maximumLengthMilliseconds.toFixed(0)} ms` : '0.1 PEAK / READY')}
     </div>
+  </section>;
+}
+
+function ResponseViewer({ capture, onClose }: { capture: ImpulseCaptureResult; onClose: () => void }) {
+  const analysis = useMemo(() => analyseResponse(capture), [capture]);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState(0);
+  const window = frameWindow(capture.frameCount, zoom, pan);
+  const left = waveformBuckets(capture.left, window, 450);
+  const right = waveformBuckets(capture.right, window, 450);
+  const decay = decayPoints(analysis.decayDb, window, 450);
+  const x = (frame: number) => 70 + 900 * (frame - window.start) / Math.max(1, window.end - window.start - 1);
+  const peak = Math.max(analysis.peakLeft, analysis.peakRight, 1e-9);
+  const envelope = (buckets: ReturnType<typeof waveformBuckets>, center: number) => buckets.map((bucket) => `M${x(bucket.frame).toFixed(1)},${(center - 34 * bucket.maximum / peak).toFixed(1)}L${x(bucket.frame).toFixed(1)},${(center - 34 * bucket.minimum / peak).toFixed(1)}`).join('');
+  const decayPath = decay.map((point, index) => `${index ? 'L' : 'M'}${x(point.frame).toFixed(1)},${(228 + Math.min(90, Math.max(0, -point.decibels))).toFixed(1)}`).join('');
+  const startMs = window.start / capture.sampleRate * 1000;
+  const endMs = window.end / capture.sampleRate * 1000;
+  const setBoundedZoom = (value: number) => setZoom(Math.max(1, Math.min(256, value)));
+  return <section className="response-viewer" aria-label="Stereo impulse response viewer">
+    <header><div><span>CAPTURE #{capture.generation} / STEREO RESPONSE</span><h2>Impulse and energy decay</h2></div><button type="button" onClick={onClose}>CLOSE ×</button></header>
+    <div className="response-metrics">
+      <div><span>WINDOW</span><strong>{startMs.toFixed(2)}–{endMs.toFixed(2)} ms</strong></div>
+      <div><span>PEAK L / R</span><strong>{analysis.peakLeft.toFixed(4)} / {analysis.peakRight.toFixed(4)}</strong></div>
+      <div><span>ONSET</span><strong>{analysis.onsetFrame === null ? 'NONE' : `${(analysis.onsetFrame / capture.sampleRate * 1000).toFixed(2)} ms`}</strong></div>
+      <div><span>RT60 / T30 FIT</span><strong>{analysis.rt60Seconds === null ? 'NOT ESTIMATED' : `${analysis.rt60Seconds.toFixed(3)} s`}</strong></div>
+    </div>
+    <div className="response-navigation">
+      <button type="button" onClick={() => { setBoundedZoom(16); setPan(0); }}>EARLY / 16×</button>
+      <button type="button" disabled={zoom >= 256} onClick={() => setBoundedZoom(zoom * 2)}>ZOOM IN</button>
+      <button type="button" disabled={zoom <= 1} onClick={() => setBoundedZoom(zoom / 2)}>ZOOM OUT</button>
+      <button type="button" onClick={() => { setBoundedZoom(1); setPan(0); }}>FULL TAIL</button>
+      <label>PAN <input aria-label="Pan response window" type="range" min="0" max="1" step="0.001" value={pan} disabled={zoom === 1} onChange={(event) => setPan(Number(event.target.value))} /></label>
+      <output>{zoom.toFixed(0)}×</output>
+    </div>
+    <div className="response-legend" aria-label="Channel line styles"><span><i className="legend-left" />L / SOLID / UPPER</span><span><i className="legend-right" />R / DASHED / LOWER</span><span><i className="legend-decay" />ENERGY DECAY / SCHROEDER</span></div>
+    <svg className="response-chart" viewBox="0 0 1000 330" role="img" aria-label={`Left solid upper waveform, right dashed lower waveform, and combined energy decay from ${startMs.toFixed(2)} to ${endMs.toFixed(2)} milliseconds`} onWheel={(event) => { event.preventDefault(); setBoundedZoom(event.deltaY < 0 ? zoom * 2 : zoom / 2); }}>
+      <g className="chart-grid"><path d="M70 75H970M70 160H970M70 228H970M70 263H970M70 298H970M70 318H970" /><text x="12" y="79">L</text><text x="12" y="164">R</text><text x="12" y="232">0 dB</text><text x="12" y="267">-35</text><text x="12" y="322">-90</text></g>
+      <path className="wave-left" d={envelope(left, 75)} />
+      <path className="wave-right" d={envelope(right, 160)} />
+      <path className="decay-line" d={decayPath} />
+      <path className="fit-band" d="M70 233H970M70 263H970" />
+      <text className="axis-label" x="70" y="328">{startMs.toFixed(2)} ms</text><text className="axis-label axis-end" x="970" y="328">{endMs.toFixed(2)} ms</text>
+    </svg>
+    {analysis.rt60Refusal ? <div className="rt60-refusal" role="note"><strong>RT60 withheld</strong><span>{rt60Explanation(analysis.rt60Refusal)}</span></div> : <div className="rt60-method"><strong>T30 estimate</strong><span>Linear fit from -5 to -35 dB, extrapolated to -60 dB.</span></div>}
   </section>;
 }
 
@@ -154,6 +201,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [graphStatus, setGraphStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
   const [pendingConnection, setPendingConnection] = useState<Connection | null>(null);
   const [activeLoopIndex, setActiveLoopIndex] = useState(0);
+  const [responseCapture, setResponseCapture] = useState<ImpulseCaptureResult | null>(null);
+  const receiveCapture = useCallback((capture: ImpulseCaptureResult) => setResponseCapture(capture), []);
 
   const loopInspection = useMemo(() => selectedNode
     ? inspectFeedbackLoops(nodes, edges, { nodeId: selectedNode.id })
@@ -360,7 +409,9 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         </div>
       </header>
 
-      <MeasurementBar sampleRate={snapshot.sampleRate} />
+      <MeasurementBar sampleRate={snapshot.sampleRate} onCapture={receiveCapture} />
+
+      {responseCapture ? <ResponseViewer key={responseCapture.generation} capture={responseCapture} onClose={() => setResponseCapture(null)} /> : null}
 
       <section className="workspace">
         <aside className="module-library" aria-label="Module library">

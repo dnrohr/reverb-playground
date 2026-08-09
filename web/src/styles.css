@@ -66,6 +66,41 @@ button { font: inherit; }
 .measurement-bar.is-capturing { box-shadow: inset 3px 0 var(--cyan); }
 .measurement-readout { min-width: 0; margin-left: auto; overflow: hidden; color: var(--amber); text-overflow: ellipsis; white-space: nowrap; }
 
+.response-viewer { position: fixed; z-index: 30; top: 132px; left: clamp(166px, 17vw, 218px); right: clamp(200px, 21vw, 270px); max-height: calc(100vh - 150px); overflow: auto; padding: 14px 16px 16px; border: 1px solid #52636d; border-top: 3px solid var(--cyan); border-radius: 6px; background: rgba(14, 19, 23, .985); box-shadow: 0 24px 70px rgba(0, 0, 0, .65); }
+.response-viewer > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.response-viewer > header span { color: var(--cyan); font: 800 8px ui-monospace, Consolas, monospace; letter-spacing: .13em; }
+.response-viewer > header h2 { margin: 3px 0 0; font-size: 18px; }
+.response-viewer > header button, .response-navigation button { padding: 6px 8px; border: 1px solid #52636d; border-radius: 3px; color: #cbd5da; background: #182127; font: 8px ui-monospace, Consolas, monospace; letter-spacing: .07em; }
+.response-viewer button:hover, .response-viewer button:focus-visible { border-color: var(--cyan); outline: none; }
+.response-viewer button:disabled { color: #52616b; border-color: #303c43; }
+.response-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin: 12px 0 8px; border: 1px solid #303c44; background: #303c44; }
+.response-metrics div { display: grid; gap: 3px; padding: 8px 10px; background: #151c21; }
+.response-metrics span { color: #788892; font-size: 7px; font-weight: 800; letter-spacing: .09em; }
+.response-metrics strong { color: #e4eaed; font: 10px ui-monospace, Consolas, monospace; }
+.response-navigation { display: flex; align-items: center; gap: 6px; }
+.response-navigation label { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 120px; margin-left: 5px; color: #788892; font: 8px ui-monospace, Consolas, monospace; }
+.response-navigation input { width: 100%; accent-color: var(--cyan); }
+.response-navigation output { width: 34px; color: var(--amber); font: 10px ui-monospace, Consolas, monospace; text-align: right; }
+.response-legend { display: flex; gap: 20px; margin: 10px 0 2px; color: #8e9ca5; font: 8px ui-monospace, Consolas, monospace; }
+.response-legend span { display: flex; align-items: center; gap: 6px; }
+.response-legend i { width: 26px; height: 0; border-top: 2px solid; }
+.response-legend .legend-left { border-color: var(--cyan); }
+.response-legend .legend-right { border-color: var(--amber); border-top-style: dashed; }
+.response-legend .legend-decay { border-color: #e5eaed; }
+.response-chart { display: block; width: 100%; height: 300px; border: 1px solid #29353c; background: #0a0f12; touch-action: none; }
+.response-chart path { vector-effect: non-scaling-stroke; fill: none; }
+.chart-grid path { stroke: #263138; stroke-width: 1; }
+.chart-grid text, .axis-label { fill: #687882; font: 9px ui-monospace, Consolas, monospace; }
+.wave-left { stroke: var(--cyan); stroke-width: 1.2; }
+.wave-right { stroke: var(--amber); stroke-width: 1.3; stroke-dasharray: 4 3; }
+.decay-line { stroke: #e5eaed; stroke-width: 1.5; }
+.fit-band { stroke: rgba(189, 156, 255, .55); stroke-width: 1; stroke-dasharray: 5 4; }
+.axis-end { text-anchor: end; }
+.rt60-refusal, .rt60-method { display: flex; gap: 10px; margin-top: 8px; padding: 8px 10px; border-left: 3px solid var(--amber); background: rgba(242, 180, 78, .07); color: #aab6bc; font-size: 9px; }
+.rt60-refusal strong { color: var(--amber); white-space: nowrap; }
+.rt60-method { border-left-color: var(--violet); background: rgba(189, 156, 255, .06); }
+.rt60-method strong { color: var(--violet); white-space: nowrap; }
+
 .workspace { min-width: 0; min-height: 0; display: grid; grid-template-columns: clamp(150px, 16vw, 202px) minmax(0, 1fr) clamp(190px, 20vw, 258px); }
 .module-library, .inspector { min-height: 0; overflow: auto; background: var(--surface); }
 .module-library { padding: 18px 14px; border-right: 1px solid var(--line); }

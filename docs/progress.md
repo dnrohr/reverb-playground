@@ -27,6 +27,7 @@ Last updated: 2026-08-08
 | M3.6 Complete graph undo/redo and clipboard behavior | Complete | Unified 100-entry/8 MiB history; semantic/document hashes; clean marker; fresh-ID subgraph paste; screenshot/video |
 | M4.1 Implement feedback-loop highlighting | Complete | Selected node/cable cycles; active/alternate styling; loop delay/elements; nested/shared fixtures; bounded maximum graph |
 | M4.2 Implement impulse audition and capture | Complete | Safe 0.1 impulse; visible length/threshold/input policy; pre-gain stereo capture; prepared lock-free publication; deterministic repeats; screenshot/video |
+| M4.3 Implement stereo impulse and decay view | Complete | Solid/dashed stereo lanes; Schroeder decay; bounded 1-256x zoom/pan; tested T30/refusal rules; short/Barr/bloom screenshots; video |
 
 ## M0.2 verification
 
@@ -285,3 +286,16 @@ Results:
 - Native tests repeat an unmodulated measurement with different live input and master gain and compare both channels sample-for-sample. Bridge tests reject non-finite or unequal channel payloads.
 - Completed-capture screenshot: [`artifacts/ui/m4-2-impulse-audition-capture/03-complete.jpg`](../artifacts/ui/m4-2-impulse-audition-capture/03-complete.jpg).
 - Ready/capturing/completed interaction evidence: [`artifacts/ui/m4-2-impulse-audition-capture/impulse-capture-interaction.mp4`](../artifacts/ui/m4-2-impulse-audition-capture/impulse-capture-interaction.mp4).
+
+## M4.3 verification
+
+- A completed stereo capture opens a response inspector with separate upper-solid `L` and lower-dashed `R` waveform lanes plus a labeled Schroeder energy-decay lane. Channel identity therefore does not depend on color.
+- Full Tail, Early / 16x, power-of-two zoom through 256x, mouse-wheel zoom, and bounded pan expose both isolated early samples and the complete captured tail. Min/max waveform buckets retain extrema within a fixed 450-column presentation budget.
+- Stereo squared energy is backward integrated and normalized before a tested T30 regression over -5 through -35 dB extrapolates RT60. A synthetic 0.75-second exponential fixture recovers 0.75 seconds.
+- Empty, noisy/truncated, insufficient-range, and non-decaying captures withhold RT60 and display a specific explanation instead of a misleading value.
+- Analysis runs only after the native real-time capture has published an immutable payload; no visualization work enters the audio callback.
+- Short response screenshot: [`artifacts/ui/m4-3-stereo-impulse-decay/01-short-response.jpg`](../artifacts/ui/m4-3-stereo-impulse-decay/01-short-response.jpg).
+- Runtime Barr full-tail screenshot: [`artifacts/ui/m4-3-stereo-impulse-decay/02-barr-reference-full-tail.png`](../artifacts/ui/m4-3-stereo-impulse-decay/02-barr-reference-full-tail.png).
+- Runtime Barr early/panned screenshots: [`03-barr-early-16x.png`](../artifacts/ui/m4-3-stereo-impulse-decay/03-barr-early-16x.png) and [`04-barr-panned-16x.png`](../artifacts/ui/m4-3-stereo-impulse-decay/04-barr-panned-16x.png).
+- Long/bloom full-tail and early screenshots: [`05-long-bloom-full-tail.jpg`](../artifacts/ui/m4-3-stereo-impulse-decay/05-long-bloom-full-tail.jpg) and [`06-long-bloom-early.jpg`](../artifacts/ui/m4-3-stereo-impulse-decay/06-long-bloom-early.jpg).
+- Measurement/navigation video: [`stereo-response-measurement-and-navigation.mp4`](../artifacts/ui/m4-3-stereo-impulse-decay/stereo-response-measurement-and-navigation.mp4).
