@@ -23,6 +23,8 @@ Last updated: 2026-08-08
 | M3.2 Implement typed connection editing | Complete | Mono branching; endpoint/type validation; replace/automatic Sum choices; structural undo; minimum-zoom hit target; video |
 | M3.3 Compile acyclic graphs | Complete | Deterministic topological schedule; prepared immutable topology; reachability warnings; direct DSP comparisons; last-valid publication |
 | M3.4 Compile feedback graphs | Complete | Deterministic SCC analysis; split-phase Delay execution; exact algebraic-loop paths; nested/multiple-loop tests; bounded compile fixture |
+| M3.5 Plan and limit delay memory | Complete | Single prepared arena; exact requested/allocated inspection; 64 MiB budget; sample-rate republish safety; boundary tests |
+| M3.6 Complete graph undo/redo and clipboard behavior | Complete | Unified 100-entry/8 MiB history; semantic/document hashes; clean marker; fresh-ID subgraph paste; screenshot/video |
 
 ## M0.2 verification
 
@@ -249,3 +251,13 @@ Results:
 - A nine-by-ten-second graph fits and publishes at 44.1 kHz, recalculates above budget at 192 kHz, fails without allocating a new runtime, and leaves the preceding runtime active.
 - Design and inspection contract: [Delay-memory planning](delay-memory-planning.md).
 - UI unchanged; no screenshot or video was required.
+
+## M3.6 verification
+
+- One bounded stack records node, cable, layout, parameter, paste, automatic Sum, and reset transactions; toolbar, inspector, and keyboard controls traverse the same history.
+- Automated mixed-edit traversal returns deterministic semantic hashes to every prior value. History retains at most the newest 100 transactions and 8 MiB of snapshots, and clears redo only after a new edit.
+- Automatic Sum insertion restores the original occupied-input graph with one undo.
+- Copy/paste assigns collision-free node/cable IDs, preserves parameter values and fully internal cables, omits required I/O, converts copies to draft nodes, offsets repeats, and commits atomically.
+- The Saved/Unsaved marker uses semantic-plus-layout document identity. Successful save moves the marker without clearing history or mutating the semantic hash; load creates a new clean baseline.
+- Screenshot: [`artifacts/ui/m3-6-unified-history/clipboard-paste.png`](../artifacts/ui/m3-6-unified-history/clipboard-paste.png).
+- Copy/paste/undo/redo video: [`artifacts/ui/m3-6-unified-history/copy-paste-undo-redo.mp4`](../artifacts/ui/m3-6-unified-history/copy-paste-undo-redo.mp4).

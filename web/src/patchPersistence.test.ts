@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createFlowModel, type RuntimeSnapshot } from './graph';
 import { parsePatchJson, writePatchJson } from './patchPersistence';
 import { createModuleNode } from './modules';
+import { semanticGraphHash } from './graphHistory';
 
 const reference: RuntimeSnapshot = {
   contractVersion: 1, engineId: 'barr-reference', sampleRate: 48000, outsidePatch: [],
@@ -23,7 +24,9 @@ describe('patch persistence', () => {
     flow.nodes[0].data.parameters[0].value = 0.371;
     flow.nodes[0].position = { x: -42.25, y: 319.75 };
     const viewport = { x: 17.5, y: -88.25, zoom: 1.375 };
+    const semanticBeforeSave = semanticGraphHash(flow);
     const written = writePatchJson(flow.nodes, flow.edges, viewport);
+    expect(semanticGraphHash(flow)).toBe(semanticBeforeSave);
     const loaded = parsePatchJson(written, reference);
 
     expect(loaded.nodes[0].data.parameters[0].value).toBe(0.371);

@@ -16,9 +16,13 @@ The reference patch opens fitted to the available canvas. Blocks retain stable I
 - Zoom with the mouse wheel or the canvas zoom controls. The fit button restores the complete reference view.
 - Press Tab to move keyboard focus through graph elements and Enter to select the focused item.
 - Press Delete or Backspace to remove selected blocks or cables from the UI copy.
+- Press Ctrl/Cmd+C and Ctrl/Cmd+V, or use **Copy** and **Paste**, to duplicate selected non-I/O blocks with fresh identities while preserving internal cables.
+- Press Ctrl/Cmd+Z to undo and Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y to redo any committed node, cable, layout, parameter, or clipboard transaction.
 - Press R, or choose **Reset view copy**, to restore the reference graph and fitted viewport.
 
 Deletion affects only the current presentation copy. **Reset view copy** reconstructs the canvas from the last native runtime snapshot. General graph compilation begins in M3, so presentation deletion does not yet alter audio.
+
+The toolbar's **Saved/Unsaved** badge compares the current semantic-plus-layout document identity with the most recent successful save/load baseline. See [Unified graph history and clipboard](unified-graph-history-and-clipboard.md).
 
 ## Learn mode
 

@@ -15,7 +15,7 @@ Runtime presentation metadata—labels, teaching roles, slider ranges/steps, and
 
 The browser reads the selected file into temporary memory and completes JSON, schema, reference-identity, range, layout, and viewport validation before calling any React setter or native parameter function. Only a fully valid temporary document replaces the visible copy and publishes its parameter values. An invalid file leaves the current nodes, cables, values, and viewport untouched and displays an actionable `Patch load rejected: …` diagnostic.
 
-After a successful load, selection and undo/redo history are cleared because the loaded document becomes the new editing baseline. Every loaded DSP parameter is then sent through the existing lock-free parameter bridge; file I/O and parsing remain on the UI thread.
+After a successful load, selection and undo/redo history are cleared because the loaded document becomes the new clean editing baseline. Every loaded DSP parameter is then sent through the existing lock-free parameter bridge; file I/O and parsing remain on the UI thread. Saving updates the clean-state marker without clearing history or changing the graph's semantic hash, so the user may still undo after saving.
 
 ## Schema and future fields
 

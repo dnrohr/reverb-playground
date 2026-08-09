@@ -17,19 +17,14 @@ import {
 } from '@xyflow/react';
 import { createFlowModel, deleteSelected, parseRuntimeSnapshot, type PatchNodeData, type RuntimeSnapshot } from './graph';
 import { createModuleNode, moduleDefinitions, nextNodeId, type ModuleType } from './modules';
-import { commitGraphEdit, emptyGraphHistory, redoGraphEdit, undoGraphEdit } from './graphHistory';
+import { commitGraphEdit, emptyGraphHistory, isHistoryClean, markHistoryClean, redoGraphEdit, snapshotGraph, undoGraphEdit } from './graphHistory';
+import { copySelectedGraph, pasteGraph, type GraphClipboard } from './graphClipboard';
 import { connectGraph, decideConnection, insertSumForOccupiedInput } from './connectionEditing';
 import { PatchNode } from './PatchNode';
 import { callNative } from './nativeBridge';
 import { parsePatchJson, writePatchJson } from './patchPersistence';
 import researchText from '../../docs/keith-barr-reverb-architectures.md?raw';
 import { teachingTopicFor, type TeachingTopic } from './teaching';
-import {
-  commitParameterEdit as commitHistoryEdit,
-  redoParameterEdit as takeRedo,
-  undoParameterEdit as takeUndo,
-  type ParameterEdit,
-} from './parameterHistory';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -65,9 +60,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [selectedNode, setSelectedNode] = useState<Node<PatchNodeData> | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 });
-  const [undoStack, setUndoStack] = useState<ParameterEdit[]>([]);
-  const [redoStack, setRedoStack] = useState<ParameterEdit[]>([]);
-  const activeEdit = useRef<ParameterEdit | null>(null);
+  const activeEdit = useRef<{ label: string; before: ReturnType<typeof snapshotGraph> } | null>(null);
+  const dragStart = useRef<ReturnType<typeof snapshotGraph> | null>(null);
+  const clipboard = useRef<GraphClipboard | null>(null);
+  const pasteCount = useRef(0);
   const loadInput = useRef<HTMLInputElement | null>(null);
   const [fileStatus, setFileStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
   const [teachingEnabled, setTeachingEnabled] = useState(() => {
@@ -75,13 +71,21 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   });
   const [dismissedTeaching, setDismissedTeaching] = useState<string | null>(null);
   const [researchOpen, setResearchOpen] = useState(false);
-  const [graphHistory, setGraphHistory] = useState(emptyGraphHistory);
+  const [graphHistory, setGraphHistory] = useState(() => emptyGraphHistory(initial));
   const [graphStatus, setGraphStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
   const [pendingConnection, setPendingConnection] = useState<Connection | null>(null);
 
   const applyGraph = useCallback((state: { nodes: Node<PatchNodeData>[]; edges: Edge[] }) => {
     setNodes(state.nodes); setEdges(state.edges); setSelectedNode(null); setSelectedEdge(null);
   }, [setEdges, setNodes]);
+
+  const publishRuntimeParameters = useCallback((state: { nodes: Node<PatchNodeData>[] }) => {
+    for (const node of state.nodes) for (const parameter of node.data.parameters)
+      if (node.data.runtimeBound) {
+        try { void callNative('setRuntimeParameter', node.id, parameter.id, parameter.value).catch(() => undefined); }
+        catch { /* browser prototype has no native bridge */ }
+      }
+  }, []);
 
   const addModule = useCallback((type: ModuleType) => {
     if ((type === 'stereo-input' || type === 'stereo-output') && nodes.some((node) => node.data.type === type)) {
@@ -101,8 +105,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     applyGraph(after); setGraphHistory((history) => commitGraphEdit(history, 'Delete selection', before, after)); setGraphStatus({ kind: 'ok', message: 'DELETED SELECTION + INCIDENT CABLES / UNDO AVAILABLE' });
   }, [applyGraph, edges, nodes]);
 
-  const undoGraph = useCallback(() => { const result = undoGraphEdit(graphHistory); if (!result.edit) return; applyGraph(result.edit.before); setGraphHistory(result.history); setGraphStatus({ kind: 'ok', message: `UNDID ${result.edit.label.toUpperCase()}` }); }, [applyGraph, graphHistory]);
-  const redoGraph = useCallback(() => { const result = redoGraphEdit(graphHistory); if (!result.edit) return; applyGraph(result.edit.after); setGraphHistory(result.history); setGraphStatus({ kind: 'ok', message: `REDID ${result.edit.label.toUpperCase()}` }); }, [applyGraph, graphHistory]);
+  const undoGraph = useCallback(() => { const result = undoGraphEdit(graphHistory); if (!result.edit) return; applyGraph(result.edit.before); publishRuntimeParameters(result.edit.before); setGraphHistory(result.history); setGraphStatus({ kind: 'ok', message: `UNDID ${result.edit.label.toUpperCase()}` }); }, [applyGraph, graphHistory, publishRuntimeParameters]);
+  const redoGraph = useCallback(() => { const result = redoGraphEdit(graphHistory); if (!result.edit) return; applyGraph(result.edit.after); publishRuntimeParameters(result.edit.after); setGraphHistory(result.history); setGraphStatus({ kind: 'ok', message: `REDID ${result.edit.label.toUpperCase()}` }); }, [applyGraph, graphHistory, publishRuntimeParameters]);
 
   const commitConnection = useCallback((connection: Connection) => {
     const before = { nodes, edges }; const decision = decideConnection(nodes, edges, connection);
@@ -131,39 +135,37 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     };
     setNodes((current) => current.map(update));
     setSelectedNode((current) => current ? update(current) : null);
-    if (nodes.find((node) => node.id === nodeId)?.data.runtimeBound) void callNative('setRuntimeParameter', nodeId, parameterId, value);
+    if (nodes.find((node) => node.id === nodeId)?.data.runtimeBound) {
+      try { void callNative('setRuntimeParameter', nodeId, parameterId, value).catch(() => undefined); }
+      catch { /* browser prototype has no native bridge */ }
+    }
   }, [nodes, setNodes]);
-
-  const undo = useCallback(() => {
-    const result = takeUndo({ undo: undoStack, redo: redoStack });
-    const edit = result.edit;
-    if (!edit) return;
-    applyParameter(edit.nodeId, edit.parameterId, edit.before);
-    setUndoStack(result.history.undo);
-    setRedoStack(result.history.redo);
-  }, [applyParameter, redoStack, undoStack]);
-
-  const redo = useCallback(() => {
-    const result = takeRedo({ undo: undoStack, redo: redoStack });
-    const edit = result.edit;
-    if (!edit) return;
-    applyParameter(edit.nodeId, edit.parameterId, edit.after);
-    setUndoStack(result.history.undo);
-    setRedoStack(result.history.redo);
-  }, [applyParameter, redoStack, undoStack]);
 
   const resetReference = useCallback(() => {
     const fresh = createFlowModel(snapshot);
-    setNodes(fresh.nodes);
-    setEdges(fresh.edges);
-    setSelectedNode(null);
-    setSelectedEdge(null);
-    setUndoStack([]);
-    setRedoStack([]);
-    setGraphHistory(emptyGraphHistory());
+    const before = { nodes, edges };
+    applyGraph(fresh);
+    publishRuntimeParameters(fresh);
+    setGraphHistory((history) => commitGraphEdit(history, 'Reset patch', before, fresh));
     setPendingConnection(null);
     requestAnimationFrame(() => void fitView({ padding: 0.16, minZoom: 0.58, maxZoom: 1.1 }));
-  }, [fitView, setEdges, setNodes, snapshot]);
+  }, [applyGraph, edges, fitView, nodes, publishRuntimeParameters, snapshot]);
+
+  const copySelection = useCallback(() => {
+    const copied = copySelectedGraph({ nodes, edges });
+    if (!copied) { setGraphStatus({ kind: 'error', message: 'SELECT ONE OR MORE NON-I/O BLOCKS TO COPY' }); return; }
+    clipboard.current = copied; pasteCount.current = 0;
+    void navigator.clipboard?.writeText(JSON.stringify({ format: 'reverb-playground-subgraph-v1', ...copied })).catch(() => undefined);
+    setGraphStatus({ kind: 'ok', message: `COPIED ${copied.nodes.length} BLOCK${copied.nodes.length === 1 ? '' : 'S'} + ${copied.edges.length} INTERNAL CABLE${copied.edges.length === 1 ? '' : 'S'}` });
+  }, [edges, nodes]);
+
+  const pasteSelection = useCallback(() => {
+    if (!clipboard.current) { setGraphStatus({ kind: 'error', message: 'GRAPH CLIPBOARD IS EMPTY' }); return; }
+    const before = { nodes, edges };
+    const after = pasteGraph(before, clipboard.current, 40 * ++pasteCount.current);
+    applyGraph(after); setGraphHistory((history) => commitGraphEdit(history, 'Paste selection', before, after));
+    setGraphStatus({ kind: 'ok', message: `PASTED ${clipboard.current.nodes.length} BLOCK${clipboard.current.nodes.length === 1 ? '' : 'S'} / NEW IDS ASSIGNED` });
+  }, [applyGraph, edges, nodes]);
 
   const handleSelection = useCallback(({ nodes: selectedNodes, edges: selectedEdges }: OnSelectionChangeParams) => {
     setSelectedNode((selectedNodes[0] as Node<PatchNodeData> | undefined) ?? null);
@@ -174,40 +176,38 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     const handleKey = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
         event.preventDefault();
-        if (event.shiftKey) redo(); else undo();
+        if (event.shiftKey) redoGraph(); else undoGraph();
         return;
       }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') {
         event.preventDefault();
-        redo();
+        redoGraph();
         return;
       }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c' && !(event.target instanceof HTMLInputElement)) { event.preventDefault(); copySelection(); return; }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v' && !(event.target instanceof HTMLInputElement)) { event.preventDefault(); pasteSelection(); return; }
       if ((event.key === 'Delete' || event.key === 'Backspace') && !(event.target instanceof HTMLInputElement)) { event.preventDefault(); removeSelection(); return; }
       if (event.key.toLowerCase() === 'r' && !(event.target instanceof HTMLInputElement))
         resetReference();
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [redo, removeSelection, resetReference, undo]);
+  }, [copySelection, pasteSelection, redoGraph, removeSelection, resetReference, undoGraph]);
 
-  const beginParameterEdit = useCallback((nodeId: string, parameterId: string, before: number) => {
-    activeEdit.current = { nodeId, parameterId, before, after: before };
-  }, []);
+  const beginParameterEdit = useCallback((nodeId: string, parameterId: string, _before: number) => {
+    activeEdit.current = { label: `Edit ${nodeId}.${parameterId}`, before: snapshotGraph({ nodes, edges }) };
+  }, [edges, nodes]);
 
   const changeParameter = useCallback((nodeId: string, parameterId: string, value: number) => {
     applyParameter(nodeId, parameterId, value);
-    if (activeEdit.current?.nodeId === nodeId && activeEdit.current.parameterId === parameterId)
-      activeEdit.current.after = value;
   }, [applyParameter]);
 
   const commitParameterEdit = useCallback(() => {
     const edit = activeEdit.current;
     activeEdit.current = null;
     if (!edit) return;
-    const result = commitHistoryEdit({ undo: undoStack, redo: redoStack }, edit);
-    setUndoStack(result.undo);
-    setRedoStack(result.redo);
-  }, [redoStack, undoStack]);
+    setGraphHistory((history) => commitGraphEdit(history, edit.label, edit.before, { nodes, edges }));
+  }, [edges, nodes]);
 
   const savePatch = useCallback(() => {
     try {
@@ -221,6 +221,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       link.click();
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 0);
+      setGraphHistory((history) => markHistoryClean(history, { nodes, edges }));
       setFileStatus({ kind: 'ok', message: 'SAVED BARR-REFERENCE.RVP.JSON / SCHEMA V1' });
     } catch (reason) {
       setFileStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Patch save failed' });
@@ -240,9 +241,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       }
       setSelectedNode(null);
       setSelectedEdge(null);
-      setUndoStack([]);
-      setRedoStack([]);
-      setGraphHistory(emptyGraphHistory());
+      setGraphHistory(emptyGraphHistory(loaded));
       setPendingConnection(null);
       setFileStatus({ kind: 'ok', message: `LOADED ${file.name.toUpperCase()} / SCHEMA V1` });
     } catch (reason) {
@@ -305,10 +304,15 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
             </div>
             <div className="canvas-actions">
               <span>{Math.round(viewport.zoom * 100)}%</span>
+              <span className={`clean-state ${isHistoryClean(graphHistory, { nodes, edges }) ? 'is-clean' : 'is-dirty'}`}>
+                {isHistoryClean(graphHistory, { nodes, edges }) ? 'SAVED' : 'UNSAVED'}
+              </span>
               <button type="button" onClick={savePatch}>SAVE PATCH</button>
               <button type="button" onClick={() => loadInput.current?.click()}>LOAD PATCH</button>
-              <button type="button" disabled={!graphHistory.undo.length} onClick={undoGraph}>UNDO STRUCTURE</button>
+              <button type="button" disabled={!graphHistory.undo.length} onClick={undoGraph}>UNDO</button>
               <button type="button" disabled={!graphHistory.redo.length} onClick={redoGraph}>REDO</button>
+              <button type="button" onClick={copySelection}>COPY</button>
+              <button type="button" disabled={!clipboard.current} onClick={pasteSelection}>PASTE</button>
               <button type="button" onClick={removeSelection}>DELETE</button>
               <button type="button" onClick={resetReference}>RESET VIEW COPY</button>
               <input
@@ -351,6 +355,14 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               nodeTypes={{ patchNode: PatchNode }}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
+              onNodeDragStart={() => { dragStart.current = snapshotGraph({ nodes, edges }); }}
+              onNodeDragStop={(_event, movedNode, movedNodes) => {
+                const before = dragStart.current; dragStart.current = null; if (!before) return;
+                const positions = new Map(movedNodes.map((node) => [node.id, node.position]));
+                positions.set(movedNode.id, movedNode.position);
+                const after = { nodes: nodes.map((node) => positions.has(node.id) ? { ...node, position: { ...positions.get(node.id)! } } : node), edges };
+                setGraphHistory((history) => commitGraphEdit(history, `Move ${movedNode.id}`, before, after));
+              }}
               onConnect={commitConnection}
               isValidConnection={(connection) => decideConnection(nodes, edges, { source: connection.source, sourceHandle: connection.sourceHandle ?? null, target: connection.target, targetHandle: connection.targetHandle ?? null }).kind !== 'invalid'}
               defaultEdgeOptions={{ interactionWidth: 24 }}
@@ -438,8 +450,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 </div>
               )) : <p className="empty-parameters">No editable parameters.</p>}
               <div className="history-actions">
-                <button type="button" disabled={!undoStack.length} onClick={undo}>UNDO</button>
-                <button type="button" disabled={!redoStack.length} onClick={redo}>REDO</button>
+                <button type="button" disabled={!graphHistory.undo.length} onClick={undoGraph}>UNDO</button>
+                <button type="button" disabled={!graphHistory.redo.length} onClick={redoGraph}>REDO</button>
               </div>
               <div className="selection-note">{selectedNode.data.runtimeBound ? `Live value from native DSP runtime contract v${snapshot.contractVersion}.` : 'Draft graph block. Saved values are editable; audio compilation arrives in a later milestone.'}</div>
               {showTeaching ? <TeachingCard topic={teachingTopicFor(selectedNode.id)} onDismiss={() => setDismissedTeaching(teachingKey)} onResearch={() => setResearchOpen(true)} /> : null}
@@ -462,7 +474,9 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <p>Select a block or cable to inspect its identity, ports, and saved parameter values.</p>
               <kbd>TAB</kbd><span>focus graph elements</span>
               <kbd>ENTER</kbd><span>select focused item</span>
-              <kbd>DELETE</kbd><span>remove from UI copy</span>
+              <kbd>⌘/CTRL C</kbd><span>copy selected non-I/O blocks</span>
+              <kbd>⌘/CTRL V</kbd><span>paste with new block and cable IDs</span>
+              <kbd>DELETE</kbd><span>remove selected blocks or cables</span>
               {showTeaching ? <TeachingCard topic={teachingTopicFor()} onDismiss={() => setDismissedTeaching(teachingKey)} onResearch={() => setResearchOpen(true)} /> : null}
             </div>
           )}

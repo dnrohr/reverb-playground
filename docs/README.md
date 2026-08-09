@@ -30,6 +30,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Acyclic graph compilation](acyclic-graph-compilation.md) - deterministic scheduling, prepared native runtimes, reachability warnings, and last-valid publication.
 - [Feedback graph compilation](feedback-graph-compilation.md) - SCC analysis, exact algebraic-loop diagnostics, split-phase Delay semantics, and compiler budgets.
 - [Delay-memory planning](delay-memory-planning.md) - requested/allocated inspection, prepared arenas, project budget, boundaries, and safe sample-rate recalculation.
+- [Unified graph history and clipboard](unified-graph-history-and-clipboard.md) - mixed-operation undo/redo, bounded history, clean-state identity, and subgraph copy/paste.
 
 ## Local source tree
 

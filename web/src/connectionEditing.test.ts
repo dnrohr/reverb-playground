@@ -34,6 +34,11 @@ describe('typed connection editing', () => {
     expect(result.edges.map((edge) => `${edge.source}.${edge.sourceHandle}->${edge.target}.${edge.targetHandle}`)).toEqual([
       'input.out-l->sum-1.in-a', 'allpass.out->sum-1.in-b', 'sum-1.out->delay.in',
     ]);
+    const history = commitGraphEdit(emptyGraphHistory(once), 'Insert +', once, result);
+    expect(history.undo).toHaveLength(1);
+    const undone = undoGraphEdit(history);
+    expect(undone.edit?.before).toEqual(once);
+    expect(undone.history.undo).toHaveLength(0);
   });
 
   it('rejects invalid direction and signal-type combinations', () => {
