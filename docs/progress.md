@@ -36,6 +36,7 @@ Last updated: 2026-08-11
 | M5.4 Implement runtime topology publication | Complete | One-entry newest-wins compile queue; bounded block-entry swap; fixed retirement ring; worker reclamation; pending/active/failed diagnostics; 1,000-edit stress test |
 | M5.5 Add short topology-change crossfades | Complete | Live schema-v2 editor binding; fixed 10 ms two-runtime ramp; newest-wins transition queue; constructed-graph capture/safety diagnostics; 125%-DPI fill fix; screenshot/video |
 | M5.6 Finalize runaway-feedback UX | Complete | 50 ms sustained detector; immediate non-finite/hard-ceiling mute; heuristic loop marking; muted Undo; state-clearing recovery; scaled-work-area sizing; screenshot/video |
+| M6.1 Define reverse-reverb architecture requirements | Complete | Four distinct signal/IR contracts; causal Reverse Envelope selected; follower/gate primitive boundary; factory naming guard; documentation tests |
 
 ## M0.2 verification
 
@@ -400,3 +401,13 @@ Results:
 - Latched screenshot: [`artifacts/ui/m5-6-runaway-feedback/01-runaway-loop-and-recovery.png`](../artifacts/ui/m5-6-runaway-feedback/01-runaway-loop-and-recovery.png).
 - Recovered screenshot: [`artifacts/ui/m5-6-runaway-feedback/03-recovered-silence.png`](../artifacts/ui/m5-6-runaway-feedback/03-recovered-silence.png).
 - Safe-reset/Undo/recovery video: [`artifacts/ui/m5-6-runaway-feedback/runaway-mute-edit-undo-recovery.mp4`](../artifacts/ui/m5-6-runaway-feedback/runaway-mute-edit-undo-recovery.mp4).
+
+## M6.1 verification
+
+- Product language separately defines true sample-order reversal, a causal rising-envelope approximation, level/fixed gated reverb, and Bloom-like slow diffusion. Each definition states its audible behavior and impulse-response evidence.
+- **Causal Reverse Envelope** is the chosen first method. Its visible increasing Delay/Gain branches are causal, real-time feasible, and explicitly do not claim lookahead, pre-echo, or literal reversal.
+- The chosen reverse construction requires no hidden primitive. M6.2 is bounded to two reverb-specific additions for gated behavior: a visible-control Envelope Follower and a control-driven Hold Gate with millisecond timing.
+- Normative naming rules prohibit a bare **Reverse** label and specifically prohibit calling a patch reverse solely because it has a long diffuse attack. Bloom requires a smooth nonzero decay; Gated requires measurable truncation.
+- Three browser documentation-contract tests enforce the four concepts, selected architecture, primitive boundary, and naming prohibition.
+- Source notes distinguish primary product behavior descriptions from inferred topology. Deferred convolution, lookahead, IR import, and polyphonic trigger work is recorded without expanding M6.2.
+- UI unchanged; no screenshot or video was required.

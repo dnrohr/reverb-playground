@@ -64,6 +64,14 @@ Costello summarizes correspondence with Barr: Quadraverb's four sections, later 
 
 Connects MIDIVerb II Bloom to a deliberately slow density attack from series allpasses and quotes the original manual's description. Useful for perceptual interpretation, but its proposed reconstruction settings are Costello's emulation, not original Alesis code.
 
+The longer product note is also available directly as [ValhallaShimmerNotes.pdf](https://www.valhalladsp.com/shimmer/ValhallaShimmerNotes.pdf). It preserves the MIDIVerb II wording that Bloom rises to a diffuse reverb and has a smooth decay. This supports an audible/envelope distinction, not a claim that the original program's samples were literally reversed.
+
+### Lexicon PCM 80 Inverse product documentation
+
+<https://lexiconpro.com/en-US/products/pcm80>
+
+Lexicon's Inverse algorithm documentation describes an initial envelope whose slope may decay, remain level, or rise for a variable interval, followed by abrupt cutoff, and distinguishes it from input-dependent gating. This is useful primary product evidence for terminology and measurable behavior; it does not establish the hidden topology of unrelated Alesis programs.
+
 ### AES Pacific Northwest meeting recap
 
 <https://www.aes-media.org/sections/pnw/pnwrecaps/2015/rlang_oct2015/>
