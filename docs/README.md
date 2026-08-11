@@ -37,6 +37,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Live energy telemetry](live-energy-telemetry.md) - fixed, non-blocking RMS snapshots; smoothed node/cable activity; disable and reduced-motion behavior.
 - [Runtime resource and safety diagnostics](runtime-resource-safety-diagnostics.md) - labeled estimates/measurements, prepared memory, clipping, revision-bound safety events, and explicit recovery.
 - [Control-rate graph semantics](control-rate-graph-semantics.md) - typed parameter sockets, fixed-rate interpolation, bounded evaluation, mapping formula, and schema-v2 persistence.
+- [LFO and control-mapping blocks](lfo-and-control-mapping.md) - sine/triangle generation, free-run/restart behavior, explicit scale/offset/polarity, range preview, and branching.
 
 ## Local source tree
 

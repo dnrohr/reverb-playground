@@ -19,6 +19,14 @@ describe('typed connection editing', () => {
     expect(state.edges.every((edge) => edge.data?.signal === 'audio' && edge.interactionWidth === 24)).toBe(true);
   });
 
+  it('branches one mapped control output to multiple parameter sockets', () => {
+    const mapper = createModuleNode('control-map', 'mapper', { x: 0, y: 0 });
+    let state = connectGraph({ nodes: [mapper, delay, allpass], edges: [] }, connection('mapper', 'out', 'delay', 'delay-mod'));
+    state = connectGraph(state, connection('mapper', 'out', 'allpass', 'coefficient-mod'));
+    expect(state.edges).toHaveLength(2);
+    expect(state.edges.every((edge) => edge.data?.signal === 'control')).toBe(true);
+  });
+
   it('rejects occupied inputs and can replace the existing cable', () => {
     const once = connectGraph({ nodes: [input, delay, allpass], edges: [] }, connection('input', 'out-l', 'delay', 'in'));
     expect(decideConnection(once.nodes, once.edges, connection('allpass', 'out', 'delay', 'in')).kind).toBe('occupied');

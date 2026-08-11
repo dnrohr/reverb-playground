@@ -67,6 +67,29 @@ describe('patch persistence', () => {
     expect(() => parsePatchJson(writePatchJson(withoutInput, [], { x: 0, y: 0, zoom: 1 }), reference)).toThrow(/exactly one Stereo Input/);
   });
 
+  it('round trips LFO and mapping blocks with a branched control output exactly', () => {
+    const input = createModuleNode('stereo-input', 'stereo-input-1', { x: 0, y: 0 });
+    const output = createModuleNode('stereo-output', 'stereo-output-1', { x: 600, y: 0 });
+    const lfo = createModuleNode('lfo', 'lfo-1', { x: 100, y: 200 });
+    const mapper = createModuleNode('control-map', 'control-map-1', { x: 300, y: 200 });
+    const gain = createModuleNode('gain', 'gain-1', { x: 500, y: 150 });
+    const delay = createModuleNode('delay', 'delay-1', { x: 500, y: 280 });
+    lfo.data.parameters.find((parameter) => parameter.id === 'frequency')!.value = 0.37;
+    lfo.data.parameters.find((parameter) => parameter.id === 'waveform')!.value = 1;
+    mapper.data.parameters.find((parameter) => parameter.id === 'scale')!.value = -0.4;
+    mapper.data.parameters.find((parameter) => parameter.id === 'offset')!.value = 0.2;
+    const edges = [
+      { id: 'lfo-map', source: lfo.id, sourceHandle: 'out', target: mapper.id, targetHandle: 'in' },
+      { id: 'map-gain', source: mapper.id, sourceHandle: 'out', target: gain.id, targetHandle: 'gain-mod' },
+      { id: 'map-delay', source: mapper.id, sourceHandle: 'out', target: delay.id, targetHandle: 'delay-mod' },
+    ];
+    const written = writePatchJson([input, output, lfo, mapper, gain, delay], edges, { x: 3, y: 4, zoom: 0.8 });
+    const loaded = parsePatchJson(written, reference);
+    expect(loaded.edges.filter((edge) => edge.source === mapper.id)).toHaveLength(2);
+    expect(loaded.nodes.find((node) => node.id === lfo.id)?.data.parameters.find((parameter) => parameter.id === 'waveform')?.value).toBe(1);
+    expect(writePatchJson(loaded.nodes, loaded.edges, loaded.viewport)).toBe(written);
+  });
+
   it('rejects persisted graphs with multiple cables on one input', () => {
     const input = createModuleNode('stereo-input', 'stereo-input-1', { x: 0, y: 0 });
     const delay = createModuleNode('delay', 'delay-1', { x: 200, y: 0 });

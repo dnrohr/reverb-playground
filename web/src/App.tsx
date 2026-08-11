@@ -31,11 +31,20 @@ import { analyseResponse, decayPoints, frameWindow, rt60Explanation, waveformBuc
 import { decorateEnergy } from './energyDecoration';
 import { parseEnergyTelemetry, shouldRunEnergyTelemetry, smoothEnergy, type EnergyLevels } from './energyTelemetry';
 import { formatBytes, parseRuntimeDiagnostics, type RuntimeDiagnostics } from './runtimeDiagnostics';
+import { decorateControlPreview, mappingRange } from './controlSemantics';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
-  { group: 'SIGNAL', items: moduleDefinitions.filter((item) => item.role !== 'io') },
+  { group: 'SIGNAL', items: moduleDefinitions.filter((item) => item.role !== 'io' && item.role !== 'control') },
+  { group: 'CONTROL', items: moduleDefinitions.filter((item) => item.role === 'control') },
 ];
+
+const parameterChoices = (unit: string): { value: number; label: string }[] | null => {
+  if (unit === 'waveform') return [{ value: 0, label: 'SINE' }, { value: 1, label: 'TRIANGLE' }];
+  if (unit === 'run-mode') return [{ value: 0, label: 'FREE RUN' }, { value: 1, label: 'RESTART ON TRANSPORT' }];
+  if (unit === 'polarity') return [{ value: 0, label: 'UNIPOLAR 0…1' }, { value: 1, label: 'BIPOLAR −1…+1' }];
+  return null;
+};
 
 function formatValue(value: number, unit: string) {
   if (unit === 'milliseconds') return `${value.toFixed(2)} ms`;
@@ -232,6 +241,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [energyLevels, setEnergyLevels] = useState<EnergyLevels>({});
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
   const [diagnostics, setDiagnostics] = useState<RuntimeDiagnostics | null>(null);
+  const [controlPreviewTime, setControlPreviewTime] = useState(() => performance.now() / 1000);
 
   const loopInspection = useMemo(() => selectedNode
     ? inspectFeedbackLoops(nodes, edges, { nodeId: selectedNode.id })
@@ -239,7 +249,19 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   [edges, nodes, selectedEdge, selectedNode]);
   const normalizedLoopIndex = loopInspection?.loops.length ? activeLoopIndex % loopInspection.loops.length : 0;
   const loopDecoratedGraph = useMemo(() => decorateFeedbackLoops(nodes, edges, loopInspection, normalizedLoopIndex), [edges, loopInspection, nodes, normalizedLoopIndex]);
-  const displayedGraph = useMemo(() => decorateEnergy(loopDecoratedGraph.nodes, loopDecoratedGraph.edges, energyLevels), [energyLevels, loopDecoratedGraph]);
+  const energyDecoratedGraph = useMemo(() => decorateEnergy(loopDecoratedGraph.nodes, loopDecoratedGraph.edges, energyLevels), [energyLevels, loopDecoratedGraph]);
+  const displayedGraph = useMemo(() => decorateControlPreview(energyDecoratedGraph.nodes, energyDecoratedGraph.edges, controlPreviewTime), [controlPreviewTime, energyDecoratedGraph]);
+  const selectedMappingRange = useMemo(() => {
+    if (selectedNode?.data.type !== 'control-map') return null;
+    const value = (id: string, fallback: number) => selectedNode.data.parameters.find((parameter) => parameter.id === id)?.value ?? fallback;
+    return mappingRange(value('scale', 1), value('offset', 0), value('polarity', 1) >= 0.5 ? 'bipolar' : 'unipolar');
+  }, [selectedNode]);
+
+  useEffect(() => {
+    if (reducedMotion || !nodes.some((node) => node.data.role === 'control')) return;
+    const timer = window.setInterval(() => setControlPreviewTime(performance.now() / 1000), 33);
+    return () => window.clearInterval(timer);
+  }, [nodes, reducedMotion]);
 
   useEffect(() => {
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -544,7 +566,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
             <section className="module-group" key={section.group}>
               <h2>{section.group}</h2>
               {section.items.map((item) => (
-                <button className="module-item" key={item.type} type="button" onClick={() => addModule(item.type)}>
+                <button className={`module-item${item.role === 'control' ? ' module-control' : ''}`} key={item.type} type="button" onClick={() => addModule(item.type)}>
                   <span className="module-glyph" aria-hidden="true" />
                   <span>{item.label}</span>
                 </button>
@@ -672,13 +694,28 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <div><dt>ROLE</dt><dd>{selectedNode.data.role}</dd></div>
                 <div><dt>PORTS</dt><dd>{selectedNode.data.ports.length} mono</dd></div>
               </dl>
+              {selectedMappingRange ? (
+                <section className="control-range-preview" aria-label="Predicted control output range">
+                  <header><span>PREDICTED OUTPUT</span><strong>{selectedMappingRange.minimum.toFixed(2)} … {selectedMappingRange.maximum.toFixed(2)}</strong></header>
+                  <div><i style={{ left: `${(selectedMappingRange.minimum + 1) * 50}%` }} /><i style={{ left: `${(selectedMappingRange.maximum + 1) * 50}%` }} /></div>
+                  <p>Visible before connection · output is clamped to −1…+1.</p>
+                </section>
+              ) : null}
               <h3>PARAMETERS</h3>
-              {selectedNode.data.parameters.length ? selectedNode.data.parameters.map((parameter) => (
+              {selectedNode.data.parameters.length ? selectedNode.data.parameters.map((parameter) => {
+                const choices = parameterChoices(parameter.unit);
+                return (
                 <div className="parameter-card" key={parameter.id}>
                   <span>{parameter.id.toUpperCase()}</span>
                   <label className="parameter-value">
                     <span className="sr-only">{`${selectedNode.data.label} ${parameter.id} numeric value`}</span>
-                    <input
+                    {choices ? <select
+                      aria-label={`${selectedNode.data.label} ${parameter.id}`}
+                      value={parameter.value}
+                      onFocus={() => beginParameterEdit(selectedNode.id, parameter.id, parameter.value)}
+                      onChange={(event) => changeParameter(selectedNode.id, parameter.id, Number(event.target.value))}
+                      onBlur={commitParameterEdit}
+                    >{choices.map((choice) => <option key={choice.value} value={choice.value}>{choice.label}</option>)}</select> : <input
                       className="parameter-number"
                       type="number"
                       min={parameter.minimum}
@@ -689,11 +726,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                       onChange={(event) => changeParameter(selectedNode.id, parameter.id, Number(event.target.value))}
                       onKeyDown={(event) => { if (event.key === 'Enter') commitParameterEdit(); }}
                       onBlur={commitParameterEdit}
-                    />
+                    />}
                     <strong>{parameter.unit === 'milliseconds' ? 'ms' : parameter.unit === 'hertz' ? 'Hz' : ''}</strong>
                   </label>
                   <small>{parameter.unit}</small>
-                  <input
+                  {!choices ? <input
                     aria-label={`${selectedNode.data.label} ${parameter.id}`}
                     type="range"
                     min={parameter.minimum}
@@ -708,7 +745,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                       if (event.key === 'Enter') commitParameterEdit();
                     }}
                     onBlur={commitParameterEdit}
-                  />
+                  /> : null}
                   {parameter.modulation ? (
                     <section className="modulation-mapping" aria-label={`${selectedNode.data.label} ${parameter.id} modulation mapping`}>
                       <header><span>CONTROL SOCKET</span><code>{parameter.modulation.portId}</code></header>
@@ -731,7 +768,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                     </section>
                   ) : null}
                 </div>
-              )) : <p className="empty-parameters">No editable parameters.</p>}
+                );
+              }) : <p className="empty-parameters">No editable parameters.</p>}
               <div className="history-actions">
                 <button type="button" disabled={!graphHistory.undo.length} onClick={undoGraph}>UNDO</button>
                 <button type="button" disabled={!graphHistory.redo.length} onClick={redoGraph}>REDO</button>

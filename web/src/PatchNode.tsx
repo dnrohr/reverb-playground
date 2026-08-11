@@ -24,6 +24,13 @@ export function PatchNode({ data, selected }: NodeProps & { data: PatchNodeData 
       <h3>{data.label}</h3>
       <div className="node-type">{data.type}</div>
       <div className="energy-meter" aria-hidden="true"><i /><i /><i /><i /><i /></div>
+      {data.controlPreview ? (
+        <div className="control-preview" aria-label={`${data.controlPreview.label} control preview ${data.controlPreview.value.toFixed(2)}`}>
+          <span>{data.controlPreview.label}</span>
+          <output>{data.controlPreview.value >= 0 ? '+' : ''}{data.controlPreview.value.toFixed(2)}</output>
+          <i style={{ left: `${(data.controlPreview.value + 1) * 50}%` }} />
+        </div>
+      ) : null}
       {data.parameters.length > 0 && (
         <div className="node-parameter">
           {data.parameters[0].value.toLocaleString(undefined, { maximumFractionDigits: 2 })} {prettyUnit(data.parameters[0].unit)}

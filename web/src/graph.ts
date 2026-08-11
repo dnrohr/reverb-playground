@@ -2,7 +2,7 @@ import type { Edge, Node } from '@xyflow/react';
 
 export type SignalType = 'audio' | 'control';
 export type PortDirection = 'input' | 'output';
-export type NodeRole = 'io' | 'routing' | 'filter' | 'delay' | 'diffusion' | 'tank' | 'tap';
+export type NodeRole = 'io' | 'routing' | 'filter' | 'delay' | 'diffusion' | 'tank' | 'tap' | 'control';
 
 export interface PatchPort {
   id: string;
@@ -33,6 +33,7 @@ export interface PatchNodeData extends Record<string, unknown> {
   parameters: PatchParameter[];
   role: NodeRole;
   runtimeBound: boolean;
+  controlPreview?: { value: number; label: string };
 }
 
 export interface RuntimeNode {

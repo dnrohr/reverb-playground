@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <ranges>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -12,6 +13,24 @@ namespace {
 std::string portKey(const std::string& nodeId, const std::string& portId)
 {
     return nodeId + "\n" + portId;
+}
+
+const Parameter* findParameter(const Node& node, const std::string_view id)
+{
+    const auto found = std::ranges::find(node.parameters, id, &Parameter::id);
+    return found == node.parameters.end() ? nullptr : &*found;
+}
+
+double requiredParameter(
+    const Node& node, const std::string_view id, const double minimum, const double maximum, ControlRatePlan& plan)
+{
+    const auto* parameter = findParameter(node, id);
+    if (parameter == nullptr || !std::isfinite(parameter->value)
+        || parameter->value < minimum || parameter->value > maximum) {
+        plan.errors.push_back("control node '" + node.id + "' has invalid " + std::string(id));
+        return minimum;
+    }
+    return parameter->value;
 }
 
 } // namespace
@@ -55,6 +74,39 @@ ControlRatePlan compileControlRatePlan(
         if (!inserted)
             plan.errors.push_back("control input '" + connection.to.nodeId + "." + connection.to.portId
                 + "' has more than one cable");
+    }
+
+    for (const auto& node : document.nodes) {
+        if (node.type == "lfo") {
+            const auto frequency = requiredParameter(node, "frequency", 0.01, 100.0, plan);
+            const auto phase = requiredParameter(node, "phase", 0.0, 0.999, plan);
+            const auto waveform = requiredParameter(node, "waveform", 0.0, 1.0, plan);
+            const auto runMode = requiredParameter(node, "run-mode", 0.0, 1.0, plan);
+            plan.lfos.push_back({
+                node.id,
+                frequency,
+                phase,
+                waveform >= 0.5 ? LfoWaveform::triangle : LfoWaveform::sine,
+                runMode >= 0.5 ? LfoRunMode::restart : LfoRunMode::freeRun,
+            });
+        } else if (node.type == "control-map") {
+            const auto scale = requiredParameter(node, "scale", -4.0, 4.0, plan);
+            const auto offset = requiredParameter(node, "offset", -1.0, 1.0, plan);
+            const auto polarityValue = requiredParameter(node, "polarity", 0.0, 1.0, plan);
+            const auto polarity = polarityValue >= 0.5
+                ? ModulationPolarity::bipolar
+                : ModulationPolarity::unipolar;
+            const auto source = incomingControl.find(portKey(node.id, "in"));
+            plan.mappers.push_back({
+                node.id,
+                source == incomingControl.end() ? std::string {} : source->second->from.nodeId,
+                source == incomingControl.end() ? std::string {} : source->second->from.portId,
+                scale,
+                offset,
+                polarity,
+                mappedControlRange(scale, offset, polarity),
+            });
+        }
     }
 
     for (const auto& node : document.nodes) {

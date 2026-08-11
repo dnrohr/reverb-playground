@@ -31,6 +31,7 @@ Last updated: 2026-08-11
 | M4.4 Implement live energy glow | Complete | Ten fixed 30 Hz RMS lanes; atomic seqlock snapshot; tested disable/drop safety; segmented node meters; width/glow cables; reduced motion; video |
 | M4.5 Add resource and safety diagnostics | Complete | Static/live/prepared labels; callback timing; exact delay memory; clip counts; revision-bound safety events; edit/undo/recover workflow; complete synthetic violations |
 | M5.1 Implement control-rate graph semantics | Complete | Typed parameter sockets; 1 kHz bounded plans; linear ramps; explicit mapping inspector; exact schema-v2 persistence; native 125%-DPI evidence |
+| M5.2 Implement LFO and modulation mapping blocks | Complete | Tested sine/triangle and transport semantics; explicit scale/offset/polarity; one-to-many control branching; predicted range; screenshot/video evidence |
 
 ## M0.2 verification
 
@@ -338,3 +339,13 @@ Results:
 - Runtime snapshot contract v2 derives parameter socket identities and defaults from the native Barr runtime definition, and identity tests reject drift between the graph, UI, and DSP contract.
 - Native screenshot: [`artifacts/ui/m5-1-control-rate-semantics/01-mapped-allpass-inspector.png`](../artifacts/ui/m5-1-control-rate-semantics/01-mapped-allpass-inspector.png).
 - Native mapping inspector with live telemetry: [`artifacts/ui/m5-1-control-rate-semantics/control-mapping-inspection.mp4`](../artifacts/ui/m5-1-control-rate-semantics/control-mapping-inspection.mp4).
+
+## M5.2 verification
+
+- Native `ControlLfo` tests cover frequency, phase, sine and triangle waveforms, phase wrapping, explicit restart, transport restart, and free-run reset behavior.
+- Scale / Offset clamps finite normalized input after explicit bipolar or unipolar polarity handling. Tests cover positive, negative, offset, clamp, and predicted endpoint ranges.
+- Native control-plan compilation records validated LFO and mapper definitions within the existing 64-node/128-mapping bounds. Browser graph tests prove a single mapper output branches to multiple parameter sockets.
+- Patch schema v2 and browser persistence preserve LFO, mapper, waveform/run-mode/polarity units, positions, and branched control cables exactly.
+- Control nodes combine a dashed outline, double rule, textual waveform/mapping marker, signed value, and moving position marker. Control cables remain dashed and animate during live preview, so neither depends on colour alone.
+- Creation, mapping, branching, and predicted-range screenshot: [`artifacts/ui/m5-2-lfo-control-mapping/01-lfo-mapper-branching.png`](../artifacts/ui/m5-2-lfo-control-mapping/01-lfo-mapper-branching.png).
+- Eight-second native live-preview video: [`artifacts/ui/m5-2-lfo-control-mapping/live-control-preview.mp4`](../artifacts/ui/m5-2-lfo-control-mapping/live-control-preview.mp4).

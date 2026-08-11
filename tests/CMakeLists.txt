@@ -2,6 +2,7 @@ add_executable(reverb_tests
     AcyclicRuntimeTests.cpp
     BarrReferenceTests.cpp
     ControlRateTests.cpp
+    ControlModulationTests.cpp
     DelayMemoryPlanTests.cpp
     DspGainTests.cpp
     DspPrimitivesTests.cpp

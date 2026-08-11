@@ -2,6 +2,7 @@ add_library(reverb_graph STATIC
     Source/AcyclicRuntime.cpp
     Source/BarrReferenceGraph.cpp
     Source/ControlRate.cpp
+    Source/ControlModulation.cpp
     Source/GraphDocument.cpp
     Source/PatchJson.cpp
     Source/RuntimeSnapshot.cpp)

@@ -196,6 +196,14 @@ button { font: inherit; }
 .node-parameter { margin-top: 7px; padding-top: 6px; border-top: 1px solid #3b4851; color: var(--cyan); font: 10px ui-monospace, Consolas, monospace; }
 .role-io { border-left-color: var(--amber); }
 .role-diffusion, .role-tank, .role-tap { border-left-color: var(--cyan); }
+.role-control { border: 1px dashed var(--violet); border-left: 4px double var(--violet); background: #211d2a; }
+.control-preview { position: relative; height: 24px; margin-top: 7px; border-top: 1px dashed #715d91; color: #c8b5ef; font: 8px ui-monospace, Consolas, monospace; }
+.control-preview span, .control-preview output { position: absolute; top: 5px; }
+.control-preview span { left: 0; letter-spacing: .08em; }
+.control-preview output { right: 0; }
+.control-preview i { position: absolute; bottom: 0; width: 4px; height: 4px; border: 1px solid #201628; background: var(--violet); transform: translateX(-50%) rotate(45deg); transition: left 30ms linear; }
+.signal-control.control-live path { animation: control-dash .7s linear infinite; }
+@keyframes control-dash { to { stroke-dashoffset: -12; } }
 .patch-node.is-selected { border-color: var(--amber); outline: 2px solid rgba(242, 180, 78, .38); outline-offset: 2px; box-shadow: 0 0 0 1px #0b1013, 0 0 24px rgba(242, 180, 78, .2); }
 .react-flow__node:focus-visible .patch-node { outline: 2px dashed var(--cyan); outline-offset: 4px; }
 .port { width: 11px; height: 11px; border: 2px solid #091014; background: var(--cyan); }
@@ -278,6 +286,13 @@ button { font: inherit; }
 .parameter-number { width: 82px; border: 0; background: transparent; color: var(--text); font: 700 12px/1 ui-monospace, Consolas, monospace; text-align: right; }
 .parameter-number:focus { outline: 1px solid var(--cyan); outline-offset: 2px; }
 .parameter-value strong { font-size: 11px; }
+.parameter-value select { max-width: 132px; padding: 4px; border: 1px solid #4d5963; border-radius: 3px; color: var(--text); background: #10161a; font: 9px ui-monospace, Consolas, monospace; }
+.control-range-preview { margin: 14px 0; padding: 11px; border: 1px dashed var(--violet); border-left: 3px double var(--violet); background: rgba(189, 156, 255, .06); }
+.control-range-preview header { display: flex; justify-content: space-between; color: #9f89ce; font: 8px ui-monospace, Consolas, monospace; letter-spacing: .08em; }
+.control-range-preview strong { color: #dfd2f7; }
+.control-range-preview div { position: relative; height: 7px; margin-top: 9px; border-top: 1px solid #57486f; }
+.control-range-preview i { position: absolute; top: -4px; width: 7px; height: 7px; border: 1px solid #22192a; background: var(--violet); transform: translateX(-50%) rotate(45deg); }
+.control-range-preview p { margin: 4px 0 0; color: #8f82a8; font-size: 8px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .history-actions { display: flex; gap: 8px; margin-top: 12px; }
 .history-actions button { flex: 1; padding: 7px; border: 1px solid var(--line); border-radius: 4px; color: var(--text); background: #1a2228; font-size: 9px; }

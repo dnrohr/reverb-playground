@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reverb/graph/GraphDocument.h>
+#include <reverb/graph/ControlModulation.h>
 
 #include <cstddef>
 #include <string>
@@ -31,6 +32,24 @@ struct ControlRatePlan final {
     std::size_t maximumTicksPerBlock { 0 };
     std::size_t maximumMappingEvaluationsPerBlock { 0 };
     std::vector<CompiledControlMapping> mappings;
+    struct LfoNode final {
+        std::string nodeId;
+        double frequencyHz { 1.0 };
+        double phaseCycles { 0.0 };
+        LfoWaveform waveform { LfoWaveform::sine };
+        LfoRunMode runMode { LfoRunMode::freeRun };
+    };
+    struct MapperNode final {
+        std::string nodeId;
+        std::string sourceNodeId;
+        std::string sourcePortId;
+        double scale { 1.0 };
+        double offset { 0.0 };
+        ModulationPolarity inputPolarity { ModulationPolarity::bipolar };
+        ControlMappingRange predictedRange;
+    };
+    std::vector<LfoNode> lfos;
+    std::vector<MapperNode> mappers;
     std::vector<std::string> errors;
 
     [[nodiscard]] bool valid() const noexcept { return errors.empty(); }
