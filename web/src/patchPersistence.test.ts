@@ -90,6 +90,39 @@ describe('patch persistence', () => {
     expect(writePatchJson(loaded.nodes, loaded.edges, loaded.viewport)).toBe(written);
   });
 
+  it('round trips follower and gate base controls without inventing modulation sockets', () => {
+    const input = createModuleNode('stereo-input', 'stereo-input-1', { x: 0, y: 0 });
+    const follower = createModuleNode('envelope-follower', 'envelope-follower-1', { x: 180, y: 180 });
+    const gate = createModuleNode('hold-gate', 'hold-gate-1', { x: 380, y: 0 });
+    const output = createModuleNode('stereo-output', 'stereo-output-1', { x: 600, y: 0 });
+    follower.data.parameters.find((parameter) => parameter.id === 'attack')!.value = 7.5;
+    follower.data.parameters.find((parameter) => parameter.id === 'release')!.value = 321;
+    gate.data.parameters.find((parameter) => parameter.id === 'threshold')!.value = 0.63;
+    gate.data.parameters.find((parameter) => parameter.id === 'attack')!.value = 4.2;
+    gate.data.parameters.find((parameter) => parameter.id === 'hold')!.value = 280;
+    gate.data.parameters.find((parameter) => parameter.id === 'release')!.value = 35;
+    const edges = [
+      { id: 'detect', source: input.id, sourceHandle: 'out-l', target: follower.id, targetHandle: 'in' },
+      { id: 'gate-control', source: follower.id, sourceHandle: 'out', target: gate.id, targetHandle: 'gate' },
+      { id: 'audio', source: input.id, sourceHandle: 'out-r', target: gate.id, targetHandle: 'in' },
+      { id: 'left', source: gate.id, sourceHandle: 'out', target: output.id, targetHandle: 'in-l' },
+      { id: 'right', source: input.id, sourceHandle: 'out-r', target: output.id, targetHandle: 'in-r' },
+    ];
+    const written = writePatchJson([input, follower, gate, output], edges, { x: 12, y: -8, zoom: 0.9 });
+    const loaded = parsePatchJson(written, reference);
+    const loadedFollower = loaded.nodes.find((node) => node.id === follower.id)!;
+    const loadedGate = loaded.nodes.find((node) => node.id === gate.id)!;
+    expect(loadedFollower.data.ports.map((port) => port.id)).toEqual(['in', 'out']);
+    expect(loadedGate.data.ports.map((port) => port.id)).toEqual(['in', 'gate', 'out']);
+    expect(loadedFollower.data.parameters.map((parameter) => [parameter.id, parameter.value, parameter.modulation])).toEqual([
+      ['attack', 7.5, undefined], ['release', 321, undefined],
+    ]);
+    expect(loadedGate.data.parameters.map((parameter) => [parameter.id, parameter.value, parameter.modulation])).toEqual([
+      ['threshold', 0.63, undefined], ['attack', 4.2, undefined], ['hold', 280, undefined], ['release', 35, undefined],
+    ]);
+    expect(writePatchJson(loaded.nodes, loaded.edges, loaded.viewport)).toBe(written);
+  });
+
   it('rejects persisted graphs with multiple cables on one input', () => {
     const input = createModuleNode('stereo-input', 'stereo-input-1', { x: 0, y: 0 });
     const delay = createModuleNode('delay', 'delay-1', { x: 200, y: 0 });

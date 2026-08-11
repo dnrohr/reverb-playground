@@ -40,7 +40,7 @@ A node contains:
 - a stable, non-empty `id`;
 - a stable type identifier such as `allpass`, `sum`, or `stereo-input`;
 - explicit ports;
-- parameters with base value, unit, and an explicit modulation mapping.
+- parameters with base value and unit, plus an explicit modulation mapping when that parameter exposes a control socket.
 
 Every port declares:
 

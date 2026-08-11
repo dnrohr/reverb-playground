@@ -37,6 +37,7 @@ Last updated: 2026-08-11
 | M5.5 Add short topology-change crossfades | Complete | Live schema-v2 editor binding; fixed 10 ms two-runtime ramp; newest-wins transition queue; constructed-graph capture/safety diagnostics; 125%-DPI fill fix; screenshot/video |
 | M5.6 Finalize runaway-feedback UX | Complete | 50 ms sustained detector; immediate non-finite/hard-ceiling mute; heuristic loop marking; muted Undo; state-clearing recovery; scaled-work-area sizing; screenshot/video |
 | M6.1 Define reverse-reverb architecture requirements | Complete | Four distinct signal/IR contracts; causal Reverse Envelope selected; follower/gate primitive boundary; factory naming guard; documentation tests |
+| M6.2 Implement the minimum envelope/gate primitives | Complete | Sample-rate-aware follower/gate DSP; visible audio/control semantics; restricted detector route; exact persistence; delayed-feedback safety; screenshot/video evidence |
 
 ## M0.2 verification
 
@@ -411,3 +412,14 @@ Results:
 - Three browser documentation-contract tests enforce the four concepts, selected architecture, primitive boundary, and naming prohibition.
 - Source notes distinguish primary product behavior descriptions from inferred topology. Deferred convolution, lookahead, IR import, and polyphonic trigger work is recorded without expanding M6.2.
 - UI unchanged; no screenshot or video was required.
+
+## M6.2 verification
+
+- Envelope Follower visibly converts mono audio to normalized `0...1` control with an absolute-peak one-pole detector, separate attack/release milliseconds, finite clamping, and deterministic reset.
+- Hold Gate visibly multiplies mono audio by detector-derived gain. Threshold, attack, hold, and release are explicit; retriggers reload hold and resume attack from current gain; gain remains within `0...1`.
+- Millisecond behavior is deterministic at 44.1, 48, and 96 kHz. Focused tests cover the follower's one-time-constant response and exact gate attack/hold/release samples.
+- The control route is deliberately reverb-specific: Envelope Follower may drive Hold Gate directly or through exactly one Scale / Offset. LFO and broader control routing fail before publication.
+- Base-only follower/gate controls omit misleading modulation sockets. Browser and native schema-v2 round trips preserve their exact values, ports, cables, positions, and absence of hidden mappings; existing mapped parameters remain exact.
+- A legal delayed feedback fixture containing Hold Gate stays finite, never exceeds its injected peak, and produces no numerical-safety violation. Processing remains allocation/lock/log free with all state and buffers prepared before publication.
+- Reviewed native screenshot: [`artifacts/ui/m6-2-envelope-hold-gate/01-envelope-follower-hold-gate.png`](../artifacts/ui/m6-2-envelope-hold-gate/01-envelope-follower-hold-gate.png).
+- Reviewed module-inspection video: [`artifacts/ui/m6-2-envelope-hold-gate/envelope-gate-module-inspection.mp4`](../artifacts/ui/m6-2-envelope-hold-gate/envelope-gate-module-inspection.mp4). It shows selection moving between both new blocks in the native editor; deterministic native tests are authoritative for signal timing and safety.

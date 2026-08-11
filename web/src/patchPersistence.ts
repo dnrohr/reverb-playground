@@ -4,17 +4,20 @@ import { createModuleNode, moduleByType, type ModuleType } from './modules';
 
 export const patchSchemaVersion = 2 as const;
 export const patchEngineVersion = '0.1';
-interface SavedParameter { id: string; value: number; unit: string; modulation: NonNullable<PatchNodeData['parameters'][number]['modulation']> }
+interface SavedParameter { id: string; value: number; unit: string; modulation?: NonNullable<PatchNodeData['parameters'][number]['modulation']> }
 interface SavedPatch { schemaVersion: 2; engineVersion: string; semantic: { nodes: Array<{ id: string; type: string; ports: PatchNodeData['ports']; parameters: SavedParameter[] }>; connections: Array<{ id: string; from: { nodeId: string; portId: string }; to: { nodeId: string; portId: string } }> }; layout: { nodes: Array<{ nodeId: string; x: number; y: number }>; viewport: Viewport } }
 export interface LoadedPatch { nodes: Node<PatchNodeData>[]; edges: Edge[]; viewport: Viewport; source: SavedPatch }
 function fail(message: string): never { throw new Error(`Patch load rejected: ${message}`); }
 function object(value: unknown, path: string): Record<string, unknown> { if (typeof value !== 'object' || value === null || Array.isArray(value)) fail(`${path} must be an object`); return value as Record<string, unknown>; }
 function exactKeys(value: Record<string, unknown>, keys: string[], path: string) { const expected = new Set(keys); const unknown = Object.keys(value).find((key) => !expected.has(key)); if (unknown) fail(`${path} contains unknown field '${unknown}' (closed schemas reject future fields)`); for (const key of keys) if (!(key in value)) fail(`${path} is missing '${key}'`); }
 function finite(value: unknown, path: string): number { if (typeof value !== 'number' || !Number.isFinite(value)) fail(`${path} must be a finite number`); return value; }
-function parseModulation(value: unknown, expected: PatchNodeData['parameters'][number], path: string, sourceVersion: 1 | 2): NonNullable<PatchNodeData['parameters'][number]['modulation']> {
+function parseModulation(value: unknown, expected: PatchNodeData['parameters'][number], path: string, sourceVersion: 1 | 2): PatchNodeData['parameters'][number]['modulation'] {
   if (sourceVersion === 1) {
-    if (!expected.modulation) fail(`${path} cannot migrate without a modulation definition`);
-    return { ...expected.modulation };
+    return expected.modulation ? { ...expected.modulation } : undefined;
+  }
+  if (!expected.modulation) {
+    if (value !== undefined) fail(`${path} does not expose a modulation socket`);
+    return undefined;
   }
   const mapping = object(value, `${path}.modulation`);
   exactKeys(mapping, ['portId', 'amount', 'polarity', 'clampMinimum', 'clampMaximum'], `${path}.modulation`);
@@ -27,7 +30,7 @@ function parseModulation(value: unknown, expected: PatchNodeData['parameters'][n
   return { portId: expected.modulation.portId, amount, polarity: mapping.polarity as 'unipolar' | 'bipolar', clampMinimum, clampMaximum };
 }
 
-export function createSavedPatch(nodes: Node<PatchNodeData>[], edges: Edge[], viewport: Viewport): SavedPatch { return { schemaVersion: 2, engineVersion: patchEngineVersion, semantic: { nodes: nodes.map((node) => ({ id: node.id, type: node.data.type, ports: node.data.ports.map((port) => ({ ...port })), parameters: node.data.parameters.map(({ id, value, unit, modulation }) => { if (!modulation) fail(`${node.id}.${id} has no modulation mapping`); return { id, value, unit, modulation: { ...modulation } }; }) })), connections: edges.map((edge) => ({ id: edge.id, from: { nodeId: edge.source, portId: String(edge.sourceHandle ?? '') }, to: { nodeId: edge.target, portId: String(edge.targetHandle ?? '') } })) }, layout: { nodes: nodes.map((node) => ({ nodeId: node.id, x: node.position.x, y: node.position.y })), viewport: { ...viewport } } }; }
+export function createSavedPatch(nodes: Node<PatchNodeData>[], edges: Edge[], viewport: Viewport): SavedPatch { return { schemaVersion: 2, engineVersion: patchEngineVersion, semantic: { nodes: nodes.map((node) => ({ id: node.id, type: node.data.type, ports: node.data.ports.map((port) => ({ ...port })), parameters: node.data.parameters.map(({ id, value, unit, modulation }) => ({ id, value, unit, ...(modulation ? { modulation: { ...modulation } } : {}) })) })), connections: edges.map((edge) => ({ id: edge.id, from: { nodeId: edge.source, portId: String(edge.sourceHandle ?? '') }, to: { nodeId: edge.target, portId: String(edge.targetHandle ?? '') } })) }, layout: { nodes: nodes.map((node) => ({ nodeId: node.id, x: node.position.x, y: node.position.y })), viewport: { ...viewport } } }; }
 export function writePatchJson(nodes: Node<PatchNodeData>[], edges: Edge[], viewport: Viewport): string { return `${JSON.stringify(createSavedPatch(nodes, edges, viewport), null, 2)}\n`; }
 
 export function parsePatchJson(text: string, reference: RuntimeSnapshot): LoadedPatch {
@@ -49,8 +52,8 @@ export function parsePatchJson(text: string, reference: RuntimeSnapshot): Loaded
     if (!Array.isArray(saved.parameters) || saved.parameters.length !== expectedParameters.length) fail(`parameters differ for node '${saved.id}'`);
     const values = savedParameters.map((unknownParameter, parameterIndex) => {
       const parameter = object(unknownParameter, `node '${savedId}' parameter`);
-      exactKeys(parameter, sourceVersion === 1 ? ['id', 'value', 'unit'] : ['id', 'value', 'unit', 'modulation'], `node '${savedId}' parameter`);
       const expected = expectedParameters[parameterIndex];
+      exactKeys(parameter, sourceVersion === 1 || !expected?.modulation ? ['id', 'value', 'unit'] : ['id', 'value', 'unit', 'modulation'], `node '${savedId}' parameter`);
       const value = finite(parameter.value, `${savedId}.${String(parameter.id)}`);
       if (parameter.id !== expected?.id || parameter.unit !== expected.unit) fail(`parameter ${parameterIndex} differs for node '${savedId}'`);
       if (value < expected.minimum || value > expected.maximum) fail(`${savedId}.${expected.id} is outside ${expected.minimum}..${expected.maximum}`);

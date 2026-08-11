@@ -40,7 +40,7 @@
     "parameter": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "value", "unit", "modulation"],
+      "required": ["id", "value", "unit"],
       "properties": {
         "id": { "$ref": "#/$defs/identifier" },
         "value": { "type": "number" },

@@ -4,7 +4,9 @@
 
 #include <reverb/dsp/Allpass.h>
 #include <reverb/dsp/Delay.h>
+#include <reverb/dsp/EnvelopeFollower.h>
 #include <reverb/dsp/Gain.h>
+#include <reverb/dsp/HoldGate.h>
 #include <reverb/dsp/OnePoleLowPass.h>
 #include <reverb/dsp/Sum.h>
 
@@ -23,9 +25,10 @@
 namespace reverb::graph {
 namespace {
 
-enum class OperationKind { input, output, gain, sum, delay, allpass, lowpass };
+enum class OperationKind { input, output, gain, sum, delay, allpass, lowpass, envelopeFollower, holdGate };
 using Processor = std::variant<std::monostate, reverb::dsp::Gain, reverb::dsp::Delay,
-    reverb::dsp::Allpass, reverb::dsp::OnePoleLowPass>;
+    reverb::dsp::Allpass, reverb::dsp::OnePoleLowPass,
+    reverb::dsp::EnvelopeFollower, reverb::dsp::HoldGate>;
 
 struct Operation final {
     std::string id;
@@ -38,6 +41,10 @@ struct Operation final {
     double baseCoefficient {};
     std::size_t delayModulation { std::numeric_limits<std::size_t>::max() };
     std::size_t coefficientModulation { std::numeric_limits<std::size_t>::max() };
+    std::size_t controlInput { std::numeric_limits<std::size_t>::max() };
+    double controlScale { 1.0 };
+    double controlOffset {};
+    ModulationPolarity controlPolarity { ModulationPolarity::unipolar };
 };
 
 enum class ControlOperationKind { lfo, mapper };
@@ -72,6 +79,15 @@ bool hasParameter(const Node& node, const std::string_view id, const std::string
 {
     const auto* value = parameter(node, id);
     return value != nullptr && value->unit == unit && std::isfinite(value->value);
+}
+
+bool parameterInRange(
+    const Node& node, const std::string_view id, const std::string_view unit,
+    const double minimum, const double maximum)
+{
+    const auto* value = parameter(node, id);
+    return value != nullptr && value->unit == unit && std::isfinite(value->value)
+        && value->value >= minimum && value->value <= maximum;
 }
 
 bool hasPorts(const Node& node, const std::vector<std::pair<std::string, PortDirection>>& expected)
@@ -131,6 +147,21 @@ void addNodeContractErrors(const Node& node, std::vector<std::string>& errors)
             || !hasParameter(node, "scale", "linear") || !hasParameter(node, "offset", "unitless")
             || !hasParameter(node, "polarity", "polarity"))
             errors.push_back("control-map node '" + node.id + "' requires scale, offset, and polarity");
+    } else if (node.type == "envelope-follower") {
+        if (!hasPort(node, "in", SignalType::audio, PortDirection::input)
+            || !hasPort(node, "out", SignalType::control, PortDirection::output)
+            || !parameterInRange(node, "attack", "milliseconds", 0.1, 500.0)
+            || !parameterInRange(node, "release", "milliseconds", 1.0, 5'000.0))
+            errors.push_back("envelope-follower node '" + node.id + "' requires audio in, control out, and bounded attack/release milliseconds");
+    } else if (node.type == "hold-gate") {
+        if (!hasPort(node, "in", SignalType::audio, PortDirection::input)
+            || !hasPort(node, "gate", SignalType::control, PortDirection::input)
+            || !hasPort(node, "out", SignalType::audio, PortDirection::output)
+            || !parameterInRange(node, "threshold", "unitless", 0.0, 1.0)
+            || !parameterInRange(node, "attack", "milliseconds", 0.1, 100.0)
+            || !parameterInRange(node, "hold", "milliseconds", 1.0, 2'000.0)
+            || !parameterInRange(node, "release", "milliseconds", 0.1, 1'000.0))
+            errors.push_back("hold-gate node '" + node.id + "' requires audio/control inputs, audio out, and bounded threshold/attack/hold/release");
     } else {
         errors.push_back("unsupported node type '" + node.type + "' on '" + node.id + "'");
     }
@@ -144,6 +175,8 @@ OperationKind kindFor(const std::string& type)
     if (type == "sum") return OperationKind::sum;
     if (type == "delay") return OperationKind::delay;
     if (type == "allpass") return OperationKind::allpass;
+    if (type == "envelope-follower") return OperationKind::envelopeFollower;
+    if (type == "hold-gate") return OperationKind::holdGate;
     return OperationKind::lowpass;
 }
 
@@ -218,6 +251,7 @@ struct PreparedAcyclicRuntime::Impl final {
     DelayMemoryPlan delayMemory;
     std::vector<float> delayArena;
     bool feedbackMode {};
+    bool sampleWiseMode {};
     std::size_t silenceBuffer {};
     std::size_t inputLeftBuffer {};
     std::size_t inputRightBuffer {};
@@ -264,6 +298,10 @@ void PreparedAcyclicRuntime::reset() noexcept
             auto& lowpass = std::get<reverb::dsp::OnePoleLowPass>(operation.processor);
             lowpass.reset();
             lowpass.settleParameters();
+        } else if (operation.kind == OperationKind::envelopeFollower) {
+            std::get<reverb::dsp::EnvelopeFollower>(operation.processor).reset();
+        } else if (operation.kind == OperationKind::holdGate) {
+            std::get<reverb::dsp::HoldGate>(operation.processor).reset();
         }
     }
     for (auto& control : implementation_->controlOperations) {
@@ -315,7 +353,7 @@ void PreparedAcyclicRuntime::process(
         if (!implementation_->modulations.empty())
             --implementation_->samplesUntilControlTick;
     }
-    if (implementation_->feedbackMode) {
+    if (implementation_->sampleWiseMode) {
         auto sampleBuffer = [this](const std::size_t index) { return std::span<float>(implementation_->buffers[index]).first(1); };
         for (std::size_t sampleIndex = 0; sampleIndex < count; ++sampleIndex) {
             implementation_->buffers[implementation_->silenceBuffer][0] = 0.0F;
@@ -348,6 +386,18 @@ void PreparedAcyclicRuntime::process(
                     } else std::get<reverb::dsp::Allpass>(operation.processor).process(destination);
                 }
                 else if (operation.kind == OperationKind::lowpass) std::get<reverb::dsp::OnePoleLowPass>(operation.processor).process(destination);
+                else if (operation.kind == OperationKind::envelopeFollower) {
+                    destination.front() = std::get<reverb::dsp::EnvelopeFollower>(operation.processor)
+                        .processSample(implementation_->buffers[operation.inputs.front()][0]);
+                } else if (operation.kind == OperationKind::holdGate) {
+                    const auto control = operation.controlInput == noModulation
+                        ? 0.0
+                        : mapControlValue(
+                            implementation_->buffers[operation.controlInput][0],
+                            operation.controlScale, operation.controlOffset, operation.controlPolarity);
+                    destination.front() = std::get<reverb::dsp::HoldGate>(operation.processor)
+                        .processSample(destination.front(), static_cast<float>(control));
+                }
             }
             for (auto& operation : implementation_->operations) if (operation.kind == OperationKind::delay)
                 std::get<reverb::dsp::Delay>(operation.processor).writeSample(implementation_->buffers[operation.inputs.front()][0]);
@@ -427,6 +477,13 @@ AcyclicCompileResult compileAcyclicGraph(
     if (sampleRate > 0.0 && sampleRate <= 192'000.0 && maximumBlockSize > 0) {
         controlPlan = compileControlRatePlan(document, sampleRate, maximumBlockSize);
         result.errors.insert(result.errors.end(), controlPlan.errors.begin(), controlPlan.errors.end());
+        for (const auto& mapping : controlPlan.mappings) {
+            const auto target = std::ranges::find(document.nodes, mapping.targetNodeId, &Node::id);
+            if (target != document.nodes.end()
+                && (target->type == "envelope-follower" || target->type == "hold-gate"))
+                result.errors.push_back("node '" + target->id
+                    + "' timing/threshold modulation is reserved; edit its millisecond/base controls directly");
+        }
     }
 
     std::map<std::string, const Node*> nodes;
@@ -502,6 +559,43 @@ AcyclicCompileResult compileAcyclicGraph(
             ++indegree[connection.to.nodeId];
         }
     }
+    for (const auto& node : document.nodes) {
+        if (node.type != "hold-gate") continue;
+        const auto gateCable = incoming.find(portKey(node.id, "gate"));
+        if (gateCable == incoming.end()) continue;
+        const auto source = nodes.at(gateCable->second->from.nodeId);
+        if (source->type == "envelope-follower") continue;
+        if (source->type == "control-map") {
+            const auto mapperInput = incoming.find(portKey(source->id, "in"));
+            if (mapperInput != incoming.end()
+                && nodes.at(mapperInput->second->from.nodeId)->type == "envelope-follower")
+                continue;
+        }
+        result.errors.push_back("hold-gate node '" + node.id
+            + "' control must come from envelope-follower directly or through one control-map");
+    }
+    for (const auto& connection : document.connections) {
+        const auto* source = nodes.at(connection.from.nodeId);
+        const auto* target = nodes.at(connection.to.nodeId);
+        if (source->type == "envelope-follower"
+            && !((target->type == "hold-gate" && connection.to.portId == "gate")
+                || (target->type == "control-map" && connection.to.portId == "in")))
+            result.errors.push_back("envelope-follower node '" + source->id
+                + "' may drive only hold-gate or one control-map");
+        if (source->type == "control-map") {
+            const auto mapperInput = incoming.find(portKey(source->id, "in"));
+            const auto followsEnvelope = mapperInput != incoming.end()
+                && nodes.at(mapperInput->second->from.nodeId)->type == "envelope-follower";
+            if (followsEnvelope) {
+                if (!(target->type == "hold-gate" && connection.to.portId == "gate"))
+                    result.errors.push_back("an envelope-follower control-map may drive only hold-gate");
+                if (std::ranges::any_of(controlPlan.mappings, [&source](const auto& mapping) {
+                        return mapping.targetNodeId == source->id;
+                    }))
+                    result.errors.push_back("an envelope-follower control-map uses base scale/offset/polarity only");
+            }
+        }
+    }
     if (!result.errors.empty()) return finish();
 
     std::priority_queue<std::string, std::vector<std::string>, std::greater<>> ready;
@@ -550,12 +644,16 @@ AcyclicCompileResult compileAcyclicGraph(
         implementation->controlQuantumSamples = controlPlan.quantumSamples == 0 ? 1 : controlPlan.quantumSamples;
         implementation->delayArena.assign(result.delayMemory.allocatedSamples, 0.0F);
         implementation->feedbackMode = allowFeedback && !result.feedbackComponents.empty();
+        implementation->sampleWiseMode = implementation->feedbackMode
+            || std::ranges::any_of(document.nodes, [](const auto& node) {
+                return node.type == "envelope-follower" || node.type == "hold-gate";
+            });
         implementation->buffers.emplace_back(maximumBlockSize, 0.0F); implementation->silenceBuffer = 0;
         std::unordered_map<std::string, std::size_t> outputBuffers;
         std::size_t delayArenaOffset = 0;
         for (const auto& id : result.schedule) {
             for (const auto& port : nodes.at(id)->ports)
-                if (port.signal == SignalType::audio && port.direction == PortDirection::output) {
+                if (port.direction == PortDirection::output) {
                 outputBuffers[portKey(id, port.id)] = implementation->buffers.size();
                 implementation->buffers.emplace_back(maximumBlockSize, 0.0F);
             }
@@ -602,7 +700,10 @@ AcyclicCompileResult compileAcyclicGraph(
             if (node.type == "lfo" || node.type == "control-map") continue;
             Operation operation { .id = id, .kind = kindFor(node.type) };
             for (const auto& port : node.ports) {
-                if (port.signal != SignalType::audio) continue;
+                const auto followerPort = node.type == "envelope-follower"
+                    && ((port.id == "in" && port.signal == SignalType::audio)
+                        || (port.id == "out" && port.signal == SignalType::control));
+                if (port.signal != SignalType::audio && !followerPort) continue;
                 if (port.direction == PortDirection::input) operation.inputs.push_back(inputBuffer(id, port.id));
                 else operation.outputs.push_back(outputBuffers.at(portKey(id, port.id)));
             }
@@ -634,6 +735,32 @@ AcyclicCompileResult compileAcyclicGraph(
                 delayArenaOffset += samples; operation.processor = std::move(processor);
             } else if (operation.kind == OperationKind::lowpass) {
                 reverb::dsp::OnePoleLowPass processor; processor.prepare(sampleRate, parameter(node, "cutoff")->value); operation.processor = std::move(processor);
+            } else if (operation.kind == OperationKind::envelopeFollower) {
+                reverb::dsp::EnvelopeFollower processor;
+                processor.prepare(sampleRate, parameter(node, "attack")->value, parameter(node, "release")->value);
+                operation.processor = std::move(processor);
+            } else if (operation.kind == OperationKind::holdGate) {
+                reverb::dsp::HoldGate processor;
+                processor.prepare(
+                    sampleRate, parameter(node, "threshold")->value,
+                    parameter(node, "attack")->value, parameter(node, "hold")->value,
+                    parameter(node, "release")->value);
+                const auto gateCable = incoming.find(portKey(id, "gate"));
+                if (gateCable != incoming.end()) {
+                    const auto* controlSource = nodes.at(gateCable->second->from.nodeId);
+                    if (controlSource->type == "envelope-follower") {
+                        operation.controlInput = outputBuffers.at(portKey(controlSource->id, "out"));
+                    } else {
+                        const auto mapperInput = incoming.at(portKey(controlSource->id, "in"));
+                        operation.controlInput = outputBuffers.at(portKey(mapperInput->from.nodeId, "out"));
+                        operation.controlScale = parameter(*controlSource, "scale")->value;
+                        operation.controlOffset = parameter(*controlSource, "offset")->value;
+                        operation.controlPolarity = parameter(*controlSource, "polarity")->value >= 0.5
+                            ? ModulationPolarity::bipolar
+                            : ModulationPolarity::unipolar;
+                    }
+                }
+                operation.processor = std::move(processor);
             } else if (operation.kind == OperationKind::sum) {
                 if (const auto* gain = parameter(node, "gain")) operation.sumGain = static_cast<float>(gain->value);
             }

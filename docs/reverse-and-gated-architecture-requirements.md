@@ -68,6 +68,8 @@ Gated construction requires exactly two new reverb-specific primitives:
 
 Existing Scale / Offset remains available between follower and gate for explicit polarity/range mapping. A fixed inverse/gated envelope can later use an explicit time-window control source, but M6.2 must not add one until a factory construction proves it necessary.
 
+M6.2 implements this boundary in [Envelope Follower and Hold Gate](envelope-follower-and-hold-gate.md). The gate accepts the follower directly or through exactly one Scale / Offset block; other control sources remain outside this reverb-specific route.
+
 ## Measurement and naming contract
 
 M6.3 fixtures must use the same impulse capture and a documented smoothed-energy window for comparisons. At minimum they report onset, time to peak, peak-to-cutoff time, residual energy after cutoff, and whether a conventional RT60 is meaningful.

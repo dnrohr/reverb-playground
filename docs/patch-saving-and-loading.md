@@ -19,7 +19,7 @@ After a successful load, selection and undo/redo history are cleared because the
 
 ## Schema and future fields
 
-Schemas v1 and v2 are closed: unknown fields are rejected at every defined object boundary. Writers emit v2, including exact parameter modulation mappings. Readers accept v1 through a tested deterministic migration and reject unsupported schema or engine versions. Forward compatibility continues to use explicit migrations rather than silently discarding data from a newer author.
+Schemas v1 and v2 are closed: unknown fields are rejected at every defined object boundary. Writers emit v2, including exact parameter modulation mappings where a control socket exists and omitting the optional mapping for base-only parameters. Readers accept v1 through a tested deterministic migration and reject unsupported schema or engine versions. Forward compatibility continues to use explicit migrations rather than silently discarding data from a newer author.
 
 ## Editable-graph boundary
 

@@ -1,7 +1,7 @@
 import type { Node, XYPosition } from '@xyflow/react';
 import type { NodeRole, PatchNodeData, PatchParameter, PatchPort } from './graph';
 
-export type ModuleType = 'stereo-input' | 'stereo-output' | 'gain' | 'sum' | 'delay' | 'allpass' | 'lowpass' | 'lfo' | 'control-map';
+export type ModuleType = 'stereo-input' | 'stereo-output' | 'gain' | 'sum' | 'delay' | 'allpass' | 'lowpass' | 'lfo' | 'control-map' | 'envelope-follower' | 'hold-gate';
 export interface ModuleDefinition { type: ModuleType; label: string; role: NodeRole; ports: PatchPort[]; parameters: PatchParameter[] }
 
 const audioIn = (id = 'in'): PatchPort => ({ id, signal: 'audio', direction: 'input' });
@@ -16,6 +16,9 @@ const controlParameter = (id: string, value: number, unit: string, minimum: numb
   ...parameter(id, value, unit, minimum, maximum, step, amount),
   modulation: { portId: `${id}-mod`, amount, polarity: 'bipolar', clampMinimum: minimum, clampMaximum: maximum },
 });
+const staticParameter = (id: string, value: number, unit: string, minimum: number, maximum: number, step: number): PatchParameter => ({
+  id, value, unit, minimum, maximum, step,
+});
 
 export const moduleDefinitions: ModuleDefinition[] = [
   { type: 'stereo-input', label: 'Stereo Input', role: 'io', ports: [audioOut('out-l'), audioOut('out-r')], parameters: [] },
@@ -27,6 +30,8 @@ export const moduleDefinitions: ModuleDefinition[] = [
   { type: 'lowpass', label: 'Low-pass', role: 'filter', ports: [audioIn(), controlIn('cutoff-mod'), audioOut()], parameters: [parameter('cutoff', 7000, 'hertz', 20, 20000, 1, 5000)] },
   { type: 'lfo', label: 'LFO', role: 'control', ports: [controlIn('frequency-mod'), controlIn('phase-mod'), controlIn('waveform-mod'), controlIn('run-mode-mod'), controlOut()], parameters: [controlParameter('frequency', 1, 'hertz', 0.01, 100, 0.01, 1), controlParameter('phase', 0, 'cycles', 0, 0.999, 0.001, 0.25), controlParameter('waveform', 0, 'waveform', 0, 1, 1, 1), controlParameter('run-mode', 0, 'run-mode', 0, 1, 1, 1)] },
   { type: 'control-map', label: 'Scale / Offset', role: 'control', ports: [controlIn('in'), controlIn('scale-mod'), controlIn('offset-mod'), controlIn('polarity-mod'), controlOut()], parameters: [controlParameter('scale', 1, 'linear', -4, 4, 0.01, 1), controlParameter('offset', 0, 'unitless', -1, 1, 0.01, 0.5), controlParameter('polarity', 1, 'polarity', 0, 1, 1, 1)] },
+  { type: 'envelope-follower', label: 'Envelope Follower', role: 'control', ports: [audioIn(), controlOut()], parameters: [staticParameter('attack', 5, 'milliseconds', 0.1, 500, 0.1), staticParameter('release', 100, 'milliseconds', 1, 5000, 1)] },
+  { type: 'hold-gate', label: 'Hold Gate', role: 'routing', ports: [audioIn(), controlIn('gate'), audioOut()], parameters: [staticParameter('threshold', 0.5, 'unitless', 0, 1, 0.01), staticParameter('attack', 2, 'milliseconds', 0.1, 100, 0.1), staticParameter('hold', 250, 'milliseconds', 1, 2000, 1), staticParameter('release', 20, 'milliseconds', 0.1, 1000, 0.1)] },
 ];
 
 export const moduleByType = new Map(moduleDefinitions.map((definition) => [definition.type, definition]));

@@ -21,7 +21,7 @@ The compiler records the prepared sample rate, maximum audio block size, quantum
 
 ## Patch contract
 
-Patch schema v2 adds this required object to every parameter:
+Patch schema v2 adds this object to every parameter that exposes a modulation socket:
 
 ```json
 "modulation": {
@@ -33,7 +33,7 @@ Patch schema v2 adds this required object to every parameter:
 }
 ```
 
-Writers always emit schema v2. Readers accept v1 and migrate supported primitive parameters deterministically by exposing their parameter socket and applying the documented default mapping. V2 reads reject unknown mapping fields, a socket that does not match the parameter, a non-finite amount, invalid polarity, or clamps outside the parameter's allowed range. Round-trip tests require every mapping field to survive exactly. Schema v1 remains in the repository as the historical readable contract; schema v2 is the current writable contract.
+Writers always emit schema v2. Readers accept v1 and migrate supported modulatable primitive parameters deterministically by exposing their parameter socket and applying the documented default mapping. A parameter without a control socket omits `modulation`; this is used by the reverb-specific Envelope Follower and Hold Gate base controls. V2 reads reject missing mappings on modulatable parameters, mappings on base-only parameters, unknown mapping fields, a socket that does not match the parameter, a non-finite amount, invalid polarity, or clamps outside the parameter's allowed range. Round-trip tests require every present mapping field to survive exactly. Schema v1 remains in the repository as the historical readable contract; schema v2 is the current writable contract.
 
 M5.1 prepares and validates mapping semantics; M5.2 supplies the documented user-creatable LFO and Scale / Offset nodes. M5.3 binds mapped Delay and Allpass targets to fractional linear delay taps and a bounded per-sample Allpass coefficient. See [Modulated Delay and Allpass](modulated-delay-and-allpass.md).
 

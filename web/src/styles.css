@@ -196,6 +196,7 @@ button { font: inherit; }
 .patch-node h3 { margin: 2px 0; color: var(--text); font-size: 13px; line-height: 1.2; }
 .node-kicker { color: #8f9da6; font-size: 8px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
 .node-type { color: #98a6af; font: 8px ui-monospace, Consolas, monospace; }
+.signal-operation { margin-top: 5px; color: var(--violet); font: 700 7px ui-monospace, Consolas, monospace; letter-spacing: .06em; }
 .energy-meter { display: flex; gap: 2px; height: 3px; margin-top: 7px; }
 .energy-meter i { flex: 1; border-radius: 1px; background: #34434b; transition: background 70ms linear, box-shadow 120ms linear; }
 .node-parameter { margin-top: 7px; padding-top: 6px; border-top: 1px solid #3b4851; color: var(--cyan); font: 10px ui-monospace, Consolas, monospace; }

@@ -23,6 +23,8 @@ export function PatchNode({ data, selected }: NodeProps & { data: PatchNodeData 
       <div className="node-kicker">{data.role}</div>
       <h3>{data.label}</h3>
       <div className="node-type">{data.type}</div>
+      {data.type === 'envelope-follower' ? <div className="signal-operation">AUDIO → ENVELOPE 0…1</div> : null}
+      {data.type === 'hold-gate' ? <div className="signal-operation">AUDIO × CONTROL GATE</div> : null}
       <div className="energy-meter" aria-hidden="true"><i /><i /><i /><i /><i /></div>
       {data.controlPreview ? (
         <div className="control-preview" aria-label={`${data.controlPreview.label} control preview ${data.controlPreview.value.toFixed(2)}`}>
