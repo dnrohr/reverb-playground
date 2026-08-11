@@ -459,3 +459,15 @@ Results:
 - `CONTRIBUTING.md` requires redistributable provenance, proportionate tests/docs/UI evidence, real-time safety, and a DCO 1.1 sign-off. `DCO` preserves the verbatim certificate; copyright remains with contributors.
 - Repository verification rejects excluded research/build roots, ROM/firmware filenames and extensions, and undocumented asset families in both the tracked file set and a real `git archive` listing.
 - UI unchanged; no screenshot or video was required.
+
+## M7.2 verification
+
+- A clean-tree Windows packaging command builds Release standalone/VST3 artifacts, stages licenses and notices, writes version/commit `build-info.json`, normalizes archive order/time/permissions, and emits an adjacent SHA-256 checksum. A Python regression proves identical inputs produce identical ZIP bytes.
+- The package includes a current-user VST3 installer and a clean-machine-oriented installation/removal guide. The packaged standalone launches directly without an installer or development checkout.
+- Tracktion pluginval 1.0.4 passed at strictness 10 across scan/open/editor/state/automation/thread/bus/fuzz checks and 44.1/48/96 kHz processing at five block sizes.
+- Steinberg VST3 validator 3.8.1 build 84 passed 47/47 tests. Its first run exposed an unnamed program and low-rate filter exception; both are fixed and covered by regressions.
+- JUCE 8.0.13 AudioPluginHost scanned and instantiated the Release VST3, routed stereo input/output as four mono host cables, kept processing active at 48 kHz, and passed its state save/load command.
+- A 13-block/16-cable Level-Gated Room selected through keyboard input survived editor close/reopen and host state round-trip with parameters, layout, and viewport intact. Valid graph edits notify hosts that non-parameter state changed.
+- At 125% Windows scaling, the editor resized from its preferred size to a maximized 1536-by-960 host window and filled all available content bounds. The former 1920-by-1200 maximum is replaced by an effectively non-limiting native bound.
+- Version `0.1.0` and the 12-character source commit are visible in the editor and repeated in the package metadata.
+- Full method and release decision: [`windows-alpha-package-and-host-validation.md`](windows-alpha-package-and-host-validation.md). UI evidence: [`artifacts/ui/m7-2-windows-package/`](../artifacts/ui/m7-2-windows-package/).

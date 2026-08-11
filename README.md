@@ -15,6 +15,8 @@ The project has a deterministic Barr-inspired DSP reference and an embedded sche
 - [Product specification](docs/visual-reverb-constructor-spec.md)
 - [Execution roadmap](docs/roadmap.md)
 - [Current progress](docs/progress.md)
+- [Windows package installation](docs/windows-package-installation.md)
+- [Windows package and host validation](docs/windows-alpha-package-and-host-validation.md)
 - [Schematic editor interactions](docs/schematic-editor-interactions.md)
 - [Continuous parameter editing](docs/continuous-parameter-editing.md)
 - [Saving and loading patches](docs/patch-saving-and-loading.md)

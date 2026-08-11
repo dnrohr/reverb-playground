@@ -5,6 +5,7 @@
 #include <reverb/dsp/LiveReferenceHarness.h>
 #include <reverb/dsp/NumericalSafetyGuard.h>
 #include <reverb/graph/AcyclicRuntime.h>
+#include <reverb/graph/HostPatchState.h>
 
 #include <atomic>
 #include <vector>
@@ -50,6 +51,7 @@ public:
     [[nodiscard]] juce::String energyTelemetryJson() const;
     [[nodiscard]] juce::String runtimeDiagnosticsJson() const;
     [[nodiscard]] juce::String publishGraphJson(const juce::String& patchJson);
+    [[nodiscard]] juce::String storePatchStateJson(const juce::String& patchJson);
     juce::String startImpulseCapture(double lengthMilliseconds, double stopThresholdDb, bool muteLiveInput);
     bool setEnergyTelemetryEnabled(bool enabled) noexcept;
     double setRuntimeParameter(const juce::String& nodeId, const juce::String& parameterId, double value) noexcept;
@@ -57,6 +59,7 @@ public:
 private:
     reverb::dsp::LiveReferenceHarness harness_;
     reverb::graph::AcyclicRuntimeHost graphHost_;
+    reverb::graph::HostPatchState hostPatchState_;
     reverb::dsp::NumericalSafetyGuard graphLeftGuard_;
     reverb::dsp::NumericalSafetyGuard graphRightGuard_;
     reverb::dsp::ImpulseCapture graphCapture_;

@@ -18,7 +18,9 @@ add_executable(reverb_tests
     RuntimeDiagnosticsTests.cpp
     RuntimeSnapshotTests.cpp
     NumericalSafetyGuardTests.cpp
-    GraphDocumentTests.cpp)
+    GraphDocumentTests.cpp
+    HostPatchStateTests.cpp
+    PluginHostStateTests.cpp)
 
 target_link_libraries(reverb_tests
     PRIVATE
@@ -26,7 +28,12 @@ target_link_libraries(reverb_tests
         reverb_dsp
         reverb_graph
         reverb_render
+        reverb_ui
+        ReverbPlayground
+        juce::juce_audio_processors
         Catch2::Catch2WithMain)
+
+target_include_directories(reverb_tests PRIVATE ${CMAKE_SOURCE_DIR}/src/app)
 
 target_compile_definitions(reverb_tests
     PRIVATE

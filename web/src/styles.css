@@ -28,7 +28,7 @@ button { font: inherit; }
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-rows: 72px 50px minmax(0, 1fr);
+  grid-template-rows: 80px 50px minmax(0, 1fr);
   background: var(--bg);
 }
 
@@ -50,6 +50,7 @@ button { font: inherit; }
 }
 
 .editor-header h1 { margin: 3px 0 0; font-size: 24px; line-height: 1; letter-spacing: -.02em; }
+.build-identity { display: block; margin-top: 5px; color: #687882; font: 8px ui-monospace, Consolas, monospace; letter-spacing: .08em; }
 .header-status { display: flex; align-items: center; gap: 9px; color: #b9c4cb; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; }
 .header-runtime { display: flex; align-items: center; gap: 12px; }
 .factory-picker { display: grid; gap: 3px; color: #83919a; font: 800 7px ui-monospace, Consolas, monospace; letter-spacing: .1em; }

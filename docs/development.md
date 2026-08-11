@@ -35,6 +35,16 @@ ctest --preset windows-debug
 
 The first configure downloads the pinned JUCE and Catch2 source revisions into the ignored build directory. It does not require the local BarrVerb or MIDIVerb_RE research checkouts.
 
+## Windows release package
+
+From a clean committed checkout, run:
+
+```powershell
+.\scripts\package_windows.ps1
+```
+
+This builds Release standalone and VST3 targets, stages the license/notices/install guide, records the exact version and 12-character source commit in `build-info.json`, and creates a sorted timestamp-normalized ZIP plus SHA-256 file under `out/packages/`. `-AllowDirty` exists only for local packaging-script validation; publishable artifacts must come from a clean commit.
+
 Build products are written beneath `build/windows-msvc/`. The relevant smoke products are:
 
 - `src/app/ReverbPlayground_artefacts/Debug/Standalone/Reverb Playground.exe`

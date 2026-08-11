@@ -6,6 +6,22 @@ project(
     DESCRIPTION "A visual instrument for constructing and understanding algorithmic reverbs"
     LANGUAGES CXX)
 
+set(REVERB_BUILD_COMMIT "" CACHE STRING "Source commit embedded in packaged artifacts")
+if(REVERB_BUILD_COMMIT STREQUAL "")
+    execute_process(
+        COMMAND git rev-parse --short=12 HEAD
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        OUTPUT_VARIABLE REVERB_BUILD_COMMIT
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET)
+endif()
+if(REVERB_BUILD_COMMIT STREQUAL "")
+    set(REVERB_BUILD_COMMIT "unknown")
+endif()
+if(NOT REVERB_BUILD_COMMIT MATCHES "^[0-9A-Za-z._-]+$")
+    message(FATAL_ERROR "REVERB_BUILD_COMMIT contains unsupported characters")
+endif()
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -47,6 +63,9 @@ FetchContent_MakeAvailable(nlohmann_json)
 
 add_library(reverb_project_options INTERFACE)
 target_compile_features(reverb_project_options INTERFACE cxx_std_20)
+target_compile_definitions(reverb_project_options INTERFACE
+    REVERB_PRODUCT_VERSION="${PROJECT_VERSION}"
+    REVERB_BUILD_COMMIT="${REVERB_BUILD_COMMIT}")
 
 if(MSVC)
     target_compile_options(reverb_project_options INTERFACE /W4 /WX /permissive- /Zc:__cplusplus)

@@ -49,11 +49,12 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
           [&processor] { return processor.energyTelemetryJson(); },
           [&processor] { return processor.runtimeDiagnosticsJson(); },
           [&processor](const auto& patchJson) { return processor.publishGraphJson(patchJson); },
+          [&processor](const auto& patchJson) { return processor.storePatchStateJson(patchJson); },
       })
 {
     addAndMakeVisible(shell_);
     setResizable(true, true);
-    setResizeLimits(640, 400, 1920, 1200);
+    setResizeLimits(640, 400, 8192, 8192);
     auto initialWidth = 1280;
     auto initialHeight = 800;
     if (const auto* display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()) {

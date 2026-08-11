@@ -15,6 +15,8 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Architecture decision records](adr/README.md) - accepted implementation, licensing, platform, and distribution choices.
 - [Execution roadmap](roadmap.md) - ordered milestones, tasks, acceptance criteria, and delivery policy.
 - [Development guide](development.md) - supported toolchain, source layout, build/test commands, and artifact conventions.
+- [Windows package installation](windows-package-installation.md) - install, run, verify, and remove the standalone/VST3 alpha package.
+- [Windows alpha package and host validation](windows-alpha-package-and-host-validation.md) - reproducible archive contract and named-host evidence.
 - [Progress log](progress.md) - completed roadmap tasks and verification evidence.
 - [Project license](../LICENSE), [third-party notices](../THIRD_PARTY_NOTICES.md), [asset provenance](../ASSET_PROVENANCE.md), and [contribution/DCO policy](../CONTRIBUTING.md) - open-source distribution boundaries.
 - [Patch format v1](patch-format.md) - versioned semantic graph, editor layout, typed ports, units, validation, and migration policy.

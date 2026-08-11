@@ -8,6 +8,7 @@
 
 #include <array>
 #include <nlohmann/json.hpp>
+#include <stdexcept>
 
 ReverbPlaygroundProcessor::ReverbPlaygroundProcessor()
     : AudioProcessor(BusesProperties()
@@ -30,8 +31,14 @@ void ReverbPlaygroundProcessor::prepareToPlay(
     graphSafetyLatched_.store(false, std::memory_order_release);
     graphSampleRate_.store(sampleRate, std::memory_order_release);
     graphMaximumBlockSize_.store(maximumBlockSize, std::memory_order_release);
-    static_cast<void>(graphHost_.requestCompilation(
-        reverb::graph::makeBarrReferenceGraph(), sampleRate, maximumBlockSize, true));
+    if (const auto restored = hostPatchState_.document(); restored.has_value()) {
+        static_cast<void>(graphHost_.requestCompilation(*restored, sampleRate, maximumBlockSize, true));
+        graphAudioEnabled_.store(true, std::memory_order_release);
+    } else {
+        static_cast<void>(graphHost_.requestCompilation(
+            reverb::graph::makeBarrReferenceGraph(), sampleRate, maximumBlockSize, true));
+        graphAudioEnabled_.store(false, std::memory_order_release);
+    }
 }
 
 void ReverbPlaygroundProcessor::releaseResources()
@@ -148,13 +155,19 @@ double ReverbPlaygroundProcessor::getTailLengthSeconds() const { return 2.0; }
 int ReverbPlaygroundProcessor::getNumPrograms() { return 1; }
 int ReverbPlaygroundProcessor::getCurrentProgram() { return 0; }
 void ReverbPlaygroundProcessor::setCurrentProgram(int) {}
-const juce::String ReverbPlaygroundProcessor::getProgramName(int) { return {}; }
+const juce::String ReverbPlaygroundProcessor::getProgramName(int index)
+{
+    return index == 0 ? juce::String { "Default" } : juce::String {};
+}
 void ReverbPlaygroundProcessor::changeProgramName(int, const juce::String&) {}
 void ReverbPlaygroundProcessor::getStateInformation(juce::MemoryBlock& destinationData)
 {
     juce::ValueTree state("ReverbPlayground");
+    state.setProperty("formatVersion", 1, nullptr);
     state.setProperty("masterGain", harness_.masterGain(), nullptr);
     state.setProperty("emergencyMuted", harness_.isEmergencyMuted(), nullptr);
+    if (const auto patch = hostPatchState_.snapshot(); patch.has_value())
+        state.setProperty("graphPatchJson", juce::String::fromUTF8(patch->data(), static_cast<int>(patch->size())), nullptr);
     juce::MemoryOutputStream stream(destinationData, false);
     state.writeToStream(stream);
 }
@@ -164,8 +177,27 @@ void ReverbPlaygroundProcessor::setStateInformation(const void* data, const int 
     const auto state = juce::ValueTree::readFromData(data, static_cast<std::size_t>(sizeInBytes));
     if (!state.isValid() || !state.hasType("ReverbPlayground"))
         return;
+    const auto patchJson = state.getProperty("graphPatchJson").toString();
+    if (patchJson.isNotEmpty()) {
+        std::string error;
+        if (!hostPatchState_.store(patchJson.toStdString(), error))
+            return;
+    }
+
     harness_.setMasterGain(static_cast<float>(state.getProperty("masterGain", 0.5F)));
     harness_.setEmergencyMuted(static_cast<bool>(state.getProperty("emergencyMuted", false)));
+    if (patchJson.isNotEmpty()) {
+        const auto sampleRate = graphSampleRate_.load(std::memory_order_acquire);
+        const auto maximumBlockSize = graphMaximumBlockSize_.load(std::memory_order_acquire);
+        if (sampleRate > 0.0 && maximumBlockSize > 0) {
+            static_cast<void>(graphHost_.requestCompilation(
+                *hostPatchState_.document(), sampleRate, maximumBlockSize, true));
+            graphAudioEnabled_.store(true, std::memory_order_release);
+        }
+    } else {
+        hostPatchState_.clear();
+        graphAudioEnabled_.store(false, std::memory_order_release);
+    }
 }
 
 void ReverbPlaygroundProcessor::triggerImpulse() noexcept
@@ -197,8 +229,14 @@ juce::String ReverbPlaygroundProcessor::runtimeSnapshotJson() const
     std::array<double, count> values {};
     for (std::size_t index = 0; index < values.size(); ++index)
         values[index] = harness_.runtimeParameter(static_cast<reverb::dsp::BarrParameterId>(index));
-    const auto json = reverb::graph::writeBarrRuntimeSnapshotJson(activeSampleRate(), values);
-    return juce::String::fromUTF8(json.data(), static_cast<int>(json.size()));
+    auto json = nlohmann::ordered_json::parse(
+        reverb::graph::writeBarrRuntimeSnapshotJson(activeSampleRate(), values));
+    json["productVersion"] = REVERB_PRODUCT_VERSION;
+    json["buildCommit"] = REVERB_BUILD_COMMIT;
+    if (const auto restored = hostPatchState_.snapshot(); restored.has_value())
+        json["restoredPatch"] = nlohmann::ordered_json::parse(*restored);
+    const auto text = json.dump(2);
+    return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
 }
 
 double ReverbPlaygroundProcessor::setRuntimeParameter(
@@ -399,9 +437,14 @@ juce::String ReverbPlaygroundProcessor::publishGraphJson(const juce::String& pat
         const auto maximumBlockSize = graphMaximumBlockSize_.load(std::memory_order_acquire);
         if (sampleRate <= 0.0 || maximumBlockSize == 0)
             return R"({"accepted":false,"revision":0,"error":"audio runtime is not prepared"})";
+        std::string stateError;
+        if (!hostPatchState_.store(patchJson.toStdString(), stateError))
+            throw std::runtime_error(stateError);
         const auto revision = graphHost_.requestCompilation(
             std::move(document), sampleRate, maximumBlockSize, true);
         graphAudioEnabled_.store(true, std::memory_order_release);
+        updateHostDisplay(juce::AudioProcessorListener::ChangeDetails {}
+                              .withNonParameterStateChanged(true));
         const nlohmann::ordered_json result {
             { "accepted", true }, { "revision", revision }, { "error", "" },
         };
@@ -414,6 +457,20 @@ juce::String ReverbPlaygroundProcessor::publishGraphJson(const juce::String& pat
         const auto text = result.dump();
         return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
     }
+}
+
+juce::String ReverbPlaygroundProcessor::storePatchStateJson(const juce::String& patchJson)
+{
+    std::string error;
+    const auto accepted = hostPatchState_.store(patchJson.toStdString(), error);
+    if (accepted)
+        updateHostDisplay(juce::AudioProcessorListener::ChangeDetails {}
+                              .withNonParameterStateChanged(true));
+    const nlohmann::ordered_json result {
+        { "accepted", accepted }, { "error", error },
+    };
+    const auto text = result.dump();
+    return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

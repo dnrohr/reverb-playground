@@ -58,6 +58,8 @@ describe('native runtime graph presentation model', () => {
       ...snapshot,
       connections: [{ ...snapshot.connections[0], sourcePort: 'missing' }],
     })).toThrow('invalid source port');
+    expect(() => parseRuntimeSnapshot({ ...snapshot, buildCommit: 'bad commit' })).toThrow('invalid build commit');
+    expect(() => parseRuntimeSnapshot({ ...snapshot, restoredPatch: [] })).toThrow('invalid restored patch');
   });
 
   it('deletes selected nodes and incident connections from only the UI copy', () => {

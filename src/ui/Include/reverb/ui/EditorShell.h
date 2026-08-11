@@ -27,6 +27,7 @@ public:
         std::function<juce::String()> energyTelemetryJson;
         std::function<juce::String()> runtimeDiagnosticsJson;
         std::function<juce::String(const juce::String&)> publishGraphJson;
+        std::function<juce::String(const juce::String&)> storePatchStateJson;
     };
 
     explicit EditorShell(Callbacks callbacks);

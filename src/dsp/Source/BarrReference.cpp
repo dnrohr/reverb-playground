@@ -16,7 +16,9 @@ void BarrReference::prepare(const double sampleRate)
             static_cast<float>(barrReferenceParameter(nodeId, "coefficient")));
     };
     inputGain_.prepare(sampleRate, static_cast<float>(barrReferenceParameter("sum", "gain")));
-    inputFilter_.prepare(sampleRate, barrReferenceParameter("input-filter", "cutoff"));
+    const auto filterCutoff = std::min(
+        barrReferenceParameter("input-filter", "cutoff"), sampleRate * 0.499);
+    inputFilter_.prepare(sampleRate, filterCutoff);
     prepareAllpass(diffuserOne_, "diffuser-1");
     prepareAllpass(diffuserTwo_, "diffuser-2");
     prepareAllpass(tankOne_, "tank-1");

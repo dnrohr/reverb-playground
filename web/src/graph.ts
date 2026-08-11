@@ -62,6 +62,9 @@ export interface RuntimeSnapshot {
   nodes: RuntimeNode[];
   connections: RuntimeConnection[];
   outsidePatch: { id: string; purpose: string }[];
+  productVersion?: string;
+  buildCommit?: string;
+  restoredPatch?: unknown;
 }
 
 const nodeRoles = new Set<NodeRole>(['io', 'routing', 'filter', 'delay', 'diffusion', 'tank', 'tap']);
@@ -80,6 +83,9 @@ export function parseRuntimeSnapshot(input: unknown): RuntimeSnapshot {
   requireCondition(Array.isArray(snapshot.nodes) && snapshot.nodes.length > 0, 'nodes are missing');
   requireCondition(Array.isArray(snapshot.connections), 'connections are missing');
   requireCondition(Array.isArray(snapshot.outsidePatch), 'outside-patch processing is missing');
+  requireCondition(snapshot.productVersion === undefined || (typeof snapshot.productVersion === 'string' && snapshot.productVersion.length > 0), 'invalid product version');
+  requireCondition(snapshot.buildCommit === undefined || (typeof snapshot.buildCommit === 'string' && /^[0-9A-Za-z._-]+$/.test(snapshot.buildCommit)), 'invalid build commit');
+  requireCondition(snapshot.restoredPatch === undefined || (typeof snapshot.restoredPatch === 'object' && snapshot.restoredPatch !== null && !Array.isArray(snapshot.restoredPatch)), 'invalid restored patch');
 
   const nodeIds = new Set<string>();
   const portsByNode = new Map<string, Map<string, PatchPort>>();

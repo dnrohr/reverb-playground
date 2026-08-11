@@ -35,6 +35,7 @@ import { audibleGraphFingerprint, parseGraphPublicationResult } from './topology
 import { decorateControlPreview, mappingRange } from './controlSemantics';
 import { comparisonPatchAfterSelection, factoryPatchDescription, factoryPatches, loadFactoryPatch, type ComparisonPatchId, type FactoryPatchId } from './factoryPatches';
 import { architectureOverlay, type GateTeachingParameters, type TeachingPatchId } from './architectureOverlay';
+import { parseHostPatchStateResult } from './hostPatchState';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -254,19 +255,21 @@ function DiagnosticsPanel({ diagnostics, runawayLoop, canUndo, onUndo, onRecover
 
 function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const { fitView, setViewport: setFlowViewport, screenToFlowPosition } = useReactFlow();
-  const initial = useMemo(() => createFlowModel(snapshot), [snapshot]);
+  const restored = useMemo(() => snapshot.restoredPatch
+    ? parsePatchJson(JSON.stringify(snapshot.restoredPatch), snapshot) : null, [snapshot]);
+  const initial = useMemo(() => restored ?? { ...createFlowModel(snapshot), viewport: { x: 0, y: 0, zoom: 1 } }, [restored, snapshot]);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node<PatchNodeData>>(initial.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initial.edges);
   const [selectedNode, setSelectedNode] = useState<Node<PatchNodeData> | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
-  const [viewport, setViewport] = useState<Viewport>({ x: 0, y: 0, zoom: 1 });
+  const [viewport, setViewport] = useState<Viewport>(initial.viewport);
   const activeEdit = useRef<{ label: string; before: ReturnType<typeof snapshotGraph> } | null>(null);
   const dragStart = useRef<ReturnType<typeof snapshotGraph> | null>(null);
   const clipboard = useRef<GraphClipboard | null>(null);
   const pasteCount = useRef(0);
   const loadInput = useRef<HTMLInputElement | null>(null);
   const [fileStatus, setFileStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
-  const [activePatchId, setActivePatchId] = useState<FactoryPatchId | 'custom'>('barr-reference');
+  const [activePatchId, setActivePatchId] = useState<FactoryPatchId | 'custom'>(restored ? 'custom' : 'barr-reference');
   const [comparisonPatchId, setComparisonPatchId] = useState<ComparisonPatchId>('causal-reverse-envelope');
   const [teachingEnabled, setTeachingEnabled] = useState(() => {
     try { return window.localStorage.getItem('reverb-playground-teaching') !== 'off'; } catch { return true; }
@@ -303,6 +306,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [diagnostics, setDiagnostics] = useState<RuntimeDiagnostics | null>(null);
   const [controlPreviewTime, setControlPreviewTime] = useState(() => performance.now() / 1000);
   const audibleFingerprint = useMemo(() => audibleGraphFingerprint(nodes, edges), [edges, nodes]);
+  const hostStateJson = useMemo(() => writePatchJson(nodes, edges, viewport), [edges, nodes, viewport]);
   const activePatch = activePatchId === 'custom' ? null : factoryPatchDescription(activePatchId);
 
   const loopInspection = useMemo(() => selectedNode
@@ -349,6 +353,24 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     }, 35);
     return () => { cancelled = true; window.clearTimeout(timer); };
   }, [audibleFingerprint]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const payload = await callNative('storePatchState', hostStateJson);
+        if (payload !== undefined) {
+          const result = parseHostPatchStateResult(payload);
+          if (!cancelled && !result.accepted)
+            setGraphStatus({ kind: 'error', message: result.error || 'Host state rejected' });
+        }
+      } catch (reason) {
+        if (!cancelled && !import.meta.env.DEV)
+          setGraphStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Host state failed' });
+      }
+    }, 120);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [hostStateJson]);
 
   useEffect(() => {
     if (!shouldRunEnergyTelemetry(energyEnabled, reducedMotion)) {
@@ -644,6 +666,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         <div>
           <div className="eyebrow">SCHEMATIC EDITOR / {activePatch?.label.toUpperCase() ?? 'CUSTOM PATCH'}</div>
           <h1>Patch architecture</h1>
+          {snapshot.productVersion && snapshot.buildCommit ? <span className="build-identity">v{snapshot.productVersion} / {snapshot.buildCommit}</span> : null}
         </div>
         <div className="header-runtime">
           <label className="factory-picker">
@@ -791,7 +814,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               defaultEdgeOptions={{ interactionWidth: 24 }}
               onSelectionChange={handleSelection}
               onViewportChange={setViewport}
-              fitView
+              defaultViewport={initial.viewport}
+              fitView={!restored}
               fitViewOptions={{ padding: 0.16, minZoom: 0.58, maxZoom: 1.1 }}
               minZoom={0.2}
               maxZoom={1.8}

@@ -113,6 +113,13 @@ EditorShell::EditorShell(Callbacks callbacks)
             }
             complete(callbacks_.publishGraphJson(arguments[0].toString()));
         })
+        .withNativeFunction("storePatchState", [this](const auto& arguments, auto complete) {
+            if (arguments.size() != 1) {
+                complete(juce::String(R"({"accepted":false,"error":"expected one patch JSON argument"})"));
+                return;
+            }
+            complete(callbacks_.storePatchStateJson(arguments[0].toString()));
+        })
         .withNativeFunction("resetSafety", [this](const auto&, auto complete) {
             callbacks_.resetSafety();
             complete(true);

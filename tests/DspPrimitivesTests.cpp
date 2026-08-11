@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <reverb/dsp/Allpass.h>
+#include <reverb/dsp/BarrReference.h>
 #include <reverb/dsp/Delay.h>
 #include <reverb/dsp/Gain.h>
 #include <reverb/dsp/OnePoleLowPass.h>
@@ -29,6 +30,13 @@ double responseMagnitude(const std::span<const float> impulse, const double radi
 }
 
 } // namespace
+
+TEST_CASE("Barr reference accepts unusual positive host sample rates")
+{
+    reverb::dsp::BarrReference reference;
+    REQUIRE_NOTHROW(reference.prepare(1'234.5678));
+    REQUIRE_NOTHROW(reference.prepare(1'234'567.8));
+}
 
 TEST_CASE("Delay timing follows milliseconds at multiple sample rates")
 {
