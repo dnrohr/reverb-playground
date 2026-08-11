@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { RuntimeSnapshot } from './graph';
-import { factoryPatches, loadFactoryPatch } from './factoryPatches';
+import { comparisonPatchAfterSelection, factoryPatches, loadFactoryPatch } from './factoryPatches';
 import { parsePatchJson, writePatchJson } from './patchPersistence';
 
 const reference: RuntimeSnapshot = {
@@ -45,5 +45,11 @@ describe('factory patches', () => {
     expect(gated.nodes.filter((node) => node.data.type === 'envelope-follower')).toHaveLength(1);
     expect(gated.nodes.filter((node) => node.data.type === 'hold-gate')).toHaveLength(2);
     expect(reverse.nodes.map((node) => node.id)).not.toEqual(gated.nodes.map((node) => node.id));
+  });
+
+  it('remembers the selected design while A is the Barr reference', () => {
+    expect(comparisonPatchAfterSelection('level-gated-room', 'causal-reverse-envelope')).toBe('level-gated-room');
+    expect(comparisonPatchAfterSelection('barr-reference', 'level-gated-room')).toBe('level-gated-room');
+    expect(comparisonPatchAfterSelection('custom', 'level-gated-room')).toBe('level-gated-room');
   });
 });

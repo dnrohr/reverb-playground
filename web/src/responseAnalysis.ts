@@ -1,6 +1,6 @@
 import type { ImpulseCaptureResult } from './impulseCapture';
 
-export type Rt60Refusal = 'no-energy' | 'tail-noise' | 'insufficient-range' | 'non-decaying';
+export type Rt60Refusal = 'no-energy' | 'tail-noise' | 'insufficient-range' | 'non-decaying' | 'abrupt-cutoff';
 
 export interface ResponseAnalysis {
   sampleRate: number;
@@ -134,5 +134,6 @@ export function rt60Explanation(reason: Rt60Refusal | null): string {
   if (reason === 'tail-noise') return 'The final 10% is above the permitted noise floor. Capture a longer or quieter tail.';
   if (reason === 'insufficient-range') return 'Fewer than 20 samples span the -5 to -35 dB fit range.';
   if (reason === 'non-decaying') return 'The fitted decay is flat or rising, so an RT60 extrapolation would be misleading.';
+  if (reason === 'abrupt-cutoff') return 'A visible level gate truncates this response, so an exponential RT60 extrapolation would be misleading.';
   return '';
 }

@@ -30,6 +30,7 @@ describe('stereo response analysis', () => {
     const noisyAnalysis = analyseResponse(noisy);
     expect(noisyAnalysis.rt60Refusal).toBe('tail-noise');
     expect(rt60Explanation(noisyAnalysis.rt60Refusal)).toMatch(/longer or quieter/);
+    expect(rt60Explanation('abrupt-cutoff')).toMatch(/level gate.*misleading/i);
   });
 
   it('preserves extrema while decimating a full tail and bounds zoom/pan', () => {

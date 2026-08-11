@@ -423,7 +423,7 @@
         "parameters": [
           {
             "id": "threshold",
-            "value": 0.05,
+            "value": 0.004,
             "unit": "unitless"
           },
           {
@@ -466,7 +466,7 @@
         "parameters": [
           {
             "id": "threshold",
-            "value": 0.05,
+            "value": 0.004,
             "unit": "unitless"
           },
           {

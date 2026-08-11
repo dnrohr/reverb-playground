@@ -7,10 +7,10 @@
   "cutoffDecibels": -40.0,
   "onsetFrame": 0,
   "peakFrame": 240,
-  "cutoffFrame": 7680,
+  "cutoffFrame": 10080,
   "timeToPeakMilliseconds": 5.0,
-  "peakToCutoffMilliseconds": 155.0,
+  "peakToCutoffMilliseconds": 205.0,
   "residualEnergyRatio": 0.0,
-  "maximumDropDecibelsPerWindow": 89.57493899643327,
+  "maximumDropDecibelsPerWindow": 84.79123364160529,
   "rt60Meaningful": false
 }

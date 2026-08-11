@@ -87,7 +87,7 @@ const levelGatedRoom = patch([
   allpass('diffusion-1', 5.7, 0.86), allpass('diffusion-2', 9.1, 0.84), allpass('diffusion-3', 13.7, 0.82),
   lowpass('tone-7-2khz', 7200), gain('output-level-0-80', 0.80),
   allpass('stereo-left-4-3ms', 4.3, 0.42), allpass('stereo-right-7-9ms', 7.9, 0.46),
-  gate('left-level-gate', 0.05, 2, 120, 8), gate('right-level-gate', 0.05, 2, 120, 8),
+  gate('left-level-gate', 0.004, 2, 120, 8), gate('right-level-gate', 0.004, 2, 120, 8),
   stereoOutput(),
 ], [
   cable('input-l', 'input', 'out-l', 'input-sum', 'in-a'), cable('input-r', 'input', 'out-r', 'input-sum', 'in-b'),

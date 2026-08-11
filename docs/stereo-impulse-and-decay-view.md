@@ -31,6 +31,10 @@ The viewer withholds RT60 and explains why when:
 
 These are refusal rules, not error states. A longer/quieter capture may make an estimate possible, while a gated or reverse-style response may legitimately have no meaningful conventional RT60.
 
+## Architecture teaching layer
+
+Factory captures can add optional measured architecture annotations without changing the underlying waveform or decay. Causal Reverse Envelope marks its rising-energy span, late peak, and -40 dB crossing. Level-Gated Room marks gate/open, hold, release, and measured cutoff using the captured graph's visible timing controls; its explicit abrupt truncation withholds RT60 even when a pre-cutoff regression exists. Barr, custom, and silent captures remain unannotated. **Learn Off** removes these graphics and their explanatory copy. See [Visualization teaching overlays and A/B comparison](visualization-teaching-overlays.md).
+
 ## Evidence
 
 Reviewed screenshots under [`artifacts/ui/m4-3-stereo-impulse-decay/`](../artifacts/ui/m4-3-stereo-impulse-decay/) cover a short response, the runtime Barr reference at full-tail/early/panned scales, and a long bloom-like response. The [`measurement and navigation video`](../artifacts/ui/m4-3-stereo-impulse-decay/stereo-response-measurement-and-navigation.mp4) demonstrates the same progression. Synthetic fixture screenshots exercise presentation shape; the Barr screenshots are produced from the runtime-bound reference measurement path.

@@ -26,6 +26,8 @@ Envelope Follower changes a solid mono audio signal into a dashed normalized con
 
 The **Factory Patch** menu loads the Barr reference, Causal Reverse Envelope, or Level-Gated Room directly into the editable canvas. The eyebrow, graph name, save filename, and reset target follow the selection. A separately loaded file is labeled Custom. Factory patches use the same schema parser and public graph publication path as user files.
 
+Beside that menu, **A / Barr** and **B / Reverse Env** or **B / Gated** form an explicit audition pair. B remembers the last selected teaching design while A loads the Barr reference; both publish a normal visible graph through the existing bounded crossfade. The active state is exposed with text and `aria-pressed`, not colour alone.
+
 Each patch opens fitted to the available canvas. Blocks retain stable IDs and use a compact layout so the complete signal path is readable at the default 1280 by 800 editor size.
 
 ## Pointer and keyboard contract
@@ -48,7 +50,7 @@ Selecting a block or cable also inspects directed feedback. The active complete 
 
 ## Learn mode
 
-The inspector's **Learn On/Off** control reveals or hides contextual explanations without changing the graph or selected parameters. A card can also be dismissed for its current context. Cards distinguish documented Barr/MIDIVerb evidence from choices in this reconstruction and link to the complete architecture research bundled into an offline reader. See [Contextual teaching](contextual-teaching.md).
+The inspector's **Learn On/Off** control reveals or hides contextual explanations without changing the graph or selected parameters. It also enables/disables measured architecture regions and explanatory prose in the response viewer. A card can be dismissed for its current context. Cards and overlays distinguish documented Barr/MIDIVerb evidence from choices in this reconstruction and link to research bundled into the offline reader. See [Contextual teaching](contextual-teaching.md) and [Visualization teaching overlays and A/B comparison](visualization-teaching-overlays.md).
 
 ## Signal semantics
 

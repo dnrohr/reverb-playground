@@ -33,7 +33,8 @@ import { parseEnergyTelemetry, shouldRunEnergyTelemetry, smoothEnergy, type Ener
 import { formatBytes, parseRuntimeDiagnostics, type RuntimeDiagnostics } from './runtimeDiagnostics';
 import { audibleGraphFingerprint, parseGraphPublicationResult } from './topologyPublication';
 import { decorateControlPreview, mappingRange } from './controlSemantics';
-import { factoryPatchDescription, factoryPatches, loadFactoryPatch, type FactoryPatchId } from './factoryPatches';
+import { comparisonPatchAfterSelection, factoryPatchDescription, factoryPatches, loadFactoryPatch, type ComparisonPatchId, type FactoryPatchId } from './factoryPatches';
+import { architectureOverlay, type GateTeachingParameters, type TeachingPatchId } from './architectureOverlay';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -148,8 +149,20 @@ function MeasurementBar({ sampleRate, onCapture }: { sampleRate: number; onCaptu
   </section>;
 }
 
-function ResponseViewer({ capture, onClose }: { capture: ImpulseCaptureResult; onClose: () => void }) {
+function ResponseViewer({ capture, patchId, gateTeaching, teachingEnabled, onClose }: {
+  capture: ImpulseCaptureResult;
+  patchId: TeachingPatchId;
+  gateTeaching: GateTeachingParameters;
+  teachingEnabled: boolean;
+  onClose: () => void;
+}) {
   const analysis = useMemo(() => analyseResponse(capture), [capture]);
+  const displayedRt60 = patchId === 'level-gated-room' ? null : analysis.rt60Seconds;
+  const displayedRt60Refusal = patchId === 'level-gated-room' ? 'abrupt-cutoff' as const : analysis.rt60Refusal;
+  const teachingOverlay = useMemo(
+    () => teachingEnabled ? architectureOverlay(capture, patchId, gateTeaching) : null,
+    [capture, gateTeaching, patchId, teachingEnabled],
+  );
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState(0);
   const window = frameWindow(capture.frameCount, zoom, pan);
@@ -160,6 +173,10 @@ function ResponseViewer({ capture, onClose }: { capture: ImpulseCaptureResult; o
   const peak = Math.max(analysis.peakLeft, analysis.peakRight, 1e-9);
   const envelope = (buckets: ReturnType<typeof waveformBuckets>, center: number) => buckets.map((bucket) => `M${x(bucket.frame).toFixed(1)},${(center - 34 * bucket.maximum / peak).toFixed(1)}L${x(bucket.frame).toFixed(1)},${(center - 34 * bucket.minimum / peak).toFixed(1)}`).join('');
   const decayPath = decay.map((point, index) => `${index ? 'L' : 'M'}${x(point.frame).toFixed(1)},${(228 + Math.min(90, Math.max(0, -point.decibels))).toFixed(1)}`).join('');
+  const visibleRegions = teachingOverlay?.regions
+    .map((region) => ({ ...region, startFrame: Math.max(window.start, region.startFrame), endFrame: Math.min(window.end - 1, region.endFrame) }))
+    .filter((region) => region.endFrame > region.startFrame) ?? [];
+  const visibleMarkers = teachingOverlay?.markers.filter((marker) => marker.frame >= window.start && marker.frame < window.end) ?? [];
   const startMs = window.start / capture.sampleRate * 1000;
   const endMs = window.end / capture.sampleRate * 1000;
   const setBoundedZoom = (value: number) => setZoom(Math.max(1, Math.min(256, value)));
@@ -169,7 +186,7 @@ function ResponseViewer({ capture, onClose }: { capture: ImpulseCaptureResult; o
       <div><span>WINDOW</span><strong>{startMs.toFixed(2)}–{endMs.toFixed(2)} ms</strong></div>
       <div><span>PEAK L / R</span><strong>{analysis.peakLeft.toFixed(4)} / {analysis.peakRight.toFixed(4)}</strong></div>
       <div><span>ONSET</span><strong>{analysis.onsetFrame === null ? 'NONE' : `${(analysis.onsetFrame / capture.sampleRate * 1000).toFixed(2)} ms`}</strong></div>
-      <div><span>RT60 / T30 FIT</span><strong>{analysis.rt60Seconds === null ? 'NOT ESTIMATED' : `${analysis.rt60Seconds.toFixed(3)} s`}</strong></div>
+      <div><span>RT60 / T30 FIT</span><strong>{displayedRt60 === null ? patchId === 'level-gated-room' ? 'NOT MEANINGFUL' : 'NOT ESTIMATED' : `${displayedRt60.toFixed(3)} s`}</strong></div>
     </div>
     <div className="response-navigation">
       <button type="button" onClick={() => { setBoundedZoom(16); setPan(0); }}>EARLY / 16×</button>
@@ -180,15 +197,28 @@ function ResponseViewer({ capture, onClose }: { capture: ImpulseCaptureResult; o
       <output>{zoom.toFixed(0)}×</output>
     </div>
     <div className="response-legend" aria-label="Channel line styles"><span><i className="legend-left" />L / SOLID / UPPER</span><span><i className="legend-right" />R / DASHED / LOWER</span><span><i className="legend-decay" />ENERGY DECAY / SCHROEDER</span></div>
-    <svg className="response-chart" viewBox="0 0 1000 330" role="img" aria-label={`Left solid upper waveform, right dashed lower waveform, and combined energy decay from ${startMs.toFixed(2)} to ${endMs.toFixed(2)} milliseconds`} onWheel={(event) => { event.preventDefault(); setBoundedZoom(event.deltaY < 0 ? zoom * 2 : zoom / 2); }}>
+    <svg className="response-chart" viewBox="0 0 1000 330" role="img" aria-label={`Left solid upper waveform, right dashed lower waveform, and combined energy decay from ${startMs.toFixed(2)} to ${endMs.toFixed(2)} milliseconds${teachingOverlay ? `, with ${teachingOverlay.regions.map((region) => region.label).join(', ')} regions` : ''}`} onWheel={(event) => { event.preventDefault(); setBoundedZoom(event.deltaY < 0 ? zoom * 2 : zoom / 2); }}>
       <g className="chart-grid"><path d="M70 75H970M70 160H970M70 228H970M70 263H970M70 298H970M70 318H970" /><text x="12" y="79">L</text><text x="12" y="164">R</text><text x="12" y="232">0 dB</text><text x="12" y="267">-35</text><text x="12" y="322">-90</text></g>
+      {teachingOverlay ? <g className="architecture-overlay" aria-label={teachingOverlay.title}>
+        {visibleRegions.map((region) => <g className={`overlay-${region.tone}`} key={`${region.label}-${region.startFrame}`}>
+          <rect x={x(region.startFrame)} y="203" width={Math.max(2, x(region.endFrame) - x(region.startFrame))} height="115" />
+          <text x={x(region.startFrame) + 5} y="219">{region.label}</text>
+        </g>)}
+        {visibleMarkers.map((marker) => <g className={`overlay-marker overlay-${marker.tone}`} key={`${marker.label}-${marker.frame}`}>
+          <path d={`M${x(marker.frame).toFixed(1)} 42V318`} />
+          <text x={Math.min(905, x(marker.frame) + 5)} y="52">{marker.label}</text>
+        </g>)}
+      </g> : null}
       <path className="wave-left" d={envelope(left, 75)} />
       <path className="wave-right" d={envelope(right, 160)} />
       <path className="decay-line" d={decayPath} />
       <path className="fit-band" d="M70 233H970M70 263H970" />
       <text className="axis-label" x="70" y="328">{startMs.toFixed(2)} ms</text><text className="axis-label axis-end" x="970" y="328">{endMs.toFixed(2)} ms</text>
     </svg>
-    {analysis.rt60Refusal ? <div className="rt60-refusal" role="note"><strong>RT60 withheld</strong><span>{rt60Explanation(analysis.rt60Refusal)}</span></div> : <div className="rt60-method"><strong>T30 estimate</strong><span>Linear fit from -5 to -35 dB, extrapolated to -60 dB.</span></div>}
+    {teachingOverlay ? <section className="architecture-explanation" aria-label="Architecture explanation">
+      <strong>{teachingOverlay.title}</strong><span>{teachingOverlay.explanation}</span>
+    </section> : null}
+    {displayedRt60Refusal ? <div className="rt60-refusal" role="note"><strong>RT60 withheld</strong><span>{rt60Explanation(displayedRt60Refusal)}</span></div> : <div className="rt60-method"><strong>T30 estimate</strong><span>Linear fit from -5 to -35 dB, extrapolated to -60 dB.</span></div>}
   </section>;
 }
 
@@ -237,6 +267,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const loadInput = useRef<HTMLInputElement | null>(null);
   const [fileStatus, setFileStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
   const [activePatchId, setActivePatchId] = useState<FactoryPatchId | 'custom'>('barr-reference');
+  const [comparisonPatchId, setComparisonPatchId] = useState<ComparisonPatchId>('causal-reverse-envelope');
   const [teachingEnabled, setTeachingEnabled] = useState(() => {
     try { return window.localStorage.getItem('reverb-playground-teaching') !== 'off'; } catch { return true; }
   });
@@ -246,8 +277,25 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [graphStatus, setGraphStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
   const [pendingConnection, setPendingConnection] = useState<Connection | null>(null);
   const [activeLoopIndex, setActiveLoopIndex] = useState(0);
-  const [responseCapture, setResponseCapture] = useState<ImpulseCaptureResult | null>(null);
-  const receiveCapture = useCallback((capture: ImpulseCaptureResult) => setResponseCapture(capture), []);
+  const [responseCapture, setResponseCapture] = useState<{
+    capture: ImpulseCaptureResult;
+    patchId: TeachingPatchId;
+    gateTeaching: GateTeachingParameters;
+  } | null>(null);
+  const receiveCapture = useCallback((capture: ImpulseCaptureResult) => {
+    const parameter = (type: string, id: string, fallback: number) => nodes
+      .find((node) => node.data.type === type)?.data.parameters
+      .find((candidate) => candidate.id === id)?.value ?? fallback;
+    setResponseCapture({
+      capture,
+      patchId: activePatchId,
+      gateTeaching: {
+        detectorReleaseMilliseconds: parameter('envelope-follower', 'release', 20),
+        holdMilliseconds: parameter('hold-gate', 'hold', 120),
+        releaseMilliseconds: parameter('hold-gate', 'release', 8),
+      },
+    });
+  }, [activePatchId, nodes]);
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [energyEnabled, setEnergyEnabled] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [energyLevels, setEnergyLevels] = useState<EnergyLevels>({});
@@ -468,6 +516,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       setGraphHistory(emptyGraphHistory(fresh));
       setPendingConnection(null);
       setActivePatchId(id);
+      setComparisonPatchId((current) => comparisonPatchAfterSelection(id, current));
       const description = factoryPatchDescription(id);
       setFileStatus({ kind: 'ok', message: `LOADED FACTORY / ${description.label.toUpperCase()}` });
       requestAnimationFrame(() => void fitView({ padding: 0.16, minZoom: 0.25, maxZoom: 1.1 }));
@@ -611,6 +660,12 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               {factoryPatches.map((patch) => <option key={patch.id} value={patch.id}>{patch.label}</option>)}
             </select>
           </label>
+          <div className="comparison-switch" role="group" aria-label="Compare Barr reference with selected design">
+            <button type="button" aria-pressed={activePatchId === 'barr-reference'} onClick={() => void selectFactoryPatch('barr-reference')}>A / BARR</button>
+            <button type="button" aria-pressed={activePatchId === comparisonPatchId} onClick={() => void selectFactoryPatch(comparisonPatchId)}>
+              B / {comparisonPatchId === 'causal-reverse-envelope' ? 'REVERSE ENV' : 'GATED'}
+            </button>
+          </div>
           <button className="energy-toggle" type="button" aria-pressed={energyEnabled} disabled={reducedMotion} onClick={() => setEnergyEnabled((value) => !value)} title={reducedMotion ? 'Disabled by the operating-system reduced-motion preference' : 'Toggle measured node and cable energy'}>
             ENERGY {reducedMotion ? 'REDUCED' : energyEnabled ? 'ON' : 'OFF'}
           </button>
@@ -630,7 +685,14 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
       <MeasurementBar sampleRate={snapshot.sampleRate} onCapture={receiveCapture} />
 
-      {responseCapture ? <ResponseViewer key={responseCapture.generation} capture={responseCapture} onClose={() => setResponseCapture(null)} /> : null}
+      {responseCapture ? <ResponseViewer
+        key={responseCapture.capture.generation}
+        capture={responseCapture.capture}
+        patchId={responseCapture.patchId}
+        gateTeaching={responseCapture.gateTeaching}
+        teachingEnabled={teachingEnabled}
+        onClose={() => setResponseCapture(null)}
+      /> : null}
       {diagnosticsOpen ? <DiagnosticsPanel diagnostics={diagnostics} runawayLoop={runawayLoopInspection} canUndo={graphHistory.undo.length > 0} onUndo={undoGraph} onRecover={() => { void callNative('resetSafety').catch(() => undefined); }} onClose={() => setDiagnosticsOpen(false)} /> : null}
 
       <section className="workspace">
@@ -760,7 +822,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         </section>
 
         <aside className="inspector" aria-label="Inspector">
-          <div className="pane-heading"><span>INSPECTOR</span><button className="teaching-toggle" type="button" aria-pressed={teachingEnabled} onClick={toggleTeaching}>LEARN {teachingEnabled ? 'ON' : 'OFF'}</button></div>
+          <div className="pane-heading"><span>INSPECTOR</span><button className="teaching-toggle" type="button" aria-pressed={teachingEnabled} title="Toggle contextual cards and response architecture overlays" onClick={toggleTeaching}>LEARN {teachingEnabled ? 'ON' : 'OFF'}</button></div>
           {selectedNode ? (
             <div className="inspector-content" key={selectedNode.id}>
               <div className="selection-kicker">SELECTED BLOCK</div>

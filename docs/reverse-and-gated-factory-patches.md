@@ -16,9 +16,9 @@ Explicit Sum blocks recombine the branches. A 6.5 kHz Low-pass supplies tone, a 
 
 ## Level-Gated Room
 
-`factory-patches/level-gated-room.rvp.json` builds a short dense room from three high-coefficient Allpasses, a 7.2 kHz Low-pass, a 0.8 level Gain, and unequal stereo Allpasses. In parallel, a visible Envelope Follower measures the summed input with 0.1 ms attack and 20 ms release. Its control cable drives two visible Hold Gates with threshold 0.05, 2 ms attack, 120 ms hold, and 8 ms release.
+`factory-patches/level-gated-room.rvp.json` builds a short dense room from three high-coefficient Allpasses, a 7.2 kHz Low-pass, a 0.8 level Gain, and unequal stereo Allpasses. In parallel, a visible Envelope Follower measures the summed input with 0.1 ms attack and 20 ms release. Its control cable drives two visible Hold Gates with threshold 0.004, 2 ms attack, 120 ms hold, and 8 ms release.
 
-The follower threshold is low enough for a unit-sample impulse to open the gate at 44.1, 48, and 96 kHz. The design remains level-triggered: sustained or repeated input can retrigger it, unlike a fixed window. At 48 kHz the measured peak occurs 5 ms after onset and the response crosses the -40 dB cutoff 155 ms later. Its 89.6 dB one-window drop makes a smooth exponential RT60 interpretation misleading, so the measurement marks RT60 as not meaningful.
+The follower threshold is low enough for both a unit-sample fixture and the product's safe 0.1-peak live audition impulse to open the gate at 44.1, 48, and 96 kHz. The design remains level-triggered: sustained or repeated input can retrigger it, unlike a fixed window. At 48 kHz the unit-fixture peak occurs 5 ms after onset and the response crosses the -40 dB cutoff 205 ms later. Its 84.79 dB one-window drop makes a smooth exponential RT60 interpretation misleading, so the measurement marks RT60 as not meaningful.
 
 ## Reproducible comparison
 
@@ -27,7 +27,7 @@ Envelope measurements sum left/right squared energy into non-overlapping 10 ms w
 | 48 kHz / 1 s impulse | Onset | Time to peak | Peak to -40 dB | Residual energy | Largest 10 ms drop | RT60 meaningful |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | Causal Reverse Envelope | 40 ms | 195 ms | 125 ms | 0.00296% | 3.87 dB | Yes |
-| Level-Gated Room | 0 ms | 5 ms | 155 ms | 0% | 89.57 dB | No |
+| Level-Gated Room | 0 ms | 5 ms | 205 ms | 0% | 84.79 dB | No |
 
 The checked-in WAVs contain only a mathematical unit impulse processed by project code:
 

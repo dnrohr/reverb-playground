@@ -6,12 +6,12 @@
   "sampleRate": 48000.0,
   "activeThreshold": 1e-07,
   "onsetFrame": 0,
-  "lastActiveFrame": 7414,
-  "impulseLengthFrames": 7415,
+  "lastActiveFrame": 9839,
+  "impulseLengthFrames": 9840,
   "peakLeft": 0.238214910030365,
   "peakRight": 0.22803378105163574,
-  "stereoDifferenceRms": 0.003045824867596778,
-  "rt60Seconds": 0.30743357426421947,
+  "stereoDifferenceRms": 0.0030665463981016565,
+  "rt60Seconds": 0.39228648166342234,
   "decayCurve": [
     {
       "frame": 0,
@@ -21,262 +21,262 @@
     {
       "frame": 187,
       "seconds": 0.003895833333333333,
-      "decibels": -5.61411481235554e-05
+      "decibels": -5.537361932482409e-05
     },
     {
       "frame": 374,
       "seconds": 0.007791666666666666,
-      "decibels": -0.6394568278029464
+      "decibels": -0.6300484137384936
     },
     {
       "frame": 561,
       "seconds": 0.0116875,
-      "decibels": -1.5812002865935657
+      "decibels": -1.5552015047160048
     },
     {
       "frame": 748,
       "seconds": 0.015583333333333333,
-      "decibels": -1.876135564474711
+      "decibels": -1.844172071119706
     },
     {
       "frame": 935,
       "seconds": 0.019479166666666665,
-      "decibels": -2.5592973859835695
+      "decibels": -2.5118961049696336
     },
     {
       "frame": 1122,
       "seconds": 0.023375,
-      "decibels": -2.964692860892722
+      "decibels": -2.906945182784115
     },
     {
       "frame": 1309,
       "seconds": 0.027270833333333334,
-      "decibels": -3.3274086426370064
+      "decibels": -3.259572407108287
     },
     {
       "frame": 1496,
       "seconds": 0.031166666666666665,
-      "decibels": -3.6851534966854778
+      "decibels": -3.6065324653198934
     },
     {
       "frame": 1683,
       "seconds": 0.0350625,
-      "decibels": -4.121357699755023
+      "decibels": -4.028367626563747
     },
     {
       "frame": 1870,
       "seconds": 0.03895833333333333,
-      "decibels": -4.648656122343507
+      "decibels": -4.5363299733695275
     },
     {
       "frame": 2057,
       "seconds": 0.042854166666666665,
-      "decibels": -5.054954939754314
+      "decibels": -4.92611159325571
     },
     {
       "frame": 2244,
       "seconds": 0.04675,
-      "decibels": -5.648245542645849
+      "decibels": -5.492465526239324
     },
     {
       "frame": 2431,
       "seconds": 0.050645833333333334,
-      "decibels": -6.172868033185472
+      "decibels": -5.990169408509018
     },
     {
       "frame": 2618,
       "seconds": 0.05454166666666667,
-      "decibels": -6.563149219943819
+      "decibels": -6.358331927660535
     },
     {
       "frame": 2805,
       "seconds": 0.0584375,
-      "decibels": -7.0106505920436675
+      "decibels": -6.778060734410544
     },
     {
       "frame": 2992,
       "seconds": 0.06233333333333333,
-      "decibels": -7.504848613585214
+      "decibels": -7.238314711825256
     },
     {
       "frame": 3179,
       "seconds": 0.06622916666666667,
-      "decibels": -8.106066567334258
+      "decibels": -7.79310698116476
     },
     {
       "frame": 3366,
       "seconds": 0.070125,
-      "decibels": -8.517546771812471
+      "decibels": -8.16923324638543
     },
     {
       "frame": 3553,
       "seconds": 0.07402083333333333,
-      "decibels": -9.093420919236657
+      "decibels": -8.690225840904892
     },
     {
       "frame": 3740,
       "seconds": 0.07791666666666666,
-      "decibels": -9.785152708613827
+      "decibels": -9.306786252054586
     },
     {
       "frame": 3927,
       "seconds": 0.0818125,
-      "decibels": -10.194503453756319
+      "decibels": -9.666394950934686
     },
     {
       "frame": 4114,
       "seconds": 0.08570833333333333,
-      "decibels": -10.782165295362105
+      "decibels": -10.175109249012607
     },
     {
       "frame": 4301,
       "seconds": 0.08960416666666667,
-      "decibels": -11.333650954622254
+      "decibels": -10.643691943384129
     },
     {
       "frame": 4488,
       "seconds": 0.0935,
-      "decibels": -11.987413822431112
+      "decibels": -11.187005246942686
     },
     {
       "frame": 4675,
       "seconds": 0.09739583333333333,
-      "decibels": -12.444354740466165
+      "decibels": -11.558217695850264
     },
     {
       "frame": 4862,
       "seconds": 0.10129166666666667,
-      "decibels": -13.222580592372697
+      "decibels": -12.172754332313833
     },
     {
       "frame": 5049,
       "seconds": 0.1051875,
-      "decibels": -13.911909726493974
+      "decibels": -12.696831685611837
     },
     {
       "frame": 5236,
       "seconds": 0.10908333333333334,
-      "decibels": -14.392831237625357
+      "decibels": -13.050271953785803
     },
     {
       "frame": 5423,
       "seconds": 0.11297916666666667,
-      "decibels": -15.024583289730556
+      "decibels": -13.498312246661142
     },
     {
       "frame": 5610,
       "seconds": 0.116875,
-      "decibels": -15.808830096035205
+      "decibels": -14.02724848097293
     },
     {
       "frame": 5797,
       "seconds": 0.12077083333333333,
-      "decibels": -16.75685269361394
+      "decibels": -14.62377235891495
     },
     {
       "frame": 5984,
       "seconds": 0.12466666666666666,
-      "decibels": -17.455355806382215
+      "decibels": -15.031777243572824
     },
     {
       "frame": 6171,
       "seconds": 0.1285625,
-      "decibels": -18.774735812598227
+      "decibels": -15.726838682169884
     },
     {
       "frame": 6358,
       "seconds": 0.13245833333333334,
-      "decibels": -19.975599619287678
+      "decibels": -16.27268672177965
     },
     {
       "frame": 6545,
       "seconds": 0.13635416666666667,
-      "decibels": -20.909618079926105
+      "decibels": -16.641256508984217
     },
     {
       "frame": 6732,
       "seconds": 0.14025,
-      "decibels": -22.556500263602103
+      "decibels": -17.179181357231567
     },
     {
       "frame": 6919,
       "seconds": 0.14414583333333333,
-      "decibels": -25.5792697010423
+      "decibels": -17.85132365392087
     },
     {
       "frame": 7106,
       "seconds": 0.14804166666666665,
-      "decibels": -32.082212059269374
+      "decibels": -18.474434534133636
     },
     {
       "frame": 7293,
       "seconds": 0.1519375,
-      "decibels": -46.17020369786569
+      "decibels": -19.063874628693583
     },
     {
       "frame": 7480,
       "seconds": 0.15583333333333332,
-      "decibels": null
+      "decibels": -19.90486607375454
     },
     {
       "frame": 7667,
       "seconds": 0.15972916666666667,
-      "decibels": null
+      "decibels": -20.594230634713266
     },
     {
       "frame": 7854,
       "seconds": 0.163625,
-      "decibels": null
+      "decibels": -21.105355527584557
     },
     {
       "frame": 8041,
       "seconds": 0.16752083333333334,
-      "decibels": null
+      "decibels": -21.757193480826203
     },
     {
       "frame": 8228,
       "seconds": 0.17141666666666666,
-      "decibels": null
+      "decibels": -22.693001895472218
     },
     {
       "frame": 8415,
       "seconds": 0.1753125,
-      "decibels": null
+      "decibels": -23.702242293247146
     },
     {
       "frame": 8602,
       "seconds": 0.17920833333333333,
-      "decibels": null
+      "decibels": -24.59026619510511
     },
     {
       "frame": 8789,
       "seconds": 0.18310416666666668,
-      "decibels": null
+      "decibels": -26.01824877803686
     },
     {
       "frame": 8976,
       "seconds": 0.187,
-      "decibels": null
+      "decibels": -27.386460061397997
     },
     {
       "frame": 9163,
       "seconds": 0.19089583333333332,
-      "decibels": null
+      "decibels": -28.872840943580936
     },
     {
       "frame": 9350,
       "seconds": 0.19479166666666667,
-      "decibels": null
+      "decibels": -31.05112232306149
     },
     {
       "frame": 9537,
       "seconds": 0.1986875,
-      "decibels": null
+      "decibels": -37.33281166558985
     },
     {
       "frame": 9724,
       "seconds": 0.20258333333333334,
-      "decibels": null
+      "decibels": -52.35293194640682
     },
     {
       "frame": 9911,

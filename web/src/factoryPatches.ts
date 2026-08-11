@@ -6,6 +6,7 @@ import reverseEnvelopePatch from '../../factory-patches/causal-reverse-envelope.
 import levelGatedPatch from '../../factory-patches/level-gated-room.rvp.json?raw';
 
 export type FactoryPatchId = 'barr-reference' | 'causal-reverse-envelope' | 'level-gated-room';
+export type ComparisonPatchId = Exclude<FactoryPatchId, 'barr-reference'>;
 
 export interface FactoryPatchDescription {
   id: FactoryPatchId;
@@ -52,6 +53,10 @@ const rawPatches: Partial<Record<FactoryPatchId, string>> = {
 
 export function factoryPatchDescription(id: FactoryPatchId): FactoryPatchDescription {
   return factoryPatches.find((patch) => patch.id === id)!;
+}
+
+export function comparisonPatchAfterSelection(id: FactoryPatchId | 'custom', current: ComparisonPatchId): ComparisonPatchId {
+  return id === 'causal-reverse-envelope' || id === 'level-gated-room' ? id : current;
 }
 
 export function loadFactoryPatch(id: FactoryPatchId, snapshot: RuntimeSnapshot): FactoryPatchGraph {
