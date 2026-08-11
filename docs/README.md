@@ -39,6 +39,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Control-rate graph semantics](control-rate-graph-semantics.md) - typed parameter sockets, fixed-rate interpolation, bounded evaluation, mapping formula, and schema-v2 persistence.
 - [LFO and control-mapping blocks](lfo-and-control-mapping.md) - sine/triangle generation, free-run/restart behavior, explicit scale/offset/polarity, range preview, and branching.
 - [Modulated Delay and Allpass](modulated-delay-and-allpass.md) - fractional linear delay taps, bounded coefficient modulation, audible behavior, memory planning, and runtime boundary.
+- [Runtime topology publication](runtime-topology-publication.md) - newest-wins off-thread compilation, bounded block-boundary swaps, off-thread reclamation, failures, and revision diagnostics.
 
 ## Local source tree
 

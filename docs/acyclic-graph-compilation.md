@@ -20,11 +20,11 @@ Warnings do not prevent publication. Errors do.
 
 ## Preparation, processing, and publication
 
-Compilation and DSP preparation run entirely on the caller/control thread. The prepared runtime owns fixed-capacity signal buffers sized to the host's maximum block, one planned arena for every Delay/Allpass buffer, and the remaining primitive state. `process` is `noexcept`, performs no topology discovery or container resizing, and returns silence for an oversized or inconsistent block.
+Compilation and DSP preparation can run synchronously on a caller or through the host's dedicated compiler worker. The prepared runtime owns fixed-capacity signal buffers sized to the host's maximum block, one planned arena for every Delay/Allpass buffer, and the remaining primitive state. `process` is `noexcept`, performs no topology discovery or container resizing, and returns silence for an oversized or inconsistent block.
 
-`AcyclicRuntimeHost` publishes a fully prepared pointer atomically. The audio callback marks its bounded processing interval with an atomic flag; publication may wait on the control thread before reclaiming the retired runtime. The audio thread never waits, locks, allocates, or destroys a runtime. A compilation error does not exchange the active pointer, so the last valid runtime remains audible.
+`AcyclicRuntimeHost` publishes a fully prepared envelope at an audio-block boundary. The audio-side swap is bounded and lock-free; the preceding envelope enters a fixed retirement ring and is reclaimed by the compiler worker. The audio thread never waits, locks, allocates, or destroys a runtime. A compilation error does not exchange the active pointer, so the last valid runtime remains audible. See [Runtime topology publication](runtime-topology-publication.md) for the ownership and revision protocol.
 
-This runtime is not yet connected to the editor/native bridge. Feedback scheduling is now available through the same prepared runtime; later M3 integration makes a complete constructed reverb the active plugin graph.
+This runtime is not yet connected to the editor/native bridge. Feedback scheduling and bounded publication are available through the same prepared host; a later integration step must submit editor documents and expose its revision snapshot in the application diagnostics.
 
 ## Verification
 

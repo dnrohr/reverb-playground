@@ -3,12 +3,15 @@
 #include <reverb/graph/GraphDocument.h>
 
 #include <atomic>
+#include <array>
+#include <condition_variable>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <mutex>
 #include <span>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace reverb::graph {
@@ -76,6 +79,17 @@ struct AcyclicPublishResult final {
     [[nodiscard]] bool valid() const noexcept { return errors.empty(); }
 };
 
+struct TopologyPublicationSnapshot final {
+    std::uint64_t requestedRevision {};
+    std::uint64_t pendingRevision {};
+    std::uint64_t activeRevision {};
+    std::uint64_t failedRevision {};
+    std::uint64_t supersededRequests {};
+    std::uint64_t completedCompilations {};
+    std::uint64_t reclaimedRuntimes {};
+    std::string failure;
+};
+
 [[nodiscard]] AcyclicCompileResult compileAcyclicGraph(
     const GraphDocument& document,
     double sampleRate,
@@ -89,6 +103,11 @@ struct AcyclicPublishResult final {
 
 class AcyclicRuntimeHost final {
 public:
+    AcyclicRuntimeHost();
+    ~AcyclicRuntimeHost();
+    AcyclicRuntimeHost(const AcyclicRuntimeHost&) = delete;
+    AcyclicRuntimeHost& operator=(const AcyclicRuntimeHost&) = delete;
+
     [[nodiscard]] AcyclicPublishResult compileAndPublish(
         const GraphDocument& document,
         double sampleRate,
@@ -97,6 +116,12 @@ public:
         const GraphDocument& document,
         double sampleRate,
         std::size_t maximumBlockSize);
+    [[nodiscard]] std::uint64_t requestCompilation(
+        GraphDocument document,
+        double sampleRate,
+        std::size_t maximumBlockSize,
+        bool allowFeedback = true);
+    [[nodiscard]] TopologyPublicationSnapshot publicationSnapshot() const;
 
     void process(
         std::span<const float> inputLeft,
@@ -107,10 +132,36 @@ public:
     [[nodiscard]] bool hasRuntime() const noexcept;
 
 private:
-    std::mutex publicationMutex_;
-    std::unique_ptr<PreparedAcyclicRuntime> ownedRuntime_;
-    std::atomic<PreparedAcyclicRuntime*> activeRuntime_ {};
-    std::atomic_bool processing_ {};
+    struct RuntimeEnvelope;
+    struct CompilationRequest;
+    static constexpr std::size_t retirementCapacity = 16;
+
+    [[nodiscard]] AcyclicPublishResult publishCompiled(AcyclicCompileResult result, std::uint64_t revision);
+    void compilerLoop(std::stop_token stopToken);
+    void publishPending(std::unique_ptr<PreparedAcyclicRuntime> runtime, std::uint64_t revision);
+    void reclaimRetired() noexcept;
+    [[nodiscard]] bool retirementHasCapacity() const noexcept;
+    void retire(RuntimeEnvelope* runtime) noexcept;
+
+    mutable std::mutex requestMutex_;
+    std::condition_variable_any requestCondition_;
+    std::unique_ptr<CompilationRequest> latestRequest_;
+    std::jthread compilerThread_;
+    std::atomic<RuntimeEnvelope*> activeRuntime_ {};
+    std::atomic<RuntimeEnvelope*> pendingRuntime_ {};
+    std::array<RuntimeEnvelope*, retirementCapacity> retired_ {};
+    std::atomic<std::size_t> retirementWrite_ {};
+    std::atomic<std::size_t> retirementRead_ {};
+    std::atomic<std::uint64_t> requestedRevision_ {};
+    std::atomic<std::uint64_t> pendingRevision_ {};
+    std::atomic<std::uint64_t> activeRevision_ {};
+    std::atomic<std::uint64_t> failedRevision_ {};
+    std::atomic<std::uint64_t> supersededRequests_ {};
+    std::atomic<std::uint64_t> completedCompilations_ {};
+    std::atomic<std::uint64_t> reclaimedRuntimes_ {};
+    mutable std::mutex failureMutex_;
+    std::mutex pendingPublicationMutex_;
+    std::string failure_;
 };
 
 } // namespace reverb::graph

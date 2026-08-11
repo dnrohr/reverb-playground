@@ -33,6 +33,7 @@ Last updated: 2026-08-11
 | M5.1 Implement control-rate graph semantics | Complete | Typed parameter sockets; 1 kHz bounded plans; linear ramps; explicit mapping inspector; exact schema-v2 persistence; native 125%-DPI evidence |
 | M5.2 Implement LFO and modulation mapping blocks | Complete | Tested sine/triangle and transport semantics; explicit scale/offset/polarity; one-to-many control branching; predicted range; screenshot/video evidence |
 | M5.3 Add modulated Delay and Allpass parameters | Complete | Fractional linear taps; bounded coefficient; prepared control-runtime binding; constant/static equivalence; boundary, feedback, and moving-diffusion tests; inspector evidence |
+| M5.4 Implement runtime topology publication | Complete | One-entry newest-wins compile queue; bounded block-entry swap; fixed retirement ring; worker reclamation; pending/active/failed diagnostics; 1,000-edit stress test |
 
 ## M0.2 verification
 
@@ -362,3 +363,15 @@ Results:
 - The inspector labels fractional linear interpolation, the 100 Hz control-source ceiling, intentional Doppler/pitch effects, and the coefficient stability boundary.
 - Reviewed native screenshot: [`artifacts/ui/m5-3-modulated-delay-allpass/01-allpass-modulation-policy.png`](../artifacts/ui/m5-3-modulated-delay-allpass/01-allpass-modulation-policy.png).
 - UI animation did not change, so no new video was required; M5.2 retains the live-control animation evidence and native render tests cover the new DSP behavior.
+
+## M5.4 verification
+
+- Every asynchronous request receives a monotonic revision. The compiler worker owns validation, preparation, allocation, and replacement of obsolete queued or pending work.
+- Audio checks one pending pointer at block entry. A successful publication uses lock-free pointer/scalar atomics and at most one fixed-ring write; the runtime remains fixed for the rest of that block.
+- Previous active envelopes enter a fixed 16-slot SPSC retirement ring and are deleted by the compiler worker. When it has no capacity, audio keeps the current graph and defers the swap.
+- The request queue and prepared pending slot each hold at most one item. Newer edits supersede older work instead of creating an unbounded backlog.
+- Diagnostics expose requested, pending, active, failed, superseded, completed, and reclaimed identities/counts plus the latest failure text.
+- A state test observes pending -> active, submits an invalid graph, observes its failed revision, and proves the preceding valid output remains audible.
+- A stress test submits 1,000 graphs while a separate audio thread continuously processes. It requires finite output, processed blocks, final-revision activation, superseded work, fewer compilations than requests, and off-thread reclamation.
+- Existing synchronous publication and feedback-failure tests remain green.
+- UI unchanged; no screenshot or video was required.

@@ -6,7 +6,10 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
+#include <chrono>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace {
@@ -40,6 +43,17 @@ GraphDocument gainSumGraph()
         cable("right-right", "input", "out-r", "output", "in-r"),
     };
     return graph;
+}
+
+template <typename Predicate>
+bool waitUntil(Predicate&& predicate, const std::chrono::milliseconds timeout = std::chrono::seconds(5))
+{
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
+    while (std::chrono::steady_clock::now() < deadline) {
+        if (predicate()) return true;
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    return predicate();
 }
 }
 
@@ -237,6 +251,72 @@ TEST_CASE("Invalid compilation leaves the last valid runtime audible")
     host.process(left, right, outputLeft, outputRight);
     REQUIRE(outputLeft[0] == 0.75F);
     REQUIRE(outputRight[0] == 0.5F);
+}
+
+TEST_CASE("Topology publication exposes pending active and failed revisions without replacing valid audio")
+{
+    AcyclicRuntimeHost host;
+    const auto firstRevision = host.requestCompilation(gainSumGraph(), 48'000.0, 8, false);
+    REQUIRE(waitUntil([&] { return host.publicationSnapshot().pendingRevision == firstRevision; }));
+    auto snapshot = host.publicationSnapshot();
+    REQUIRE(snapshot.requestedRevision == firstRevision);
+    REQUIRE(snapshot.activeRevision == 0);
+
+    const std::array left { 1.0F }; const std::array right { 0.5F };
+    std::array<float, 1> outputLeft {}; std::array<float, 1> outputRight {};
+    host.process(left, right, outputLeft, outputRight);
+    REQUIRE(host.publicationSnapshot().activeRevision == firstRevision);
+    REQUIRE(outputLeft[0] == 0.75F);
+
+    auto invalid = gainSumGraph(); invalid.nodes[1].type = "unknown";
+    const auto failedRevision = host.requestCompilation(std::move(invalid), 48'000.0, 8, false);
+    REQUIRE(waitUntil([&] { return host.publicationSnapshot().failedRevision == failedRevision; }));
+    snapshot = host.publicationSnapshot();
+    REQUIRE(snapshot.activeRevision == firstRevision);
+    REQUIRE(snapshot.failure.find("unsupported node type") != std::string::npos);
+    outputLeft.fill(0.0F); outputRight.fill(0.0F);
+    host.process(left, right, outputLeft, outputRight);
+    REQUIRE(outputLeft[0] == 0.75F);
+}
+
+TEST_CASE("Rapid topology edits coalesce with bounded swaps and off-thread reclamation")
+{
+    AcyclicRuntimeHost host;
+    REQUIRE(host.compileAndPublish(gainSumGraph(), 48'000.0, 64).valid());
+    std::atomic_bool stop {};
+    std::atomic_bool finite { true };
+    std::atomic<std::uint64_t> blocks {};
+    std::jthread audio([&](const std::stop_token token) {
+        std::array<float, 64> left {}; std::array<float, 64> right {};
+        std::array<float, 64> outputLeft {}; std::array<float, 64> outputRight {};
+        left.front() = 0.25F; right.front() = -0.125F;
+        while (!token.stop_requested() && !stop.load(std::memory_order_acquire)) {
+            host.process(left, right, outputLeft, outputRight);
+            if (!std::ranges::all_of(outputLeft, [](const float value) { return std::isfinite(value); })
+                || !std::ranges::all_of(outputRight, [](const float value) { return std::isfinite(value); }))
+                finite.store(false, std::memory_order_release);
+            blocks.fetch_add(1, std::memory_order_relaxed);
+        }
+    });
+
+    std::uint64_t finalRevision = 0;
+    for (int index = 0; index < 1'000; ++index) {
+        auto graph = gainSumGraph();
+        graph.nodes[1].parameters[0].value = 0.1 + 0.0008 * static_cast<double>(index);
+        finalRevision = host.requestCompilation(std::move(graph), 48'000.0, 64, false);
+    }
+    REQUIRE(waitUntil([&] { return host.publicationSnapshot().activeRevision == finalRevision; }));
+    REQUIRE(waitUntil([&] { return host.publicationSnapshot().reclaimedRuntimes > 0; }));
+    stop.store(true, std::memory_order_release);
+    audio.request_stop();
+    audio.join();
+    const auto snapshot = host.publicationSnapshot();
+    REQUIRE(finite.load(std::memory_order_acquire));
+    REQUIRE(blocks.load(std::memory_order_acquire) > 0);
+    REQUIRE(snapshot.activeRevision == finalRevision);
+    REQUIRE(snapshot.supersededRequests > 0);
+    REQUIRE(snapshot.completedCompilations < snapshot.requestedRevision);
+    REQUIRE(snapshot.reclaimedRuntimes > 0);
 }
 
 TEST_CASE("Acyclic compiler reserves delay-containing cycles for feedback compilation")

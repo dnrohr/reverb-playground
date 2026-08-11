@@ -80,4 +80,6 @@ Do not introduce a dependency on local research clones, ROM images, developer ho
 
 When a task changes visible UI, store a reviewed screenshot under `artifacts/ui/<task-slug>/`. Add a short video when interaction, animation, live telemetry, modulation, or audio-reactive behavior cannot be proven by a still image. Non-UI tasks state that no capture was required.
 
+Runtime topology publication uses the bounded ownership protocol in [Runtime topology publication](runtime-topology-publication.md). Do not replace its pending/active raw envelopes with callback-owned smart pointers or reclaim a retired runtime from `process`; both changes can move destruction or a non-lock-free reference-count operation onto the audio thread.
+
 Do not place temporary captures in `artifacts/`; only reviewed completion evidence belongs there.

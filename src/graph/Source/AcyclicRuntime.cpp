@@ -642,48 +642,219 @@ AcyclicCompileResult compileFeedbackGraph(
     return compileAcyclicGraph(document, sampleRate, maximumBlockSize, true);
 }
 
+struct AcyclicRuntimeHost::RuntimeEnvelope final {
+    std::unique_ptr<PreparedAcyclicRuntime> runtime;
+    std::uint64_t revision {};
+};
+
+struct AcyclicRuntimeHost::CompilationRequest final {
+    GraphDocument document;
+    double sampleRate {};
+    std::size_t maximumBlockSize {};
+    bool allowFeedback {};
+    std::uint64_t revision {};
+};
+
+AcyclicRuntimeHost::AcyclicRuntimeHost()
+    : compilerThread_([this](const std::stop_token token) { compilerLoop(token); })
+{
+    static_assert(std::atomic<RuntimeEnvelope*>::is_always_lock_free);
+    static_assert(std::atomic<std::size_t>::is_always_lock_free);
+    static_assert(std::atomic<std::uint64_t>::is_always_lock_free);
+}
+
+AcyclicRuntimeHost::~AcyclicRuntimeHost()
+{
+    compilerThread_.request_stop();
+    requestCondition_.notify_all();
+    if (compilerThread_.joinable()) compilerThread_.join();
+    delete pendingRuntime_.exchange(nullptr, std::memory_order_acq_rel);
+    delete activeRuntime_.exchange(nullptr, std::memory_order_acq_rel);
+    reclaimRetired();
+}
+
 AcyclicPublishResult AcyclicRuntimeHost::compileAndPublish(
     const GraphDocument& document, const double sampleRate, const std::size_t maximumBlockSize)
 {
-    auto result = compileAcyclicGraph(document, sampleRate, maximumBlockSize);
-    AcyclicPublishResult publication { result.schedule, result.warnings, result.errors, result.delayMemory };
-    if (!result.valid()) return publication;
-    std::scoped_lock lock(publicationMutex_);
-    auto next = std::move(result.runtime);
-    auto previous = std::move(ownedRuntime_);
-    ownedRuntime_ = std::move(next);
-    activeRuntime_.store(ownedRuntime_.get());
-    while (processing_.load()) std::this_thread::yield();
-    previous.reset();
-    return publication;
+    const auto revision = requestedRevision_.fetch_add(1, std::memory_order_acq_rel) + 1;
+    return publishCompiled(compileAcyclicGraph(document, sampleRate, maximumBlockSize), revision);
 }
 
 AcyclicPublishResult AcyclicRuntimeHost::compileFeedbackAndPublish(
     const GraphDocument& document, const double sampleRate, const std::size_t maximumBlockSize)
 {
-    auto result = compileFeedbackGraph(document, sampleRate, maximumBlockSize);
+    const auto revision = requestedRevision_.fetch_add(1, std::memory_order_acq_rel) + 1;
+    return publishCompiled(compileFeedbackGraph(document, sampleRate, maximumBlockSize), revision);
+}
+
+AcyclicPublishResult AcyclicRuntimeHost::publishCompiled(
+    AcyclicCompileResult result, const std::uint64_t revision)
+{
     AcyclicPublishResult publication { result.schedule, result.warnings, result.errors, result.delayMemory };
-    if (!result.valid()) return publication;
-    std::scoped_lock lock(publicationMutex_);
-    auto next = std::move(result.runtime);
-    auto previous = std::move(ownedRuntime_);
-    ownedRuntime_ = std::move(next);
-    activeRuntime_.store(ownedRuntime_.get());
-    while (processing_.load()) std::this_thread::yield();
-    previous.reset();
+    completedCompilations_.fetch_add(1, std::memory_order_relaxed);
+    if (!result.valid()) {
+        failedRevision_.store(revision, std::memory_order_release);
+        std::scoped_lock lock(failureMutex_);
+        failure_.clear();
+        for (std::size_t index = 0; index < result.errors.size(); ++index) {
+            if (index != 0) failure_ += "; ";
+            failure_ += result.errors[index];
+        }
+        return publication;
+    }
+    publishPending(std::move(result.runtime), revision);
     return publication;
+}
+
+std::uint64_t AcyclicRuntimeHost::requestCompilation(
+    GraphDocument document,
+    const double sampleRate,
+    const std::size_t maximumBlockSize,
+    const bool allowFeedback)
+{
+    const auto revision = requestedRevision_.fetch_add(1, std::memory_order_acq_rel) + 1;
+    {
+        std::scoped_lock lock(requestMutex_);
+        if (latestRequest_ != nullptr)
+            supersededRequests_.fetch_add(1, std::memory_order_relaxed);
+        latestRequest_ = std::make_unique<CompilationRequest>(CompilationRequest {
+            std::move(document), sampleRate, maximumBlockSize, allowFeedback, revision });
+    }
+    requestCondition_.notify_one();
+    return revision;
+}
+
+void AcyclicRuntimeHost::compilerLoop(const std::stop_token stopToken)
+{
+    while (!stopToken.stop_requested()) {
+        reclaimRetired();
+        std::unique_ptr<CompilationRequest> request;
+        {
+            std::unique_lock lock(requestMutex_);
+            requestCondition_.wait_for(lock, stopToken, std::chrono::milliseconds(2), [this] {
+                return latestRequest_ != nullptr;
+            });
+            if (stopToken.stop_requested()) break;
+            request = std::move(latestRequest_);
+        }
+        if (request == nullptr) continue;
+        auto result = compileAcyclicGraph(
+            request->document, request->sampleRate, request->maximumBlockSize, request->allowFeedback);
+        completedCompilations_.fetch_add(1, std::memory_order_relaxed);
+        {
+            std::scoped_lock lock(requestMutex_);
+            if (requestedRevision_.load(std::memory_order_acquire) > request->revision
+                || (latestRequest_ != nullptr && latestRequest_->revision > request->revision)) {
+                supersededRequests_.fetch_add(1, std::memory_order_relaxed);
+                continue;
+            }
+        }
+        if (result.valid()) {
+            publishPending(std::move(result.runtime), request->revision);
+        } else {
+            failedRevision_.store(request->revision, std::memory_order_release);
+            std::scoped_lock lock(failureMutex_);
+            failure_.clear();
+            for (std::size_t index = 0; index < result.errors.size(); ++index) {
+                if (index != 0) failure_ += "; ";
+                failure_ += result.errors[index];
+            }
+        }
+    }
+    reclaimRetired();
+}
+
+void AcyclicRuntimeHost::publishPending(
+    std::unique_ptr<PreparedAcyclicRuntime> runtime, const std::uint64_t revision)
+{
+    std::scoped_lock lock(pendingPublicationMutex_);
+    auto* envelope = new RuntimeEnvelope { std::move(runtime), revision };
+    const auto activeRevision = activeRevision_.load(std::memory_order_acquire);
+    auto* currentPending = pendingRuntime_.load(std::memory_order_acquire);
+    if (revision <= activeRevision
+        || (currentPending != nullptr
+            && revision <= pendingRevision_.load(std::memory_order_acquire))) {
+        delete envelope;
+        supersededRequests_.fetch_add(1, std::memory_order_relaxed);
+        return;
+    }
+    auto* superseded = pendingRuntime_.exchange(envelope, std::memory_order_acq_rel);
+    pendingRevision_.store(revision, std::memory_order_release);
+    if (superseded != nullptr) {
+        delete superseded;
+        supersededRequests_.fetch_add(1, std::memory_order_relaxed);
+    }
+}
+
+bool AcyclicRuntimeHost::retirementHasCapacity() const noexcept
+{
+    const auto write = retirementWrite_.load(std::memory_order_relaxed);
+    const auto next = (write + 1) % retirementCapacity;
+    return next != retirementRead_.load(std::memory_order_acquire);
+}
+
+void AcyclicRuntimeHost::retire(RuntimeEnvelope* const runtime) noexcept
+{
+    const auto write = retirementWrite_.load(std::memory_order_relaxed);
+    retired_[write] = runtime;
+    retirementWrite_.store((write + 1) % retirementCapacity, std::memory_order_release);
+}
+
+void AcyclicRuntimeHost::reclaimRetired() noexcept
+{
+    auto read = retirementRead_.load(std::memory_order_relaxed);
+    const auto write = retirementWrite_.load(std::memory_order_acquire);
+    while (read != write) {
+        delete retired_[read];
+        retired_[read] = nullptr;
+        read = (read + 1) % retirementCapacity;
+        reclaimedRuntimes_.fetch_add(1, std::memory_order_relaxed);
+    }
+    retirementRead_.store(read, std::memory_order_release);
+}
+
+TopologyPublicationSnapshot AcyclicRuntimeHost::publicationSnapshot() const
+{
+    TopologyPublicationSnapshot snapshot;
+    snapshot.requestedRevision = requestedRevision_.load(std::memory_order_acquire);
+    snapshot.pendingRevision = pendingRuntime_.load(std::memory_order_acquire) == nullptr
+        ? 0
+        : pendingRevision_.load(std::memory_order_acquire);
+    snapshot.activeRevision = activeRevision_.load(std::memory_order_acquire);
+    snapshot.failedRevision = failedRevision_.load(std::memory_order_acquire);
+    snapshot.supersededRequests = supersededRequests_.load(std::memory_order_acquire);
+    snapshot.completedCompilations = completedCompilations_.load(std::memory_order_acquire);
+    snapshot.reclaimedRuntimes = reclaimedRuntimes_.load(std::memory_order_acquire);
+    std::scoped_lock lock(failureMutex_);
+    snapshot.failure = failure_;
+    return snapshot;
 }
 
 void AcyclicRuntimeHost::process(
     const std::span<const float> inputLeft, const std::span<const float> inputRight,
     const std::span<float> outputLeft, const std::span<float> outputRight) noexcept
 {
-    processing_.store(true);
-    if (auto* runtime = activeRuntime_.load()) runtime->process(inputLeft, inputRight, outputLeft, outputRight);
+    auto* pending = pendingRuntime_.load(std::memory_order_acquire);
+    auto* active = activeRuntime_.load(std::memory_order_acquire);
+    if (pending != nullptr && (active == nullptr || retirementHasCapacity())) {
+        pending = pendingRuntime_.exchange(nullptr, std::memory_order_acq_rel);
+        if (pending != nullptr) {
+            active = activeRuntime_.exchange(pending, std::memory_order_acq_rel);
+            activeRevision_.store(pending->revision, std::memory_order_release);
+            if (pendingRuntime_.load(std::memory_order_acquire) == nullptr)
+                pendingRevision_.store(0, std::memory_order_release);
+            if (active != nullptr) retire(active);
+            active = pending;
+        }
+    }
+    if (active != nullptr) active->runtime->process(inputLeft, inputRight, outputLeft, outputRight);
     else { std::ranges::fill(outputLeft, 0.0F); std::ranges::fill(outputRight, 0.0F); }
-    processing_.store(false);
 }
 
-bool AcyclicRuntimeHost::hasRuntime() const noexcept { return activeRuntime_.load() != nullptr; }
+bool AcyclicRuntimeHost::hasRuntime() const noexcept
+{
+    return activeRuntime_.load(std::memory_order_acquire) != nullptr
+        || pendingRuntime_.load(std::memory_order_acquire) != nullptr;
+}
 
 } // namespace reverb::graph
