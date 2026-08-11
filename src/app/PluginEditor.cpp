@@ -57,11 +57,10 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
     auto initialWidth = 1280;
     auto initialHeight = 800;
     if (const auto* display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()) {
-        const auto scale = std::max(1.0, display->scale);
         initialWidth = std::min(initialWidth,
-            juce::roundToInt(static_cast<double>(display->userBounds.getWidth()) / scale) - 32);
+            juce::roundToInt(display->userBounds.getWidth()) - 32);
         initialHeight = std::min(initialHeight,
-            juce::roundToInt(static_cast<double>(display->userBounds.getHeight()) / scale) - 64);
+            juce::roundToInt(display->userBounds.getHeight()) - 64);
     }
     setSize(std::max(640, initialWidth), std::max(400, initialHeight));
 }

@@ -1,14 +1,17 @@
 #include <reverb/graph/BarrReferenceGraph.h>
 #include <reverb/graph/PatchJson.h>
+#include <reverb/render/EnvelopeMeasurements.h>
 #include <reverb/render/OfflineRenderer.h>
 #include <reverb/render/ResponseMeasurements.h>
 #include <reverb/render/WavWriter.h>
 
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 
 namespace {
 
@@ -18,6 +21,7 @@ struct Options final {
     std::string analysisPath;
     std::string exportPatchPath;
     std::string measurementsPath;
+    std::string envelopeMeasurementsPath;
     reverb::render::InputKind input { reverb::render::InputKind::impulse };
     double sampleRate { 48'000.0 };
     double durationMilliseconds { 1'000.0 };
@@ -43,6 +47,8 @@ Options parseOptions(const int argc, char** argv)
             options.analysisPath = requireValue(argc, argv, index);
         else if (argument == "--measurements")
             options.measurementsPath = requireValue(argc, argv, index);
+        else if (argument == "--envelope-measurements")
+            options.envelopeMeasurementsPath = requireValue(argc, argv, index);
         else if (argument == "--input")
             options.input = reverb::render::parseInputKind(requireValue(argc, argv, index));
         else if (argument == "--sample-rate")
@@ -111,6 +117,20 @@ int main(const int argc, char** argv)
             measurements.engineVersion = request.patch.engineVersion;
             measurements.patchId = "barr-reference";
             writeFile(options.measurementsPath, reverb::render::writeMeasurementsJson(measurements));
+        }
+        if (!options.envelopeMeasurementsPath.empty()) {
+            auto measurements = reverb::render::measureEnvelope(
+                result.left, result.right, request.sampleRate);
+            measurements.engineVersion = request.patch.engineVersion;
+            auto patchId = options.patchPath.empty()
+                ? std::string { "barr-reference" }
+                : std::filesystem::path(options.patchPath).filename().string();
+            constexpr std::string_view suffix { ".rvp.json" };
+            if (patchId.ends_with(suffix))
+                patchId.erase(patchId.size() - suffix.size());
+            measurements.patchId = std::move(patchId);
+            writeFile(options.envelopeMeasurementsPath,
+                reverb::render::writeEnvelopeMeasurementsJson(measurements));
         }
         return 0;
     } catch (const std::exception& error) {

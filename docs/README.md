@@ -39,6 +39,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Runaway-feedback safety and recovery](runaway-feedback-safety.md) - sustained detection, likely-loop guidance, muted Undo, and state-clearing recovery.
 - [Reverse, inverse, gated, and Bloom requirements](reverse-and-gated-architecture-requirements.md) - distinct impulse contracts, the causal first method, required primitives, and naming rules.
 - [Envelope Follower and Hold Gate](envelope-follower-and-hold-gate.md) - detector equation, gate timing/retrigger semantics, restricted routing, persistence, and feedback safety.
+- [Reverse-envelope and gated factory patches](reverse-and-gated-factory-patches.md) - visible topologies, musical controls, deterministic envelope metrics, and audio fixtures.
 - [Control-rate graph semantics](control-rate-graph-semantics.md) - typed parameter sockets, fixed-rate interpolation, bounded evaluation, mapping formula, and schema-v2 persistence.
 - [LFO and control-mapping blocks](lfo-and-control-mapping.md) - sine/triangle generation, free-run/restart behavior, explicit scale/offset/polarity, range preview, and branching.
 - [Modulated Delay and Allpass](modulated-delay-and-allpass.md) - fractional linear delay taps, bounded coefficient modulation, audible behavior, memory planning, and runtime boundary.

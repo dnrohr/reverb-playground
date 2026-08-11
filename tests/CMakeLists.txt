@@ -9,6 +9,7 @@ add_executable(reverb_tests
     EnergyTelemetryTests.cpp
     EnvelopeGateTests.cpp
     EnvelopeGateRuntimeTests.cpp
+    FactoryPatchTests.cpp
     FeedbackRuntimeTests.cpp
     ImpulseCaptureTests.cpp
     LiveReferenceHarnessTests.cpp
@@ -29,7 +30,8 @@ target_link_libraries(reverb_tests
 
 target_compile_definitions(reverb_tests
     PRIVATE
-        REVERB_TEST_FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures")
+        REVERB_TEST_FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures"
+        REVERB_FACTORY_PATCH_DIR="${CMAKE_SOURCE_DIR}/factory-patches")
 
 include(Catch)
 catch_discover_tests(reverb_tests)

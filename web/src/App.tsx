@@ -33,6 +33,7 @@ import { parseEnergyTelemetry, shouldRunEnergyTelemetry, smoothEnergy, type Ener
 import { formatBytes, parseRuntimeDiagnostics, type RuntimeDiagnostics } from './runtimeDiagnostics';
 import { audibleGraphFingerprint, parseGraphPublicationResult } from './topologyPublication';
 import { decorateControlPreview, mappingRange } from './controlSemantics';
+import { factoryPatchDescription, factoryPatches, loadFactoryPatch, type FactoryPatchId } from './factoryPatches';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -235,6 +236,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const pasteCount = useRef(0);
   const loadInput = useRef<HTMLInputElement | null>(null);
   const [fileStatus, setFileStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
+  const [activePatchId, setActivePatchId] = useState<FactoryPatchId | 'custom'>('barr-reference');
   const [teachingEnabled, setTeachingEnabled] = useState(() => {
     try { return window.localStorage.getItem('reverb-playground-teaching') !== 'off'; } catch { return true; }
   });
@@ -253,6 +255,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [diagnostics, setDiagnostics] = useState<RuntimeDiagnostics | null>(null);
   const [controlPreviewTime, setControlPreviewTime] = useState(() => performance.now() / 1000);
   const audibleFingerprint = useMemo(() => audibleGraphFingerprint(nodes, edges), [edges, nodes]);
+  const activePatch = activePatchId === 'custom' ? null : factoryPatchDescription(activePatchId);
 
   const loopInspection = useMemo(() => selectedNode
     ? inspectFeedbackLoops(nodes, edges, { nodeId: selectedNode.id })
@@ -443,15 +446,35 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     setSelectedNode((current) => current ? update(current) : null);
   }, [setNodes]);
 
-  const resetReference = useCallback(() => {
-    const fresh = createFlowModel(snapshot);
+  const resetPatch = useCallback(() => {
+    const resetId = activePatchId === 'custom' ? 'barr-reference' : activePatchId;
+    const fresh = loadFactoryPatch(resetId, snapshot);
     const before = { nodes, edges };
     applyGraph(fresh);
     publishRuntimeParameters(fresh);
     setGraphHistory((history) => commitGraphEdit(history, 'Reset patch', before, fresh));
     setPendingConnection(null);
-    requestAnimationFrame(() => void fitView({ padding: 0.16, minZoom: 0.58, maxZoom: 1.1 }));
-  }, [applyGraph, edges, fitView, nodes, publishRuntimeParameters, snapshot]);
+    setActivePatchId(resetId);
+    requestAnimationFrame(() => void fitView({ padding: 0.16, minZoom: 0.25, maxZoom: 1.1 }));
+  }, [activePatchId, applyGraph, edges, fitView, nodes, publishRuntimeParameters, snapshot]);
+
+  const selectFactoryPatch = useCallback(async (id: FactoryPatchId) => {
+    try {
+      const fresh = loadFactoryPatch(id, snapshot);
+      applyGraph(fresh);
+      publishRuntimeParameters(fresh);
+      setViewport(fresh.viewport);
+      await setFlowViewport(fresh.viewport);
+      setGraphHistory(emptyGraphHistory(fresh));
+      setPendingConnection(null);
+      setActivePatchId(id);
+      const description = factoryPatchDescription(id);
+      setFileStatus({ kind: 'ok', message: `LOADED FACTORY / ${description.label.toUpperCase()}` });
+      requestAnimationFrame(() => void fitView({ padding: 0.16, minZoom: 0.25, maxZoom: 1.1 }));
+    } catch (reason) {
+      setFileStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Factory patch load failed' });
+    }
+  }, [applyGraph, fitView, publishRuntimeParameters, setFlowViewport, snapshot]);
 
   const copySelection = useCallback(() => {
     const copied = copySelectedGraph({ nodes, edges });
@@ -491,11 +514,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v' && !(event.target instanceof HTMLInputElement)) { event.preventDefault(); pasteSelection(); return; }
       if ((event.key === 'Delete' || event.key === 'Backspace') && !(event.target instanceof HTMLInputElement)) { event.preventDefault(); removeSelection(); return; }
       if (event.key.toLowerCase() === 'r' && !(event.target instanceof HTMLInputElement))
-        resetReference();
+        resetPatch();
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [copySelection, pasteSelection, redoGraph, removeSelection, resetReference, undoGraph]);
+  }, [copySelection, pasteSelection, redoGraph, removeSelection, resetPatch, undoGraph]);
 
   const beginParameterEdit = useCallback((nodeId: string, parameterId: string, _before: number) => {
     activeEdit.current = { label: `Edit ${nodeId}.${parameterId}`, before: snapshotGraph({ nodes, edges }) };
@@ -519,17 +542,18 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'barr-reference.rvp.json';
+      const filename = activePatch?.filename ?? 'custom-patch.rvp.json';
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 0);
       setGraphHistory((history) => markHistoryClean(history, { nodes, edges }));
-      setFileStatus({ kind: 'ok', message: 'SAVED BARR-REFERENCE.RVP.JSON / SCHEMA V2' });
+      setFileStatus({ kind: 'ok', message: `SAVED ${filename.toUpperCase()} / SCHEMA V2` });
     } catch (reason) {
       setFileStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Patch save failed' });
     }
-  }, [edges, nodes, snapshot, viewport]);
+  }, [activePatch, edges, nodes, snapshot, viewport]);
 
   const loadPatch = useCallback(async (file: File) => {
     try {
@@ -546,6 +570,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       setSelectedEdge(null);
       setGraphHistory(emptyGraphHistory(loaded));
       setPendingConnection(null);
+      setActivePatchId('custom');
       setFileStatus({ kind: 'ok', message: `LOADED ${file.name.toUpperCase()} / SCHEMA V2` });
     } catch (reason) {
       setFileStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Patch load failed' });
@@ -568,10 +593,24 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     <main className="editor-shell">
       <header className="editor-header">
         <div>
-          <div className="eyebrow">SCHEMATIC EDITOR / BARR REFERENCE</div>
+          <div className="eyebrow">SCHEMATIC EDITOR / {activePatch?.label.toUpperCase() ?? 'CUSTOM PATCH'}</div>
           <h1>Patch architecture</h1>
         </div>
         <div className="header-runtime">
+          <label className="factory-picker">
+            <span>FACTORY PATCH</span>
+            <select
+              aria-label="Factory patch"
+              value={activePatchId}
+              onChange={(event) => {
+                const id = event.target.value;
+                if (id !== 'custom') void selectFactoryPatch(id as FactoryPatchId);
+              }}
+            >
+              {activePatchId === 'custom' ? <option value="custom">Custom / loaded file</option> : null}
+              {factoryPatches.map((patch) => <option key={patch.id} value={patch.id}>{patch.label}</option>)}
+            </select>
+          </label>
           <button className="energy-toggle" type="button" aria-pressed={energyEnabled} disabled={reducedMotion} onClick={() => setEnergyEnabled((value) => !value)} title={reducedMotion ? 'Disabled by the operating-system reduced-motion preference' : 'Toggle measured node and cable energy'}>
             ENERGY {reducedMotion ? 'REDUCED' : energyEnabled ? 'ON' : 'OFF'}
           </button>
@@ -621,7 +660,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         <section className="canvas-pane" aria-label="Patch canvas">
           <div className="canvas-toolbar">
             <div>
-              <strong>REFERENCE.graph</strong>
+              <strong>{activePatch?.graphName ?? 'CUSTOM.graph'}</strong>
               <span>{nodes.length} blocks / {edges.length} cables</span>
             </div>
             <div className="canvas-actions">
@@ -636,7 +675,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <button type="button" onClick={copySelection}>COPY</button>
               <button type="button" disabled={!clipboard.current} onClick={pasteSelection}>PASTE</button>
               <button type="button" onClick={removeSelection}>DELETE</button>
-              <button type="button" onClick={resetReference}>RESET VIEW COPY</button>
+              <button type="button" onClick={resetPatch}>RESET PATCH</button>
               <input
                 ref={loadInput}
                 className="file-input"
@@ -692,7 +731,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               onViewportChange={setViewport}
               fitView
               fitViewOptions={{ padding: 0.16, minZoom: 0.58, maxZoom: 1.1 }}
-              minZoom={0.4}
+              minZoom={0.2}
               maxZoom={1.8}
               deleteKeyCode={null}
               selectionKeyCode="Shift"
@@ -704,7 +743,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               edgesFocusable
               elevateEdgesOnSelect
               proOptions={{ hideAttribution: false }}
-              aria-label="Barr reference patch graph"
+              aria-label={`${activePatch?.label ?? 'Custom'} patch graph`}
             >
               <Background color="#34414a" gap={22} size={1.2} variant={BackgroundVariant.Dots} />
               <Controls position="bottom-left" showInteractive={false} />

@@ -16,7 +16,7 @@ The **Energy On/Off** control enables measured activity on runtime-bound blocks 
 
 For a constructed graph, a latch also marks the highest-ranked explicit delayed feedback loop in red and prints its complete path. The label states that this is a bounded gain/delay heuristic, not a stability proof. Recovery clears the active runtime's stored feedback energy before audio can resume.
 
-The resizable editor still prefers 1280 by 800 logical pixels, but its initial standalone/plugin size is clamped to the primary work area after display scaling. This keeps diagnostics, Undo, and recovery reachable on smaller 125%-scaled desktops.
+The resizable editor prefers 1280 by 800 logical pixels, clamped directly to JUCE's logical primary work area. Display scale is not applied a second time. The embedded WebView receives the exact remaining parent bounds below the intentional 88-pixel native audition strip, so the schematic fills that region at 100%, 125%, and 150% scaling.
 
 Every modulatable parameter exposes a dashed control socket. Its inspector keeps the base value beside amount, bipolar/unipolar polarity, clamp range, and the fixed 1 kHz/linear-interpolation policy. A disconnected socket leaves the base value unchanged. Base-only parameters show only their direct editor; M6.2 uses this for Envelope Follower timing and Hold Gate threshold/timing so the UI does not promise unsupported modulation. Control cables cannot connect to audio ports, accept only one source, and never offer automatic insertion of an audio Sum block. LFO and Scale / Offset live under a separate **CONTROL** library heading. Their dashed/double block outline, `SINE`/`TRI`/`MAP` marker, signed live preview, and dashed animated cable keep them distinguishable without colour alone. Selecting Scale / Offset shows its predicted normalized output range before an output connection is made. See [Control-rate graph semantics](control-rate-graph-semantics.md) and [LFO and control-mapping blocks](lfo-and-control-mapping.md).
 
@@ -24,7 +24,9 @@ Delay and Allpass time inspectors identify their fractional linear delay tap and
 
 Envelope Follower changes a solid mono audio signal into a dashed normalized control signal and prints `AUDIO -> ENVELOPE 0...1` on the block. Hold Gate prints `AUDIO x CONTROL GATE`, keeps audio input/output solid, and shows its separate dashed detector input. Its control accepts the follower directly or through one Scale / Offset block, keeping the cause of a gated tail visible.
 
-The reference patch opens fitted to the available canvas. Blocks retain stable IDs and use a compact snake layout so the complete signal path is readable at the default 1280 by 800 editor size.
+The **Factory Patch** menu loads the Barr reference, Causal Reverse Envelope, or Level-Gated Room directly into the editable canvas. The eyebrow, graph name, save filename, and reset target follow the selection. A separately loaded file is labeled Custom. Factory patches use the same schema parser and public graph publication path as user files.
+
+Each patch opens fitted to the available canvas. Blocks retain stable IDs and use a compact layout so the complete signal path is readable at the default 1280 by 800 editor size.
 
 ## Pointer and keyboard contract
 
@@ -36,9 +38,9 @@ The reference patch opens fitted to the available canvas. Blocks retain stable I
 - Press Delete or Backspace to remove selected blocks or cables from the UI copy.
 - Press Ctrl/Cmd+C and Ctrl/Cmd+V, or use **Copy** and **Paste**, to duplicate selected non-I/O blocks with fresh identities while preserving internal cables.
 - Press Ctrl/Cmd+Z to undo and Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y to redo any committed node, cable, layout, parameter, or clipboard transaction.
-- Press R, or choose **Reset view copy**, to restore the reference graph and fitted viewport.
+- Press R, or choose **Reset Patch**, to restore the selected factory graph and fitted viewport. A custom file resets to the Barr reference.
 
-Deletion affects only the current presentation copy. **Reset view copy** reconstructs the canvas from the last native runtime snapshot. General graph compilation begins in M3, so presentation deletion does not yet alter audio.
+Deletion and other audible semantic edits publish the current visible graph through the off-thread compiler. **Reset Patch** reconstructs the selected factory canvas; the Barr reference is rebuilt from the native runtime snapshot, while the other factories are parsed from their checked-in schema-v2 documents.
 
 The toolbar's **Saved/Unsaved** badge compares the current semantic-plus-layout document identity with the most recent successful save/load baseline. See [Unified graph history and clipboard](unified-graph-history-and-clipboard.md).
 

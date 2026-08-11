@@ -387,7 +387,7 @@ Results:
 - A newer prepared graph waits for the active transition; still-newer requests replace that one slot. The 1,000-edit concurrent stress test reaches the final revision with finite output, an empty pending slot, a finished transition, bounded compilations/crossfades, and reclaimed runtimes.
 - Legal feedback-path changes remain finite. Invalid compilation leaves the preceding audible runtime active. Constructed feedback reset produces repeatable measurement output.
 - Constructed-graph mode retains audition gain, manual mute, impulse injection, deterministic pre-gain capture, numerical guards, live CPU/clipping accounting, active revision identity, and prepared delay-memory reporting.
-- The WebView2 physical/logical sizing mismatch is compensated from the active Windows display scale. At the tested 125% scale, the schematic fills all space below the intentional native control strip.
+- JUCE's logical display bounds are used once and WebView2 receives its parent's exact remaining logical bounds. At the tested 125% scale, the schematic fills all space below the intentional native control strip without a second scale conversion.
 - Reviewed native screenshot: [`artifacts/ui/m5-5-topology-crossfade/01-live-crossfade-diagnostics.png`](../artifacts/ui/m5-5-topology-crossfade/01-live-crossfade-diagnostics.png).
 - Reviewed live-edit video: [`artifacts/ui/m5-5-topology-crossfade/live-topology-edit.mp4`](../artifacts/ui/m5-5-topology-crossfade/live-topology-edit.mp4). The video is visual-only; native render tests prove finite audible transitions.
 
@@ -397,7 +397,7 @@ Results:
 - A latched constructed graph stays silent while edits and Undo remain available. The first event retains its kind, channel, sample index, and graph revision.
 - The editor searches explicit Delay-containing cycles within the existing 100,000-transition bound, ranks by visible absolute loop gain divided by nominal delay, labels the result heuristic, and marks the highest-ranked path in red. Absence of an identifiable loop is reported explicitly.
 - Explicit recovery resets active and crossfading constructed runtimes before clearing both guards, so abandoned delay/feedback energy cannot resume. The end-to-end native test remains muted through a safe publication and recovers to deterministic silence.
-- The preferred 1280-by-800 editor size is clamped to the scaled desktop work area. Native QA at 125% on a 1536-by-960 display kept the complete diagnostics panel and recovery actions reachable.
+- The preferred 1280-by-800 editor size is clamped to JUCE's logical desktop work area. Native QA at 125% on a 1536-by-960 display kept the complete diagnostics panel and recovery actions reachable.
 - Shared Debug verification passed 49 browser tests and 80 native/audio tests with warnings as errors.
 - Latched screenshot: [`artifacts/ui/m5-6-runaway-feedback/01-runaway-loop-and-recovery.png`](../artifacts/ui/m5-6-runaway-feedback/01-runaway-loop-and-recovery.png).
 - Recovered screenshot: [`artifacts/ui/m5-6-runaway-feedback/03-recovered-silence.png`](../artifacts/ui/m5-6-runaway-feedback/03-recovered-silence.png).
@@ -423,3 +423,16 @@ Results:
 - A legal delayed feedback fixture containing Hold Gate stays finite, never exceeds its injected peak, and produces no numerical-safety violation. Processing remains allocation/lock/log free with all state and buffers prepared before publication.
 - Reviewed native screenshot: [`artifacts/ui/m6-2-envelope-hold-gate/01-envelope-follower-hold-gate.png`](../artifacts/ui/m6-2-envelope-hold-gate/01-envelope-follower-hold-gate.png).
 - Reviewed module-inspection video: [`artifacts/ui/m6-2-envelope-hold-gate/envelope-gate-module-inspection.mp4`](../artifacts/ui/m6-2-envelope-hold-gate/envelope-gate-module-inspection.mp4). It shows selection moving between both new blocks in the native editor; deterministic native tests are authoritative for signal timing and safety.
+
+## M6.3 verification
+
+- Two checked-in schema-v2 factory documents use only public editable primitives. Native and browser tests independently load and round-trip both; constructed graphs execute through the public compiler/runtime rather than a patch-identity DSP shortcut.
+- **Causal Reverse Envelope** exposes three visible increasing Delay/Gain branches (45/115/210 ms and 0.25/0.55/0.95), explicit Sum blocks, diffusion Allpasses, 6.5 kHz tone, 0.75 level, and unequal stereo output diffusion.
+- **Level-Gated Room** exposes three diffusion Allpasses, 7.2 kHz tone, 0.8 level, one 0.1/20 ms Envelope Follower, and two 0.05-threshold, 2/120/8 ms Hold Gates. The detector threshold opens for a unit impulse at 44.1, 48, and 96 kHz.
+- At 48 kHz the reverse patch reaches its smoothed peak 195 ms after onset and drops at most 3.87 dB per 10 ms window. The gated patch peaks at 5 ms, crosses -40 dB 155 ms later, and has an 89.57 dB single-window cutoff. RT60 is marked meaningful only for the gradual reverse-envelope tail.
+- Both patches remain finite and at or below unity for one-second impulses and bounded stereo-noise stress at 44.1, 48, and 96 kHz. Residual post-cutoff energy remains below `1e-4`; stereo outputs differ.
+- Checked-in deterministic WAV, analysis, response-measurement, and envelope-measurement fixtures live under [`artifacts/audio/m6-3-factory-patches/`](../artifacts/audio/m6-3-factory-patches/).
+- The header factory menu loads Barr/reference, reverse-envelope, and gated graphs, follows their identity in graph/save/reset labels, and publishes each visible graph for continuous audition. Wide factories may fit below 40% without changing the user's general zoom range.
+- The Windows sizing defect is removed at both boundaries: the editor no longer divides JUCE logical work-area dimensions by scale, and WebView2 receives exact parent bounds. Full-window evidence: [`00-barr-reference-full-window.png`](../artifacts/ui/m6-3-factory-patches/00-barr-reference-full-window.png).
+- Reviewed factory screenshots: [`01-causal-reverse-envelope.png`](../artifacts/ui/m6-3-factory-patches/01-causal-reverse-envelope.png) and [`02-level-gated-room.png`](../artifacts/ui/m6-3-factory-patches/02-level-gated-room.png).
+- Reviewed selection/publication video: [`factory-patch-switching.mp4`](../artifacts/ui/m6-3-factory-patches/factory-patch-switching.mp4). Deterministic offline fixtures and native tests are authoritative for audio-envelope differences.

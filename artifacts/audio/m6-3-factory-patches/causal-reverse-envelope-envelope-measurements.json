@@ -1,0 +1,16 @@
+{
+  "measurementVersion": 1,
+  "engineVersion": "0.1",
+  "patchId": "causal-reverse-envelope",
+  "sampleRate": 48000.0,
+  "smoothingWindowMilliseconds": 10.0,
+  "cutoffDecibels": -40.0,
+  "onsetFrame": 1920,
+  "peakFrame": 11280,
+  "cutoffFrame": 17280,
+  "timeToPeakMilliseconds": 195.0,
+  "peakToCutoffMilliseconds": 125.0,
+  "residualEnergyRatio": 2.9605822168717556e-05,
+  "maximumDropDecibelsPerWindow": 3.8744136819973685,
+  "rt60Meaningful": true
+}

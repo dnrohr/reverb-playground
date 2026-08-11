@@ -1,6 +1,7 @@
 #include <reverb/render/OfflineRenderer.h>
 
 #include <reverb/dsp/BarrReference.h>
+#include <reverb/graph/AcyclicRuntime.h>
 #include <reverb/graph/BarrReferenceGraph.h>
 
 #include <nlohmann/json.hpp>
@@ -65,17 +66,34 @@ RenderResult renderOffline(const RenderRequest& request)
 {
     if (request.sampleRate <= 0.0 || request.frameCount == 0)
         throw std::invalid_argument("render requires positive sample rate and frame count");
-    if (request.patch != reverb::graph::makeBarrReferenceGraph())
-        throw std::invalid_argument("offline renderer currently supports the canonical Barr reference patch only");
-
     std::vector<float> inputLeft(request.frameCount, 0.0F);
     std::vector<float> inputRight(request.frameCount, 0.0F);
     makeInput(request.input, inputLeft, inputRight);
 
     RenderResult result { std::vector<float>(request.frameCount), std::vector<float>(request.frameCount) };
-    reverb::dsp::BarrReference engine;
-    engine.prepare(request.sampleRate);
-    engine.process(inputLeft, inputRight, result.left, result.right);
+    if (request.patch == reverb::graph::makeBarrReferenceGraph()) {
+        reverb::dsp::BarrReference engine;
+        engine.prepare(request.sampleRate);
+        engine.process(inputLeft, inputRight, result.left, result.right);
+        return result;
+    }
+
+    constexpr std::size_t blockSize = 256;
+    auto compiled = reverb::graph::compileFeedbackGraph(request.patch, request.sampleRate, blockSize);
+    if (!compiled.valid()) {
+        std::string message = "patch compilation failed";
+        for (const auto& error : compiled.errors)
+            message += "; " + error;
+        throw std::invalid_argument(message);
+    }
+    for (std::size_t start = 0; start < request.frameCount; start += blockSize) {
+        const auto count = std::min(blockSize, request.frameCount - start);
+        compiled.runtime->process(
+            std::span<const float>(inputLeft).subspan(start, count),
+            std::span<const float>(inputRight).subspan(start, count),
+            std::span<float>(result.left).subspan(start, count),
+            std::span<float>(result.right).subspan(start, count));
+    }
     return result;
 }
 

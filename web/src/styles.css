@@ -52,6 +52,9 @@ button { font: inherit; }
 .editor-header h1 { margin: 3px 0 0; font-size: 24px; line-height: 1; letter-spacing: -.02em; }
 .header-status { display: flex; align-items: center; gap: 9px; color: #b9c4cb; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; }
 .header-runtime { display: flex; align-items: center; gap: 12px; }
+.factory-picker { display: grid; gap: 3px; color: #83919a; font: 800 7px ui-monospace, Consolas, monospace; letter-spacing: .1em; }
+.factory-picker select { min-width: 174px; padding: 5px 24px 5px 7px; border: 1px solid #4b5a64; border-radius: 3px; color: #dce4e8; background: #11171b; font: 9px ui-monospace, Consolas, monospace; letter-spacing: 0; }
+.factory-picker select:focus-visible { border-color: var(--cyan); outline: none; }
 .energy-toggle { padding: 6px 8px; border: 1px solid var(--cyan); border-radius: 3px; color: var(--cyan); background: rgba(69, 208, 204, .06); font: 8px ui-monospace, Consolas, monospace; letter-spacing: .08em; }
 .energy-toggle[aria-pressed="false"], .energy-toggle:disabled { border-color: #52616a; color: #829099; background: transparent; }
 .diagnostics-toggle { padding: 6px 8px; border: 1px solid #596872; border-radius: 3px; color: #aebac0; background: #182127; font: 8px ui-monospace, Consolas, monospace; letter-spacing: .08em; }

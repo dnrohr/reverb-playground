@@ -1,6 +1,6 @@
 # Offline rendering and golden tests
 
-`reverb_render_cli` renders the canonical Barr reference patch to a stereo 16-bit PCM WAV without opening or linking any UI. The same code path supplies deterministic DSP tests and later measurement tooling.
+`reverb_render_cli` renders the canonical Barr reference or any valid public schema-v2 graph to a stereo 16-bit PCM WAV without opening or linking any UI. The Barr reference retains its direct reference-engine path; other patches use the same prepared graph compiler/runtime used for editor publication. The same paths supply deterministic DSP tests and measurement tooling.
 
 ## Build and run
 
@@ -24,7 +24,7 @@ build/windows-msvc/src/render/Debug/reverb_render_cli.exe `
   --patch build/barr-reference.json --input impulse --output build/reloaded.wav
 ```
 
-M1.3 intentionally rejects any document that differs from the canonical reference graph. General patch compilation belongs to M3; accepting a file here must not imply that arbitrary legal schema documents are executable yet.
+Invalid graphs are rejected with the graph compiler's complete diagnostics before rendering. No factory-patch identity selects a private DSP path: a factory file executes only the public nodes and connections it contains.
 
 ## Analysis JSON
 
@@ -36,6 +36,8 @@ The optional `--analysis` file, or standard output when it is omitted, contains:
 - an unsigned decimal FNV-1a hash of each channel after PCM16 quantization.
 
 `--measurements <path>` additionally writes the versioned impulse-response metrics described in [Response measurements](response-measurements.md).
+
+`--envelope-measurements <path>` writes deterministic 10 ms smoothed-envelope evidence: onset, peak and -40 dB cutoff frames, time-to-peak, peak-to-cutoff time, residual-energy ratio, largest adjacent-window drop, and whether a conventional RT60 is meaningful. See [Reverse-envelope and gated factory patches](reverse-and-gated-factory-patches.md).
 
 The WAV writer emits canonical little-endian stereo PCM16 with no metadata or timestamps, so a fixed patch, input, sample rate, duration, and engine version are byte-stable on the primary Windows/MSVC toolchain.
 

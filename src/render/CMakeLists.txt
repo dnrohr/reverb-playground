@@ -1,4 +1,5 @@
 add_library(reverb_render STATIC
+    Source/EnvelopeMeasurements.cpp
     Source/OfflineRenderer.cpp
     Source/ResponseMeasurements.cpp
     Source/WavWriter.cpp)

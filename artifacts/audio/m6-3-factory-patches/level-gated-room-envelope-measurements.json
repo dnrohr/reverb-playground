@@ -1,0 +1,16 @@
+{
+  "measurementVersion": 1,
+  "engineVersion": "0.1",
+  "patchId": "level-gated-room",
+  "sampleRate": 48000.0,
+  "smoothingWindowMilliseconds": 10.0,
+  "cutoffDecibels": -40.0,
+  "onsetFrame": 0,
+  "peakFrame": 240,
+  "cutoffFrame": 7680,
+  "timeToPeakMilliseconds": 5.0,
+  "peakToCutoffMilliseconds": 155.0,
+  "residualEnergyRatio": 0.0,
+  "maximumDropDecibelsPerWindow": 89.57493899643327,
+  "rt60Meaningful": false
+}
