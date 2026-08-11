@@ -248,6 +248,35 @@ std::size_t PreparedAcyclicRuntime::preparedStorageBytes() const noexcept
 }
 const DelayMemoryPlan& PreparedAcyclicRuntime::delayMemoryPlan() const noexcept { return implementation_->delayMemory; }
 
+void PreparedAcyclicRuntime::reset() noexcept
+{
+    for (auto& buffer : implementation_->buffers) std::ranges::fill(buffer, 0.0F);
+    for (auto& operation : implementation_->operations) {
+        if (operation.kind == OperationKind::gain)
+            std::get<reverb::dsp::Gain>(operation.processor).settleTarget();
+        else if (operation.kind == OperationKind::delay)
+            std::get<reverb::dsp::Delay>(operation.processor).reset();
+        else if (operation.kind == OperationKind::allpass) {
+            auto& allpass = std::get<reverb::dsp::Allpass>(operation.processor);
+            allpass.reset();
+            allpass.settleParameters();
+        } else if (operation.kind == OperationKind::lowpass) {
+            auto& lowpass = std::get<reverb::dsp::OnePoleLowPass>(operation.processor);
+            lowpass.reset();
+            lowpass.settleParameters();
+        }
+    }
+    for (auto& control : implementation_->controlOperations) {
+        control.value = 0.0;
+        if (control.kind == ControlOperationKind::lfo) control.lfo.restart();
+    }
+    for (auto& modulation : implementation_->modulations) {
+        modulation.ramp.reset(modulation.mapping.baseValue);
+        std::ranges::fill(modulation.values, modulation.mapping.baseValue);
+    }
+    implementation_->samplesUntilControlTick = 0;
+}
+
 void PreparedAcyclicRuntime::process(
     const std::span<const float> inputLeft, const std::span<const float> inputRight,
     const std::span<float> outputLeft, const std::span<float> outputRight) noexcept
@@ -645,6 +674,9 @@ AcyclicCompileResult compileFeedbackGraph(
 struct AcyclicRuntimeHost::RuntimeEnvelope final {
     std::unique_ptr<PreparedAcyclicRuntime> runtime;
     std::uint64_t revision {};
+    std::size_t crossfadeSamples {};
+    std::vector<float> crossfadeLeft;
+    std::vector<float> crossfadeRight;
 };
 
 struct AcyclicRuntimeHost::CompilationRequest final {
@@ -670,6 +702,7 @@ AcyclicRuntimeHost::~AcyclicRuntimeHost()
     if (compilerThread_.joinable()) compilerThread_.join();
     delete pendingRuntime_.exchange(nullptr, std::memory_order_acq_rel);
     delete activeRuntime_.exchange(nullptr, std::memory_order_acq_rel);
+    delete fadingRuntime_;
     reclaimRetired();
 }
 
@@ -677,18 +710,18 @@ AcyclicPublishResult AcyclicRuntimeHost::compileAndPublish(
     const GraphDocument& document, const double sampleRate, const std::size_t maximumBlockSize)
 {
     const auto revision = requestedRevision_.fetch_add(1, std::memory_order_acq_rel) + 1;
-    return publishCompiled(compileAcyclicGraph(document, sampleRate, maximumBlockSize), revision);
+    return publishCompiled(compileAcyclicGraph(document, sampleRate, maximumBlockSize), revision, sampleRate);
 }
 
 AcyclicPublishResult AcyclicRuntimeHost::compileFeedbackAndPublish(
     const GraphDocument& document, const double sampleRate, const std::size_t maximumBlockSize)
 {
     const auto revision = requestedRevision_.fetch_add(1, std::memory_order_acq_rel) + 1;
-    return publishCompiled(compileFeedbackGraph(document, sampleRate, maximumBlockSize), revision);
+    return publishCompiled(compileFeedbackGraph(document, sampleRate, maximumBlockSize), revision, sampleRate);
 }
 
 AcyclicPublishResult AcyclicRuntimeHost::publishCompiled(
-    AcyclicCompileResult result, const std::uint64_t revision)
+    AcyclicCompileResult result, const std::uint64_t revision, const double sampleRate)
 {
     AcyclicPublishResult publication { result.schedule, result.warnings, result.errors, result.delayMemory };
     completedCompilations_.fetch_add(1, std::memory_order_relaxed);
@@ -702,7 +735,7 @@ AcyclicPublishResult AcyclicRuntimeHost::publishCompiled(
         }
         return publication;
     }
-    publishPending(std::move(result.runtime), revision);
+    publishPending(std::move(result.runtime), revision, sampleRate);
     return publication;
 }
 
@@ -750,7 +783,7 @@ void AcyclicRuntimeHost::compilerLoop(const std::stop_token stopToken)
             }
         }
         if (result.valid()) {
-            publishPending(std::move(result.runtime), request->revision);
+            publishPending(std::move(result.runtime), request->revision, request->sampleRate);
         } else {
             failedRevision_.store(request->revision, std::memory_order_release);
             std::scoped_lock lock(failureMutex_);
@@ -765,10 +798,17 @@ void AcyclicRuntimeHost::compilerLoop(const std::stop_token stopToken)
 }
 
 void AcyclicRuntimeHost::publishPending(
-    std::unique_ptr<PreparedAcyclicRuntime> runtime, const std::uint64_t revision)
+    std::unique_ptr<PreparedAcyclicRuntime> runtime,
+    const std::uint64_t revision,
+    const double sampleRate)
 {
     std::scoped_lock lock(pendingPublicationMutex_);
-    auto* envelope = new RuntimeEnvelope { std::move(runtime), revision };
+    const auto maximumBlockSize = runtime->maximumBlockSize();
+    const auto crossfadeSamples = static_cast<std::size_t>(std::max(
+        1.0, std::round(sampleRate * topologyCrossfadeMilliseconds / 1'000.0)));
+    auto* envelope = new RuntimeEnvelope {
+        std::move(runtime), revision, crossfadeSamples,
+        std::vector<float>(maximumBlockSize), std::vector<float>(maximumBlockSize) };
     const auto activeRevision = activeRevision_.load(std::memory_order_acquire);
     auto* currentPending = pendingRuntime_.load(std::memory_order_acquire);
     if (revision <= activeRevision
@@ -825,6 +865,14 @@ TopologyPublicationSnapshot AcyclicRuntimeHost::publicationSnapshot() const
     snapshot.supersededRequests = supersededRequests_.load(std::memory_order_acquire);
     snapshot.completedCompilations = completedCompilations_.load(std::memory_order_acquire);
     snapshot.reclaimedRuntimes = reclaimedRuntimes_.load(std::memory_order_acquire);
+    snapshot.crossfadeFromRevision = crossfadeFromRevision_.load(std::memory_order_acquire);
+    snapshot.crossfadePositionSamples = crossfadePositionSamples_.load(std::memory_order_acquire);
+    snapshot.crossfadeTotalSamples = crossfadeTotalSamples_.load(std::memory_order_acquire);
+    snapshot.completedCrossfades = completedCrossfades_.load(std::memory_order_acquire);
+    snapshot.lastCrossfadeFromRevision = lastCrossfadeFromRevision_.load(std::memory_order_acquire);
+    snapshot.lastCrossfadeToRevision = lastCrossfadeToRevision_.load(std::memory_order_acquire);
+    snapshot.activeDelayLineCount = activeDelayLineCount_.load(std::memory_order_acquire);
+    snapshot.activeDelayMemoryBytes = activeDelayMemoryBytes_.load(std::memory_order_acquire);
     std::scoped_lock lock(failureMutex_);
     snapshot.failure = failure_;
     return snapshot;
@@ -836,25 +884,87 @@ void AcyclicRuntimeHost::process(
 {
     auto* pending = pendingRuntime_.load(std::memory_order_acquire);
     auto* active = activeRuntime_.load(std::memory_order_acquire);
-    if (pending != nullptr && (active == nullptr || retirementHasCapacity())) {
+    if (fadingRuntime_ == nullptr && pending != nullptr && (active == nullptr || retirementHasCapacity())) {
         pending = pendingRuntime_.exchange(nullptr, std::memory_order_acq_rel);
         if (pending != nullptr) {
             active = activeRuntime_.exchange(pending, std::memory_order_acq_rel);
             activeRevision_.store(pending->revision, std::memory_order_release);
+            activeDelayLineCount_.store(
+                pending->runtime->delayMemoryPlan().lineCount, std::memory_order_release);
+            activeDelayMemoryBytes_.store(
+                pending->runtime->delayMemoryPlan().allocatedBytes, std::memory_order_release);
             if (pendingRuntime_.load(std::memory_order_acquire) == nullptr)
                 pendingRevision_.store(0, std::memory_order_release);
-            if (active != nullptr) retire(active);
+            if (active != nullptr) {
+                fadingRuntime_ = active;
+                crossfadePosition_ = 0;
+                crossfadeFromRevision_.store(active->revision, std::memory_order_release);
+                crossfadePositionSamples_.store(0, std::memory_order_release);
+                crossfadeTotalSamples_.store(pending->crossfadeSamples, std::memory_order_release);
+            }
             active = pending;
         }
     }
-    if (active != nullptr) active->runtime->process(inputLeft, inputRight, outputLeft, outputRight);
-    else { std::ranges::fill(outputLeft, 0.0F); std::ranges::fill(outputRight, 0.0F); }
+    if (active == nullptr) {
+        std::ranges::fill(outputLeft, 0.0F);
+        std::ranges::fill(outputRight, 0.0F);
+        return;
+    }
+    if (fadingRuntime_ == nullptr) {
+        active->runtime->process(inputLeft, inputRight, outputLeft, outputRight);
+        return;
+    }
+
+    const auto count = outputLeft.size();
+    const auto sizesMatch = inputLeft.size() == count && inputRight.size() == count
+        && outputRight.size() == count && count <= active->crossfadeLeft.size();
+    if (sizesMatch) {
+        const auto nextLeft = std::span(active->crossfadeLeft).first(count);
+        const auto nextRight = std::span(active->crossfadeRight).first(count);
+        active->runtime->process(inputLeft, inputRight, nextLeft, nextRight);
+        fadingRuntime_->runtime->process(inputLeft, inputRight, outputLeft, outputRight);
+        const auto total = active->crossfadeSamples;
+        for (std::size_t index = 0; index < count; ++index) {
+            const auto alpha = std::min(1.0F, static_cast<float>(crossfadePosition_ + index + 1)
+                / static_cast<float>(total));
+            outputLeft[index] += alpha * (nextLeft[index] - outputLeft[index]);
+            outputRight[index] += alpha * (nextRight[index] - outputRight[index]);
+        }
+        crossfadePosition_ = std::min(total, crossfadePosition_ + count);
+        crossfadePositionSamples_.store(crossfadePosition_, std::memory_order_release);
+    } else {
+        active->runtime->process(inputLeft, inputRight, outputLeft, outputRight);
+        crossfadePosition_ = active->crossfadeSamples;
+    }
+
+    if (crossfadePosition_ >= active->crossfadeSamples) {
+        lastCrossfadeFromRevision_.store(fadingRuntime_->revision, std::memory_order_release);
+        lastCrossfadeToRevision_.store(active->revision, std::memory_order_release);
+        completedCrossfades_.fetch_add(1, std::memory_order_relaxed);
+        retire(fadingRuntime_);
+        fadingRuntime_ = nullptr;
+        crossfadePosition_ = 0;
+        crossfadeFromRevision_.store(0, std::memory_order_release);
+        crossfadePositionSamples_.store(0, std::memory_order_release);
+        crossfadeTotalSamples_.store(0, std::memory_order_release);
+    }
+}
+
+void AcyclicRuntimeHost::resetActiveRuntimes() noexcept
+{
+    if (auto* active = activeRuntime_.load(std::memory_order_acquire)) active->runtime->reset();
+    if (fadingRuntime_ != nullptr) fadingRuntime_->runtime->reset();
 }
 
 bool AcyclicRuntimeHost::hasRuntime() const noexcept
 {
     return activeRuntime_.load(std::memory_order_acquire) != nullptr
         || pendingRuntime_.load(std::memory_order_acquire) != nullptr;
+}
+
+std::uint64_t AcyclicRuntimeHost::activeRevision() const noexcept
+{
+    return activeRevision_.load(std::memory_order_acquire);
 }
 
 } // namespace reverb::graph

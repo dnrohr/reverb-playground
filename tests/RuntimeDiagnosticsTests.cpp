@@ -12,6 +12,7 @@ TEST_CASE("Runtime diagnostics distinguish prepared estimates from live measurem
 {
     reverb::dsp::RuntimeDiagnostics diagnostics;
     diagnostics.prepare(48'000.0, 6, 12'345);
+    diagnostics.setActiveRevision(42);
     const auto started = diagnostics.beginBlock();
     diagnostics.endBlock(started, 480, 7);
     const auto snapshot = diagnostics.snapshot();
@@ -26,6 +27,7 @@ TEST_CASE("Runtime diagnostics distinguish prepared estimates from live measurem
     REQUIRE(snapshot.peakLoadPercent >= snapshot.liveLoadPercent);
     REQUIRE(snapshot.clippedSamples == 7);
     REQUIRE(snapshot.clippedBlocks == 1);
+    REQUIRE(snapshot.activeRevision == 42);
 }
 
 TEST_CASE("NaN infinity and runaway events retain their active revision through recovery")

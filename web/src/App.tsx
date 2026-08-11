@@ -31,6 +31,7 @@ import { analyseResponse, decayPoints, frameWindow, rt60Explanation, waveformBuc
 import { decorateEnergy } from './energyDecoration';
 import { parseEnergyTelemetry, shouldRunEnergyTelemetry, smoothEnergy, type EnergyLevels } from './energyTelemetry';
 import { formatBytes, parseRuntimeDiagnostics, type RuntimeDiagnostics } from './runtimeDiagnostics';
+import { audibleGraphFingerprint, parseGraphPublicationResult } from './topologyPublication';
 import { decorateControlPreview, mappingRange } from './controlSemantics';
 
 const modules = [
@@ -204,7 +205,15 @@ function DiagnosticsPanel({ diagnostics, canUndo, onUndo, onRecover, onClose }: 
         <section><span>MEMORY / PREPARED</span><strong>{formatBytes(diagnostics.delayMemory.bytes)}</strong><small>{diagnostics.delayMemory.lineCount} delay-bearing lines</small></section>
         <section><span>CLIPPING / MEASURED</span><strong>{diagnostics.clipping.samples.toLocaleString()} samples</strong><small>{diagnostics.clipping.blocks.toLocaleString()} affected blocks</small></section>
       </div>
-      <dl className="revision-diagnostic"><div><dt>ACTIVE GRAPH REVISION</dt><dd>#{diagnostics.activeGraphRevision}</dd></div><div><dt>SUCCESSFUL RECOVERIES</dt><dd>{diagnostics.recoveryCount}</dd></div></dl>
+      <dl className="revision-diagnostic">
+        <div><dt>ACTIVE GRAPH REVISION</dt><dd>#{diagnostics.topologyPublication.activeRevision || diagnostics.activeGraphRevision}</dd></div>
+        <div><dt>PENDING / FAILED</dt><dd>{diagnostics.topologyPublication.pendingRevision ? `#${diagnostics.topologyPublication.pendingRevision}` : '—'} / {diagnostics.topologyPublication.failedRevision ? `#${diagnostics.topologyPublication.failedRevision}` : '—'}</dd></div>
+        <div><dt>TOPOLOGY CROSSFADE</dt><dd>{diagnostics.topologyPublication.crossfadeTotalSamples ? `${diagnostics.topologyPublication.crossfadePositionSamples}/${diagnostics.topologyPublication.crossfadeTotalSamples} samples` : 'IDLE'}</dd></div>
+        <div><dt>LAST CROSSFADE</dt><dd>{diagnostics.topologyPublication.completedCrossfades ? `#${diagnostics.topologyPublication.lastCrossfadeFromRevision} → #${diagnostics.topologyPublication.lastCrossfadeToRevision}` : '—'}</dd></div>
+        <div><dt>SUPERSEDED / RECLAIMED</dt><dd>{diagnostics.topologyPublication.supersededRequests} / {diagnostics.topologyPublication.reclaimedRuntimes}</dd></div>
+        <div><dt>SUCCESSFUL RECOVERIES</dt><dd>{diagnostics.recoveryCount}</dd></div>
+      </dl>
+      {diagnostics.topologyPublication.failure ? <p className="topology-failure">REVISION #{diagnostics.topologyPublication.failedRevision}: {diagnostics.topologyPublication.failure}</p> : null}
       {diagnostics.lastSafetyEvent ? <section className="safety-event"><span>LAST SAFETY EVENT #{diagnostics.lastSafetyEvent.generation}</span><strong>{diagnostics.lastSafetyEvent.kind.toUpperCase()} / {diagnostics.lastSafetyEvent.channel.toUpperCase()}</strong><p>Sample {diagnostics.lastSafetyEvent.sampleIndex.toLocaleString()} of graph revision <b>#{diagnostics.lastSafetyEvent.graphRevision}</b>. This identity remains fixed when later edits change the active revision.</p></section> : <p className="no-safety-event">No NaN, infinity, or runaway event recorded.</p>}
       <div className="diagnostic-actions"><button type="button" disabled={!canUndo} onClick={onUndo}>UNDO LAST EDIT</button><button type="button" disabled={!diagnostics.mute.safetyLatched} onClick={onRecover}>RECOVER AUDIO</button></div>
     </>}
@@ -242,6 +251,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
   const [diagnostics, setDiagnostics] = useState<RuntimeDiagnostics | null>(null);
   const [controlPreviewTime, setControlPreviewTime] = useState(() => performance.now() / 1000);
+  const audibleFingerprint = useMemo(() => audibleGraphFingerprint(nodes, edges), [edges, nodes]);
 
   const loopInspection = useMemo(() => selectedNode
     ? inspectFeedbackLoops(nodes, edges, { nodeId: selectedNode.id })
@@ -269,6 +279,21 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     preference.addEventListener('change', update);
     return () => preference.removeEventListener('change', update);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const result = parseGraphPublicationResult(await callNative('publishGraph', writePatchJson(nodes, edges, viewport)));
+        if (!cancelled) setGraphStatus(result.accepted
+          ? { kind: 'ok', message: `GRAPH REVISION #${result.revision} QUEUED FOR AUDITION` }
+          : { kind: 'error', message: result.error });
+      } catch (reason) {
+        if (!cancelled && !import.meta.env.DEV) setGraphStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Graph publication failed' });
+      }
+    }, 35);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [audibleFingerprint]);
 
   useEffect(() => {
     if (!shouldRunEnergyTelemetry(energyEnabled, reducedMotion)) {
@@ -318,6 +343,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         const next = parseRuntimeDiagnostics(await callNative('getRuntimeDiagnostics'));
         if (!cancelled) {
           setDiagnostics(next);
+          if (next.topologyPublication.failedRevision > 0
+            && next.topologyPublication.failedRevision === next.topologyPublication.requestedRevision
+            && next.topologyPublication.failure)
+            setGraphStatus({ kind: 'error', message: `REVISION #${next.topologyPublication.failedRevision} REJECTED: ${next.topologyPublication.failure}` });
           if (next.mute.safetyLatched) setDiagnosticsOpen(true);
         }
       } catch { /* native snapshot may not be available in the development browser */ }
@@ -545,7 +574,13 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           <button className="diagnostics-toggle" type="button" aria-expanded={diagnosticsOpen} onClick={() => setDiagnosticsOpen((value) => !value)}>DIAGNOSTICS</button>
           <div className="header-status" aria-label="Audition status">
             <span className="status-dot" aria-hidden="true" />
-            <span>RUNTIME BOUND / {snapshot.sampleRate > 0 ? `${(snapshot.sampleRate / 1000).toFixed(1)} kHz` : 'awaiting audio'}</span>
+            <span>{diagnostics?.topologyPublication.crossfadeTotalSamples
+              ? `CROSSFADING #${diagnostics.topologyPublication.crossfadeFromRevision} → #${diagnostics.topologyPublication.activeRevision}`
+              : diagnostics?.topologyPublication.pendingRevision
+                ? `COMPILING #${diagnostics.topologyPublication.pendingRevision}`
+                : diagnostics?.topologyPublication.activeRevision
+                  ? `GRAPH ACTIVE #${diagnostics.topologyPublication.activeRevision}`
+                  : `RUNTIME BOUND / ${snapshot.sampleRate > 0 ? `${(snapshot.sampleRate / 1000).toFixed(1)} kHz` : 'awaiting audio'}`}</span>
           </div>
         </div>
       </header>
@@ -780,7 +815,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <button type="button" disabled={!graphHistory.undo.length} onClick={undoGraph}>UNDO</button>
                 <button type="button" disabled={!graphHistory.redo.length} onClick={redoGraph}>REDO</button>
               </div>
-              <div className="selection-note">{selectedNode.data.runtimeBound ? `Live value from native DSP runtime contract v${snapshot.contractVersion}.` : 'Draft graph block. Delay and Allpass modulation compile for prepared audition; publishing edited topology to the live plugin arrives in M5.4.'}</div>
+              <div className="selection-note">{selectedNode.data.runtimeBound ? `Live value from native DSP runtime contract v${snapshot.contractVersion}.` : 'Constructed graph block. Audible edits compile off-thread and crossfade into the live plugin at an audio-block boundary.'}</div>
               {showTeaching ? <TeachingCard topic={teachingTopicFor(selectedNode.id)} onDismiss={() => setDismissedTeaching(teachingKey)} onResearch={() => setResearchOpen(true)} /> : null}
             </div>
           ) : selectedEdge ? (

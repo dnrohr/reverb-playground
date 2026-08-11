@@ -153,6 +153,49 @@ TEST_CASE("Feedback publication rejects invalid edits without silencing the acti
     REQUIRE(continuedLeft[0] == 0.125F);
 }
 
+TEST_CASE("Legal feedback topology changes remain finite through the bounded crossfade")
+{
+    AcyclicRuntimeHost host;
+    REQUIRE(host.compileFeedbackAndPublish(simpleFeedbackGraph(), 1'000.0, 8).valid());
+    std::array<float, 8> input {}; input.fill(0.25F);
+    std::array<float, 8> outputLeft {}; std::array<float, 8> outputRight {};
+    host.process(input, input, outputLeft, outputRight);
+
+    auto edited = simpleFeedbackGraph();
+    std::ranges::find(edited.nodes, "feedback", &Node::id)->parameters[0].value = 0.25;
+    REQUIRE(host.compileFeedbackAndPublish(edited, 1'000.0, 8).valid());
+    host.process(input, input, outputLeft, outputRight);
+    auto snapshot = host.publicationSnapshot();
+    REQUIRE(snapshot.crossfadeFromRevision == 1);
+    REQUIRE(snapshot.crossfadePositionSamples == 8);
+    REQUIRE(snapshot.crossfadeTotalSamples == 10);
+    REQUIRE(snapshot.activeDelayLineCount == 1);
+    REQUIRE(snapshot.activeDelayMemoryBytes > 0);
+    REQUIRE(std::ranges::all_of(outputLeft, [](const float value) { return std::isfinite(value); }));
+    REQUIRE(std::ranges::all_of(outputRight, [](const float value) { return std::isfinite(value); }));
+
+    std::array<float, 2> tailInput {}; std::array<float, 2> tailLeft {}; std::array<float, 2> tailRight {};
+    host.process(tailInput, tailInput, tailLeft, tailRight);
+    snapshot = host.publicationSnapshot();
+    REQUIRE(snapshot.crossfadeTotalSamples == 0);
+    REQUIRE(std::ranges::all_of(tailLeft, [](const float value) { return std::isfinite(value); }));
+}
+
+TEST_CASE("Constructed feedback runtime reset makes repeated measurements deterministic")
+{
+    AcyclicRuntimeHost host;
+    REQUIRE(host.compileFeedbackAndPublish(simpleFeedbackGraph(), 1'000.0, 8).valid());
+    const std::array input { 0.1F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F };
+    const std::array<float, 8> silence {};
+    std::array<float, 8> firstLeft {}; std::array<float, 8> firstRight {};
+    std::array<float, 8> secondLeft {}; std::array<float, 8> secondRight {};
+    host.process(input, silence, firstLeft, firstRight);
+    host.resetActiveRuntimes();
+    host.process(input, silence, secondLeft, secondRight);
+    REQUIRE(secondLeft == firstLeft);
+    REQUIRE(secondRight == firstRight);
+}
+
 TEST_CASE("MVP feedback compilation remains within defined time and memory budgets")
 {
     GraphDocument graph; graph.nodes = { stereoInput(), stereoOutput() };

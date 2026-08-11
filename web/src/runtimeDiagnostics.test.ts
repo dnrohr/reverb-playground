@@ -9,6 +9,7 @@ const diagnostic = {
   clipping: { basis: 'measured', samples: 3, blocks: 1 },
   mute: { manual: false, safetyLatched: true, active: true }, safetyEventCoherent: true,
   lastSafetyEvent: { generation: 2, kind: 'runaway', channel: 'left', sampleIndex: 4, graphRevision: 6 }, recoveryCount: 1,
+  topologyPublication: { requestedRevision: 9, pendingRevision: 9, activeRevision: 8, failedRevision: 0, supersededRequests: 2, completedCompilations: 7, reclaimedRuntimes: 5, crossfadeFromRevision: 7, crossfadePositionSamples: 128, crossfadeTotalSamples: 480, completedCrossfades: 3, lastCrossfadeFromRevision: 6, lastCrossfadeToRevision: 7, activeDelayLineCount: 6, activeDelayMemoryBytes: 46084, failure: '' },
 };
 
 describe('runtime diagnostics contract', () => {
@@ -19,6 +20,8 @@ describe('runtime diagnostics contract', () => {
     expect(parsed.delayMemory.basis).toBe('prepared-allocation');
     expect(parsed.lastSafetyEvent?.graphRevision).toBe(6);
     expect(parsed.activeGraphRevision).toBe(7);
+    expect(parsed.topologyPublication.pendingRevision).toBe(9);
+    expect(parsed.topologyPublication.crossfadeTotalSamples).toBe(480);
     expect(formatBytes(46084)).toBe('45.0 KiB');
   });
 

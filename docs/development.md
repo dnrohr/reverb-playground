@@ -82,4 +82,6 @@ When a task changes visible UI, store a reviewed screenshot under `artifacts/ui/
 
 Runtime topology publication uses the bounded ownership protocol in [Runtime topology publication](runtime-topology-publication.md). Do not replace its pending/active raw envelopes with callback-owned smart pointers or reclaim a retired runtime from `process`; both changes can move destruction or a non-lock-free reference-count operation onto the audio thread.
 
+Topology transitions use the fixed policy in [Topology-change crossfades](topology-change-crossfades.md). Crossfade output scratch must remain prepared with the runtime, and no third graph may execute while a transition is active. On Windows, preserve the display-scale compensation in `EditorShell::resized`; WebView2's native child otherwise occupies only the unscaled logical extent.
+
 Do not place temporary captures in `artifacts/`; only reviewed completion evidence belongs there.

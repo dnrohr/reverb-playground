@@ -279,6 +279,50 @@ TEST_CASE("Topology publication exposes pending active and failed revisions with
     REQUIRE(outputLeft[0] == 0.75F);
 }
 
+TEST_CASE("Topology changes crossfade for a fixed duration and coalesce while a transition is active")
+{
+    AcyclicRuntimeHost host;
+    auto first = gainSumGraph();
+    first.nodes[1].parameters[0].value = 0.25;
+    REQUIRE(host.compileAndPublish(first, 1'000.0, 5).valid());
+    const std::array<float, 5> input { 1, 1, 1, 1, 1 };
+    const std::array<float, 5> silence {};
+    std::array<float, 5> outputLeft {}; std::array<float, 5> outputRight {};
+    host.process(input, silence, outputLeft, outputRight);
+    REQUIRE(outputLeft == std::array<float, 5> { 0.25F, 0.25F, 0.25F, 0.25F, 0.25F });
+
+    auto second = gainSumGraph(); second.nodes[1].parameters[0].value = 0.75;
+    REQUIRE(host.compileAndPublish(second, 1'000.0, 5).valid());
+    host.process(input, silence, outputLeft, outputRight);
+    const auto transitioning = host.publicationSnapshot();
+    REQUIRE(transitioning.crossfadeFromRevision == 1);
+    REQUIRE(transitioning.crossfadePositionSamples == 5);
+    REQUIRE(transitioning.crossfadeTotalSamples == 10);
+    REQUIRE(outputLeft == std::array<float, 5> { 0.30F, 0.35F, 0.40F, 0.45F, 0.50F });
+
+    auto third = gainSumGraph(); third.nodes[1].parameters[0].value = 0.1;
+    REQUIRE(host.compileAndPublish(third, 1'000.0, 5).valid());
+    auto fourth = gainSumGraph(); fourth.nodes[1].parameters[0].value = 0.9;
+    REQUIRE(host.compileAndPublish(fourth, 1'000.0, 5).valid());
+    auto queued = host.publicationSnapshot();
+    REQUIRE(queued.activeRevision == 2);
+    REQUIRE(queued.pendingRevision == 4);
+    REQUIRE(queued.supersededRequests > 0);
+
+    host.process(input, silence, outputLeft, outputRight);
+    REQUIRE(outputLeft == std::array<float, 5> { 0.55F, 0.60F, 0.65F, 0.70F, 0.75F });
+    const auto completed = host.publicationSnapshot();
+    REQUIRE(completed.crossfadeTotalSamples == 0);
+    REQUIRE(completed.completedCrossfades == 1);
+    REQUIRE(completed.lastCrossfadeFromRevision == 1);
+    REQUIRE(completed.lastCrossfadeToRevision == 2);
+    host.process(input, silence, outputLeft, outputRight);
+    queued = host.publicationSnapshot();
+    REQUIRE(queued.activeRevision == 4);
+    REQUIRE(queued.crossfadeFromRevision == 2);
+    REQUIRE(std::ranges::all_of(outputLeft, [](const float value) { return std::isfinite(value); }));
+}
+
 TEST_CASE("Rapid topology edits coalesce with bounded swaps and off-thread reclamation")
 {
     AcyclicRuntimeHost host;
@@ -305,7 +349,12 @@ TEST_CASE("Rapid topology edits coalesce with bounded swaps and off-thread recla
         graph.nodes[1].parameters[0].value = 0.1 + 0.0008 * static_cast<double>(index);
         finalRevision = host.requestCompilation(std::move(graph), 48'000.0, 64, false);
     }
-    REQUIRE(waitUntil([&] { return host.publicationSnapshot().activeRevision == finalRevision; }));
+    REQUIRE(waitUntil([&] {
+        const auto state = host.publicationSnapshot();
+        return state.activeRevision == finalRevision
+            && state.pendingRevision == 0
+            && state.crossfadeTotalSamples == 0;
+    }));
     REQUIRE(waitUntil([&] { return host.publicationSnapshot().reclaimedRuntimes > 0; }));
     stop.store(true, std::memory_order_release);
     audio.request_stop();
@@ -316,6 +365,7 @@ TEST_CASE("Rapid topology edits coalesce with bounded swaps and off-thread recla
     REQUIRE(snapshot.activeRevision == finalRevision);
     REQUIRE(snapshot.supersededRequests > 0);
     REQUIRE(snapshot.completedCompilations < snapshot.requestedRevision);
+    REQUIRE(snapshot.completedCrossfades < snapshot.requestedRevision);
     REQUIRE(snapshot.reclaimedRuntimes > 0);
 }
 

@@ -70,6 +70,11 @@ std::uint64_t RuntimeDiagnostics::advanceRevision() noexcept
     return activeRevision_.fetch_add(1, std::memory_order_acq_rel) + 1;
 }
 
+void RuntimeDiagnostics::setActiveRevision(const std::uint64_t revision) noexcept
+{
+    activeRevision_.store(revision, std::memory_order_release);
+}
+
 std::uint64_t RuntimeDiagnostics::activeRevision() const noexcept
 {
     return activeRevision_.load(std::memory_order_acquire);

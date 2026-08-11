@@ -37,6 +37,7 @@ public:
     [[nodiscard]] std::uint64_t beginBlock() const noexcept;
     void endBlock(std::uint64_t startedNanoseconds, std::size_t frameCount, std::size_t clippedSamples) noexcept;
     [[nodiscard]] std::uint64_t advanceRevision() noexcept;
+    void setActiveRevision(std::uint64_t revision) noexcept;
     [[nodiscard]] std::uint64_t activeRevision() const noexcept;
     void recordSafety(SafetyStatus status, SafetyChannel channel) noexcept;
     void recordRecovery() noexcept;

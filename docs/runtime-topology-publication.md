@@ -44,4 +44,4 @@ Native tests explicitly observe pending, active, and failed states. They prove a
 
 ## Milestone boundary
 
-M5.4 supplies the publication engine for the editable graph; wiring editor document changes into this host remains a later integration step. The existing standalone presentation does not change in this task, so no new screenshot or video is required. M5.5 adds the short old/new output crossfade that suppresses the remaining topology-switch click without retaining abandoned tails indefinitely.
+M5.4 supplies the publication engine for the editable graph. [M5.5](topology-change-crossfades.md) wires editor documents into this host and adds the short old/new output crossfade that suppresses the remaining topology-switch click without retaining abandoned tails indefinitely. The standalone presentation did not change in M5.4, so that earlier task required no screenshot or video.

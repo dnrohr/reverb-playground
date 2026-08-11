@@ -26,6 +26,7 @@ public:
         std::function<bool(bool)> setEnergyTelemetryEnabled;
         std::function<juce::String()> energyTelemetryJson;
         std::function<juce::String()> runtimeDiagnosticsJson;
+        std::function<juce::String(const juce::String&)> publishGraphJson;
     };
 
     explicit EditorShell(Callbacks callbacks);

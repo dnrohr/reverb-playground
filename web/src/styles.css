@@ -126,6 +126,7 @@ button { font: inherit; }
 .revision-diagnostic div { display: flex; justify-content: space-between; padding: 7px 2px; border-bottom: 1px solid #303c44; }
 .revision-diagnostic dt { color: #82919a; font-size: 8px; font-weight: 800; letter-spacing: .07em; }
 .revision-diagnostic dd { margin: 0; color: var(--text); font: 10px ui-monospace, Consolas, monospace; }
+.topology-failure { margin: 9px 0; padding: 8px 9px; border-left: 3px solid var(--danger); color: #ffb9bc; background: rgba(226, 78, 83, .08); font: 8px/1.45 ui-monospace, Consolas, monospace; }
 .safety-event { padding: 10px; border: 1px solid rgba(226, 78, 83, .55); border-left: 3px solid var(--danger); background: rgba(226, 78, 83, .07); }
 .safety-event > span { color: var(--danger); }
 .safety-event strong { display: block; margin-top: 4px; color: #ffd9da; font: 12px ui-monospace, Consolas, monospace; }

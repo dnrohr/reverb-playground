@@ -106,6 +106,13 @@ EditorShell::EditorShell(Callbacks callbacks)
         .withNativeFunction("getRuntimeDiagnostics", [this](const auto&, auto complete) {
             complete(callbacks_.runtimeDiagnosticsJson());
         })
+        .withNativeFunction("publishGraph", [this](const auto& arguments, auto complete) {
+            if (arguments.size() != 1) {
+                complete(juce::String(R"({"accepted":false,"revision":0,"error":"expected one patch JSON argument"})"));
+                return;
+            }
+            complete(callbacks_.publishGraphJson(arguments[0].toString()));
+        })
         .withNativeFunction("resetSafety", [this](const auto&, auto complete) {
             callbacks_.resetSafety();
             complete(true);
@@ -165,8 +172,22 @@ void EditorShell::resized()
     auto gainRow = controls.removeFromTop(34);
     gainLabel_.setBounds(gainRow.removeFromLeft(190));
     gain_.setBounds(gainRow.removeFromLeft(340));
-    if (browser_ != nullptr)
-        browser_->setBounds(bounds);
+    if (browser_ != nullptr) {
+        auto browserBounds = bounds;
+#if JUCE_WINDOWS
+        // WebView2's native child is sized in physical pixels while JUCE component
+        // bounds are logical pixels. Compensate at the boundary so the embedded
+        // editor covers its parent on scaled Windows displays.
+        if (const auto* display = juce::Desktop::getInstance().getDisplays()
+                                      .getDisplayForRect(getScreenBounds())) {
+            const auto scale = display->scale;
+            browserBounds.setSize(
+                juce::roundToInt(static_cast<double>(bounds.getRight()) * scale) - bounds.getX(),
+                juce::roundToInt(static_cast<double>(bounds.getBottom()) * scale) - bounds.getY());
+        }
+#endif
+        browser_->setBounds(browserBounds);
+    }
 }
 
 void EditorShell::timerCallback()

@@ -48,6 +48,7 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
           [&processor](const bool enabled) { return processor.setEnergyTelemetryEnabled(enabled); },
           [&processor] { return processor.energyTelemetryJson(); },
           [&processor] { return processor.runtimeDiagnosticsJson(); },
+          [&processor](const auto& patchJson) { return processor.publishGraphJson(patchJson); },
       })
 {
     addAndMakeVisible(shell_);

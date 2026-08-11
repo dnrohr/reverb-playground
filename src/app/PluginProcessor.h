@@ -3,6 +3,11 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #include <reverb/dsp/LiveReferenceHarness.h>
+#include <reverb/dsp/NumericalSafetyGuard.h>
+#include <reverb/graph/AcyclicRuntime.h>
+
+#include <atomic>
+#include <vector>
 
 class ReverbPlaygroundProcessor final : public juce::AudioProcessor {
 public:
@@ -44,12 +49,27 @@ public:
     [[nodiscard]] juce::String impulseCaptureJson() const;
     [[nodiscard]] juce::String energyTelemetryJson() const;
     [[nodiscard]] juce::String runtimeDiagnosticsJson() const;
+    [[nodiscard]] juce::String publishGraphJson(const juce::String& patchJson);
     juce::String startImpulseCapture(double lengthMilliseconds, double stopThresholdDb, bool muteLiveInput);
     bool setEnergyTelemetryEnabled(bool enabled) noexcept;
     double setRuntimeParameter(const juce::String& nodeId, const juce::String& parameterId, double value) noexcept;
 
 private:
     reverb::dsp::LiveReferenceHarness harness_;
+    reverb::graph::AcyclicRuntimeHost graphHost_;
+    reverb::dsp::NumericalSafetyGuard graphLeftGuard_;
+    reverb::dsp::NumericalSafetyGuard graphRightGuard_;
+    reverb::dsp::ImpulseCapture graphCapture_;
+    reverb::dsp::RuntimeDiagnostics graphDiagnostics_;
+    std::vector<float> graphInputLeft_;
+    std::vector<float> graphInputRight_;
+    std::atomic<double> graphSampleRate_ {};
+    std::atomic<std::size_t> graphMaximumBlockSize_ {};
+    std::atomic<bool> graphAudioEnabled_ {};
+    std::atomic<bool> graphImpulsePending_ {};
+    std::atomic<bool> graphSafetyResetPending_ {};
+    std::atomic<bool> graphSafetyLatched_ {};
+    std::atomic<bool> graphCaptureMode_ {};
     std::atomic<double> captureLengthMilliseconds_ { 2'000.0 };
     std::atomic<double> captureStopThresholdDb_ { -80.0 };
     std::atomic<bool> captureMutesLiveInput_ { true };

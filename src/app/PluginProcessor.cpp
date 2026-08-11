@@ -3,6 +3,7 @@
 #include "PluginEditor.h"
 
 #include <reverb/graph/BarrReferenceGraph.h>
+#include <reverb/graph/PatchJson.h>
 #include <reverb/graph/RuntimeSnapshot.h>
 
 #include <array>
@@ -15,9 +16,22 @@ ReverbPlaygroundProcessor::ReverbPlaygroundProcessor()
 {
 }
 
-void ReverbPlaygroundProcessor::prepareToPlay(const double sampleRate, int)
+void ReverbPlaygroundProcessor::prepareToPlay(
+    const double sampleRate, const int maximumExpectedSamplesPerBlock)
 {
     harness_.prepare(sampleRate);
+    const auto maximumBlockSize = static_cast<std::size_t>(std::max(1, maximumExpectedSamplesPerBlock));
+    graphInputLeft_.assign(maximumBlockSize, 0.0F);
+    graphInputRight_.assign(maximumBlockSize, 0.0F);
+    graphLeftGuard_.reset();
+    graphRightGuard_.reset();
+    graphCapture_.prepare(sampleRate);
+    graphDiagnostics_.prepare(sampleRate, reverb::dsp::BarrReference::delayLineCount(), 0);
+    graphSafetyLatched_.store(false, std::memory_order_release);
+    graphSampleRate_.store(sampleRate, std::memory_order_release);
+    graphMaximumBlockSize_.store(maximumBlockSize, std::memory_order_release);
+    static_cast<void>(graphHost_.requestCompilation(
+        reverb::graph::makeBarrReferenceGraph(), sampleRate, maximumBlockSize, true));
 }
 
 void ReverbPlaygroundProcessor::releaseResources()
@@ -43,7 +57,72 @@ void ReverbPlaygroundProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
     const std::span<const float> inputRight { buffer.getReadPointer(1), sampleCount };
     const std::span<float> outputLeft { buffer.getWritePointer(0), sampleCount };
     const std::span<float> outputRight { buffer.getWritePointer(1), sampleCount };
-    harness_.process(inputLeft, inputRight, outputLeft, outputRight);
+    if (!graphAudioEnabled_.load(std::memory_order_acquire) || !graphHost_.hasRuntime()) {
+        harness_.process(inputLeft, inputRight, outputLeft, outputRight);
+        return;
+    }
+
+    const auto diagnosticsStart = graphDiagnostics_.beginBlock();
+    const auto finishGraphDiagnostics = [this, diagnosticsStart, sampleCount](const std::size_t clips = 0) {
+        graphDiagnostics_.endBlock(diagnosticsStart, sampleCount, clips);
+    };
+    if (graphSafetyResetPending_.exchange(false, std::memory_order_acq_rel)) {
+        const auto wasLatched = graphSafetyLatched_.load(std::memory_order_acquire);
+        graphLeftGuard_.reset();
+        graphRightGuard_.reset();
+        graphSafetyLatched_.store(false, std::memory_order_release);
+        if (wasLatched) graphDiagnostics_.recordRecovery();
+    }
+    if (graphSafetyLatched_.load(std::memory_order_acquire)) {
+        buffer.clear();
+        finishGraphDiagnostics();
+        return;
+    }
+
+    const auto captureStarted = graphCapture_.beginIfRequested();
+    if (captureStarted) graphHost_.resetActiveRuntimes();
+    const auto captureConfig = graphCapture_.activeConfig();
+    const auto captureActive = graphCapture_.state() == reverb::dsp::ImpulseCaptureState::capturing;
+    auto renderLeft = inputLeft;
+    auto renderRight = inputRight;
+    const auto manualImpulse = graphImpulsePending_.exchange(false, std::memory_order_acq_rel);
+    if ((captureStarted || manualImpulse || (captureActive && captureConfig.muteLiveInput))
+        && sampleCount <= graphInputLeft_.size()) {
+        if (captureActive && captureConfig.muteLiveInput) {
+            std::ranges::fill(graphInputLeft_, 0.0F);
+            std::ranges::fill(graphInputRight_, 0.0F);
+        } else {
+            std::ranges::copy(inputLeft, graphInputLeft_.begin());
+            std::ranges::copy(inputRight, graphInputRight_.begin());
+        }
+        if (sampleCount > 0 && (captureStarted || manualImpulse))
+            graphInputLeft_.front() += captureStarted ? captureConfig.impulseLevel : 1.0F;
+        renderLeft = std::span<const float>(graphInputLeft_).first(sampleCount);
+        renderRight = std::span<const float>(graphInputRight_).first(sampleCount);
+    }
+    graphHost_.process(renderLeft, renderRight, outputLeft, outputRight);
+    graphDiagnostics_.setActiveRevision(graphHost_.activeRevision());
+    graphCapture_.append(outputLeft, outputRight);
+    if (harness_.isEmergencyMuted()) {
+        buffer.clear();
+        finishGraphDiagnostics();
+        return;
+    }
+    const auto gain = harness_.masterGain();
+    for (auto& sample : outputLeft) sample *= gain;
+    for (auto& sample : outputRight) sample *= gain;
+    const auto leftStatus = graphLeftGuard_.inspectAndMute(outputLeft);
+    const auto rightStatus = graphRightGuard_.inspectAndMute(outputRight);
+    if (leftStatus.violation != reverb::dsp::SafetyViolation::none
+        || rightStatus.violation != reverb::dsp::SafetyViolation::none) {
+        if (leftStatus.violation != reverb::dsp::SafetyViolation::none)
+            graphDiagnostics_.recordSafety(leftStatus, reverb::dsp::SafetyChannel::left);
+        else
+            graphDiagnostics_.recordSafety(rightStatus, reverb::dsp::SafetyChannel::right);
+        graphSafetyLatched_.store(true, std::memory_order_release);
+        buffer.clear();
+    }
+    finishGraphDiagnostics(leftStatus.clippedSamples + rightStatus.clippedSamples);
 }
 
 juce::AudioProcessorEditor* ReverbPlaygroundProcessor::createEditor()
@@ -88,13 +167,24 @@ void ReverbPlaygroundProcessor::setStateInformation(const void* data, const int 
     harness_.setEmergencyMuted(static_cast<bool>(state.getProperty("emergencyMuted", false)));
 }
 
-void ReverbPlaygroundProcessor::triggerImpulse() noexcept { harness_.triggerImpulse(); }
+void ReverbPlaygroundProcessor::triggerImpulse() noexcept
+{
+    harness_.triggerImpulse();
+    graphImpulsePending_.store(true, std::memory_order_release);
+}
 void ReverbPlaygroundProcessor::setMasterGain(const float value) noexcept { harness_.setMasterGain(value); }
 void ReverbPlaygroundProcessor::setEmergencyMuted(const bool muted) noexcept { harness_.setEmergencyMuted(muted); }
-void ReverbPlaygroundProcessor::requestSafetyReset() noexcept { harness_.requestSafetyReset(); }
+void ReverbPlaygroundProcessor::requestSafetyReset() noexcept
+{
+    harness_.requestSafetyReset();
+    graphSafetyResetPending_.store(true, std::memory_order_release);
+}
 float ReverbPlaygroundProcessor::masterGain() const noexcept { return harness_.masterGain(); }
 bool ReverbPlaygroundProcessor::isEmergencyMuted() const noexcept { return harness_.isEmergencyMuted(); }
-bool ReverbPlaygroundProcessor::isSafetyLatched() const noexcept { return harness_.isSafetyLatched(); }
+bool ReverbPlaygroundProcessor::isSafetyLatched() const noexcept
+{
+    return harness_.isSafetyLatched() || graphSafetyLatched_.load(std::memory_order_acquire);
+}
 double ReverbPlaygroundProcessor::activeSampleRate() const noexcept { return harness_.sampleRate(); }
 
 juce::String ReverbPlaygroundProcessor::runtimeSnapshotJson() const
@@ -130,12 +220,17 @@ juce::String ReverbPlaygroundProcessor::startImpulseCapture(
     const double stopThresholdDb,
     const bool muteLiveInput)
 {
-    const auto bounded = harness_.requestImpulseCapture({
+    const auto graphMode = graphAudioEnabled_.load(std::memory_order_acquire);
+    graphCaptureMode_.store(graphMode, std::memory_order_release);
+    const reverb::dsp::ImpulseCaptureConfig requested {
         .maximumLengthMilliseconds = lengthMilliseconds,
         .stopThresholdDb = stopThresholdDb,
         .muteLiveInput = muteLiveInput,
         .impulseLevel = 0.1F,
-    });
+    };
+    const auto bounded = graphMode
+        ? graphCapture_.request(requested)
+        : harness_.requestImpulseCapture(requested);
     captureLengthMilliseconds_.store(bounded.maximumLengthMilliseconds, std::memory_order_release);
     captureStopThresholdDb_.store(bounded.stopThresholdDb, std::memory_order_release);
     captureMutesLiveInput_.store(bounded.muteLiveInput, std::memory_order_release);
@@ -144,15 +239,16 @@ juce::String ReverbPlaygroundProcessor::startImpulseCapture(
 
 juce::String ReverbPlaygroundProcessor::impulseCaptureStatusJson() const
 {
-    const auto state = harness_.captureState();
+    const auto graphMode = graphCaptureMode_.load(std::memory_order_acquire);
+    const auto state = graphMode ? graphCapture_.state() : harness_.captureState();
     const auto stateName = state == reverb::dsp::ImpulseCaptureState::armed ? "armed"
         : state == reverb::dsp::ImpulseCaptureState::capturing ? "capturing"
         : state == reverb::dsp::ImpulseCaptureState::complete ? "complete" : "idle";
     const auto sampleRate = activeSampleRate();
-    const auto frames = harness_.capturedFrames();
+    const auto frames = graphMode ? graphCapture_.capturedFrames() : harness_.capturedFrames();
     const nlohmann::ordered_json json {
         { "state", stateName },
-        { "generation", harness_.captureGeneration() },
+        { "generation", graphMode ? graphCapture_.generation() : harness_.captureGeneration() },
         { "capturedFrames", frames },
         { "capturedMilliseconds", sampleRate > 0.0 ? 1'000.0 * static_cast<double>(frames) / sampleRate : 0.0 },
         { "maximumLengthMilliseconds", captureLengthMilliseconds_.load(std::memory_order_acquire) },
@@ -166,7 +262,9 @@ juce::String ReverbPlaygroundProcessor::impulseCaptureStatusJson() const
 
 juce::String ReverbPlaygroundProcessor::impulseCaptureJson() const
 {
-    const auto capture = harness_.copyLatestCapture();
+    const auto capture = graphCaptureMode_.load(std::memory_order_acquire)
+        ? graphCapture_.copyLatest()
+        : harness_.copyLatestCapture();
     const nlohmann::ordered_json json {
         { "formatVersion", 1 },
         { "generation", capture.generation },
@@ -213,7 +311,11 @@ juce::String ReverbPlaygroundProcessor::energyTelemetryJson() const
 
 juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
 {
-    const auto snapshot = harness_.runtimeDiagnosticsSnapshot();
+    const auto graphMode = graphAudioEnabled_.load(std::memory_order_acquire);
+    const auto snapshot = graphMode
+        ? graphDiagnostics_.snapshot()
+        : harness_.runtimeDiagnosticsSnapshot();
+    const auto topology = graphHost_.publicationSnapshot();
     const auto violationName = snapshot.lastViolation == reverb::dsp::SafetyViolation::nonFinite
         ? "non-finite"
         : snapshot.lastViolation == reverb::dsp::SafetyViolation::runawayLevel ? "runaway" : "none";
@@ -233,7 +335,26 @@ juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
     const auto sampleRate = activeSampleRate();
     const nlohmann::ordered_json json {
         { "formatVersion", 1 },
-        { "activeGraphRevision", snapshot.activeRevision },
+        { "activeGraphRevision", graphMode
+            ? topology.activeRevision : snapshot.activeRevision },
+        { "topologyPublication", {
+            { "requestedRevision", topology.requestedRevision },
+            { "pendingRevision", topology.pendingRevision },
+            { "activeRevision", topology.activeRevision },
+            { "failedRevision", topology.failedRevision },
+            { "supersededRequests", topology.supersededRequests },
+            { "completedCompilations", topology.completedCompilations },
+            { "reclaimedRuntimes", topology.reclaimedRuntimes },
+            { "crossfadeFromRevision", topology.crossfadeFromRevision },
+            { "crossfadePositionSamples", topology.crossfadePositionSamples },
+            { "crossfadeTotalSamples", topology.crossfadeTotalSamples },
+            { "completedCrossfades", topology.completedCrossfades },
+            { "lastCrossfadeFromRevision", topology.lastCrossfadeFromRevision },
+            { "lastCrossfadeToRevision", topology.lastCrossfadeToRevision },
+            { "activeDelayLineCount", topology.activeDelayLineCount },
+            { "activeDelayMemoryBytes", topology.activeDelayMemoryBytes },
+            { "failure", topology.failure },
+        } },
         { "workloadEstimate", {
             { "basis", "static-estimate" },
             { "scalarOperationsPerSample", reverb::dsp::RuntimeDiagnostics::estimatedScalarOperationsPerSample },
@@ -248,8 +369,8 @@ juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
         } },
         { "delayMemory", {
             { "basis", "prepared-allocation" },
-            { "lineCount", snapshot.delayLineCount },
-            { "bytes", snapshot.delayMemoryBytes },
+            { "lineCount", graphMode ? topology.activeDelayLineCount : snapshot.delayLineCount },
+            { "bytes", graphMode ? topology.activeDelayMemoryBytes : snapshot.delayMemoryBytes },
         } },
         { "clipping", {
             { "basis", "measured" },
@@ -267,6 +388,31 @@ juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
     };
     const auto text = json.dump();
     return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
+}
+
+juce::String ReverbPlaygroundProcessor::publishGraphJson(const juce::String& patchJson)
+{
+    try {
+        auto document = reverb::graph::parsePatchJson(patchJson.toStdString());
+        const auto sampleRate = graphSampleRate_.load(std::memory_order_acquire);
+        const auto maximumBlockSize = graphMaximumBlockSize_.load(std::memory_order_acquire);
+        if (sampleRate <= 0.0 || maximumBlockSize == 0)
+            return R"({"accepted":false,"revision":0,"error":"audio runtime is not prepared"})";
+        const auto revision = graphHost_.requestCompilation(
+            std::move(document), sampleRate, maximumBlockSize, true);
+        graphAudioEnabled_.store(true, std::memory_order_release);
+        const nlohmann::ordered_json result {
+            { "accepted", true }, { "revision", revision }, { "error", "" },
+        };
+        const auto text = result.dump();
+        return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
+    } catch (const std::exception& error) {
+        const nlohmann::ordered_json result {
+            { "accepted", false }, { "revision", 0 }, { "error", error.what() },
+        };
+        const auto text = result.dump();
+        return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
+    }
 }
 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()

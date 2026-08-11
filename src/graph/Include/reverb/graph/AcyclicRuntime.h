@@ -44,6 +44,7 @@ public:
         std::span<const float> inputRight,
         std::span<float> outputLeft,
         std::span<float> outputRight) noexcept;
+    void reset() noexcept;
 
     [[nodiscard]] const std::vector<std::string>& schedule() const noexcept;
     [[nodiscard]] std::size_t maximumBlockSize() const noexcept;
@@ -87,6 +88,14 @@ struct TopologyPublicationSnapshot final {
     std::uint64_t supersededRequests {};
     std::uint64_t completedCompilations {};
     std::uint64_t reclaimedRuntimes {};
+    std::uint64_t crossfadeFromRevision {};
+    std::size_t crossfadePositionSamples {};
+    std::size_t crossfadeTotalSamples {};
+    std::uint64_t completedCrossfades {};
+    std::uint64_t lastCrossfadeFromRevision {};
+    std::uint64_t lastCrossfadeToRevision {};
+    std::size_t activeDelayLineCount {};
+    std::size_t activeDelayMemoryBytes {};
     std::string failure;
 };
 
@@ -103,6 +112,7 @@ struct TopologyPublicationSnapshot final {
 
 class AcyclicRuntimeHost final {
 public:
+    static constexpr double topologyCrossfadeMilliseconds = 10.0;
     AcyclicRuntimeHost();
     ~AcyclicRuntimeHost();
     AcyclicRuntimeHost(const AcyclicRuntimeHost&) = delete;
@@ -128,17 +138,21 @@ public:
         std::span<const float> inputRight,
         std::span<float> outputLeft,
         std::span<float> outputRight) noexcept;
+    void resetActiveRuntimes() noexcept;
 
     [[nodiscard]] bool hasRuntime() const noexcept;
+    [[nodiscard]] std::uint64_t activeRevision() const noexcept;
 
 private:
     struct RuntimeEnvelope;
     struct CompilationRequest;
     static constexpr std::size_t retirementCapacity = 16;
 
-    [[nodiscard]] AcyclicPublishResult publishCompiled(AcyclicCompileResult result, std::uint64_t revision);
+    [[nodiscard]] AcyclicPublishResult publishCompiled(
+        AcyclicCompileResult result, std::uint64_t revision, double sampleRate);
     void compilerLoop(std::stop_token stopToken);
-    void publishPending(std::unique_ptr<PreparedAcyclicRuntime> runtime, std::uint64_t revision);
+    void publishPending(
+        std::unique_ptr<PreparedAcyclicRuntime> runtime, std::uint64_t revision, double sampleRate);
     void reclaimRetired() noexcept;
     [[nodiscard]] bool retirementHasCapacity() const noexcept;
     void retire(RuntimeEnvelope* runtime) noexcept;
@@ -149,6 +163,8 @@ private:
     std::jthread compilerThread_;
     std::atomic<RuntimeEnvelope*> activeRuntime_ {};
     std::atomic<RuntimeEnvelope*> pendingRuntime_ {};
+    RuntimeEnvelope* fadingRuntime_ {};
+    std::size_t crossfadePosition_ {};
     std::array<RuntimeEnvelope*, retirementCapacity> retired_ {};
     std::atomic<std::size_t> retirementWrite_ {};
     std::atomic<std::size_t> retirementRead_ {};
@@ -159,6 +175,14 @@ private:
     std::atomic<std::uint64_t> supersededRequests_ {};
     std::atomic<std::uint64_t> completedCompilations_ {};
     std::atomic<std::uint64_t> reclaimedRuntimes_ {};
+    std::atomic<std::uint64_t> crossfadeFromRevision_ {};
+    std::atomic<std::size_t> crossfadePositionSamples_ {};
+    std::atomic<std::size_t> crossfadeTotalSamples_ {};
+    std::atomic<std::uint64_t> completedCrossfades_ {};
+    std::atomic<std::uint64_t> lastCrossfadeFromRevision_ {};
+    std::atomic<std::uint64_t> lastCrossfadeToRevision_ {};
+    std::atomic<std::size_t> activeDelayLineCount_ {};
+    std::atomic<std::size_t> activeDelayMemoryBytes_ {};
     mutable std::mutex failureMutex_;
     std::mutex pendingPublicationMutex_;
     std::string failure_;

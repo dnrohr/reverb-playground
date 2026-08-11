@@ -34,6 +34,7 @@ Last updated: 2026-08-11
 | M5.2 Implement LFO and modulation mapping blocks | Complete | Tested sine/triangle and transport semantics; explicit scale/offset/polarity; one-to-many control branching; predicted range; screenshot/video evidence |
 | M5.3 Add modulated Delay and Allpass parameters | Complete | Fractional linear taps; bounded coefficient; prepared control-runtime binding; constant/static equivalence; boundary, feedback, and moving-diffusion tests; inspector evidence |
 | M5.4 Implement runtime topology publication | Complete | One-entry newest-wins compile queue; bounded block-entry swap; fixed retirement ring; worker reclamation; pending/active/failed diagnostics; 1,000-edit stress test |
+| M5.5 Add short topology-change crossfades | Complete | Live schema-v2 editor binding; fixed 10 ms two-runtime ramp; newest-wins transition queue; constructed-graph capture/safety diagnostics; 125%-DPI fill fix; screenshot/video |
 
 ## M0.2 verification
 
@@ -375,3 +376,14 @@ Results:
 - A stress test submits 1,000 graphs while a separate audio thread continuously processes. It requires finite output, processed blocks, final-revision activation, superseded work, fewer compilations than requests, and off-thread reclamation.
 - Existing synchronous publication and feedback-failure tests remain green.
 - UI unchanged; no screenshot or video was required.
+
+## M5.5 verification
+
+- Audible editor semantics are debounced for 35 ms, parsed through the native schema-v2 contract, compiled away from audio, and identified as requested, pending, active, or failed revisions.
+- A valid replacement executes beside the preceding graph for exactly 10 ms with a linear old-to-new stereo ramp. Only two runtimes execute; all scratch storage is prepared, and abandoned state is reclaimed by the worker.
+- A newer prepared graph waits for the active transition; still-newer requests replace that one slot. The 1,000-edit concurrent stress test reaches the final revision with finite output, an empty pending slot, a finished transition, bounded compilations/crossfades, and reclaimed runtimes.
+- Legal feedback-path changes remain finite. Invalid compilation leaves the preceding audible runtime active. Constructed feedback reset produces repeatable measurement output.
+- Constructed-graph mode retains audition gain, manual mute, impulse injection, deterministic pre-gain capture, numerical guards, live CPU/clipping accounting, active revision identity, and prepared delay-memory reporting.
+- The WebView2 physical/logical sizing mismatch is compensated from the active Windows display scale. At the tested 125% scale, the schematic fills all space below the intentional native control strip.
+- Reviewed native screenshot: [`artifacts/ui/m5-5-topology-crossfade/01-live-crossfade-diagnostics.png`](../artifacts/ui/m5-5-topology-crossfade/01-live-crossfade-diagnostics.png).
+- Reviewed live-edit video: [`artifacts/ui/m5-5-topology-crossfade/live-topology-edit.mp4`](../artifacts/ui/m5-5-topology-crossfade/live-topology-edit.mp4). The video is visual-only; native render tests prove finite audible transitions.

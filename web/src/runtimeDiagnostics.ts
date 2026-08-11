@@ -9,6 +9,14 @@ export interface RuntimeDiagnostics {
   safetyEventCoherent: boolean;
   lastSafetyEvent: null | { generation: number; kind: 'non-finite' | 'runaway'; channel: 'left' | 'right'; sampleIndex: number; graphRevision: number };
   recoveryCount: number;
+  topologyPublication: {
+    requestedRevision: number; pendingRevision: number; activeRevision: number; failedRevision: number;
+    supersededRequests: number; completedCompilations: number; reclaimedRuntimes: number;
+    crossfadeFromRevision: number; crossfadePositionSamples: number; crossfadeTotalSamples: number;
+    completedCrossfades: number; lastCrossfadeFromRevision: number; lastCrossfadeToRevision: number;
+    activeDelayLineCount: number; activeDelayMemoryBytes: number;
+    failure: string;
+  };
 }
 
 const record = (value: unknown, label: string): Record<string, unknown> => {
@@ -37,6 +45,7 @@ export function parseRuntimeDiagnostics(value: unknown): RuntimeDiagnostics {
   const memory = record(root.delayMemory, 'delay memory');
   const clipping = record(root.clipping, 'clipping');
   const mute = record(root.mute, 'mute');
+  const topology = record(root.topologyPublication, 'topology publication');
   if (estimate.basis !== 'static-estimate' || cpu.basis !== 'measured' || memory.basis !== 'prepared-allocation' || clipping.basis !== 'measured') throw new Error('diagnostic bases are invalid');
   const coherent = flag(root.safetyEventCoherent, 'safety event coherence');
   let event: RuntimeDiagnostics['lastSafetyEvent'] = null;
@@ -59,6 +68,24 @@ export function parseRuntimeDiagnostics(value: unknown): RuntimeDiagnostics {
     safetyEventCoherent: coherent,
     lastSafetyEvent: event,
     recoveryCount: count(root.recoveryCount, 'recovery count'),
+    topologyPublication: {
+      requestedRevision: count(topology.requestedRevision, 'requested topology revision'),
+      pendingRevision: count(topology.pendingRevision, 'pending topology revision'),
+      activeRevision: count(topology.activeRevision, 'active topology revision'),
+      failedRevision: count(topology.failedRevision, 'failed topology revision'),
+      supersededRequests: count(topology.supersededRequests, 'superseded topology requests'),
+      completedCompilations: count(topology.completedCompilations, 'completed topology compilations'),
+      reclaimedRuntimes: count(topology.reclaimedRuntimes, 'reclaimed topology runtimes'),
+      crossfadeFromRevision: count(topology.crossfadeFromRevision, 'crossfade source revision'),
+      crossfadePositionSamples: count(topology.crossfadePositionSamples, 'crossfade position'),
+      crossfadeTotalSamples: count(topology.crossfadeTotalSamples, 'crossfade length'),
+      completedCrossfades: count(topology.completedCrossfades, 'completed crossfades'),
+      lastCrossfadeFromRevision: count(topology.lastCrossfadeFromRevision, 'last crossfade source'),
+      lastCrossfadeToRevision: count(topology.lastCrossfadeToRevision, 'last crossfade target'),
+      activeDelayLineCount: count(topology.activeDelayLineCount, 'active topology delay lines'),
+      activeDelayMemoryBytes: count(topology.activeDelayMemoryBytes, 'active topology delay memory'),
+      failure: typeof topology.failure === 'string' ? topology.failure : (() => { throw new Error('topology failure must be a string'); })(),
+    },
   };
 }
 

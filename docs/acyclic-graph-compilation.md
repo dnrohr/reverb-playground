@@ -24,7 +24,7 @@ Compilation and DSP preparation can run synchronously on a caller or through the
 
 `AcyclicRuntimeHost` publishes a fully prepared envelope at an audio-block boundary. The audio-side swap is bounded and lock-free; the preceding envelope enters a fixed retirement ring and is reclaimed by the compiler worker. The audio thread never waits, locks, allocates, or destroys a runtime. A compilation error does not exchange the active pointer, so the last valid runtime remains audible. See [Runtime topology publication](runtime-topology-publication.md) for the ownership and revision protocol.
 
-This runtime is not yet connected to the editor/native bridge. Feedback scheduling and bounded publication are available through the same prepared host; a later integration step must submit editor documents and expose its revision snapshot in the application diagnostics.
+The editor/native bridge submits the complete schema-v2 semantic document to this host. Feedback scheduling, bounded publication, transition state, and failed revisions are exposed in the application diagnostics; see [Topology-change crossfades](topology-change-crossfades.md).
 
 ## Verification
 
