@@ -31,7 +31,7 @@ function canonicalGraph(state: GraphState, includeLayout: boolean) {
       type: node.data.type,
       ...(includeLayout ? { position: { x: node.position.x, y: node.position.y } } : {}),
       ports: node.data.ports.map(({ id, signal, direction }) => ({ id, signal, direction })),
-      parameters: node.data.parameters.map(({ id, value, unit }) => ({ id, value, unit })),
+      parameters: node.data.parameters.map(({ id, value, unit, modulation }) => ({ id, value, unit, modulation: modulation ? { ...modulation } : undefined })),
     })).sort((left, right) => left.id.localeCompare(right.id)),
     edges: state.edges.map((edge) => ({
       id: edge.id,

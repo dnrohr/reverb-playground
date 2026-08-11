@@ -265,6 +265,15 @@ button { font: inherit; }
 .parameter-card strong { color: var(--text); font: 12px ui-monospace, Consolas, monospace; }
 .parameter-card small { grid-column: 1 / -1; color: #667680; font-size: 8px; }
 .parameter-card input[type="range"] { grid-column: 1 / -1; width: 100%; margin: 5px 0 0; accent-color: var(--cyan); }
+.modulation-mapping { grid-column: 1 / -1; margin-top: 7px; padding: 9px; border: 1px dashed #765f91; border-radius: 5px; background: rgba(189, 156, 255, .055); }
+.modulation-mapping header { display: flex; justify-content: space-between; gap: 8px; color: var(--violet); font-size: 8px; letter-spacing: .1em; }
+.modulation-mapping header code { color: #d6c5f7; letter-spacing: 0; }
+.mapping-formula { margin: 7px 0 9px; color: #9eabb3; font: 8px ui-monospace, Consolas, monospace; }
+.modulation-mapping label { display: grid; grid-template-columns: minmax(68px, 1fr) minmax(0, 1.45fr); align-items: center; gap: 7px; margin-top: 6px; color: #9daab2; font-size: 8px; letter-spacing: .08em; }
+.modulation-mapping input, .modulation-mapping select { min-width: 0; width: 100%; padding: 5px 6px; border: 1px solid #4d5963; border-radius: 3px; color: #e4e9ec; background: #10161a; font: 9px ui-monospace, Consolas, monospace; }
+.mapping-clamp { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.mapping-clamp label { display: grid; grid-template-columns: 1fr; gap: 4px; }
+.modulation-mapping footer { margin-top: 9px; padding-top: 7px; border-top: 1px solid #3c3647; color: #aa98cd; font: 8px ui-monospace, Consolas, monospace; }
 .parameter-value { display: flex; align-items: baseline; justify-content: flex-end; gap: 4px; }
 .parameter-number { width: 82px; border: 0; background: transparent; color: var(--text); font: 700 12px/1 ui-monospace, Consolas, monospace; text-align: right; }
 .parameter-number:focus { outline: 1px solid var(--cyan); outline-offset: 2px; }

@@ -1,5 +1,7 @@
 #include <reverb/graph/GraphDocument.h>
 
+#include <cmath>
+#include <ranges>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
@@ -79,6 +81,27 @@ ValidationResult validate(const GraphDocument& document)
             requireNonEmpty(parameter.unit, "parameter '" + parameter.id + "' unit", result);
             if (!parameterIds.insert(parameter.id).second)
                 result.errors.push_back("duplicate parameter id '" + parameter.id + "' on node '" + node.id + "'");
+            if (!std::isfinite(parameter.value))
+                result.errors.push_back("parameter '" + node.id + "." + parameter.id + "' must be finite");
+            if (parameter.modulation) {
+                const auto& modulation = *parameter.modulation;
+                const auto socket = std::ranges::find(node.ports, modulation.portId, &Port::id);
+                if (socket == node.ports.end()
+                    || socket->signal != SignalType::control
+                    || socket->direction != PortDirection::input) {
+                    result.errors.push_back("parameter '" + node.id + "." + parameter.id
+                        + "' must reference a control input socket");
+                }
+                if (!std::isfinite(modulation.amount))
+                    result.errors.push_back("parameter '" + node.id + "." + parameter.id
+                        + "' modulation amount must be finite");
+                if (!std::isfinite(modulation.clampMinimum)
+                    || !std::isfinite(modulation.clampMaximum)
+                    || modulation.clampMinimum >= modulation.clampMaximum) {
+                    result.errors.push_back("parameter '" + node.id + "." + parameter.id
+                        + "' modulation clamp must be finite and increasing");
+                }
+            }
         }
     }
 

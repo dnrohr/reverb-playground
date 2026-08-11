@@ -29,6 +29,11 @@ TEST_CASE("Barr UI snapshot is generated from the DSP runtime identity")
     REQUIRE(tank != json.at("nodes").end());
     REQUIRE(tank->at("parameters").at(0).at("value") == 19.91);
     REQUIRE(tank->at("parameters").at(0).at("unit") == "milliseconds");
+    REQUIRE(tank->at("parameters").at(0).at("modulation").at("portId") == "delay-mod");
+    REQUIRE(tank->at("parameters").at(0).at("modulation").at("amount") == 2.0);
+    REQUIRE(tank->at("parameters").at(0).at("modulation").at("polarity") == "bipolar");
+    REQUIRE(tank->at("parameters").at(0).at("modulation").at("clampMinimum") == 0.1);
+    REQUIRE(tank->at("parameters").at(0).at("modulation").at("clampMaximum") == 100.0);
     REQUIRE(json.at("outsidePatch").size() == 2);
 }
 

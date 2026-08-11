@@ -25,6 +25,14 @@ GraphDocument makeBarrReferenceGraph()
         for (const auto& parameter : definition.parameters) {
             node.parameters.push_back({
                 std::string(parameter.id), parameter.value, std::string(parameter.unit),
+                ParameterModulation {
+                    std::string(parameter.modulationPort),
+                    parameter.modulationAmount,
+                    parameter.modulationPolarity == "unipolar"
+                        ? ModulationPolarity::unipolar : ModulationPolarity::bipolar,
+                    parameter.minimum,
+                    parameter.maximum,
+                },
             });
         }
         graph.nodes.push_back(std::move(node));

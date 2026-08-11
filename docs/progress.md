@@ -1,6 +1,6 @@
 # Roadmap progress
 
-Last updated: 2026-08-08
+Last updated: 2026-08-11
 
 | Task | Status | Evidence |
 |---|---|---|
@@ -30,6 +30,7 @@ Last updated: 2026-08-08
 | M4.3 Implement stereo impulse and decay view | Complete | Solid/dashed stereo lanes; Schroeder decay; bounded 1-256x zoom/pan; tested T30/refusal rules; short/Barr/bloom screenshots; video |
 | M4.4 Implement live energy glow | Complete | Ten fixed 30 Hz RMS lanes; atomic seqlock snapshot; tested disable/drop safety; segmented node meters; width/glow cables; reduced motion; video |
 | M4.5 Add resource and safety diagnostics | Complete | Static/live/prepared labels; callback timing; exact delay memory; clip counts; revision-bound safety events; edit/undo/recover workflow; complete synthetic violations |
+| M5.1 Implement control-rate graph semantics | Complete | Typed parameter sockets; 1 kHz bounded plans; linear ramps; explicit mapping inspector; exact schema-v2 persistence; native 125%-DPI evidence |
 
 ## M0.2 verification
 
@@ -327,3 +328,13 @@ Results:
 - Explicit recovered state, with active revision advanced and event revision retained: [`04-recovered-revision.png`](../artifacts/ui/m4-5-resource-safety-diagnostics/04-recovered-revision.png).
 - Native 125%-scale window with the schematic filling the complete embedded-browser bounds: [`05-full-window-125-percent.png`](../artifacts/ui/m4-5-resource-safety-diagnostics/05-full-window-125-percent.png).
 - Resource/safety/Undo/recovery video: [`diagnostics-undo-and-recovery.mp4`](../artifacts/ui/m4-5-resource-safety-diagnostics/diagnostics-undo-and-recovery.mp4).
+
+## M5.1 verification
+
+- Parameter sockets are typed control inputs. Native and browser validation reject audio/control endpoint mismatches, duplicate control inputs, invalid mapping sockets, non-finite amounts, invalid polarity, and out-of-range clamps.
+- Prepared control plans use a nominal 1 kHz rate, a sample-rate-derived quantum, linear target ramps, and explicit 64-node/128-mapping budgets. Tests prove the effective `clamp(base + amount × normalizedControl)` calculation and the per-block evaluation bound.
+- The inspector keeps each base value beside its control socket, formula, polarity, amount, clamp range, and `1 kHz control ticks · linear interpolation to audio rate` policy.
+- Patch schema v2 saves every mapping field. Both native and browser round trips require exact preservation, while schema-v1 fixtures migrate deterministically and remain readable.
+- Runtime snapshot contract v2 derives parameter socket identities and defaults from the native Barr runtime definition, and identity tests reject drift between the graph, UI, and DSP contract.
+- Native screenshot: [`artifacts/ui/m5-1-control-rate-semantics/01-mapped-allpass-inspector.png`](../artifacts/ui/m5-1-control-rate-semantics/01-mapped-allpass-inspector.png).
+- Native mapping inspector with live telemetry: [`artifacts/ui/m5-1-control-rate-semantics/control-mapping-inspection.mp4`](../artifacts/ui/m5-1-control-rate-semantics/control-mapping-inspection.mp4).

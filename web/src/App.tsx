@@ -346,11 +346,13 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       setPendingConnection(connection); setGraphStatus({ kind: 'error', message: 'INPUT OCCUPIED / REPLACE ITS CABLE OR INSERT +' }); return;
     }
     const after = connectGraph(before, connection); applyGraph(after);
-    setGraphHistory((history) => commitGraphEdit(history, 'Create cable', before, after)); setGraphStatus({ kind: 'ok', message: 'CONNECTED MONO AUDIO CABLE' });
+    setGraphHistory((history) => commitGraphEdit(history, 'Create cable', before, after)); setGraphStatus({ kind: 'ok', message: `CONNECTED ${decision.signal.toUpperCase()} CABLE` });
   }, [applyGraph, edges, nodes]);
 
   const resolveOccupied = useCallback((action: 'replace' | 'sum' | 'cancel') => {
     const connection = pendingConnection; setPendingConnection(null); if (!connection || action === 'cancel') { setGraphStatus(null); return; }
+    const decision = decideConnection(nodes, edges, connection);
+    if (action === 'sum' && (decision.kind !== 'occupied' || decision.signal !== 'audio')) { setGraphStatus({ kind: 'error', message: 'CONTROL INPUTS CANNOT INSERT AN AUDIO SUM' }); return; }
     const before = { nodes, edges }; const after = action === 'replace' ? connectGraph(before, connection, true) : insertSumForOccupiedInput(before, connection);
     applyGraph(after); setGraphHistory((history) => commitGraphEdit(history, action === 'replace' ? 'Replace cable' : 'Insert +', before, after));
     setGraphStatus({ kind: 'ok', message: action === 'replace' ? 'REPLACED OCCUPIED INPUT CABLE' : 'INSERTED + AND REWIRED BOTH SOURCES' });
@@ -371,6 +373,20 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       catch { /* browser prototype has no native bridge */ }
     }
   }, [nodes, setNodes]);
+
+  const applyModulation = useCallback((nodeId: string, parameterId: string, change: Partial<NonNullable<PatchNodeData['parameters'][number]['modulation']>>) => {
+    const update = (node: Node<PatchNodeData>) => node.id !== nodeId ? node : {
+      ...node,
+      data: {
+        ...node.data,
+        parameters: node.data.parameters.map((parameter) => parameter.id !== parameterId || !parameter.modulation
+          ? parameter
+          : { ...parameter, modulation: { ...parameter.modulation, ...change } }),
+      },
+    };
+    setNodes((current) => current.map(update));
+    setSelectedNode((current) => current ? update(current) : null);
+  }, [setNodes]);
 
   const resetReference = useCallback(() => {
     const fresh = createFlowModel(snapshot);
@@ -454,7 +470,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(url), 0);
       setGraphHistory((history) => markHistoryClean(history, { nodes, edges }));
-      setFileStatus({ kind: 'ok', message: 'SAVED BARR-REFERENCE.RVP.JSON / SCHEMA V1' });
+      setFileStatus({ kind: 'ok', message: 'SAVED BARR-REFERENCE.RVP.JSON / SCHEMA V2' });
     } catch (reason) {
       setFileStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Patch save failed' });
     }
@@ -475,13 +491,15 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       setSelectedEdge(null);
       setGraphHistory(emptyGraphHistory(loaded));
       setPendingConnection(null);
-      setFileStatus({ kind: 'ok', message: `LOADED ${file.name.toUpperCase()} / SCHEMA V1` });
+      setFileStatus({ kind: 'ok', message: `LOADED ${file.name.toUpperCase()} / SCHEMA V2` });
     } catch (reason) {
       setFileStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Patch load failed' });
     }
   }, [setEdges, setFlowViewport, setNodes, snapshot]);
 
   const teachingKey = selectedNode?.id ?? 'overview';
+  const pendingConnectionDecision = pendingConnection ? decideConnection(nodes, edges, pendingConnection) : null;
+  const pendingSignal = pendingConnectionDecision?.kind === 'occupied' ? pendingConnectionDecision.signal : null;
   const showTeaching = teachingEnabled && dismissedTeaching !== teachingKey;
   const toggleTeaching = useCallback(() => {
     setTeachingEnabled((current) => {
@@ -587,8 +605,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           {pendingConnection ? (
             <div className="connection-offer" role="dialog" aria-label="Occupied input options">
               <strong>INPUT ALREADY HAS A CABLE</strong>
-              <span>Replace it, or insert an explicit Sum (+) block to preserve both sources.</span>
-              <div><button type="button" onClick={() => resolveOccupied('sum')}>INSERT +</button><button type="button" onClick={() => resolveOccupied('replace')}>REPLACE CABLE</button><button type="button" onClick={() => resolveOccupied('cancel')}>CANCEL</button></div>
+              <span>{pendingSignal === 'control' ? 'A parameter socket accepts one control cable. Replace it or cancel.' : 'Replace it, or insert an explicit Sum (+) block to preserve both audio sources.'}</span>
+              <div>{pendingSignal === 'audio' ? <button type="button" onClick={() => resolveOccupied('sum')}>INSERT +</button> : null}<button type="button" onClick={() => resolveOccupied('replace')}>REPLACE CABLE</button><button type="button" onClick={() => resolveOccupied('cancel')}>CANCEL</button></div>
             </div>
           ) : null}
           <div className="flow-wrap">
@@ -691,6 +709,27 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                     }}
                     onBlur={commitParameterEdit}
                   />
+                  {parameter.modulation ? (
+                    <section className="modulation-mapping" aria-label={`${selectedNode.data.label} ${parameter.id} modulation mapping`}>
+                      <header><span>CONTROL SOCKET</span><code>{parameter.modulation.portId}</code></header>
+                      <div className="mapping-formula">effective = clamp(base + amount × control)</div>
+                      <label>
+                        <span>POLARITY</span>
+                        <select
+                          value={parameter.modulation.polarity}
+                          onFocus={() => beginParameterEdit(selectedNode.id, `${parameter.id} modulation`, parameter.value)}
+                          onChange={(event) => applyModulation(selectedNode.id, parameter.id, { polarity: event.target.value as 'unipolar' | 'bipolar' })}
+                          onBlur={commitParameterEdit}
+                        ><option value="bipolar">BIPOLAR −1…+1</option><option value="unipolar">UNIPOLAR 0…1</option></select>
+                      </label>
+                      <label><span>AMOUNT</span><input type="number" step={parameter.step} value={parameter.modulation.amount} onFocus={() => beginParameterEdit(selectedNode.id, `${parameter.id} modulation`, parameter.value)} onChange={(event) => applyModulation(selectedNode.id, parameter.id, { amount: Number(event.target.value) })} onBlur={commitParameterEdit} /></label>
+                      <div className="mapping-clamp">
+                        <label><span>CLAMP MIN</span><input type="number" min={parameter.minimum} max={parameter.modulation.clampMaximum} step={parameter.step} value={parameter.modulation.clampMinimum} onFocus={() => beginParameterEdit(selectedNode.id, `${parameter.id} modulation`, parameter.value)} onChange={(event) => applyModulation(selectedNode.id, parameter.id, { clampMinimum: Number(event.target.value) })} onBlur={commitParameterEdit} /></label>
+                        <label><span>CLAMP MAX</span><input type="number" min={parameter.modulation.clampMinimum} max={parameter.maximum} step={parameter.step} value={parameter.modulation.clampMaximum} onFocus={() => beginParameterEdit(selectedNode.id, `${parameter.id} modulation`, parameter.value)} onChange={(event) => applyModulation(selectedNode.id, parameter.id, { clampMaximum: Number(event.target.value) })} onBlur={commitParameterEdit} /></label>
+                      </div>
+                      <footer>1 kHz control ticks · linear interpolation to audio rate</footer>
+                    </section>
+                  ) : null}
                 </div>
               )) : <p className="empty-parameters">No editable parameters.</p>}
               <div className="history-actions">
@@ -703,13 +742,13 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           ) : selectedEdge ? (
             <div className="inspector-content">
               <div className="selection-kicker">SELECTED CABLE</div>
-              <h2>Audio connection</h2>
+              <h2>{selectedEdge.data?.signal === 'control' ? 'Control connection' : 'Audio connection'}</h2>
               <code>{selectedEdge.id}</code>
               {loopInspection ? <LoopInspector inspection={loopInspection} activeIndex={normalizedLoopIndex} onActiveIndex={setActiveLoopIndex} /> : null}
               <dl className="property-list">
                 <div><dt>FROM</dt><dd>{selectedEdge.source}</dd></div>
                 <div><dt>TO</dt><dd>{selectedEdge.target}</dd></div>
-                <div><dt>SIGNAL</dt><dd>AUDIO / SOLID</dd></div>
+                <div><dt>SIGNAL</dt><dd>{selectedEdge.data?.signal === 'control' ? 'CONTROL / DASHED' : 'AUDIO / SOLID'}</dd></div>
               </dl>
             </div>
           ) : (

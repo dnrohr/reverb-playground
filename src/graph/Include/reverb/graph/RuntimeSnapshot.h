@@ -8,7 +8,7 @@
 
 namespace reverb::graph {
 
-inline constexpr int barrRuntimeContractVersion = 1;
+inline constexpr int barrRuntimeContractVersion = 2;
 
 [[nodiscard]] std::string writeBarrRuntimeSnapshotJson(
     double sampleRate, std::span<const double> parameterValues = {});

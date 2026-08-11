@@ -57,6 +57,12 @@ TEST_CASE("Valid patch preserves semantic graph, layout, stable IDs, and millise
     REQUIRE(allpass.parameters.front().value == 13.725);
     REQUIRE(allpass.parameters.front().unit == "milliseconds");
     REQUIRE(allpass.ports.back().signal == reverb::graph::SignalType::control);
+    REQUIRE(allpass.parameters.front().modulation.has_value());
+    REQUIRE(allpass.parameters.front().modulation->portId == "delay-mod");
+    REQUIRE(allpass.parameters.front().modulation->amount == 2.0);
+    REQUIRE(allpass.parameters.front().modulation->polarity == reverb::graph::ModulationPolarity::bipolar);
+    REQUIRE(allpass.parameters.front().modulation->clampMinimum == 0.1);
+    REQUIRE(allpass.parameters.front().modulation->clampMaximum == 100.0);
 
     const auto written = reverb::graph::writePatchJson(original);
     const auto roundTripped = reverb::graph::parsePatchJson(written);
@@ -77,15 +83,17 @@ TEST_CASE("Validator rejects an audio-control type mismatch")
 
 TEST_CASE("Patch schema is valid JSON Schema metadata")
 {
-    const auto schemaPath = std::filesystem::path { REVERB_TEST_FIXTURES_DIR }
-        / ".." / ".." / "schemas" / "patch-v1.schema.json";
-    std::ifstream stream(schemaPath, std::ios::binary);
-    REQUIRE(stream.good());
+    for (const auto version : { 1, 2 }) {
+        const auto schemaPath = std::filesystem::path { REVERB_TEST_FIXTURES_DIR }
+            / ".." / ".." / "schemas" / ("patch-v" + std::to_string(version) + ".schema.json");
+        std::ifstream stream(schemaPath, std::ios::binary);
+        REQUIRE(stream.good());
 
-    const auto schema = nlohmann::json::parse(stream);
-    REQUIRE(schema.at("$schema") == "https://json-schema.org/draft/2020-12/schema");
-    REQUIRE(schema.at("properties").at("schemaVersion").at("const") == 1);
-    REQUIRE(schema.at("required").size() == 4);
+        const auto schema = nlohmann::json::parse(stream);
+        REQUIRE(schema.at("$schema") == "https://json-schema.org/draft/2020-12/schema");
+        REQUIRE(schema.at("properties").at("schemaVersion").at("const") == version);
+        REQUIRE(schema.at("required").size() == 4);
+    }
 }
 
 TEST_CASE("Validator rejects zero-delay cycles and accepts delayed feedback")

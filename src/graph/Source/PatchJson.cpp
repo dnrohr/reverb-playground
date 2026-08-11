@@ -2,6 +2,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <algorithm>
+#include <cmath>
 #include <stdexcept>
 #include <utility>
 
@@ -38,6 +40,20 @@ const char* toString(const PortDirection value)
     return value == PortDirection::input ? "input" : "output";
 }
 
+ModulationPolarity parseModulationPolarity(const std::string& value)
+{
+    if (value == "unipolar")
+        return ModulationPolarity::unipolar;
+    if (value == "bipolar")
+        return ModulationPolarity::bipolar;
+    throw std::invalid_argument("unknown modulation polarity '" + value + "'");
+}
+
+const char* toString(const ModulationPolarity value)
+{
+    return value == ModulationPolarity::unipolar ? "unipolar" : "bipolar";
+}
+
 Port parsePort(const Json& json)
 {
     return {
@@ -49,11 +65,21 @@ Port parsePort(const Json& json)
 
 Parameter parseParameter(const Json& json)
 {
-    return {
+    Parameter parameter {
         .id = json.at("id").get<std::string>(),
         .value = json.at("value").get<double>(),
         .unit = json.at("unit").get<std::string>(),
     };
+    if (const auto mapping = json.find("modulation"); mapping != json.end()) {
+        parameter.modulation = ParameterModulation {
+            .portId = mapping->at("portId").get<std::string>(),
+            .amount = mapping->at("amount").get<double>(),
+            .polarity = parseModulationPolarity(mapping->at("polarity").get<std::string>()),
+            .clampMinimum = mapping->at("clampMinimum").get<double>(),
+            .clampMaximum = mapping->at("clampMaximum").get<double>(),
+        };
+    }
+    return parameter;
 }
 
 PortReference parseReference(const Json& json)
@@ -75,11 +101,21 @@ Json writePort(const Port& port)
 
 Json writeParameter(const Parameter& parameter)
 {
-    return Json {
+    Json json {
         { "id", parameter.id },
         { "value", parameter.value },
         { "unit", parameter.unit },
     };
+    if (parameter.modulation) {
+        json["modulation"] = {
+            { "portId", parameter.modulation->portId },
+            { "amount", parameter.modulation->amount },
+            { "polarity", toString(parameter.modulation->polarity) },
+            { "clampMinimum", parameter.modulation->clampMinimum },
+            { "clampMaximum", parameter.modulation->clampMaximum },
+        };
+    }
+    return json;
 }
 
 Json writeReference(const PortReference& reference)
@@ -90,13 +126,51 @@ Json writeReference(const PortReference& reference)
     };
 }
 
+void migrateVersionOneModulation(Node& node)
+{
+    for (auto& parameter : node.parameters) {
+        const auto portId = parameter.id + "-mod";
+        if (std::ranges::none_of(node.ports, [&](const Port& port) { return port.id == portId; }))
+            node.ports.push_back({ portId, SignalType::control, PortDirection::input });
+
+        double minimum = 0.0;
+        double maximum = 1.0;
+        double amount = 0.25;
+        if (parameter.id == "gain") {
+            minimum = node.type == "sum" ? 0.0 : -1.0;
+            maximum = 1.0;
+            amount = 0.5;
+        } else if (parameter.id == "delay") {
+            minimum = 0.1;
+            maximum = node.type == "delay" ? 10'000.0 : 100.0;
+            amount = node.type == "delay" ? 10.0 : 2.0;
+        } else if (parameter.id == "coefficient") {
+            minimum = -0.95;
+            maximum = 0.95;
+            amount = 0.25;
+        } else if (parameter.id == "cutoff") {
+            minimum = node.id == "input-filter" ? 100.0 : 20.0;
+            maximum = 20'000.0;
+            amount = 5'000.0;
+        } else {
+            const auto extent = std::max(1.0, std::abs(parameter.value));
+            minimum = parameter.value - extent;
+            maximum = parameter.value + extent;
+            amount = extent * 0.5;
+        }
+        parameter.modulation = ParameterModulation {
+            portId, amount, ModulationPolarity::bipolar, minimum, maximum,
+        };
+    }
+}
+
 } // namespace
 
 GraphDocument parsePatchJson(const std::string_view jsonText)
 {
     const auto root = Json::parse(jsonText);
     const auto version = root.at("schemaVersion").get<std::uint32_t>();
-    if (version != GraphDocument::schemaVersion)
+    if (version < GraphDocument::oldestReadableSchemaVersion || version > GraphDocument::schemaVersion)
         throw std::invalid_argument("unsupported schemaVersion " + std::to_string(version));
 
     GraphDocument document;
@@ -111,6 +185,8 @@ GraphDocument parsePatchJson(const std::string_view jsonText)
             node.ports.push_back(parsePort(portJson));
         for (const auto& parameterJson : nodeJson.at("parameters"))
             node.parameters.push_back(parseParameter(parameterJson));
+        if (version == 1)
+            migrateVersionOneModulation(node);
         document.nodes.push_back(std::move(node));
     }
 

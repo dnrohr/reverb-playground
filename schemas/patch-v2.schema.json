@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://reverbplayground.org/schemas/patch-v2.schema.json",
+  "title": "Reverb Playground patch v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "engineVersion", "semantic", "layout"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "engineVersion": { "type": "string", "minLength": 1 },
+    "semantic": { "$ref": "#/$defs/semanticGraph" },
+    "layout": { "$ref": "#/$defs/layout" }
+  },
+  "$defs": {
+    "identifier": { "type": "string", "minLength": 1 },
+    "signalType": { "enum": ["audio", "control"] },
+    "portDirection": { "enum": ["input", "output"] },
+    "port": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "signal", "direction"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "signal": { "$ref": "#/$defs/signalType" },
+        "direction": { "$ref": "#/$defs/portDirection" }
+      }
+    },
+    "modulation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["portId", "amount", "polarity", "clampMinimum", "clampMaximum"],
+      "properties": {
+        "portId": { "$ref": "#/$defs/identifier" },
+        "amount": { "type": "number" },
+        "polarity": { "enum": ["unipolar", "bipolar"] },
+        "clampMinimum": { "type": "number" },
+        "clampMaximum": { "type": "number" }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "value", "unit", "modulation"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "value": { "type": "number" },
+        "unit": { "enum": ["coefficient", "decibels", "hertz", "linear", "milliseconds", "unitless"] },
+        "modulation": { "$ref": "#/$defs/modulation" }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "ports", "parameters"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "type": { "$ref": "#/$defs/identifier" },
+        "ports": { "type": "array", "items": { "$ref": "#/$defs/port" } },
+        "parameters": { "type": "array", "items": { "$ref": "#/$defs/parameter" } }
+      }
+    },
+    "portReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeId", "portId"],
+      "properties": {
+        "nodeId": { "$ref": "#/$defs/identifier" },
+        "portId": { "$ref": "#/$defs/identifier" }
+      }
+    },
+    "connection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "from", "to"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "from": { "$ref": "#/$defs/portReference" },
+        "to": { "$ref": "#/$defs/portReference" }
+      }
+    },
+    "semanticGraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodes", "connections"],
+      "properties": {
+        "nodes": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+        "connections": { "type": "array", "items": { "$ref": "#/$defs/connection" } }
+      }
+    },
+    "nodePosition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodeId", "x", "y"],
+      "properties": {
+        "nodeId": { "$ref": "#/$defs/identifier" },
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "viewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "zoom"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "zoom": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nodes", "viewport"],
+      "properties": {
+        "nodes": { "type": "array", "items": { "$ref": "#/$defs/nodePosition" } },
+        "viewport": { "$ref": "#/$defs/viewport" }
+      }
+    }
+  }
+}

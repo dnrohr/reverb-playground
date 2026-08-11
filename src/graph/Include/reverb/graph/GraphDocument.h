@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -24,10 +25,26 @@ struct Port final {
     friend bool operator==(const Port&, const Port&) = default;
 };
 
+enum class ModulationPolarity {
+    unipolar,
+    bipolar,
+};
+
+struct ParameterModulation final {
+    std::string portId;
+    double amount { 0.0 };
+    ModulationPolarity polarity { ModulationPolarity::bipolar };
+    double clampMinimum { 0.0 };
+    double clampMaximum { 1.0 };
+
+    friend bool operator==(const ParameterModulation&, const ParameterModulation&) = default;
+};
+
 struct Parameter final {
     std::string id;
     double value { 0.0 };
     std::string unit { "unitless" };
+    std::optional<ParameterModulation> modulation;
 
     friend bool operator==(const Parameter&, const Parameter&) = default;
 };
@@ -81,7 +98,8 @@ struct Layout final {
 
 class GraphDocument final {
 public:
-    static constexpr std::uint32_t schemaVersion = 1;
+    static constexpr std::uint32_t schemaVersion = 2;
+    static constexpr std::uint32_t oldestReadableSchemaVersion = 1;
 
     std::string engineVersion { "0.1" };
     std::vector<Node> nodes;

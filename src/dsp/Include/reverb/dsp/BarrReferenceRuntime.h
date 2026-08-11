@@ -38,6 +38,9 @@ struct RuntimeParameterDefinition final {
     double minimum;
     double maximum;
     double step;
+    std::string_view modulationPort;
+    double modulationAmount;
+    std::string_view modulationPolarity;
 };
 
 struct RuntimeNodeDefinition final {

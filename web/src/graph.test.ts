@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createFlowModel, deleteSelected, parseRuntimeSnapshot, type RuntimeSnapshot } from './graph';
 
 const snapshot: RuntimeSnapshot = {
-  contractVersion: 1,
+  contractVersion: 2,
   engineId: 'barr-reference',
   sampleRate: 48000,
   nodes: [
@@ -10,20 +10,23 @@ const snapshot: RuntimeSnapshot = {
       id: 'tank-2', type: 'allpass', label: 'Tank 2', role: 'tank', position: { x: 20, y: 30 },
       ports: [
         { id: 'in', signal: 'audio', direction: 'input' },
+        { id: 'delay-mod', signal: 'control', direction: 'input' },
+        { id: 'coefficient-mod', signal: 'control', direction: 'input' },
         { id: 'out', signal: 'audio', direction: 'output' },
       ],
       parameters: [
-        { id: 'delay', value: 19.91, unit: 'milliseconds', minimum: 0.1, maximum: 100, step: 0.01 },
-        { id: 'coefficient', value: -0.5, unit: 'unitless', minimum: -0.95, maximum: 0.95, step: 0.001 },
+        { id: 'delay', value: 19.91, unit: 'milliseconds', minimum: 0.1, maximum: 100, step: 0.01, modulation: { portId: 'delay-mod', amount: 2, polarity: 'bipolar', clampMinimum: 0.1, clampMaximum: 100 } },
+        { id: 'coefficient', value: -0.5, unit: 'unitless', minimum: -0.95, maximum: 0.95, step: 0.001, modulation: { portId: 'coefficient-mod', amount: 0.25, polarity: 'bipolar', clampMinimum: -0.95, clampMaximum: 0.95 } },
       ],
     },
     {
       id: 'left-tap', type: 'allpass', label: 'Left Tap', role: 'tap', position: { x: 200, y: 30 },
       ports: [
         { id: 'in', signal: 'audio', direction: 'input' },
+        { id: 'delay-mod', signal: 'control', direction: 'input' },
         { id: 'out', signal: 'audio', direction: 'output' },
       ],
-      parameters: [{ id: 'delay', value: 29.71, unit: 'milliseconds', minimum: 0.1, maximum: 100, step: 0.01 }],
+      parameters: [{ id: 'delay', value: 29.71, unit: 'milliseconds', minimum: 0.1, maximum: 100, step: 0.01, modulation: { portId: 'delay-mod', amount: 2, polarity: 'bipolar', clampMinimum: 0.1, clampMaximum: 100 } }],
     },
   ],
   connections: [
@@ -43,11 +46,12 @@ describe('native runtime graph presentation model', () => {
     expect(model.edges.map((edge) => edge.id)).toEqual(['tank-to-left']);
     expect(model.nodes[0]?.data.parameters[0]).toEqual({
       id: 'delay', value: 19.91, unit: 'milliseconds', minimum: 0.1, maximum: 100, step: 0.01,
+      modulation: { portId: 'delay-mod', amount: 2, polarity: 'bipolar', clampMinimum: 0.1, clampMaximum: 100 },
     });
   });
 
   it('rejects contract and runtime identity mismatches before rendering', () => {
-    expect(() => parseRuntimeSnapshot({ ...snapshot, contractVersion: 2 })).toThrow('unsupported contract version');
+    expect(() => parseRuntimeSnapshot({ ...snapshot, contractVersion: 1 })).toThrow('unsupported contract version');
     expect(() => parseRuntimeSnapshot({ ...snapshot, engineId: 'different-engine' })).toThrow('unexpected engine identity');
     expect(() => parseRuntimeSnapshot({ ...snapshot, nodes: [...snapshot.nodes, snapshot.nodes[0]] })).toThrow('node IDs must be unique');
     expect(() => parseRuntimeSnapshot({

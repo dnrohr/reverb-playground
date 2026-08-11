@@ -44,6 +44,13 @@ std::string writeBarrRuntimeSnapshotJson(
             parameters.push_back({
                 { "id", parameter.id }, { "value", value }, { "unit", parameter.unit },
                 { "minimum", parameter.minimum }, { "maximum", parameter.maximum }, { "step", parameter.step },
+                { "modulation", {
+                    { "portId", parameter.modulationPort },
+                    { "amount", parameter.modulationAmount },
+                    { "polarity", parameter.modulationPolarity },
+                    { "clampMinimum", parameter.minimum },
+                    { "clampMaximum", parameter.maximum },
+                } },
             });
         }
         const auto& position = positions.at(std::string(definition.id));
@@ -120,7 +127,12 @@ std::vector<std::string> validateBarrRuntimeIdentity(const GraphDocument& graph)
             const auto actual = findById(node->parameters, parameter.id, [](const auto& value) { return std::string_view(value.id); });
             if (actual == node->parameters.end()
                 || actual->value != parameter.value
-                || actual->unit != parameter.unit) {
+                || actual->unit != parameter.unit
+                || !actual->modulation
+                || actual->modulation->portId != parameter.modulationPort
+                || actual->modulation->amount != parameter.modulationAmount
+                || actual->modulation->clampMinimum != parameter.minimum
+                || actual->modulation->clampMaximum != parameter.maximum) {
                 errors.push_back("runtime/UI parameter differs: " + std::string(definition.id)
                     + "." + std::string(parameter.id));
             }

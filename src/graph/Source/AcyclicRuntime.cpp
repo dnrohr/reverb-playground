@@ -49,7 +49,7 @@ bool hasParameter(const Node& node, const std::string_view id, const std::string
 
 bool hasPorts(const Node& node, const std::vector<std::pair<std::string, PortDirection>>& expected)
 {
-    if (node.ports.size() != expected.size())
+    if (static_cast<std::size_t>(std::ranges::count(node.ports, SignalType::audio, &Port::signal)) != expected.size())
         return false;
     for (const auto& [id, direction] : expected) {
         const auto found = std::ranges::find(node.ports, id, &Port::id);

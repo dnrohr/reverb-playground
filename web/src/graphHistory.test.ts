@@ -22,6 +22,7 @@ describe('unified graph history', () => {
     const states = [baseGraph()];
     const moved = structuredClone(states.at(-1)!); moved.nodes[1].position.x = 140; states.push(moved);
     const parameter = structuredClone(states.at(-1)!); parameter.nodes[1].data.parameters[0].value = 27.5; states.push(parameter);
+    const modulation = structuredClone(states.at(-1)!); modulation.nodes[1].data.parameters[0].modulation!.amount = 8; modulation.nodes[1].data.parameters[0].modulation!.polarity = 'unipolar'; states.push(modulation);
     const connected = structuredClone(states.at(-1)!); connected.edges.push({ id: 'cable', source: 'input', sourceHandle: 'out-l', target: 'delay', targetHandle: 'in' }); states.push(connected);
     const added = structuredClone(states.at(-1)!); added.nodes.push(createModuleNode('gain', 'gain', { x: 80, y: 100 })); states.push(added);
 

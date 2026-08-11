@@ -31,7 +31,11 @@ FetchContent_Declare(
     JUCE
     GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
     GIT_TAG 8.0.13
-    GIT_SHALLOW TRUE)
+    GIT_SHALLOW TRUE
+    PATCH_COMMAND
+        ${CMAKE_COMMAND}
+        -DJUCE_SOURCE_DIR=<SOURCE_DIR>
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/PatchJuceWebView2Bounds.cmake)
 FetchContent_MakeAvailable(JUCE)
 
 FetchContent_Declare(

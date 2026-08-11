@@ -17,6 +17,13 @@ export interface PatchParameter {
   minimum: number;
   maximum: number;
   step: number;
+  modulation?: {
+    portId: string;
+    amount: number;
+    polarity: 'unipolar' | 'bipolar';
+    clampMinimum: number;
+    clampMaximum: number;
+  };
 }
 
 export interface PatchNodeData extends Record<string, unknown> {
@@ -48,7 +55,7 @@ export interface RuntimeConnection {
 }
 
 export interface RuntimeSnapshot {
-  contractVersion: 1;
+  contractVersion: 2;
   engineId: 'barr-reference';
   sampleRate: number;
   nodes: RuntimeNode[];
@@ -66,7 +73,7 @@ function requireCondition(condition: unknown, message: string): asserts conditio
 export function parseRuntimeSnapshot(input: unknown): RuntimeSnapshot {
   requireCondition(typeof input === 'object' && input !== null, 'payload is not an object');
   const snapshot = input as Partial<RuntimeSnapshot>;
-  requireCondition(snapshot.contractVersion === 1, 'unsupported contract version');
+  requireCondition(snapshot.contractVersion === 2, 'unsupported contract version');
   requireCondition(snapshot.engineId === 'barr-reference', 'unexpected engine identity');
   requireCondition(typeof snapshot.sampleRate === 'number' && Number.isFinite(snapshot.sampleRate), 'invalid sample rate');
   requireCondition(Array.isArray(snapshot.nodes) && snapshot.nodes.length > 0, 'nodes are missing');
@@ -95,6 +102,14 @@ export function parseRuntimeSnapshot(input: unknown): RuntimeSnapshot {
       requireCondition(typeof parameter.unit === 'string' && parameter.unit.length > 0, `missing unit on ${node.id}.${parameter.id}`);
       requireCondition(Number.isFinite(parameter.minimum) && Number.isFinite(parameter.maximum) && parameter.minimum < parameter.maximum, `invalid range on ${node.id}.${parameter.id}`);
       requireCondition(Number.isFinite(parameter.step) && parameter.step > 0, `invalid step on ${node.id}.${parameter.id}`);
+      const modulation = parameter.modulation;
+      requireCondition(typeof modulation === 'object' && modulation !== null, `missing modulation mapping on ${node.id}.${parameter.id}`);
+      requireCondition(typeof modulation.portId === 'string', `invalid modulation socket on ${node.id}.${parameter.id}`);
+      const socket = ports.get(modulation.portId);
+      requireCondition(socket?.signal === 'control' && socket.direction === 'input', `modulation socket is not a control input on ${node.id}.${parameter.id}`);
+      requireCondition(Number.isFinite(modulation.amount), `invalid modulation amount on ${node.id}.${parameter.id}`);
+      requireCondition(modulation.polarity === 'unipolar' || modulation.polarity === 'bipolar', `invalid modulation polarity on ${node.id}.${parameter.id}`);
+      requireCondition(Number.isFinite(modulation.clampMinimum) && Number.isFinite(modulation.clampMaximum) && modulation.clampMinimum < modulation.clampMaximum, `invalid modulation clamp on ${node.id}.${parameter.id}`);
     }
   }
   for (const connection of snapshot.connections) {

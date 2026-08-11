@@ -4,7 +4,7 @@ M2.4 adds explicit **Save Patch** and **Load Patch** actions to the Barr referen
 
 ## What is saved
 
-- `schemaVersion: 1` and `engineVersion: "0.1"`;
+- `schemaVersion: 2` and `engineVersion: "0.1"`;
 - every semantic node, mono port, parameter value/unit, and connection;
 - every node's schematic coordinates;
 - viewport pan and zoom.
@@ -19,7 +19,7 @@ After a successful load, selection and undo/redo history are cleared because the
 
 ## Schema and future fields
 
-Schema v1 is closed: unknown fields are rejected at every defined object boundary. An unknown top-level field therefore produces a diagnostic such as `document contains unknown field 'futureField' (schema v1 rejects future fields)`. Unsupported schema or engine versions are also rejected. Forward compatibility will use explicit, tested migrations rather than silently discarding data from a newer author.
+Schemas v1 and v2 are closed: unknown fields are rejected at every defined object boundary. Writers emit v2, including exact parameter modulation mappings. Readers accept v1 through a tested deterministic migration and reject unsupported schema or engine versions. Forward compatibility continues to use explicit migrations rather than silently discarding data from a newer author.
 
 ## Editable-graph boundary
 

@@ -6,14 +6,15 @@ import { semanticGraphHash } from './graphHistory';
 import sharedEdgeLoopFixture from '../../artifacts/ui/m4-1-feedback-loop-highlighting/shared-edge-loop-fixture.rvp.json?raw';
 
 const reference: RuntimeSnapshot = {
-  contractVersion: 1, engineId: 'barr-reference', sampleRate: 48000, outsidePatch: [],
+  contractVersion: 2, engineId: 'barr-reference', sampleRate: 48000, outsidePatch: [],
   nodes: [{
     id: 'sum', type: 'sum', label: 'Mono Sum', role: 'routing', position: { x: 1, y: 2 },
     ports: [
       { id: 'in', signal: 'audio', direction: 'input' },
+      { id: 'gain-mod', signal: 'control', direction: 'input' },
       { id: 'out', signal: 'audio', direction: 'output' },
     ],
-    parameters: [{ id: 'gain', value: 0.5, unit: 'linear', minimum: 0, maximum: 1, step: 0.001 }],
+    parameters: [{ id: 'gain', value: 0.5, unit: 'linear', minimum: 0, maximum: 1, step: 0.001, modulation: { portId: 'gain-mod', amount: 0.5, polarity: 'bipolar', clampMinimum: 0, clampMaximum: 1 } }],
   }],
   connections: [],
 };
@@ -23,6 +24,7 @@ describe('patch persistence', () => {
     const flow = createFlowModel(reference);
     flow.nodes.push(createModuleNode('stereo-input', 'stereo-input-1', { x: -200, y: 0 }), createModuleNode('stereo-output', 'stereo-output-1', { x: 200, y: 0 }));
     flow.nodes[0].data.parameters[0].value = 0.371;
+    flow.nodes[0].data.parameters[0].modulation = { portId: 'gain-mod', amount: -0.275, polarity: 'unipolar', clampMinimum: 0.1, clampMaximum: 0.9 };
     flow.nodes[0].position = { x: -42.25, y: 319.75 };
     const viewport = { x: 17.5, y: -88.25, zoom: 1.375 };
     const semanticBeforeSave = semanticGraphHash(flow);
@@ -31,6 +33,7 @@ describe('patch persistence', () => {
     const loaded = parsePatchJson(written, reference);
 
     expect(loaded.nodes[0].data.parameters[0].value).toBe(0.371);
+    expect(loaded.nodes[0].data.parameters[0].modulation).toEqual({ portId: 'gain-mod', amount: -0.275, polarity: 'unipolar', clampMinimum: 0.1, clampMaximum: 0.9 });
     expect(loaded.nodes[0].position).toEqual(flow.nodes[0].position);
     expect(loaded.viewport).toEqual(viewport);
     expect(writePatchJson(loaded.nodes, loaded.edges, loaded.viewport)).toBe(written);
@@ -42,7 +45,7 @@ describe('patch persistence', () => {
     const untouched = structuredClone(flow);
     const valid = JSON.parse(writePatchJson(flow.nodes, flow.edges, { x: 0, y: 0, zoom: 1 })) as Record<string, unknown>;
     expect(() => parsePatchJson('{ bad json', reference)).toThrow(/invalid JSON/);
-    expect(() => parsePatchJson(JSON.stringify({ ...valid, schemaVersion: 2 }), reference)).toThrow(/unsupported schemaVersion/);
+    expect(() => parsePatchJson(JSON.stringify({ ...valid, schemaVersion: 3 }), reference)).toThrow(/unsupported schemaVersion/);
     expect(() => parsePatchJson(JSON.stringify({ ...valid, futureField: true }), reference)).toThrow(/unknown field 'futureField'/);
 
     const semantic = valid.semantic as { nodes: Array<{ parameters: Array<{ value: number }> }> };

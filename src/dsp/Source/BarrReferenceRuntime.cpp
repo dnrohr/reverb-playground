@@ -12,53 +12,68 @@ using Parameter = RuntimeParameterDefinition;
 
 constexpr Port audioInput(std::string_view id) { return { id, "audio", "input" }; }
 constexpr Port audioOutput(std::string_view id) { return { id, "audio", "output" }; }
+constexpr Port controlInput(std::string_view id) { return { id, "control", "input" }; }
+
+constexpr Parameter parameter(
+    BarrParameterId runtimeId, std::string_view id, double value, std::string_view unit,
+    double minimum, double maximum, double step, std::string_view modulationPort,
+    double modulationAmount)
+{
+    return { runtimeId, id, value, unit, minimum, maximum, step,
+        modulationPort, modulationAmount, "bipolar" };
+}
 
 constexpr std::array inputPorts { audioOutput("out-l"), audioOutput("out-r") };
-constexpr std::array sumPorts { audioInput("in-l"), audioInput("in-r"), audioOutput("out") };
-constexpr std::array monoPorts { audioInput("in"), audioOutput("out") };
+constexpr std::array sumPorts {
+    audioInput("in-l"), audioInput("in-r"), controlInput("gain-mod"), audioOutput("out")
+};
+constexpr std::array filterPorts { audioInput("in"), controlInput("cutoff-mod"), audioOutput("out") };
+constexpr std::array allpassPorts {
+    audioInput("in"), controlInput("delay-mod"), controlInput("coefficient-mod"), audioOutput("out")
+};
 constexpr std::array outputPorts { audioInput("in-l"), audioInput("in-r") };
 constexpr std::span<const Parameter> noParameters {};
 constexpr std::array sumParameters {
-    Parameter { BarrParameterId::sumGain, "gain", 0.5, "linear", 0.0, 1.0, 0.001 }
+    parameter(BarrParameterId::sumGain, "gain", 0.5, "linear", 0.0, 1.0, 0.001, "gain-mod", 0.5)
 };
 constexpr std::array filterParameters {
-    Parameter { BarrParameterId::filterCutoff, "cutoff", 7'000.0, "hertz", 100.0, 20'000.0, 1.0 }
+    parameter(BarrParameterId::filterCutoff, "cutoff", 7'000.0, "hertz", 100.0, 20'000.0, 1.0, "cutoff-mod", 5'000.0)
 };
 constexpr std::array diffuserOneParameters {
-    Parameter { BarrParameterId::diffuserOneDelay, "delay", 4.31, "milliseconds", 0.1, 100.0, 0.01 },
-    Parameter { BarrParameterId::diffuserOneCoefficient, "coefficient", 0.5, "unitless", -0.95, 0.95, 0.001 }
+    parameter(BarrParameterId::diffuserOneDelay, "delay", 4.31, "milliseconds", 0.1, 100.0, 0.01, "delay-mod", 2.0),
+    parameter(BarrParameterId::diffuserOneCoefficient, "coefficient", 0.5, "unitless", -0.95, 0.95, 0.001, "coefficient-mod", 0.25)
 };
 constexpr std::array diffuserTwoParameters {
-    Parameter { BarrParameterId::diffuserTwoDelay, "delay", 7.13, "milliseconds", 0.1, 100.0, 0.01 },
-    Parameter { BarrParameterId::diffuserTwoCoefficient, "coefficient", 0.5, "unitless", -0.95, 0.95, 0.001 }
+    parameter(BarrParameterId::diffuserTwoDelay, "delay", 7.13, "milliseconds", 0.1, 100.0, 0.01, "delay-mod", 2.0),
+    parameter(BarrParameterId::diffuserTwoCoefficient, "coefficient", 0.5, "unitless", -0.95, 0.95, 0.001, "coefficient-mod", 0.25)
 };
 constexpr std::array tankOneParameters {
-    Parameter { BarrParameterId::tankOneDelay, "delay", 13.73, "milliseconds", 0.1, 100.0, 0.01 },
-    Parameter { BarrParameterId::tankOneCoefficient, "coefficient", 0.5, "unitless", -0.95, 0.95, 0.001 }
+    parameter(BarrParameterId::tankOneDelay, "delay", 13.73, "milliseconds", 0.1, 100.0, 0.01, "delay-mod", 2.0),
+    parameter(BarrParameterId::tankOneCoefficient, "coefficient", 0.5, "unitless", -0.95, 0.95, 0.001, "coefficient-mod", 0.25)
 };
 constexpr std::array tankTwoParameters {
-    Parameter { BarrParameterId::tankTwoDelay, "delay", 19.91, "milliseconds", 0.1, 100.0, 0.01 },
-    Parameter { BarrParameterId::tankTwoCoefficient, "coefficient", -0.5, "unitless", -0.95, 0.95, 0.001 }
+    parameter(BarrParameterId::tankTwoDelay, "delay", 19.91, "milliseconds", 0.1, 100.0, 0.01, "delay-mod", 2.0),
+    parameter(BarrParameterId::tankTwoCoefficient, "coefficient", -0.5, "unitless", -0.95, 0.95, 0.001, "coefficient-mod", 0.25)
 };
 constexpr std::array leftTapParameters {
-    Parameter { BarrParameterId::leftTapDelay, "delay", 29.71, "milliseconds", 0.1, 100.0, 0.01 },
-    Parameter { BarrParameterId::leftTapCoefficient, "coefficient", 0.5, "unitless", -0.95, 0.95, 0.001 }
+    parameter(BarrParameterId::leftTapDelay, "delay", 29.71, "milliseconds", 0.1, 100.0, 0.01, "delay-mod", 2.0),
+    parameter(BarrParameterId::leftTapCoefficient, "coefficient", 0.5, "unitless", -0.95, 0.95, 0.001, "coefficient-mod", 0.25)
 };
 constexpr std::array rightTapParameters {
-    Parameter { BarrParameterId::rightTapDelay, "delay", 37.11, "milliseconds", 0.1, 100.0, 0.01 },
-    Parameter { BarrParameterId::rightTapCoefficient, "coefficient", 0.5, "unitless", -0.95, 0.95, 0.001 }
+    parameter(BarrParameterId::rightTapDelay, "delay", 37.11, "milliseconds", 0.1, 100.0, 0.01, "delay-mod", 2.0),
+    parameter(BarrParameterId::rightTapCoefficient, "coefficient", 0.5, "unitless", -0.95, 0.95, 0.001, "coefficient-mod", 0.25)
 };
 
 constexpr std::array nodes {
     RuntimeNodeDefinition { "input", "stereo-input", "Stereo Input", "io", inputPorts, noParameters },
     RuntimeNodeDefinition { "sum", "sum", "Mono Sum", "routing", sumPorts, sumParameters },
-    RuntimeNodeDefinition { "input-filter", "lowpass", "Input Low-pass", "filter", monoPorts, filterParameters },
-    RuntimeNodeDefinition { "diffuser-1", "allpass", "Diffuser 1", "diffusion", monoPorts, diffuserOneParameters },
-    RuntimeNodeDefinition { "diffuser-2", "allpass", "Diffuser 2", "diffusion", monoPorts, diffuserTwoParameters },
-    RuntimeNodeDefinition { "tank-1", "allpass", "Tank 1", "tank", monoPorts, tankOneParameters },
-    RuntimeNodeDefinition { "tank-2", "allpass", "Tank 2", "tank", monoPorts, tankTwoParameters },
-    RuntimeNodeDefinition { "left-tap", "allpass", "Left Tap", "tap", monoPorts, leftTapParameters },
-    RuntimeNodeDefinition { "right-tap", "allpass", "Right Tap", "tap", monoPorts, rightTapParameters },
+    RuntimeNodeDefinition { "input-filter", "lowpass", "Input Low-pass", "filter", filterPorts, filterParameters },
+    RuntimeNodeDefinition { "diffuser-1", "allpass", "Diffuser 1", "diffusion", allpassPorts, diffuserOneParameters },
+    RuntimeNodeDefinition { "diffuser-2", "allpass", "Diffuser 2", "diffusion", allpassPorts, diffuserTwoParameters },
+    RuntimeNodeDefinition { "tank-1", "allpass", "Tank 1", "tank", allpassPorts, tankOneParameters },
+    RuntimeNodeDefinition { "tank-2", "allpass", "Tank 2", "tank", allpassPorts, tankTwoParameters },
+    RuntimeNodeDefinition { "left-tap", "allpass", "Left Tap", "tap", allpassPorts, leftTapParameters },
+    RuntimeNodeDefinition { "right-tap", "allpass", "Right Tap", "tap", allpassPorts, rightTapParameters },
     RuntimeNodeDefinition { "output", "stereo-output", "Stereo Output", "io", outputPorts, noParameters },
 };
 

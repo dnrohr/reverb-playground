@@ -14,6 +14,8 @@ The **Energy On/Off** control enables measured activity on runtime-bound blocks 
 
 **Diagnostics** opens a resource/safety panel without covering graph controls. Static workload estimates, measured live CPU/clipping, and exact prepared delay memory are labeled by evidence type. A numerical safety latch opens the panel automatically, identifies the immutable offending graph revision, and leaves editing plus Undo available. **Recover Audio** is enabled only while safety-muted and clears the latch explicitly after the user has reduced or undone the risky setting.
 
+Every editable parameter exposes a dashed control socket. Its inspector keeps the base value beside amount, bipolar/unipolar polarity, clamp range, and the fixed 1 kHz/linear-interpolation policy. A disconnected socket leaves the base value unchanged. Control cables cannot connect to audio ports, accept only one source, and never offer automatic insertion of an audio Sum block. See [Control-rate graph semantics](control-rate-graph-semantics.md).
+
 The reference patch opens fitted to the available canvas. Blocks retain stable IDs and use a compact snake layout so the complete signal path is readable at the default 1280 by 800 editor size.
 
 ## Pointer and keyboard contract

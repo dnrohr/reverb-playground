@@ -1,8 +1,8 @@
-# Patch format v1
+# Patch format v2
 
 Runtime acceptance also follows the versioned [real-time and safety contract](real-time-safety-contract-v1.md), including the rule that every feedback cycle contains an explicit stateful delay.
 
-The authoritative machine-readable definition is [`schemas/patch-v1.schema.json`](../schemas/patch-v1.schema.json). The framework-light C++ representation and semantic validator live in `src/graph/`.
+The current authoritative machine-readable definition is [`schemas/patch-v2.schema.json`](../schemas/patch-v2.schema.json); [`patch-v1.schema.json`](../schemas/patch-v1.schema.json) remains the readable historical contract. The framework-light C++ representation and semantic validator live in `src/graph/`.
 
 ## Design goals
 
@@ -18,7 +18,7 @@ The authoritative machine-readable definition is [`schemas/patch-v1.schema.json`
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "engineVersion": "0.1",
   "semantic": {
     "nodes": [],
@@ -40,7 +40,7 @@ A node contains:
 - a stable, non-empty `id`;
 - a stable type identifier such as `allpass`, `sum`, or `stereo-input`;
 - explicit ports;
-- parameters with value and unit.
+- parameters with base value, unit, and an explicit modulation mapping.
 
 Every port declares:
 
@@ -80,7 +80,7 @@ Graph-cycle legality, occupied single-input policy, and node-specific parameter 
 
 ## Parameters and units
 
-Version 1 permits these units:
+Version 2 permits these units:
 
 - `coefficient`
 - `decibels`
@@ -91,7 +91,7 @@ Version 1 permits these units:
 
 Delay time defaults to milliseconds. Conversion to sample counts occurs when a runtime is prepared for a sample rate; saved state does not silently rewrite musical time as an integer sample count. Historical fixed-sample-rate behavior will require an explicit later schema/engine extension.
 
-Parameters are base values. Modulation mapping is represented by typed control connections and dedicated mapping nodes when that feature enters the engine; it is not hidden inside the serialized numeric value.
+Parameters are base values. Each parameter records its control socket, amount, bipolar/unipolar polarity, and clamp range. A typed control cable supplies the normalized source value; the effective value follows the formula in [Control-rate graph semantics](control-rate-graph-semantics.md). Mapping metadata is never hidden inside the serialized numeric value.
 
 ## Layout
 
@@ -101,13 +101,13 @@ A loader may calculate a default position for a semantic node omitted from layou
 
 ## Versioning and migration
 
-- `schemaVersion` describes the serialized document shape and is currently exactly `1`.
+- `schemaVersion` describes the serialized document shape. Writers emit `2`; readers migrate `1` or read `2`.
 - `engineVersion` records the engine family that authored the patch.
-- The v1 parser rejects unsupported schema versions.
+- The current parser rejects unsupported schema versions outside readable v1-v2.
 - A future incompatible shape increments `schemaVersion` and adds a tested migration into the current in-memory model.
 - Migrations preserve stable IDs unless the old format did not contain them; generated replacement IDs must then be deterministic or explicitly recorded.
 - Unknown fields are rejected by the JSON Schema. Forward compatibility is handled by versioned migrations, not silent field loss.
-- The interactive v1 loader enforces this recursively at every defined object boundary and reports the first unknown field without replacing the active document.
+- The interactive loader enforces this recursively at every defined object boundary and reports the first unknown field without replacing the active document.
 - Factory fixtures from every released schema remain in tests.
 
 ## Fixtures and verification
