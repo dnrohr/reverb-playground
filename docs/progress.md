@@ -35,6 +35,7 @@ Last updated: 2026-08-11
 | M5.3 Add modulated Delay and Allpass parameters | Complete | Fractional linear taps; bounded coefficient; prepared control-runtime binding; constant/static equivalence; boundary, feedback, and moving-diffusion tests; inspector evidence |
 | M5.4 Implement runtime topology publication | Complete | One-entry newest-wins compile queue; bounded block-entry swap; fixed retirement ring; worker reclamation; pending/active/failed diagnostics; 1,000-edit stress test |
 | M5.5 Add short topology-change crossfades | Complete | Live schema-v2 editor binding; fixed 10 ms two-runtime ramp; newest-wins transition queue; constructed-graph capture/safety diagnostics; 125%-DPI fill fix; screenshot/video |
+| M5.6 Finalize runaway-feedback UX | Complete | 50 ms sustained detector; immediate non-finite/hard-ceiling mute; heuristic loop marking; muted Undo; state-clearing recovery; scaled-work-area sizing; screenshot/video |
 
 ## M0.2 verification
 
@@ -387,3 +388,15 @@ Results:
 - The WebView2 physical/logical sizing mismatch is compensated from the active Windows display scale. At the tested 125% scale, the schematic fills all space below the intentional native control strip.
 - Reviewed native screenshot: [`artifacts/ui/m5-5-topology-crossfade/01-live-crossfade-diagnostics.png`](../artifacts/ui/m5-5-topology-crossfade/01-live-crossfade-diagnostics.png).
 - Reviewed live-edit video: [`artifacts/ui/m5-5-topology-crossfade/live-topology-edit.mp4`](../artifacts/ui/m5-5-topology-crossfade/live-topology-edit.mp4). The video is visual-only; native render tests prove finite audible transitions.
+
+## M5.6 verification
+
+- NaN/infinity and a finite sample above absolute 16 mute immediately. Absolute output above 4 for exactly 50 continuous milliseconds also mutes; a lower sample resets the consecutive count, making the result independent of host block partitions.
+- A latched constructed graph stays silent while edits and Undo remain available. The first event retains its kind, channel, sample index, and graph revision.
+- The editor searches explicit Delay-containing cycles within the existing 100,000-transition bound, ranks by visible absolute loop gain divided by nominal delay, labels the result heuristic, and marks the highest-ranked path in red. Absence of an identifiable loop is reported explicitly.
+- Explicit recovery resets active and crossfading constructed runtimes before clearing both guards, so abandoned delay/feedback energy cannot resume. The end-to-end native test remains muted through a safe publication and recovers to deterministic silence.
+- The preferred 1280-by-800 editor size is clamped to the scaled desktop work area. Native QA at 125% on a 1536-by-960 display kept the complete diagnostics panel and recovery actions reachable.
+- Shared Debug verification passed 49 browser tests and 80 native/audio tests with warnings as errors.
+- Latched screenshot: [`artifacts/ui/m5-6-runaway-feedback/01-runaway-loop-and-recovery.png`](../artifacts/ui/m5-6-runaway-feedback/01-runaway-loop-and-recovery.png).
+- Recovered screenshot: [`artifacts/ui/m5-6-runaway-feedback/03-recovered-silence.png`](../artifacts/ui/m5-6-runaway-feedback/03-recovered-silence.png).
+- Safe-reset/Undo/recovery video: [`artifacts/ui/m5-6-runaway-feedback/runaway-mute-edit-undo-recovery.mp4`](../artifacts/ui/m5-6-runaway-feedback/runaway-mute-edit-undo-recovery.mp4).

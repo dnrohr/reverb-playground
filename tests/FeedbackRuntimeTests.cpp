@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <reverb/graph/AcyclicRuntime.h>
+#include <reverb/dsp/NumericalSafetyGuard.h>
 
 #include <algorithm>
 #include <array>
@@ -194,6 +195,40 @@ TEST_CASE("Constructed feedback runtime reset makes repeated measurements determ
     host.process(input, silence, secondLeft, secondRight);
     REQUIRE(secondLeft == firstLeft);
     REQUIRE(secondRight == firstRight);
+}
+
+TEST_CASE("Runaway feedback is muted through a safe edit and explicit state-clearing recovery")
+{
+    AcyclicRuntimeHost host;
+    REQUIRE(host.compileFeedbackAndPublish(simpleFeedbackGraph(), 1'000.0, 8).valid());
+    reverb::dsp::NumericalSafetyGuard guard { 16.0F, 4.0F, 50.0 };
+    guard.prepare(1'000.0);
+    std::array<float, 8> loudInput {}; loudInput.fill(5.0F);
+    std::array<float, 8> silence {}; std::array<float, 8> left {}; std::array<float, 8> right {};
+    reverb::dsp::SafetyStatus violation;
+    for (int block = 0; block < 16 && violation.violation == reverb::dsp::SafetyViolation::none; ++block) {
+        host.process(loudInput, silence, left, right);
+        violation = guard.inspectAndMute(left);
+        if (violation.violation != reverb::dsp::SafetyViolation::none)
+            std::ranges::fill(right, 0.0F);
+    }
+    REQUIRE(violation.violation == reverb::dsp::SafetyViolation::runawayLevel);
+    REQUIRE(guard.isMuted());
+    REQUIRE(std::ranges::all_of(left, [](const auto sample) { return sample == 0.0F; }));
+
+    auto safeEdit = simpleFeedbackGraph();
+    std::ranges::find(safeEdit.nodes, "feedback", &Node::id)->parameters[0].value = 0.25;
+    REQUIRE(host.compileFeedbackAndPublish(safeEdit, 1'000.0, 8).valid());
+    host.process(silence, silence, left, right);
+    REQUIRE(guard.inspectAndMute(left).violation == reverb::dsp::SafetyViolation::none);
+    REQUIRE(std::ranges::all_of(left, [](const auto sample) { return sample == 0.0F; }));
+
+    host.resetActiveRuntimes();
+    guard.reset();
+    host.process(silence, silence, left, right);
+    REQUIRE_FALSE(guard.isMuted());
+    REQUIRE(std::ranges::all_of(left, [](const auto sample) { return sample == 0.0F; }));
+    REQUIRE(std::ranges::all_of(right, [](const auto sample) { return sample == 0.0F; }));
 }
 
 TEST_CASE("MVP feedback compilation remains within defined time and memory budgets")

@@ -2,6 +2,7 @@
 
 #include <reverb/dsp/NumericalSafetyGuard.h>
 
+#include <algorithm>
 #include <array>
 #include <limits>
 
@@ -41,4 +42,25 @@ TEST_CASE("Numerical safety guard latches mute on runaway output until reset")
     later = { 0.25F, -0.25F };
     REQUIRE(guard.inspectAndMute(later).violation == reverb::dsp::SafetyViolation::none);
     REQUIRE(later == std::array { 0.25F, -0.25F });
+}
+
+TEST_CASE("Numerical safety guard requires a continuous sustained runaway interval")
+{
+    reverb::dsp::NumericalSafetyGuard guard { 16.0F, 4.0F, 50.0 };
+    guard.prepare(1'000.0);
+
+    std::array<float, 49> almostSustained {};
+    almostSustained.fill(4.25F);
+    REQUIRE(guard.inspectAndMute(almostSustained).violation == reverb::dsp::SafetyViolation::none);
+
+    std::array resetInterval { 0.5F };
+    REQUIRE(guard.inspectAndMute(resetInterval).violation == reverb::dsp::SafetyViolation::none);
+
+    std::array<float, 50> sustained {};
+    sustained.fill(-4.25F);
+    const auto status = guard.inspectAndMute(sustained);
+    REQUIRE(status.violation == reverb::dsp::SafetyViolation::runawayLevel);
+    REQUIRE(status.sampleIndex == 49);
+    REQUIRE(status.clippedSamples == 50);
+    REQUIRE(std::ranges::all_of(sustained, [](const auto sample) { return sample == 0.0F; }));
 }

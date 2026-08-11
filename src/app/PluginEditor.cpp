@@ -54,7 +54,16 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
     addAndMakeVisible(shell_);
     setResizable(true, true);
     setResizeLimits(640, 400, 1920, 1200);
-    setSize(1280, 800);
+    auto initialWidth = 1280;
+    auto initialHeight = 800;
+    if (const auto* display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()) {
+        const auto scale = std::max(1.0, display->scale);
+        initialWidth = std::min(initialWidth,
+            juce::roundToInt(static_cast<double>(display->userBounds.getWidth()) / scale) - 32);
+        initialHeight = std::min(initialHeight,
+            juce::roundToInt(static_cast<double>(display->userBounds.getHeight()) / scale) - 64);
+    }
+    setSize(std::max(640, initialWidth), std::max(400, initialHeight));
 }
 
 void ReverbPlaygroundEditor::resized()

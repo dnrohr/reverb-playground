@@ -23,8 +23,8 @@ void ReverbPlaygroundProcessor::prepareToPlay(
     const auto maximumBlockSize = static_cast<std::size_t>(std::max(1, maximumExpectedSamplesPerBlock));
     graphInputLeft_.assign(maximumBlockSize, 0.0F);
     graphInputRight_.assign(maximumBlockSize, 0.0F);
-    graphLeftGuard_.reset();
-    graphRightGuard_.reset();
+    graphLeftGuard_.prepare(sampleRate);
+    graphRightGuard_.prepare(sampleRate);
     graphCapture_.prepare(sampleRate);
     graphDiagnostics_.prepare(sampleRate, reverb::dsp::BarrReference::delayLineCount(), 0);
     graphSafetyLatched_.store(false, std::memory_order_release);
@@ -68,6 +68,7 @@ void ReverbPlaygroundProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
     };
     if (graphSafetyResetPending_.exchange(false, std::memory_order_acq_rel)) {
         const auto wasLatched = graphSafetyLatched_.load(std::memory_order_acquire);
+        graphHost_.resetActiveRuntimes();
         graphLeftGuard_.reset();
         graphRightGuard_.reset();
         graphSafetyLatched_.store(false, std::memory_order_release);

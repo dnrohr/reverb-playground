@@ -19,7 +19,7 @@ import { createFlowModel, deleteSelected, parseRuntimeSnapshot, type PatchNodeDa
 import { createModuleNode, moduleDefinitions, nextNodeId, type ModuleType } from './modules';
 import { commitGraphEdit, emptyGraphHistory, isHistoryClean, markHistoryClean, redoGraphEdit, snapshotGraph, undoGraphEdit } from './graphHistory';
 import { copySelectedGraph, pasteGraph, type GraphClipboard } from './graphClipboard';
-import { decorateFeedbackLoops, inspectFeedbackLoops, type FeedbackLoopInspection } from './loopInspection';
+import { decorateFeedbackLoops, decorateRunawayFeedbackLoop, inspectFeedbackLoops, inspectMostRelevantFeedbackLoop, type FeedbackLoopInspection } from './loopInspection';
 import { connectGraph, decideConnection, insertSumForOccupiedInput } from './connectionEditing';
 import { PatchNode } from './PatchNode';
 import { callNative } from './nativeBridge';
@@ -191,7 +191,7 @@ function ResponseViewer({ capture, onClose }: { capture: ImpulseCaptureResult; o
   </section>;
 }
 
-function DiagnosticsPanel({ diagnostics, canUndo, onUndo, onRecover, onClose }: { diagnostics: RuntimeDiagnostics | null; canUndo: boolean; onUndo: () => void; onRecover: () => void; onClose: () => void }) {
+function DiagnosticsPanel({ diagnostics, runawayLoop, canUndo, onUndo, onRecover, onClose }: { diagnostics: RuntimeDiagnostics | null; runawayLoop: FeedbackLoopInspection | null; canUndo: boolean; onUndo: () => void; onRecover: () => void; onClose: () => void }) {
   return <aside className={`diagnostics-panel ${diagnostics?.mute.safetyLatched ? 'has-safety-latch' : ''}`} aria-label="Runtime resource and safety diagnostics">
     <header><div><span>RUNTIME DIAGNOSTICS</span><h2>Resources and safety</h2></div><button type="button" onClick={onClose}>CLOSE ×</button></header>
     {!diagnostics ? <p className="diagnostics-waiting">Waiting for a coherent native snapshot…</p> : <>
@@ -215,6 +215,7 @@ function DiagnosticsPanel({ diagnostics, canUndo, onUndo, onRecover, onClose }: 
       </dl>
       {diagnostics.topologyPublication.failure ? <p className="topology-failure">REVISION #{diagnostics.topologyPublication.failedRevision}: {diagnostics.topologyPublication.failure}</p> : null}
       {diagnostics.lastSafetyEvent ? <section className="safety-event"><span>LAST SAFETY EVENT #{diagnostics.lastSafetyEvent.generation}</span><strong>{diagnostics.lastSafetyEvent.kind.toUpperCase()} / {diagnostics.lastSafetyEvent.channel.toUpperCase()}</strong><p>Sample {diagnostics.lastSafetyEvent.sampleIndex.toLocaleString()} of graph revision <b>#{diagnostics.lastSafetyEvent.graphRevision}</b>. This identity remains fixed when later edits change the active revision.</p></section> : <p className="no-safety-event">No NaN, infinity, or runaway event recorded.</p>}
+      {diagnostics.mute.safetyLatched ? runawayLoop?.loops[0] ? <section className="runaway-loop-event"><span>LIKELY FEEDBACK LOOP / HEURISTIC</span><strong>{runawayLoop.loops[0].nominalDelayMilliseconds.toFixed(2)} ms · {runawayLoop.loops[0].nodeIds.length} blocks</strong><code>{[...runawayLoop.loops[0].nodeIds, runawayLoop.loops[0].nodeIds[0]].join(' → ')}</code><p>Marked red on the graph. Ranking uses visible loop gain and nominal delay; it is guidance, not a stability proof.</p></section> : <p className="no-safety-event">No explicit delayed feedback loop could be identified for this event.</p> : null}
       <div className="diagnostic-actions"><button type="button" disabled={!canUndo} onClick={onUndo}>UNDO LAST EDIT</button><button type="button" disabled={!diagnostics.mute.safetyLatched} onClick={onRecover}>RECOVER AUDIO</button></div>
     </>}
   </aside>;
@@ -257,9 +258,12 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     ? inspectFeedbackLoops(nodes, edges, { nodeId: selectedNode.id })
     : selectedEdge ? inspectFeedbackLoops(nodes, edges, { edgeId: selectedEdge.id }) : null,
   [edges, nodes, selectedEdge, selectedNode]);
+  const runawayLoopInspection = useMemo(() => diagnostics?.mute.safetyLatched
+    ? inspectMostRelevantFeedbackLoop(nodes, edges) : null, [diagnostics?.mute.safetyLatched, edges, nodes]);
   const normalizedLoopIndex = loopInspection?.loops.length ? activeLoopIndex % loopInspection.loops.length : 0;
   const loopDecoratedGraph = useMemo(() => decorateFeedbackLoops(nodes, edges, loopInspection, normalizedLoopIndex), [edges, loopInspection, nodes, normalizedLoopIndex]);
-  const energyDecoratedGraph = useMemo(() => decorateEnergy(loopDecoratedGraph.nodes, loopDecoratedGraph.edges, energyLevels), [energyLevels, loopDecoratedGraph]);
+  const safetyDecoratedGraph = useMemo(() => decorateRunawayFeedbackLoop(loopDecoratedGraph.nodes, loopDecoratedGraph.edges, runawayLoopInspection), [loopDecoratedGraph, runawayLoopInspection]);
+  const energyDecoratedGraph = useMemo(() => decorateEnergy(safetyDecoratedGraph.nodes, safetyDecoratedGraph.edges, energyLevels), [energyLevels, safetyDecoratedGraph]);
   const displayedGraph = useMemo(() => decorateControlPreview(energyDecoratedGraph.nodes, energyDecoratedGraph.edges, controlPreviewTime), [controlPreviewTime, energyDecoratedGraph]);
   const selectedMappingRange = useMemo(() => {
     if (selectedNode?.data.type !== 'control-map') return null;
@@ -588,7 +592,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       <MeasurementBar sampleRate={snapshot.sampleRate} onCapture={receiveCapture} />
 
       {responseCapture ? <ResponseViewer key={responseCapture.generation} capture={responseCapture} onClose={() => setResponseCapture(null)} /> : null}
-      {diagnosticsOpen ? <DiagnosticsPanel diagnostics={diagnostics} canUndo={graphHistory.undo.length > 0} onUndo={undoGraph} onRecover={() => { void callNative('resetSafety').catch(() => undefined); }} onClose={() => setDiagnosticsOpen(false)} /> : null}
+      {diagnosticsOpen ? <DiagnosticsPanel diagnostics={diagnostics} runawayLoop={runawayLoopInspection} canUndo={graphHistory.undo.length > 0} onUndo={undoGraph} onRecover={() => { void callNative('resetSafety').catch(() => undefined); }} onClose={() => setDiagnosticsOpen(false)} /> : null}
 
       <section className="workspace">
         <aside className="module-library" aria-label="Module library">

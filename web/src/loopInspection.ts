@@ -45,6 +45,20 @@ export function decorateFeedbackLoops(
   };
 }
 
+export function decorateRunawayFeedbackLoop(
+  nodes: Node<PatchNodeData>[], edges: Edge[], inspection: FeedbackLoopInspection | null,
+): { nodes: Node<PatchNodeData>[]; edges: Edge[] } {
+  const loop = inspection?.loops[0];
+  const activeNodes = new Set(loop?.nodeIds ?? []); const activeEdges = new Set(loop?.edgeIds ?? []);
+  const className = (current: string | undefined, active: boolean) => [
+    current?.replace(/\bsafety-loop-active\b/g, '').trim(), active ? 'safety-loop-active' : '',
+  ].filter(Boolean).join(' ');
+  return {
+    nodes: nodes.map((node) => ({ ...node, className: className(node.className, activeNodes.has(node.id)) })),
+    edges: edges.map((edge) => ({ ...edge, className: className(edge.className, activeEdges.has(edge.id)) })),
+  };
+}
+
 function stronglyConnectedComponents(nodeIds: string[], edges: Edge[]): Map<string, Set<string>> {
   const adjacency = new Map(nodeIds.map((id) => [id, [] as string[]]));
   for (const edge of edges) adjacency.get(edge.source)?.push(edge.target);
@@ -135,4 +149,31 @@ export function inspectFeedbackLoops(
   }
   loops.sort((left, right) => left.id.localeCompare(right.id));
   return { loops, truncated, exploredTransitions };
+}
+
+function runawayRisk(loop: FeedbackLoop): number {
+  const gain = loop.gainElements.reduce((product, element) => product * Math.max(0.001, Math.abs(element.value)), 1);
+  return gain / Math.max(0.001, loop.nominalDelayMilliseconds);
+}
+
+export function inspectMostRelevantFeedbackLoop(
+  nodes: Node<PatchNodeData>[], edges: Edge[], transitionBudget = feedbackLoopTransitionBudget,
+): FeedbackLoopInspection {
+  const candidates = nodes
+    .filter((node) => node.data.type === 'delay')
+    .sort((left, right) => left.id.localeCompare(right.id));
+  const loops = new Map<string, FeedbackLoop>(); let exploredTransitions = 0; let truncated = false;
+  for (const node of candidates) {
+    const remaining = transitionBudget - exploredTransitions;
+    if (remaining <= 0 || loops.size >= feedbackLoopResultLimit) { truncated = true; break; }
+    const inspection = inspectFeedbackLoops(nodes, edges, { nodeId: node.id }, feedbackLoopResultLimit - loops.size, remaining);
+    exploredTransitions += inspection.exploredTransitions;
+    truncated ||= inspection.truncated;
+    for (const loop of inspection.loops) loops.set([...loop.edgeIds].sort().join('|'), loop);
+  }
+  const ranked = [...loops.values()].sort((left, right) =>
+    runawayRisk(right) - runawayRisk(left)
+    || left.nominalDelayMilliseconds - right.nominalDelayMilliseconds
+    || left.id.localeCompare(right.id));
+  return { loops: ranked.slice(0, 1), truncated, exploredTransitions };
 }

@@ -131,6 +131,10 @@ button { font: inherit; }
 .safety-event > span { color: var(--danger); }
 .safety-event strong { display: block; margin-top: 4px; color: #ffd9da; font: 12px ui-monospace, Consolas, monospace; }
 .safety-event p { margin: 5px 0 0; color: #adb8be; font-size: 9px; line-height: 1.45; }
+.runaway-loop-event { margin-top: 8px; padding: 10px; border: 1px solid rgba(226, 78, 83, .55); background: rgba(226, 78, 83, .08); }
+.runaway-loop-event span { display: block; color: var(--danger); font: 800 8px ui-monospace, Consolas, monospace; letter-spacing: .1em; }
+.runaway-loop-event strong, .runaway-loop-event code { display: block; margin-top: 5px; color: #ffd9da; font: 10px ui-monospace, Consolas, monospace; overflow-wrap: anywhere; }
+.runaway-loop-event p { margin: 6px 0 0; color: #adb8be; font-size: 9px; line-height: 1.45; }
 .diagnostic-actions { display: flex; gap: 7px; margin-top: 10px; }
 .diagnostic-actions button { flex: 1; padding: 7px; border: 1px solid #596872; border-radius: 3px; color: #c8d1d6; background: #1a2329; font-size: 8px; }
 .diagnostic-actions button:last-child { border-color: var(--danger); color: #ffb9bc; }
@@ -218,6 +222,8 @@ button { font: inherit; }
 .react-flow__node.loop-related .patch-node { border-color: var(--violet); box-shadow: 0 0 18px rgba(171, 128, 255, .18); }
 .react-flow__edge.loop-active path { stroke: var(--amber); stroke-width: 4; filter: drop-shadow(0 0 4px rgba(242, 180, 78, .65)); }
 .react-flow__edge.loop-related path { stroke: var(--violet); stroke-width: 3; stroke-dasharray: 7 4; opacity: .82; }
+.react-flow__node.safety-loop-active .patch-node { border-color: var(--danger); outline: 3px double rgba(226, 78, 83, .85); outline-offset: 3px; box-shadow: 0 0 30px rgba(226, 78, 83, .5); }
+.react-flow__edge.safety-loop-active path { stroke: var(--danger); stroke-width: 5; stroke-dasharray: 10 3; filter: drop-shadow(0 0 5px rgba(226, 78, 83, .85)); }
 .react-flow__node[class*="energy-level-"] .patch-node { transition: border-color 45ms linear, box-shadow 110ms linear; }
 .react-flow__node.energy-level-1 .patch-node { box-shadow: 0 0 8px rgba(69, 208, 204, .12); }
 .react-flow__node.energy-level-2 .patch-node { box-shadow: 0 0 12px rgba(69, 208, 204, .2); }

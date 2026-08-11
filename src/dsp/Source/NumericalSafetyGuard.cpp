@@ -5,9 +5,23 @@
 
 namespace reverb::dsp {
 
-NumericalSafetyGuard::NumericalSafetyGuard(const float maximumAbsoluteSample) noexcept
-    : maximumAbsoluteSample_(maximumAbsoluteSample)
+NumericalSafetyGuard::NumericalSafetyGuard(
+    const float maximumAbsoluteSample,
+    const float sustainedAbsoluteSample,
+    const double sustainedMilliseconds) noexcept
+    : maximumAbsoluteSample_(std::max(0.0F, maximumAbsoluteSample)),
+      sustainedAbsoluteSample_(std::clamp(sustainedAbsoluteSample, 0.0F, maximumAbsoluteSample_)),
+      sustainedMilliseconds_(std::max(0.0, sustainedMilliseconds))
 {
+}
+
+void NumericalSafetyGuard::prepare(const double sampleRate) noexcept
+{
+    const auto samples = sampleRate > 0.0
+        ? std::ceil(sampleRate * sustainedMilliseconds_ / 1'000.0)
+        : 1.0;
+    sustainedSampleLimit_ = static_cast<std::size_t>(std::max(1.0, samples));
+    reset();
 }
 
 SafetyStatus NumericalSafetyGuard::inspectAndMute(const std::span<float> samples) noexcept
@@ -26,9 +40,18 @@ SafetyStatus NumericalSafetyGuard::inspectAndMute(const std::span<float> samples
             if (absolute > 1.0F)
                 ++status.clippedSamples;
         }
-        const auto violation = !std::isfinite(sample)
-            ? SafetyViolation::nonFinite
-            : (absolute > maximumAbsoluteSample_ ? SafetyViolation::runawayLevel : SafetyViolation::none);
+        auto violation = SafetyViolation::none;
+        if (!std::isfinite(sample)) {
+            violation = SafetyViolation::nonFinite;
+        } else if (absolute > maximumAbsoluteSample_) {
+            violation = SafetyViolation::runawayLevel;
+        } else {
+            consecutiveOverThreshold_ = absolute > sustainedAbsoluteSample_
+                ? consecutiveOverThreshold_ + 1
+                : 0;
+            if (consecutiveOverThreshold_ >= sustainedSampleLimit_)
+                violation = SafetyViolation::runawayLevel;
+        }
 
         if (violation != SafetyViolation::none) {
             muted_ = true;
@@ -50,6 +73,7 @@ bool NumericalSafetyGuard::isMuted() const noexcept
 void NumericalSafetyGuard::reset() noexcept
 {
     muted_ = false;
+    consecutiveOverThreshold_ = 0;
 }
 
 } // namespace reverb::dsp

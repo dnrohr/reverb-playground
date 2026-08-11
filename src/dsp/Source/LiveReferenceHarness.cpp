@@ -24,8 +24,8 @@ void LiveReferenceHarness::prepare(const double sampleRate)
         BarrReference::delayLineCount(),
         reference_.delayStorageSamples() * sizeof(float));
     capture_.prepare(sampleRate);
-    leftGuard_.reset();
-    rightGuard_.reset();
+    leftGuard_.prepare(sampleRate);
+    rightGuard_.prepare(sampleRate);
     safetyLatched_.store(false, std::memory_order_release);
     sampleRate_.store(sampleRate, std::memory_order_release);
 }

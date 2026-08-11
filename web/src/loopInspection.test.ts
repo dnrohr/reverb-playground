@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Edge, Node } from '@xyflow/react';
 import type { PatchNodeData } from './graph';
-import { decorateFeedbackLoops, feedbackLoopTransitionBudget, inspectFeedbackLoops } from './loopInspection';
+import { decorateFeedbackLoops, decorateRunawayFeedbackLoop, feedbackLoopTransitionBudget, inspectFeedbackLoops, inspectMostRelevantFeedbackLoop } from './loopInspection';
 import { createModuleNode } from './modules';
 
 const edge = (id: string, source: string, target: string): Edge => ({ id, source, target });
@@ -31,6 +31,23 @@ describe('feedback loop inspection', () => {
     expect(decorated.nodes.find((node) => node.id === 'd')?.className).toBe('loop-related');
     expect(decorated.edges.filter((item) => item.className === 'loop-active').map((item) => item.id)).toEqual(['shared', 'bc', 'ca']);
     expect({ nodes, edges }).toEqual(before);
+  });
+
+  it('ranks and danger-highlights the most relevant delayed runaway loop', () => {
+    const delayShort = createModuleNode('delay', 'delay-short', { x: 0, y: 0 }); delayShort.data.parameters[0].value = 10;
+    const delayLong = createModuleNode('delay', 'delay-long', { x: 0, y: 0 }); delayLong.data.parameters[0].value = 80;
+    const nodes = [delayShort, delayLong, gain('hot', 1.5), gain('quiet', 0.5), createModuleNode('sum', 'sum', { x: 0, y: 0 })];
+    const edges = [
+      edge('a', 'sum', 'delay-short'), edge('b', 'delay-short', 'hot'), edge('c', 'hot', 'sum'),
+      edge('d', 'sum', 'delay-long'), edge('e', 'delay-long', 'quiet'), edge('f', 'quiet', 'sum'),
+    ];
+    const result = inspectMostRelevantFeedbackLoop(nodes, edges);
+    expect(result.loops).toHaveLength(1);
+    expect(result.loops[0]?.nodeIds).toContain('delay-short');
+    const decorated = decorateRunawayFeedbackLoop(nodes, edges, result);
+    expect(decorated.nodes.filter((node) => node.className?.includes('safety-loop-active')).length).toBeGreaterThan(0);
+    expect(decorated.edges.filter((edge) => edge.className?.includes('safety-loop-active')).length).toBeGreaterThan(0);
+    expect(result.exploredTransitions).toBeLessThanOrEqual(feedbackLoopTransitionBudget);
   });
 
   it('does not mutate the graph and ignores selections outside directed cycles', () => {

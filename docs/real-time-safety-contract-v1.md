@@ -22,13 +22,13 @@ DSP state, scratch buffers, schedules, and parameter lanes are prepared off-thre
 
 ## Numerical safety
 
-Every externally audible block passes through a constant-space, allocation-free output guard. The default runaway threshold is absolute sample value `16.0` (about +24 dBFS). The first NaN, positive or negative infinity, or sample above that threshold:
+Every externally audible block passes through a constant-space, allocation-free output guard. The default hard runaway threshold is absolute sample value `16.0` (about +24 dBFS). The first NaN, positive or negative infinity, or sample above that threshold mutes immediately. A second detector mutes after absolute output above `4.0` persists continuously for 50 milliseconds; a sample at or below `4.0` resets that consecutive count. Either path:
 
 1. zeros the complete output block, including samples before the violation;
 2. latches emergency mute for subsequent blocks;
 3. records a bounded violation code and sample index for off-thread observation.
 
-Muted processing emits silence. Recovery is explicit: the control thread prepares or resets the DSP state and then clears the latch. It never resumes automatically into unknown feedback state. Denormals are handled with the platform's real-time-safe flush-to-zero facility and are not treated as an emergency.
+Muted processing emits silence. Recovery is explicit: the audio thread resets the active constructed runtime, including delay/feedback state, and then clears the latch. It never resumes automatically into unknown stored feedback energy. Denormals are handled with the platform's real-time-safe flush-to-zero facility and are not treated as an emergency.
 
 The current `NumericalSafetyGuard` makes non-finite and runaway behavior directly testable. Later graph runtimes must place the guard after wet/dry output assembly so no public output bypasses it.
 
