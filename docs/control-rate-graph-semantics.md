@@ -35,7 +35,7 @@ Patch schema v2 adds this required object to every parameter:
 
 Writers always emit schema v2. Readers accept v1 and migrate supported primitive parameters deterministically by exposing their parameter socket and applying the documented default mapping. V2 reads reject unknown mapping fields, a socket that does not match the parameter, a non-finite amount, invalid polarity, or clamps outside the parameter's allowed range. Round-trip tests require every mapping field to survive exactly. Schema v1 remains in the repository as the historical readable contract; schema v2 is the current writable contract.
 
-M5.1 prepares and validates mapping semantics; M5.2 supplies the documented user-creatable LFO and Scale / Offset nodes, and M5.3 binds mapped Delay and Allpass targets to their specialized interpolation paths.
+M5.1 prepares and validates mapping semantics; M5.2 supplies the documented user-creatable LFO and Scale / Offset nodes. M5.3 binds mapped Delay and Allpass targets to fractional linear delay taps and a bounded per-sample Allpass coefficient. See [Modulated Delay and Allpass](modulated-delay-and-allpass.md).
 
 ## Reviewed UI evidence
 

@@ -14,6 +14,11 @@ public:
     void reset() noexcept;
     void settleParameters() noexcept;
     void process(std::span<float> samples) noexcept;
+    void processModulated(std::span<float> samples,
+        std::span<const double> delayMilliseconds,
+        std::span<const double> coefficients) noexcept;
+    [[nodiscard]] float processSampleModulated(
+        float sample, double delayMilliseconds, double coefficient) noexcept;
 
     [[nodiscard]] float coefficient() const noexcept;
     [[nodiscard]] double delayMilliseconds() const noexcept;
@@ -35,6 +40,8 @@ private:
     float coefficient_ { 0.5F };
     float targetCoefficient_ { 0.5F };
     float coefficientSmoothing_ { 1.0F };
+
+    [[nodiscard]] float readFractional(double delaySamples) const noexcept;
 };
 
 } // namespace reverb::dsp

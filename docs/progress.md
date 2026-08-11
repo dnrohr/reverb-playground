@@ -32,6 +32,7 @@ Last updated: 2026-08-11
 | M4.5 Add resource and safety diagnostics | Complete | Static/live/prepared labels; callback timing; exact delay memory; clip counts; revision-bound safety events; edit/undo/recover workflow; complete synthetic violations |
 | M5.1 Implement control-rate graph semantics | Complete | Typed parameter sockets; 1 kHz bounded plans; linear ramps; explicit mapping inspector; exact schema-v2 persistence; native 125%-DPI evidence |
 | M5.2 Implement LFO and modulation mapping blocks | Complete | Tested sine/triangle and transport semantics; explicit scale/offset/polarity; one-to-many control branching; predicted range; screenshot/video evidence |
+| M5.3 Add modulated Delay and Allpass parameters | Complete | Fractional linear taps; bounded coefficient; prepared control-runtime binding; constant/static equivalence; boundary, feedback, and moving-diffusion tests; inspector evidence |
 
 ## M0.2 verification
 
@@ -349,3 +350,15 @@ Results:
 - Control nodes combine a dashed outline, double rule, textual waveform/mapping marker, signed value, and moving position marker. Control cables remain dashed and animate during live preview, so neither depends on colour alone.
 - Creation, mapping, branching, and predicted-range screenshot: [`artifacts/ui/m5-2-lfo-control-mapping/01-lfo-mapper-branching.png`](../artifacts/ui/m5-2-lfo-control-mapping/01-lfo-mapper-branching.png).
 - Eight-second native live-preview video: [`artifacts/ui/m5-2-lfo-control-mapping/live-control-preview.mp4`](../artifacts/ui/m5-2-lfo-control-mapping/live-control-preview.mp4).
+
+## M5.3 verification
+
+- Delay time uses a two-point fractional linear circular-buffer read. Connected mapping clamps determine prepared storage plus one interpolation guard sample, and existing line-count/64 MiB rejection occurs before construction.
+- Allpass time uses the same moving tap; coefficient control is evaluated per sample and hard-limited to `-0.95` through `+0.95`.
+- Prepared control operations run at 1 kHz and fill preallocated audio-rate ramp buffers. Processing performs no allocation, resizing, locking, logging, or I/O.
+- Native tests prove constant mapped control matches equivalent static Delay and Allpass output, and stress minimum/maximum time, full-depth sweeps, extreme coefficient values, and finite output.
+- A modulated Delay feedback loop renders identically across different host block partitions. Existing invalid-publication tests continue to protect the last valid runtime.
+- A compiled visible LFO -> Scale / Offset -> Allpass graph branches one control output into delay and coefficient and renders finite non-silent moving diffusion.
+- The inspector labels fractional linear interpolation, the 100 Hz control-source ceiling, intentional Doppler/pitch effects, and the coefficient stability boundary.
+- Reviewed native screenshot: [`artifacts/ui/m5-3-modulated-delay-allpass/01-allpass-modulation-policy.png`](../artifacts/ui/m5-3-modulated-delay-allpass/01-allpass-modulation-policy.png).
+- UI animation did not change, so no new video was required; M5.2 retains the live-control animation evidence and native render tests cover the new DSP behavior.

@@ -15,6 +15,9 @@ void Delay::prepare(const double sampleRate, const double delayMilliseconds)
     ownedBuffer_.assign(std::max<std::size_t>(1, samples), 0.0F);
     buffer_ = ownedBuffer_;
     writeIndex_ = 0;
+    sampleRate_ = sampleRate;
+    delaySamples_ = static_cast<double>(buffer_.size());
+    fractional_ = false;
 }
 
 void Delay::prepare(
@@ -30,6 +33,30 @@ void Delay::prepare(
     buffer_ = preparedStorage;
     std::ranges::fill(buffer_, 0.0F);
     writeIndex_ = 0;
+    sampleRate_ = sampleRate;
+    delaySamples_ = static_cast<double>(buffer_.size());
+    fractional_ = false;
+}
+
+void Delay::prepareModulated(
+    const double sampleRate,
+    const double delayMilliseconds,
+    const double maximumDelayMilliseconds,
+    const std::span<float> preparedStorage)
+{
+    if (sampleRate <= 0.0 || delayMilliseconds <= 0.0 || maximumDelayMilliseconds < delayMilliseconds)
+        throw std::invalid_argument("modulated delay preparation requires positive ordered times");
+    const auto capacity = std::max<std::size_t>(2,
+        static_cast<std::size_t>(std::ceil(sampleRate * maximumDelayMilliseconds / 1000.0)) + 1);
+    if (preparedStorage.size() != capacity)
+        throw std::invalid_argument("prepared modulated delay storage does not match the declared maximum time");
+    ownedBuffer_.clear();
+    buffer_ = preparedStorage;
+    std::ranges::fill(buffer_, 0.0F);
+    writeIndex_ = 0;
+    sampleRate_ = sampleRate;
+    fractional_ = true;
+    setDelayMilliseconds(delayMilliseconds);
 }
 
 void Delay::reset() noexcept
@@ -52,9 +79,30 @@ void Delay::process(const std::span<float> samples) noexcept
     }
 }
 
+void Delay::processModulated(
+    const std::span<float> samples, const std::span<const double> delayMilliseconds) noexcept
+{
+    if (delayMilliseconds.size() < samples.size()) {
+        std::ranges::fill(samples, 0.0F);
+        return;
+    }
+    for (std::size_t index = 0; index < samples.size(); ++index) {
+        setDelayMilliseconds(delayMilliseconds[index]);
+        const auto input = samples[index];
+        samples[index] = readSample();
+        writeSample(input);
+    }
+}
+
 float Delay::readSample() const noexcept
 {
-    return buffer_.empty() ? 0.0F : buffer_[writeIndex_];
+    if (buffer_.empty()) return 0.0F;
+    if (!fractional_) return buffer_[writeIndex_];
+    const auto lower = static_cast<std::size_t>(std::floor(delaySamples_));
+    const auto fraction = static_cast<float>(delaySamples_ - static_cast<double>(lower));
+    const auto first = buffer_[(writeIndex_ + buffer_.size() - lower) % buffer_.size()];
+    const auto second = buffer_[(writeIndex_ + buffer_.size() - lower - 1) % buffer_.size()];
+    return std::lerp(first, second, fraction);
 }
 
 void Delay::writeSample(const float sample) noexcept
@@ -66,7 +114,20 @@ void Delay::writeSample(const float sample) noexcept
 
 std::size_t Delay::delaySamples() const noexcept
 {
-    return buffer_.size();
+    return static_cast<std::size_t>(std::llround(delaySamples_));
+}
+
+double Delay::delayMilliseconds() const noexcept
+{
+    return sampleRate_ > 0.0 ? delaySamples_ * 1000.0 / sampleRate_ : 0.0;
+}
+
+void Delay::setDelayMilliseconds(const double delayMilliseconds) noexcept
+{
+    if (!fractional_ || buffer_.size() < 2 || sampleRate_ <= 0.0) return;
+    const auto finite = std::isfinite(delayMilliseconds) ? delayMilliseconds : 1000.0 / sampleRate_;
+    delaySamples_ = std::clamp(
+        finite * sampleRate_ / 1000.0, 1.0, static_cast<double>(buffer_.size() - 1));
 }
 
 } // namespace reverb::dsp

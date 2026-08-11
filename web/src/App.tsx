@@ -764,7 +764,13 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                         <label><span>CLAMP MIN</span><input type="number" min={parameter.minimum} max={parameter.modulation.clampMaximum} step={parameter.step} value={parameter.modulation.clampMinimum} onFocus={() => beginParameterEdit(selectedNode.id, `${parameter.id} modulation`, parameter.value)} onChange={(event) => applyModulation(selectedNode.id, parameter.id, { clampMinimum: Number(event.target.value) })} onBlur={commitParameterEdit} /></label>
                         <label><span>CLAMP MAX</span><input type="number" min={parameter.modulation.clampMinimum} max={parameter.maximum} step={parameter.step} value={parameter.modulation.clampMaximum} onFocus={() => beginParameterEdit(selectedNode.id, `${parameter.id} modulation`, parameter.value)} onChange={(event) => applyModulation(selectedNode.id, parameter.id, { clampMaximum: Number(event.target.value) })} onBlur={commitParameterEdit} /></label>
                       </div>
-                      <footer>1 kHz control ticks · linear interpolation to audio rate</footer>
+                      <footer>
+                        {parameter.id === 'delay' && (selectedNode.data.type === 'delay' || selectedNode.data.type === 'allpass')
+                          ? '1 kHz control ticks / linear audio-rate ramp / fractional linear delay tap. Moving time intentionally produces Doppler and pitch effects; control sources are limited to 100 Hz.'
+                          : parameter.id === 'coefficient' && selectedNode.data.type === 'allpass'
+                            ? '1 kHz control ticks / linear audio-rate ramp / coefficient hard-limited to -0.95 through +0.95.'
+                            : '1 kHz control ticks / linear interpolation to audio rate'}
+                      </footer>
                     </section>
                   ) : null}
                 </div>
@@ -774,7 +780,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <button type="button" disabled={!graphHistory.undo.length} onClick={undoGraph}>UNDO</button>
                 <button type="button" disabled={!graphHistory.redo.length} onClick={redoGraph}>REDO</button>
               </div>
-              <div className="selection-note">{selectedNode.data.runtimeBound ? `Live value from native DSP runtime contract v${snapshot.contractVersion}.` : 'Draft graph block. Saved values are editable; audio compilation arrives in a later milestone.'}</div>
+              <div className="selection-note">{selectedNode.data.runtimeBound ? `Live value from native DSP runtime contract v${snapshot.contractVersion}.` : 'Draft graph block. Delay and Allpass modulation compile for prepared audition; publishing edited topology to the live plugin arrives in M5.4.'}</div>
               {showTeaching ? <TeachingCard topic={teachingTopicFor(selectedNode.id)} onDismiss={() => setDismissedTeaching(teachingKey)} onResearch={() => setResearchOpen(true)} /> : null}
             </div>
           ) : selectedEdge ? (

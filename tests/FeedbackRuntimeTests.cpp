@@ -14,6 +14,8 @@ namespace {
 using namespace reverb::graph;
 Port inputPort(std::string id = "in") { return { std::move(id), SignalType::audio, PortDirection::input }; }
 Port outputPort(std::string id = "out") { return { std::move(id), SignalType::audio, PortDirection::output }; }
+Port controlInputPort(std::string id) { return { std::move(id), SignalType::control, PortDirection::input }; }
+Port controlOutputPort(std::string id = "out") { return { std::move(id), SignalType::control, PortDirection::output }; }
 Node stereoInput() { return { "input", "stereo-input", { outputPort("out-l"), outputPort("out-r") }, {} }; }
 Node stereoOutput() { return { "output", "stereo-output", { inputPort("in-l"), inputPort("in-r") }, {} }; }
 Node sumNode(std::string id) { return { std::move(id), "sum", { inputPort("in-a"), inputPort("in-b"), outputPort() }, {} }; }
@@ -61,6 +63,35 @@ TEST_CASE("Delay-containing feedback renders a deterministic causal recurrence")
     partitioned.runtime->process(std::span(inputLeft).subspan(2), std::span(inputRight).subspan(2), std::span(partitionedLeft).subspan(2), std::span(partitionedRight).subspan(2));
     REQUIRE(firstLeft == std::array { 0.0F, 0.5F, 0.25F, 0.125F, 0.0625F });
     REQUIRE(secondLeft == firstLeft); REQUIRE(secondRight == firstRight); REQUIRE(partitionedLeft == firstLeft);
+}
+
+TEST_CASE("Modulated delay feedback is finite and deterministic across host block partitions")
+{
+    auto graph = simpleFeedbackGraph();
+    auto& delay = *std::ranges::find(graph.nodes, "delay", &Node::id);
+    delay.ports.insert(delay.ports.begin() + 1, controlInputPort("delay-mod"));
+    delay.parameters.front().modulation = ParameterModulation {
+        "delay-mod", 0.75, ModulationPolarity::bipolar, 1.0, 3.0 };
+    graph.nodes.insert(graph.nodes.end() - 1, {
+        "lfo", "lfo", { controlOutputPort() }, {
+            { "frequency", 100.0, "hertz" }, { "phase", 0.0, "cycles" },
+            { "waveform", 1.0, "waveform" }, { "run-mode", 0.0, "run-mode" },
+        },
+    });
+    graph.connections.push_back(cable("lfo-delay", "lfo", "out", "delay", "delay-mod"));
+    auto whole = compileFeedbackGraph(graph, 1'000.0, 32);
+    auto partitioned = compileFeedbackGraph(graph, 1'000.0, 32);
+    REQUIRE(whole.valid()); REQUIRE(partitioned.valid());
+    std::array<float, 32> input {}; input.front() = 0.5F;
+    std::array<float, 32> silence {}; std::array<float, 32> wholeLeft {}; std::array<float, 32> wholeRight {};
+    std::array<float, 32> partitionedLeft {}; std::array<float, 32> partitionedRight {};
+    whole.runtime->process(input, silence, wholeLeft, wholeRight);
+    partitioned.runtime->process(std::span(input).first(11), std::span(silence).first(11),
+        std::span(partitionedLeft).first(11), std::span(partitionedRight).first(11));
+    partitioned.runtime->process(std::span(input).subspan(11), std::span(silence).subspan(11),
+        std::span(partitionedLeft).subspan(11), std::span(partitionedRight).subspan(11));
+    REQUIRE(partitionedLeft == wholeLeft);
+    REQUIRE(std::ranges::all_of(wholeLeft, [](const float sample) { return std::isfinite(sample); }));
 }
 
 TEST_CASE("Zero-delay algebraic cycles report the exact offending loop")

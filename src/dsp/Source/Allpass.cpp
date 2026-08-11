@@ -97,6 +97,51 @@ void Allpass::process(const std::span<float> samples) noexcept
     }
 }
 
+void Allpass::processModulated(
+    const std::span<float> samples,
+    const std::span<const double> delayMilliseconds,
+    const std::span<const double> coefficients) noexcept
+{
+    if (buffer_.empty() || delayMilliseconds.size() < samples.size() || coefficients.size() < samples.size()) {
+        std::ranges::fill(samples, 0.0F);
+        return;
+    }
+    for (std::size_t index = 0; index < samples.size(); ++index) {
+        samples[index] = processSampleModulated(
+            samples[index], delayMilliseconds[index], coefficients[index]);
+    }
+}
+
+float Allpass::processSampleModulated(
+    const float sample, const double delayMilliseconds, const double coefficient) noexcept
+{
+    if (buffer_.empty()) return 0.0F;
+    const auto maximumDelaySamples = static_cast<double>(buffer_.size() - 1);
+    const auto finiteDelay = std::isfinite(delayMilliseconds)
+        ? delayMilliseconds * sampleRate_ / 1000.0
+        : 1.0;
+    const auto delay = std::clamp(finiteDelay, 1.0, maximumDelaySamples);
+    const auto finiteCoefficient = std::isfinite(coefficient)
+        ? static_cast<float>(coefficient)
+        : 0.0F;
+    coefficient_ = std::clamp(finiteCoefficient, -0.95F, 0.95F);
+    const auto delayed = readFractional(delay);
+    const auto output = delayed - coefficient_ * sample;
+    buffer_[writeIndex_] = sample + coefficient_ * output;
+    writeIndex_ = (writeIndex_ + 1) % buffer_.size();
+    delayMilliseconds_ = delay * 1000.0 / sampleRate_;
+    return output;
+}
+
+float Allpass::readFractional(const double delaySamples) const noexcept
+{
+    const auto lower = static_cast<std::size_t>(std::floor(delaySamples));
+    const auto fraction = static_cast<float>(delaySamples - static_cast<double>(lower));
+    const auto first = buffer_[(writeIndex_ + buffer_.size() - lower) % buffer_.size()];
+    const auto second = buffer_[(writeIndex_ + buffer_.size() - lower - 1) % buffer_.size()];
+    return std::lerp(first, second, fraction);
+}
+
 double Allpass::delayMilliseconds() const noexcept { return delayMilliseconds_; }
 std::size_t Allpass::storageSamples() const noexcept { return buffer_.size(); }
 

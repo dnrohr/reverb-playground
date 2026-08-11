@@ -154,3 +154,83 @@ TEST_CASE("Allpass delay edits crossfade with finite bounded output")
         [](const float sample) { return std::abs(sample); });
     REQUIRE(maximum < 1.0F);
 }
+
+TEST_CASE("Constant modulated delay matches the equivalent static integer delay")
+{
+    constexpr auto sampleRate = 48'000.0;
+    constexpr auto delayMilliseconds = 7.5;
+    reverb::dsp::Delay fixed;
+    fixed.prepare(sampleRate, delayMilliseconds);
+
+    const auto capacity = static_cast<std::size_t>(
+        std::ceil(sampleRate * 20.0 / 1000.0)) + 1;
+    std::vector<float> storage(capacity);
+    reverb::dsp::Delay modulated;
+    modulated.prepareModulated(sampleRate, delayMilliseconds, 20.0, storage);
+
+    std::vector<float> expected(2'048);
+    for (std::size_t index = 0; index < expected.size(); ++index)
+        expected[index] = static_cast<float>(std::sin(0.017 * static_cast<double>(index)));
+    auto actual = expected;
+    std::vector<double> control(actual.size(), delayMilliseconds);
+    fixed.process(expected);
+    modulated.processModulated(actual, control);
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Linear delay interpolation remains bounded at minimum maximum and full-depth modulation")
+{
+    constexpr auto sampleRate = 48'000.0;
+    constexpr auto maximumMilliseconds = 100.0;
+    const auto capacity = static_cast<std::size_t>(
+        std::ceil(sampleRate * maximumMilliseconds / 1000.0)) + 1;
+    std::vector<float> storage(capacity);
+    reverb::dsp::Delay delay;
+    delay.prepareModulated(sampleRate, 1.0, maximumMilliseconds, storage);
+
+    std::vector<float> signal(24'000);
+    std::vector<double> control(signal.size());
+    for (std::size_t index = 0; index < signal.size(); ++index) {
+        signal[index] = 0.2F * static_cast<float>(std::sin(0.11 * static_cast<double>(index)));
+        const auto sweep = static_cast<double>(index) / static_cast<double>(signal.size() - 1);
+        control[index] = index % 2 == 0
+            ? 1000.0 / sampleRate
+            : maximumMilliseconds * sweep;
+    }
+    delay.processModulated(signal, control);
+    REQUIRE(std::ranges::all_of(signal, [](const float sample) { return std::isfinite(sample); }));
+    REQUIRE(delay.delayMilliseconds() >= 1000.0 / sampleRate);
+    REQUIRE(delay.delayMilliseconds() <= maximumMilliseconds);
+}
+
+TEST_CASE("Constant modulated allpass matches static processing and clamps extreme controls")
+{
+    constexpr auto sampleRate = 48'000.0;
+    constexpr auto delayMilliseconds = 5.0;
+    constexpr auto coefficient = 0.65;
+    reverb::dsp::Allpass fixed;
+    fixed.prepare(sampleRate, delayMilliseconds, static_cast<float>(coefficient), 100.0);
+    reverb::dsp::Allpass modulated;
+    modulated.prepare(sampleRate, delayMilliseconds, static_cast<float>(coefficient), 100.0);
+
+    std::vector<float> expected(8'192, 0.0F);
+    expected.front() = 1.0F;
+    auto actual = expected;
+    std::vector<double> delays(actual.size(), delayMilliseconds);
+    std::vector<double> coefficients(actual.size(), coefficient);
+    fixed.process(expected);
+    modulated.processModulated(actual, delays, coefficients);
+    REQUIRE(std::ranges::equal(actual, expected, [](const float left, const float right) {
+        return std::abs(left - right) <= 1.0e-7F;
+    }));
+
+    std::ranges::fill(actual, 0.1F);
+    for (std::size_t index = 0; index < actual.size(); ++index) {
+        delays[index] = index % 2 == 0 ? -1'000.0 : 1'000.0;
+        coefficients[index] = index % 2 == 0 ? -100.0 : 100.0;
+    }
+    modulated.processModulated(actual, delays, coefficients);
+    REQUIRE(std::ranges::all_of(actual, [](const float sample) { return std::isfinite(sample); }));
+    REQUIRE(std::abs(modulated.coefficient()) <= 0.95F);
+    REQUIRE(modulated.delayMilliseconds() <= 100.0);
+}

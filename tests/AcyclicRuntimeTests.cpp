@@ -14,6 +14,8 @@ using namespace reverb::graph;
 
 Port inputPort(std::string id = "in") { return { std::move(id), SignalType::audio, PortDirection::input }; }
 Port outputPort(std::string id = "out") { return { std::move(id), SignalType::audio, PortDirection::output }; }
+Port controlInputPort(std::string id) { return { std::move(id), SignalType::control, PortDirection::input }; }
+Port controlOutputPort(std::string id = "out") { return { std::move(id), SignalType::control, PortDirection::output }; }
 Node stereoInput() { return { "input", "stereo-input", { outputPort("out-l"), outputPort("out-r") }, {} }; }
 Node stereoOutput() { return { "output", "stereo-output", { inputPort("in-l"), inputPort("in-r") }, {} }; }
 Connection cable(std::string id, std::string fromNode, std::string fromPort, std::string toNode, std::string toPort)
@@ -85,6 +87,93 @@ TEST_CASE("Constructed delay graph matches a direct one-sample shift")
     compiled.runtime->process(left, right, outputLeft, outputRight);
     REQUIRE(outputLeft == std::array { 0.0F, 1.0F, 2.0F, 3.0F });
     REQUIRE(outputRight == right);
+}
+
+TEST_CASE("Compiled constant control matches the equivalent static delay")
+{
+    GraphDocument modulated;
+    modulated.nodes = {
+        stereoInput(),
+        { "lfo", "lfo", { controlOutputPort() }, {
+            { "frequency", 1.0, "hertz" }, { "phase", 0.0, "cycles" },
+            { "waveform", 0.0, "waveform" }, { "run-mode", 0.0, "run-mode" },
+        } },
+        { "map", "control-map", { controlInputPort("in"), controlOutputPort() }, {
+            { "scale", 0.0, "linear" }, { "offset", 1.0, "unitless" },
+            { "polarity", 1.0, "polarity" },
+        } },
+        { "delay", "delay", { inputPort(), controlInputPort("delay-mod"), outputPort() }, {
+            { "delay", 2.0, "milliseconds", ParameterModulation {
+                "delay-mod", 1.0, ModulationPolarity::bipolar, 1.0, 3.0 } },
+        } },
+        stereoOutput(),
+    };
+    modulated.connections = {
+        cable("audio-in", "input", "out-l", "delay", "in"),
+        cable("audio-out", "delay", "out", "output", "in-l"),
+        cable("right", "input", "out-r", "output", "in-r"),
+        cable("lfo-map", "lfo", "out", "map", "in"),
+        cable("map-delay", "map", "out", "delay", "delay-mod"),
+    };
+    auto staticGraph = modulated;
+    staticGraph.nodes.erase(staticGraph.nodes.begin() + 1, staticGraph.nodes.begin() + 3);
+    staticGraph.nodes[1].ports.erase(staticGraph.nodes[1].ports.begin() + 1);
+    staticGraph.nodes[1].parameters[0] = { "delay", 3.0, "milliseconds" };
+    staticGraph.connections.erase(staticGraph.connections.begin() + 3, staticGraph.connections.end());
+
+    auto moving = compileAcyclicGraph(modulated, 1'000.0, 16);
+    auto fixed = compileAcyclicGraph(staticGraph, 1'000.0, 16);
+    REQUIRE(moving.valid());
+    REQUIRE(fixed.valid());
+    REQUIRE(moving.delayMemory.allocatedSamples == 4);
+    const std::array<float, 8> input { 1, 2, 3, 4, 5, 6, 7, 8 };
+    std::array<float, 8> silence {};
+    std::array<float, 8> movingLeft {}; std::array<float, 8> movingRight {};
+    std::array<float, 8> fixedLeft {}; std::array<float, 8> fixedRight {};
+    moving.runtime->process(input, silence, movingLeft, movingRight);
+    fixed.runtime->process(input, silence, fixedLeft, fixedRight);
+    REQUIRE(movingLeft == fixedLeft);
+}
+
+TEST_CASE("Visible LFO mapping drives bounded Barr-style moving diffusion")
+{
+    GraphDocument graph;
+    graph.nodes = {
+        stereoInput(),
+        { "lfo", "lfo", { controlOutputPort() }, {
+            { "frequency", 2.0, "hertz" }, { "phase", 0.0, "cycles" },
+            { "waveform", 1.0, "waveform" }, { "run-mode", 0.0, "run-mode" },
+        } },
+        { "map", "control-map", { controlInputPort("in"), controlOutputPort() }, {
+            { "scale", 1.0, "linear" }, { "offset", 0.0, "unitless" },
+            { "polarity", 1.0, "polarity" },
+        } },
+        { "diffuser", "allpass", {
+            inputPort(), controlInputPort("delay-mod"), controlInputPort("coefficient-mod"), outputPort(),
+        }, {
+            { "delay", 7.0, "milliseconds", ParameterModulation {
+                "delay-mod", 3.0, ModulationPolarity::bipolar, 1.0, 12.0 } },
+            { "coefficient", 0.5, "unitless", ParameterModulation {
+                "coefficient-mod", 0.2, ModulationPolarity::bipolar, -0.95, 0.95 } },
+        } },
+        stereoOutput(),
+    };
+    graph.connections = {
+        cable("audio-in", "input", "out-l", "diffuser", "in"),
+        cable("audio-out", "diffuser", "out", "output", "in-l"),
+        cable("right", "input", "out-r", "output", "in-r"),
+        cable("lfo-map", "lfo", "out", "map", "in"),
+        cable("map-delay", "map", "out", "diffuser", "delay-mod"),
+        cable("map-coefficient", "map", "out", "diffuser", "coefficient-mod"),
+    };
+    auto compiled = compileAcyclicGraph(graph, 48'000.0, 4'800);
+    REQUIRE(compiled.valid());
+    std::vector<float> input(4'800, 0.0F); input.front() = 1.0F;
+    std::vector<float> silence(input.size());
+    std::vector<float> outputLeft(input.size()); std::vector<float> outputRight(input.size());
+    compiled.runtime->process(input, silence, outputLeft, outputRight);
+    REQUIRE(std::ranges::all_of(outputLeft, [](const float sample) { return std::isfinite(sample); }));
+    REQUIRE(std::ranges::any_of(outputLeft, [](const float sample) { return sample != 0.0F; }));
 }
 
 TEST_CASE("Compiled Barr primitive graph matches its direct DSP reference")

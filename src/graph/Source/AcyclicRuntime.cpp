@@ -1,4 +1,6 @@
 #include <reverb/graph/AcyclicRuntime.h>
+#include <reverb/graph/ControlModulation.h>
+#include <reverb/graph/ControlRate.h>
 
 #include <reverb/dsp/Allpass.h>
 #include <reverb/dsp/Delay.h>
@@ -9,6 +11,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <limits>
 #include <map>
 #include <queue>
 #include <stdexcept>
@@ -31,6 +34,30 @@ struct Operation final {
     std::vector<std::size_t> outputs;
     Processor processor;
     float sumGain { 1.0F };
+    double baseDelayMilliseconds {};
+    double baseCoefficient {};
+    std::size_t delayModulation { std::numeric_limits<std::size_t>::max() };
+    std::size_t coefficientModulation { std::numeric_limits<std::size_t>::max() };
+};
+
+enum class ControlOperationKind { lfo, mapper };
+
+struct ControlOperation final {
+    std::string id;
+    ControlOperationKind kind {};
+    reverb::graph::ControlLfo lfo;
+    std::size_t source { std::numeric_limits<std::size_t>::max() };
+    double scale { 1.0 };
+    double offset {};
+    ModulationPolarity polarity { ModulationPolarity::bipolar };
+    double value {};
+};
+
+struct RuntimeModulation final {
+    CompiledControlMapping mapping;
+    ControlRamp ramp;
+    std::size_t source { std::numeric_limits<std::size_t>::max() };
+    std::vector<double> values;
 };
 
 std::string portKey(const std::string& node, const std::string& port) { return node + "\n" + port; }
@@ -57,6 +84,12 @@ bool hasPorts(const Node& node, const std::vector<std::pair<std::string, PortDir
             return false;
     }
     return true;
+}
+
+bool hasPort(const Node& node, const std::string_view id, const SignalType signal, const PortDirection direction)
+{
+    const auto found = std::ranges::find(node.ports, id, &Port::id);
+    return found != node.ports.end() && found->signal == signal && found->direction == direction;
 }
 
 void addNodeContractErrors(const Node& node, std::vector<std::string>& errors)
@@ -87,6 +120,17 @@ void addNodeContractErrors(const Node& node, std::vector<std::string>& errors)
     } else if (node.type == "lowpass") {
         if (!unary || !hasParameter(node, "cutoff", "hertz"))
             errors.push_back("lowpass node '" + node.id + "' requires in, out, and cutoff");
+    } else if (node.type == "lfo") {
+        if (!hasPort(node, "out", SignalType::control, PortDirection::output)
+            || !hasParameter(node, "frequency", "hertz") || !hasParameter(node, "phase", "cycles")
+            || !hasParameter(node, "waveform", "waveform") || !hasParameter(node, "run-mode", "run-mode"))
+            errors.push_back("lfo node '" + node.id + "' requires frequency, phase, waveform, and run-mode");
+    } else if (node.type == "control-map") {
+        if (!hasPort(node, "in", SignalType::control, PortDirection::input)
+            || !hasPort(node, "out", SignalType::control, PortDirection::output)
+            || !hasParameter(node, "scale", "linear") || !hasParameter(node, "offset", "unitless")
+            || !hasParameter(node, "polarity", "polarity"))
+            errors.push_back("control-map node '" + node.id + "' requires scale, offset, and polarity");
     } else {
         errors.push_back("unsupported node type '" + node.type + "' on '" + node.id + "'");
     }
@@ -182,6 +226,11 @@ struct PreparedAcyclicRuntime::Impl final {
     std::vector<std::string> schedule;
     std::vector<std::vector<float>> buffers;
     std::vector<Operation> operations;
+    std::vector<ControlOperation> controlOperations;
+    std::unordered_map<std::string, std::size_t> controlOperationById;
+    std::vector<RuntimeModulation> modulations;
+    std::size_t controlQuantumSamples { 1 };
+    std::size_t samplesUntilControlTick {};
 };
 
 PreparedAcyclicRuntime::PreparedAcyclicRuntime(std::unique_ptr<Impl> implementation) noexcept
@@ -210,14 +259,45 @@ void PreparedAcyclicRuntime::process(
         std::ranges::fill(outputRight, 0.0F);
         return;
     }
+    const auto noModulation = std::numeric_limits<std::size_t>::max();
+    for (std::size_t sample = 0; sample < count; ++sample) {
+        if (!implementation_->modulations.empty() && implementation_->samplesUntilControlTick == 0) {
+            for (auto& control : implementation_->controlOperations) {
+                if (control.kind == ControlOperationKind::lfo) {
+                    control.value = control.lfo.next();
+                } else {
+                    const auto input = control.source == noModulation
+                        ? 0.0
+                        : implementation_->controlOperations[control.source].value;
+                    control.value = mapControlValue(input, control.scale, control.offset, control.polarity);
+                }
+            }
+            for (auto& modulation : implementation_->modulations) {
+                const auto control = modulation.source == noModulation
+                    ? 0.0
+                    : implementation_->controlOperations[modulation.source].value;
+                modulation.ramp.setTarget(
+                    mappedParameterValue(modulation.mapping, control), implementation_->controlQuantumSamples);
+            }
+            implementation_->samplesUntilControlTick = implementation_->controlQuantumSamples;
+        }
+        for (auto& modulation : implementation_->modulations)
+            modulation.values[sample] = modulation.ramp.next();
+        if (!implementation_->modulations.empty())
+            --implementation_->samplesUntilControlTick;
+    }
     if (implementation_->feedbackMode) {
         auto sampleBuffer = [this](const std::size_t index) { return std::span<float>(implementation_->buffers[index]).first(1); };
         for (std::size_t sampleIndex = 0; sampleIndex < count; ++sampleIndex) {
             implementation_->buffers[implementation_->silenceBuffer][0] = 0.0F;
             implementation_->buffers[implementation_->inputLeftBuffer][0] = inputLeft[sampleIndex];
             implementation_->buffers[implementation_->inputRightBuffer][0] = inputRight[sampleIndex];
-            for (auto& operation : implementation_->operations) if (operation.kind == OperationKind::delay)
+            for (auto& operation : implementation_->operations) if (operation.kind == OperationKind::delay) {
+                if (operation.delayModulation != noModulation)
+                    std::get<reverb::dsp::Delay>(operation.processor).setDelayMilliseconds(
+                        implementation_->modulations[operation.delayModulation].values[sampleIndex]);
                 implementation_->buffers[operation.outputs.front()][0] = std::get<reverb::dsp::Delay>(operation.processor).readSample();
+            }
             for (auto& operation : implementation_->operations) {
                 if (operation.kind == OperationKind::input || operation.kind == OperationKind::output || operation.kind == OperationKind::delay) continue;
                 auto destination = sampleBuffer(operation.outputs.front());
@@ -226,7 +306,18 @@ void PreparedAcyclicRuntime::process(
                     reverb::dsp::Sum::process(destination, sampleBuffer(operation.inputs[1]), destination);
                     destination.front() *= operation.sumGain;
                 } else if (operation.kind == OperationKind::gain) std::get<reverb::dsp::Gain>(operation.processor).process(destination);
-                else if (operation.kind == OperationKind::allpass) std::get<reverb::dsp::Allpass>(operation.processor).process(destination);
+                else if (operation.kind == OperationKind::allpass) {
+                    if (operation.delayModulation != noModulation || operation.coefficientModulation != noModulation) {
+                        const auto delay = operation.delayModulation == noModulation
+                            ? operation.baseDelayMilliseconds
+                            : implementation_->modulations[operation.delayModulation].values[sampleIndex];
+                        const auto coefficient = operation.coefficientModulation == noModulation
+                            ? operation.baseCoefficient
+                            : implementation_->modulations[operation.coefficientModulation].values[sampleIndex];
+                        destination.front() = std::get<reverb::dsp::Allpass>(operation.processor)
+                            .processSampleModulated(destination.front(), delay, coefficient);
+                    } else std::get<reverb::dsp::Allpass>(operation.processor).process(destination);
+                }
                 else if (operation.kind == OperationKind::lowpass) std::get<reverb::dsp::OnePoleLowPass>(operation.processor).process(destination);
             }
             for (auto& operation : implementation_->operations) if (operation.kind == OperationKind::delay)
@@ -253,9 +344,27 @@ void PreparedAcyclicRuntime::process(
         } else if (operation.kind == OperationKind::gain) {
             std::get<reverb::dsp::Gain>(operation.processor).process(destination);
         } else if (operation.kind == OperationKind::delay) {
-            std::get<reverb::dsp::Delay>(operation.processor).process(destination);
+            auto& processor = std::get<reverb::dsp::Delay>(operation.processor);
+            if (operation.delayModulation == noModulation)
+                processor.process(destination);
+            else
+                processor.processModulated(destination,
+                    std::span<const double>(implementation_->modulations[operation.delayModulation].values).first(count));
         } else if (operation.kind == OperationKind::allpass) {
-            std::get<reverb::dsp::Allpass>(operation.processor).process(destination);
+            auto& processor = std::get<reverb::dsp::Allpass>(operation.processor);
+            if (operation.delayModulation == noModulation && operation.coefficientModulation == noModulation) {
+                processor.process(destination);
+            } else {
+                for (std::size_t sample = 0; sample < count; ++sample) {
+                    const auto delay = operation.delayModulation == noModulation
+                        ? operation.baseDelayMilliseconds
+                        : implementation_->modulations[operation.delayModulation].values[sample];
+                    const auto coefficient = operation.coefficientModulation == noModulation
+                        ? operation.baseCoefficient
+                        : implementation_->modulations[operation.coefficientModulation].values[sample];
+                    destination[sample] = processor.processSampleModulated(destination[sample], delay, coefficient);
+                }
+            }
         } else if (operation.kind == OperationKind::lowpass) {
             std::get<reverb::dsp::OnePoleLowPass>(operation.processor).process(destination);
         }
@@ -285,6 +394,11 @@ AcyclicCompileResult compileAcyclicGraph(
         if (!(allowFeedback && error == "directed cycles must contain an explicit delay node"))
             result.errors.push_back(error);
     }
+    ControlRatePlan controlPlan;
+    if (sampleRate > 0.0 && sampleRate <= 192'000.0 && maximumBlockSize > 0) {
+        controlPlan = compileControlRatePlan(document, sampleRate, maximumBlockSize);
+        result.errors.insert(result.errors.end(), controlPlan.errors.begin(), controlPlan.errors.end());
+    }
 
     std::map<std::string, const Node*> nodes;
     std::unordered_map<std::string, std::vector<std::string>> adjacency;
@@ -311,10 +425,19 @@ AcyclicCompileResult compileAcyclicGraph(
                 else if (sampleRate > 0.0 && sampleRate <= 192'000.0 && std::isfinite(delay->value)) {
                     const auto requested = std::max<std::size_t>(1,
                         static_cast<std::size_t>(std::llround(sampleRate * delay->value / 1000.0)));
+                    const auto delayMapping = std::ranges::find_if(controlPlan.mappings, [&](const auto& mapping) {
+                        return mapping.targetNodeId == node.id && mapping.parameterId == "delay";
+                    });
+                    const auto maximumDelay = delayMapping == controlPlan.mappings.end()
+                        ? delay->value
+                        : delayMapping->clampMaximum;
                     const auto allocated = node.type == "allpass"
                         ? std::max<std::size_t>(2, static_cast<std::size_t>(
-                            std::ceil(sampleRate * std::max(100.0, delay->value) / 1000.0)) + 1)
-                        : requested;
+                            std::ceil(sampleRate * std::max(100.0, maximumDelay) / 1000.0)) + 1)
+                        : delayMapping == controlPlan.mappings.end()
+                            ? requested
+                            : std::max<std::size_t>(2, static_cast<std::size_t>(
+                                std::ceil(sampleRate * maximumDelay / 1000.0)) + 1);
                     delaySamplePlans[node.id] = { requested, allocated };
                     result.delayMemory.requestedSamples += requested;
                     result.delayMemory.allocatedSamples += allocated;
@@ -339,7 +462,13 @@ AcyclicCompileResult compileAcyclicGraph(
         adjacency[connection.from.nodeId].push_back(connection.to.nodeId);
         reverse[connection.to.nodeId].push_back(connection.from.nodeId);
         incidentNodes.insert(connection.from.nodeId); incidentNodes.insert(connection.to.nodeId);
-        if (!allowFeedback || nodes.at(connection.to.nodeId)->type != "delay") {
+        const auto& targetPorts = nodes.at(connection.to.nodeId)->ports;
+        const auto targetPort = std::ranges::find(targetPorts, connection.to.portId, &Port::id);
+        const auto cutsDelayedAudioDependency = allowFeedback
+            && nodes.at(connection.to.nodeId)->type == "delay"
+            && targetPort != targetPorts.end()
+            && targetPort->signal == SignalType::audio;
+        if (!cutsDelayedAudioDependency) {
             executionAdjacency[connection.from.nodeId].push_back(connection.to.nodeId);
             ++indegree[connection.to.nodeId];
         }
@@ -377,6 +506,7 @@ AcyclicCompileResult compileAcyclicGraph(
     frontier = { outputId };
     while (!frontier.empty()) { auto id = frontier.back(); frontier.pop_back(); for (const auto& prior : reverse[id]) if (toOutput.insert(prior).second) frontier.push_back(prior); }
     for (const auto& [id, node] : nodes) {
+        if (node->type == "lfo" || node->type == "control-map") continue;
         const auto incident = incidentNodes.contains(id);
         if (!incident && node->type != "stereo-input" && node->type != "stereo-output")
             result.warnings.push_back("disconnected node '" + id + "' processes silence and its output is discarded");
@@ -388,13 +518,15 @@ AcyclicCompileResult compileAcyclicGraph(
         auto implementation = std::make_unique<PreparedAcyclicRuntime::Impl>();
         implementation->maximumBlockSize = maximumBlockSize; implementation->schedule = result.schedule;
         implementation->delayMemory = result.delayMemory;
+        implementation->controlQuantumSamples = controlPlan.quantumSamples == 0 ? 1 : controlPlan.quantumSamples;
         implementation->delayArena.assign(result.delayMemory.allocatedSamples, 0.0F);
         implementation->feedbackMode = allowFeedback && !result.feedbackComponents.empty();
         implementation->buffers.emplace_back(maximumBlockSize, 0.0F); implementation->silenceBuffer = 0;
         std::unordered_map<std::string, std::size_t> outputBuffers;
         std::size_t delayArenaOffset = 0;
         for (const auto& id : result.schedule) {
-            for (const auto& port : nodes.at(id)->ports) if (port.direction == PortDirection::output) {
+            for (const auto& port : nodes.at(id)->ports)
+                if (port.signal == SignalType::audio && port.direction == PortDirection::output) {
                 outputBuffers[portKey(id, port.id)] = implementation->buffers.size();
                 implementation->buffers.emplace_back(maximumBlockSize, 0.0F);
             }
@@ -410,7 +542,36 @@ AcyclicCompileResult compileAcyclicGraph(
         implementation->outputRightInput = inputBuffer(outputId, "in-r");
 
         for (const auto& id : result.schedule) {
-            const auto& node = *nodes.at(id); Operation operation { .id = id, .kind = kindFor(node.type) };
+            if (const auto lfo = std::ranges::find(controlPlan.lfos, id, &ControlRatePlan::LfoNode::nodeId);
+                lfo != controlPlan.lfos.end()) {
+                ControlOperation control { .id = id, .kind = ControlOperationKind::lfo };
+                control.lfo.prepare(controlRateHz);
+                control.lfo.configure(lfo->frequencyHz, lfo->phaseCycles, lfo->waveform, lfo->runMode);
+                control.lfo.restart();
+                implementation->controlOperationById[id] = implementation->controlOperations.size();
+                implementation->controlOperations.push_back(std::move(control));
+            } else if (const auto mapper = std::ranges::find(
+                controlPlan.mappers, id, &ControlRatePlan::MapperNode::nodeId);
+                mapper != controlPlan.mappers.end()) {
+                ControlOperation control {
+                    .id = id,
+                    .kind = ControlOperationKind::mapper,
+                    .scale = mapper->scale,
+                    .offset = mapper->offset,
+                    .polarity = mapper->inputPolarity,
+                };
+                if (const auto source = implementation->controlOperationById.find(mapper->sourceNodeId);
+                    source != implementation->controlOperationById.end())
+                    control.source = source->second;
+                implementation->controlOperationById[id] = implementation->controlOperations.size();
+                implementation->controlOperations.push_back(std::move(control));
+            }
+        }
+
+        for (const auto& id : result.schedule) {
+            const auto& node = *nodes.at(id);
+            if (node.type == "lfo" || node.type == "control-map") continue;
+            Operation operation { .id = id, .kind = kindFor(node.type) };
             for (const auto& port : node.ports) {
                 if (port.signal != SignalType::audio) continue;
                 if (port.direction == PortDirection::input) operation.inputs.push_back(inputBuffer(id, port.id));
@@ -421,14 +582,26 @@ AcyclicCompileResult compileAcyclicGraph(
             } else if (operation.kind == OperationKind::delay) {
                 reverb::dsp::Delay processor;
                 const auto samples = delaySamplePlans.at(id).second;
-                processor.prepare(sampleRate, parameter(node, "delay")->value,
-                    std::span(implementation->delayArena).subspan(delayArenaOffset, samples));
+                const auto delayMapping = std::ranges::find_if(controlPlan.mappings, [&](const auto& mapping) {
+                    return mapping.targetNodeId == id && mapping.parameterId == "delay";
+                });
+                if (delayMapping == controlPlan.mappings.end()) {
+                    processor.prepare(sampleRate, parameter(node, "delay")->value,
+                        std::span(implementation->delayArena).subspan(delayArenaOffset, samples));
+                } else {
+                    processor.prepareModulated(sampleRate, parameter(node, "delay")->value,
+                        delayMapping->clampMaximum,
+                        std::span(implementation->delayArena).subspan(delayArenaOffset, samples));
+                }
+                operation.baseDelayMilliseconds = parameter(node, "delay")->value;
                 delayArenaOffset += samples; operation.processor = std::move(processor);
             } else if (operation.kind == OperationKind::allpass) {
                 reverb::dsp::Allpass processor; const auto delay = parameter(node, "delay")->value;
                 const auto samples = delaySamplePlans.at(id).second;
                 processor.prepare(sampleRate, delay, static_cast<float>(parameter(node, "coefficient")->value),
                     std::max(100.0, delay), std::span(implementation->delayArena).subspan(delayArenaOffset, samples));
+                operation.baseDelayMilliseconds = delay;
+                operation.baseCoefficient = parameter(node, "coefficient")->value;
                 delayArenaOffset += samples; operation.processor = std::move(processor);
             } else if (operation.kind == OperationKind::lowpass) {
                 reverb::dsp::OnePoleLowPass processor; processor.prepare(sampleRate, parameter(node, "cutoff")->value); operation.processor = std::move(processor);
@@ -436,6 +609,24 @@ AcyclicCompileResult compileAcyclicGraph(
                 if (const auto* gain = parameter(node, "gain")) operation.sumGain = static_cast<float>(gain->value);
             }
             implementation->operations.push_back(std::move(operation));
+        }
+        for (const auto& mapping : controlPlan.mappings) {
+            if (mapping.parameterId != "delay" && mapping.parameterId != "coefficient") continue;
+            const auto operation = std::ranges::find(
+                implementation->operations, mapping.targetNodeId, &Operation::id);
+            if (operation == implementation->operations.end()
+                || (operation->kind != OperationKind::delay && operation->kind != OperationKind::allpass))
+                continue;
+            RuntimeModulation runtime { .mapping = mapping };
+            runtime.ramp.reset(mapping.baseValue);
+            runtime.values.assign(maximumBlockSize, mapping.baseValue);
+            if (const auto source = implementation->controlOperationById.find(mapping.sourceNodeId);
+                source != implementation->controlOperationById.end())
+                runtime.source = source->second;
+            const auto index = implementation->modulations.size();
+            implementation->modulations.push_back(std::move(runtime));
+            if (mapping.parameterId == "delay") operation->delayModulation = index;
+            else operation->coefficientModulation = index;
         }
         result.runtime = std::unique_ptr<PreparedAcyclicRuntime>(new PreparedAcyclicRuntime(std::move(implementation)));
     } catch (const std::exception& exception) {
