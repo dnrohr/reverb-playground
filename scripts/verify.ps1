@@ -41,6 +41,8 @@ try {
     & $pnpm.Source --dir web build
     if ($LASTEXITCODE -ne 0) { throw 'Web asset build failed.' }
 
+    & $python.Source -m unittest scripts/test_check_repository.py
+    if ($LASTEXITCODE -ne 0) { throw 'Repository policy tests failed.' }
     & $python.Source scripts/check_repository.py
     if ($LASTEXITCODE -ne 0) { throw 'Repository checks failed.' }
 

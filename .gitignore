@@ -11,6 +11,7 @@
 /node_modules/
 **/node_modules/
 **/*.tsbuildinfo
+**/__pycache__/
 
 # Local editor and operating-system state
 .DS_Store

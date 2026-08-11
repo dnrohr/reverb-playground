@@ -2,6 +2,8 @@
 
 An open-source visual instrument for constructing, hearing, and understanding algorithmic reverbs.
 
+Licensed under [GNU AGPLv3 only](LICENSE). Dependency terms, generated-asset provenance, and contribution requirements are documented in [Third-party notices](THIRD_PARTY_NOTICES.md), [Asset provenance](ASSET_PROVENANCE.md), and [Contributing](CONTRIBUTING.md).
+
 The project begins with a visible reconstruction of the Keith Barr/Alesis MIDIVerb-I signal architecture, then grows into a small reverb-specific patching environment. The diagram is the program: mono audio cables, explicit summing, delays, allpasses, filters, feedback paths, modulation, and stereo output branches remain visible and inspectable.
 
 ## Project status
@@ -31,7 +33,7 @@ The project has a deterministic Barr-inspired DSP reference and an embedded sche
 - C++20, CMake, and JUCE 8
 - React Flow interaction prototype with a host-compatibility checkpoint before the production UI is fixed
 
-No transformed MIDIVerb ROM data is part of this repository. The first distributable Barr-inspired patch must be implemented from documented primitives and legally redistributable parameters or generated fixtures.
+No transformed MIDIVerb ROM data is part of this repository. The distributable Barr-inspired reference is implemented from documented primitives, original project parameter choices, and generated fixtures.
 
 ## Building
 

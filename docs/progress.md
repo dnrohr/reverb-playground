@@ -449,3 +449,13 @@ Results:
 - Eighteen browser files / 62 tests cover overlay landmarks and text boundaries, silent/Barr/custom refusal, abrupt-cutoff explanation, and remembered comparison target.
 - Reverse overlay: [`01-reverse-rise-peak-overlay.png`](../artifacts/ui/m6-4-teaching-overlays/01-reverse-rise-peak-overlay.png). Gated overlay: [`02-gated-hold-cutoff-overlay.png`](../artifacts/ui/m6-4-teaching-overlays/02-gated-hold-cutoff-overlay.png). Disabled teaching: [`03-learn-off-raw-response.png`](../artifacts/ui/m6-4-teaching-overlays/03-learn-off-raw-response.png).
 - Reviewed A/B and response-overlay video: [`ab-response-overlays.mp4`](../artifacts/ui/m6-4-teaching-overlays/ab-response-overlays.mp4). Native captures are visual/audio-path evidence; deterministic tests remain authoritative for multirate timing and bounds.
+
+## M7.1 verification
+
+- The accepted AGPLv3 open-source decision is now executable: the complete AGPL-3.0-only text is at the repository root and the README links the license, notices, provenance, and contribution policy.
+- `THIRD_PARTY_NOTICES.md` records every direct native/runtime/build dependency and the complete bundled production JavaScript license families. Pinned versions remain authoritative in `CMakeLists.txt` and `web/pnpm-lock.yaml`.
+- `ASSET_PROVENANCE.md` covers every tracked binary/generated-data family, its preferred source or generator, ownership boundary, and redistribution terms. No external font, icon, photo, sample library, impulse response, or model asset is bundled.
+- The Barr reference contains only original public-primitive code/graphs, project-authored parameter choices, and generated fixtures. BarrVerb, transformed `rom.h`, firmware, and decoded ROM instructions remain research-only and prohibited from tracked/archive paths.
+- `CONTRIBUTING.md` requires redistributable provenance, proportionate tests/docs/UI evidence, real-time safety, and a DCO 1.1 sign-off. `DCO` preserves the verbatim certificate; copyright remains with contributors.
+- Repository verification rejects excluded research/build roots, ROM/firmware filenames and extensions, and undocumented asset families in both the tracked file set and a real `git archive` listing.
+- UI unchanged; no screenshot or video was required.
