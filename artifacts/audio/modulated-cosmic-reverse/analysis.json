@@ -1,0 +1,16 @@
+{
+  "engineVersion": "0.1",
+  "sampleRate": 48000.0,
+  "frameCount": 240000,
+  "input": "impulse",
+  "left": {
+    "peak": 0.04468721151351929,
+    "firstNonZeroFrame": 12144,
+    "pcm16Fnv1a": "8451484433817990504"
+  },
+  "right": {
+    "peak": 0.04451810196042061,
+    "firstNonZeroFrame": 12144,
+    "pcm16Fnv1a": "317193610133361640"
+  }
+}

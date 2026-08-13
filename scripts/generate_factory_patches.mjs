@@ -40,6 +40,14 @@ const gate = (id, threshold, attack, hold, release) => ({
     staticParameter('release', release, 'milliseconds'),
   ],
 });
+const lfo = (id, frequency, phase = 0, waveform = 0) => ({
+  id, type: 'lfo',
+  ports: [controlIn('frequency-mod'), controlIn('phase-mod'), controlIn('waveform-mod'), controlIn('run-mode-mod'), controlOut()],
+  parameters: [
+    parameter('frequency', frequency, 'hertz', 1, 0.01, 100), parameter('phase', phase, 'cycles', 0.25, 0, 0.999),
+    parameter('waveform', waveform, 'waveform', 1, 0, 1), parameter('run-mode', 0, 'run-mode', 1, 0, 1),
+  ],
+});
 const cable = (id, fromNode, fromPort, toNode, toPort) => ({
   id, from: { nodeId: fromNode, portId: fromPort }, to: { nodeId: toNode, portId: toPort },
 });
@@ -106,6 +114,64 @@ const levelGatedRoom = patch([
   position('left-level-gate', 1520, 120), position('right-level-gate', 1520, 360), position('output', 1730, 240),
 ]);
 
+const modulatedCosmicReverse = patch([
+  stereoInput(), sum('input-sum'),
+  allpass('input-diffusion-7-9ms', 7.9, 0.62), allpass('input-diffusion-13-1ms', 13.1, 0.66),
+  delay('rise-early-80ms', 80), gain('weight-early-0-18', 0.18),
+  delay('rise-middle-240ms', 240), gain('weight-middle-0-42', 0.42),
+  delay('rise-peak-520ms', 520), gain('weight-peak-0-72', 0.72),
+  sum('sum-early-middle'), sum('sum-rising-envelope'), sum('tank-input'),
+  allpass('tank-diffusion-a-19-7ms', 19.7, 0.68), allpass('tank-diffusion-b-31-3ms', 31.3, 0.71),
+  delay('tank-space-173ms', 173), lowpass('tail-damping-4-8khz', 4800), gain('feedback-0-58', 0.58),
+  gain('output-level-0-55', 0.55),
+  allpass('stereo-left-11-9ms', 11.9, 0.54), allpass('stereo-right-17-3ms', 17.3, 0.57),
+  lfo('slow-drift-a-0-11hz', 0.11, 0, 0), lfo('slow-drift-b-0-073hz', 0.073, 0.37, 1),
+  stereoOutput(),
+], [
+  cable('input-l', 'input', 'out-l', 'input-sum', 'in-a'), cable('input-r', 'input', 'out-r', 'input-sum', 'in-b'),
+  cable('sum-diffusion-a', 'input-sum', 'out', 'input-diffusion-7-9ms', 'in'),
+  cable('diffusion-a-b', 'input-diffusion-7-9ms', 'out', 'input-diffusion-13-1ms', 'in'),
+  cable('diffuse-early', 'input-diffusion-13-1ms', 'out', 'rise-early-80ms', 'in'),
+  cable('early-weight', 'rise-early-80ms', 'out', 'weight-early-0-18', 'in'),
+  cable('diffuse-middle', 'input-diffusion-13-1ms', 'out', 'rise-middle-240ms', 'in'),
+  cable('middle-weight', 'rise-middle-240ms', 'out', 'weight-middle-0-42', 'in'),
+  cable('diffuse-peak', 'input-diffusion-13-1ms', 'out', 'rise-peak-520ms', 'in'),
+  cable('peak-weight', 'rise-peak-520ms', 'out', 'weight-peak-0-72', 'in'),
+  cable('early-sum', 'weight-early-0-18', 'out', 'sum-early-middle', 'in-a'),
+  cable('middle-sum', 'weight-middle-0-42', 'out', 'sum-early-middle', 'in-b'),
+  cable('early-middle-envelope', 'sum-early-middle', 'out', 'sum-rising-envelope', 'in-a'),
+  cable('peak-envelope', 'weight-peak-0-72', 'out', 'sum-rising-envelope', 'in-b'),
+  cable('envelope-tank', 'sum-rising-envelope', 'out', 'tank-input', 'in-a'),
+  cable('feedback-return', 'feedback-0-58', 'out', 'tank-input', 'in-b'),
+  cable('tank-diffusion-a', 'tank-input', 'out', 'tank-diffusion-a-19-7ms', 'in'),
+  cable('tank-diffusion-b', 'tank-diffusion-a-19-7ms', 'out', 'tank-diffusion-b-31-3ms', 'in'),
+  cable('tank-space', 'tank-diffusion-b-31-3ms', 'out', 'tank-space-173ms', 'in'),
+  cable('space-damping', 'tank-space-173ms', 'out', 'tail-damping-4-8khz', 'in'),
+  cable('damping-feedback', 'tail-damping-4-8khz', 'out', 'feedback-0-58', 'in'),
+  cable('damping-output', 'tail-damping-4-8khz', 'out', 'output-level-0-55', 'in'),
+  cable('level-left', 'output-level-0-55', 'out', 'stereo-left-11-9ms', 'in'),
+  cable('level-right', 'output-level-0-55', 'out', 'stereo-right-17-3ms', 'in'),
+  cable('left-out', 'stereo-left-11-9ms', 'out', 'output', 'in-l'),
+  cable('right-out', 'stereo-right-17-3ms', 'out', 'output', 'in-r'),
+  cable('drift-a-tank-a', 'slow-drift-a-0-11hz', 'out', 'tank-diffusion-a-19-7ms', 'delay-mod'),
+  cable('drift-a-left', 'slow-drift-a-0-11hz', 'out', 'stereo-left-11-9ms', 'delay-mod'),
+  cable('drift-b-tank-b', 'slow-drift-b-0-073hz', 'out', 'tank-diffusion-b-31-3ms', 'delay-mod'),
+  cable('drift-b-right', 'slow-drift-b-0-073hz', 'out', 'stereo-right-17-3ms', 'delay-mod'),
+], [
+  position('input', 0, 260), position('input-sum', 180, 260),
+  position('input-diffusion-7-9ms', 360, 220), position('input-diffusion-13-1ms', 540, 220),
+  position('rise-early-80ms', 730, 0), position('weight-early-0-18', 910, 0),
+  position('rise-middle-240ms', 730, 190), position('weight-middle-0-42', 910, 190),
+  position('rise-peak-520ms', 730, 380), position('weight-peak-0-72', 910, 380),
+  position('sum-early-middle', 1090, 90), position('sum-rising-envelope', 1270, 200),
+  position('tank-input', 1450, 200), position('tank-diffusion-a-19-7ms', 1640, 140),
+  position('tank-diffusion-b-31-3ms', 1830, 140), position('tank-space-173ms', 2020, 140),
+  position('tail-damping-4-8khz', 2210, 140), position('feedback-0-58', 2020, 390),
+  position('output-level-0-55', 2400, 140), position('stereo-left-11-9ms', 2590, 40),
+  position('stereo-right-17-3ms', 2590, 270), position('output', 2800, 150),
+  position('slow-drift-a-0-11hz', 1640, 520), position('slow-drift-b-0-073hz', 1830, 520),
+]);
+
 const catalog = {
   catalogVersion: 1,
   patches: [
@@ -160,6 +226,23 @@ const catalog = {
         description: 'Generated from project-authored public-primitives topology and parameters.',
       },
     },
+    {
+      id: 'modulated-cosmic-reverse',
+      family: 'modulated-reverse-style',
+      status: 'complete',
+      document: {
+        kind: 'checked-in-json',
+        path: 'factory-patches/modulated-cosmic-reverse.rvp.json',
+        schemaVersion: 2,
+        engineVersion: '0.1',
+      },
+      license: { expression: 'AGPL-3.0-only', file: 'LICENSE' },
+      provenance: {
+        kind: 'project-authored-generated',
+        source: 'scripts/generate_factory_patches.mjs',
+        description: 'Original public-primitives topology inferred from documented large, inverse, modulated reverb behavior; not a reconstruction of a proprietary algorithm.',
+      },
+    },
   ],
 };
 
@@ -168,6 +251,7 @@ const checkOnly = process.argv.includes('--check');
 for (const [filename, document] of [
   ['causal-reverse-envelope.rvp.json', reverseEnvelope],
   ['level-gated-room.rvp.json', levelGatedRoom],
+  ['modulated-cosmic-reverse.rvp.json', modulatedCosmicReverse],
   ['catalog.json', catalog],
 ]) {
   const outputPath = resolve(outputDirectory, filename);

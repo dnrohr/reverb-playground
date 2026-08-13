@@ -4,8 +4,9 @@ import { createFlowModel } from './graph';
 import { parsePatchJson } from './patchPersistence';
 import reverseEnvelopePatch from '../../factory-patches/causal-reverse-envelope.rvp.json?raw';
 import levelGatedPatch from '../../factory-patches/level-gated-room.rvp.json?raw';
+import cosmicReversePatch from '../../factory-patches/modulated-cosmic-reverse.rvp.json?raw';
 
-export type FactoryPatchId = 'barr-reference' | 'causal-reverse-envelope' | 'level-gated-room';
+export type FactoryPatchId = 'barr-reference' | 'causal-reverse-envelope' | 'level-gated-room' | 'modulated-cosmic-reverse';
 export type ComparisonPatchId = Exclude<FactoryPatchId, 'barr-reference'>;
 
 export interface FactoryPatchDescription {
@@ -44,11 +45,19 @@ export const factoryPatches: readonly FactoryPatchDescription[] = [
     filename: 'level-gated-room.rvp.json',
     summary: 'Envelope follower and hold gates cut a diffuse room tail',
   },
+  {
+    id: 'modulated-cosmic-reverse',
+    label: 'Modulated Cosmic Reverse',
+    graphName: 'MODULATED-COSMIC-REVERSE.graph',
+    filename: 'modulated-cosmic-reverse.rvp.json',
+    summary: 'Rising taps enter a damped, slowly modulated feedback space',
+  },
 ] as const;
 
 const rawPatches: Partial<Record<FactoryPatchId, string>> = {
   'causal-reverse-envelope': reverseEnvelopePatch,
   'level-gated-room': levelGatedPatch,
+  'modulated-cosmic-reverse': cosmicReversePatch,
 };
 
 export function factoryPatchDescription(id: FactoryPatchId): FactoryPatchDescription {
@@ -56,7 +65,7 @@ export function factoryPatchDescription(id: FactoryPatchId): FactoryPatchDescrip
 }
 
 export function comparisonPatchAfterSelection(id: FactoryPatchId | 'custom', current: ComparisonPatchId): ComparisonPatchId {
-  return id === 'causal-reverse-envelope' || id === 'level-gated-room' ? id : current;
+  return id === 'barr-reference' || id === 'custom' ? current : id;
 }
 
 export function loadFactoryPatch(id: FactoryPatchId, snapshot: RuntimeSnapshot): FactoryPatchGraph {

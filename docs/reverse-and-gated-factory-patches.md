@@ -1,6 +1,6 @@
 # Reverse-envelope and gated factory patches
 
-M6.3 ships two editable schema-v2 factory patches beside the Barr reference. Both are ordinary public graphs: loading one creates the same visible nodes and mono cables that a user can place by hand. There is no factory-only processor, opaque macro, imported impulse response, lookahead, or hidden gate.
+M6.3 introduced two editable schema-v2 factory patches beside the Barr reference. The factory library now also includes **Modulated Cosmic Reverse**. All are ordinary public graphs: loading one creates the same visible nodes and mono cables that a user can place by hand. There is no factory-only processor, opaque macro, imported impulse response, lookahead, or hidden gate.
 
 ## Causal Reverse Envelope
 
@@ -20,6 +20,12 @@ Explicit Sum blocks recombine the branches. A 6.5 kHz Low-pass supplies tone, a 
 
 The follower threshold is low enough for both a unit-sample fixture and the product's safe 0.1-peak live audition impulse to open the gate at 44.1, 48, and 96 kHz. The design remains level-triggered: sustained or repeated input can retrigger it, unlike a fixed window. At 48 kHz the unit-fixture peak occurs 5 ms after onset and the response crosses the -40 dB cutoff 205 ms later. Its 84.79 dB one-window drop makes a smooth exponential RT60 interpretation misleading, so the measurement marks RT60 as not meaningful.
 
+## Modulated Cosmic Reverse
+
+`factory-patches/modulated-cosmic-reverse.rvp.json` extends the visible causal-rise idea into a large moving feedback space. Its 80/240/520 ms branches rise through 0.18/0.42/0.72 weights, then enter two diffusers, a required 173 ms loop Delay, 4.8 kHz damping, and 0.58 feedback. Independent 0.11 Hz sine and 0.073 Hz triangle LFOs branch to the tank and unequal stereo output allpasses. Moving taps are intentionally Doppler/pitch active; this is not pitch shifting or shimmer.
+
+The name describes an original project design. Public Eventide and Valhalla documentation informed its behavioral goals—large scale, inverse-like rise, diffusion, damping, and modulation—but does not reveal a proprietary topology. See [Large modulated, inverse, and shimmer reverb topologies](large-modulated-and-shimmer-reverb-topologies.md). At 48 kHz its five-second unit-impulse fixture begins at frame 12,144, peaks near 0.0447, and the smoothed envelope takes 455 ms from onset to peak.
+
 ## Reproducible comparison
 
 Envelope measurements sum left/right squared energy into non-overlapping 10 ms windows. Onset is the first window above `peak * 1e-8`; cutoff is the first post-peak window at least 40 dB below peak. Residual energy is everything from that cutoff onward divided by total energy. These rules are deterministic and intentionally separate a late-rising response from an abruptly truncated one.
@@ -33,6 +39,7 @@ The checked-in WAVs contain only a mathematical unit impulse processed by projec
 
 - [`causal-reverse-envelope-48k.wav`](../artifacts/audio/m6-3-factory-patches/causal-reverse-envelope-48k.wav)
 - [`level-gated-room-48k.wav`](../artifacts/audio/m6-3-factory-patches/level-gated-room-48k.wav)
+- [`modulated-cosmic-reverse-48k.wav`](../artifacts/audio/modulated-cosmic-reverse/modulated-cosmic-reverse-48k.wav)
 
 Their adjacent analysis, response-measurement, and envelope-measurement JSON files are the machine-readable evidence. Regenerate one with:
 
@@ -46,7 +53,12 @@ build/windows-msvc/src/render/Release/reverb_render_cli.exe `
   --envelope-measurements artifacts/audio/m6-3-factory-patches/causal-reverse-envelope-envelope-measurements.json
 ```
 
-The editor's **Factory Patch** menu switches between these two graphs and the Barr reference. Selecting a factory patch replaces the editable canvas and publishes that visible graph for audition; saving produces an ordinary `.rvp.json` document.
+The editor's **Factory Patch** menu switches among all complete graphs and the Barr reference. Selecting a factory patch replaces the editable canvas and publishes that visible graph for audition; saving produces an ordinary `.rvp.json` document.
+
+Reviewed Modulated Cosmic Reverse UI evidence at 125% Windows scaling:
+
+- [`01-factory-topology.png`](../artifacts/ui/modulated-cosmic-reverse/01-factory-topology.png) shows the complete 24-block, 30-cable graph after Fit View.
+- [`02-select-and-inspect.mp4`](../artifacts/ui/modulated-cosmic-reverse/02-select-and-inspect.mp4) records factory selection and the slow LFO previews moving in the visible graph.
 
 Reviewed native evidence at 125% Windows scaling:
 

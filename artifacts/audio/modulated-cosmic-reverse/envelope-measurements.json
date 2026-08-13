@@ -1,0 +1,16 @@
+{
+  "measurementVersion": 1,
+  "engineVersion": "0.1",
+  "patchId": "modulated-cosmic-reverse",
+  "sampleRate": 48000.0,
+  "smoothingWindowMilliseconds": 10.0,
+  "cutoffDecibels": -40.0,
+  "onsetFrame": 12000,
+  "peakFrame": 33840,
+  "cutoffFrame": 48960,
+  "timeToPeakMilliseconds": 455.0,
+  "peakToCutoffMilliseconds": 315.0,
+  "residualEnergyRatio": 0.03735414959134823,
+  "maximumDropDecibelsPerWindow": 4.144639463252142,
+  "rt60Meaningful": true
+}

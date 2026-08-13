@@ -66,6 +66,15 @@ Connects MIDIVerb II Bloom to a deliberately slow density attack from series all
 
 The longer product note is also available directly as [ValhallaShimmerNotes.pdf](https://www.valhalladsp.com/shimmer/ValhallaShimmerNotes.pdf). It preserves the MIDIVerb II wording that Bloom rises to a diffuse reverb and has a smooth decay. This supports an audible/envelope distinction, not a claim that the original program's samples were literally reversed.
 
+### Large modulated, inverse, and shimmer behavior
+
+- [Eventide Blackhole user guide](https://downloads.eventide.com/audio/manuals/plug-ins/Blackhole%2BUser%2BGuide.pdf) documents inverse Gravity, Size, predelay, tone, and tail modulation behavior without exposing a topology.
+- [Eventide Blackhole Immersive user guide](https://downloads.eventide.com/audio/manuals/plug-ins/Blackhole%20Immersive%20User%20Guide.pdf) relates size to buildup/smoothness and feedback/crossfeed to decay and image motion.
+- [ValhallaShimmer controls](https://valhalladsp.com/2010/11/27/valhallashimmer-the-controls/) and [envelope notes](https://valhalladsp.com/2010/12/01/valhallashimmer-tips-and-tricks-adjusting-the-reverb-envelope/) describe diffuse delay networks, density growth, feedback, scale, and modulation.
+- [Eno/Lanois shimmer topology](https://valhalladsp.com/2010/05/11/enolanois-shimmer-sound-how-it-is-made/) identifies the essential octave pitch shifter, long modulated reverb, feedback, and equalization loop.
+
+The resulting project analysis and claim boundary are in [Large modulated, inverse, and shimmer reverb topologies](large-modulated-and-shimmer-reverb-topologies.md).
+
 ### Lexicon PCM 80 Inverse product documentation
 
 <https://lexiconpro.com/en-US/products/pcm80>

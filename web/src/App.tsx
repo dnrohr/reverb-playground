@@ -686,7 +686,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           <div className="comparison-switch" role="group" aria-label="Compare Barr reference with selected design">
             <button type="button" aria-pressed={activePatchId === 'barr-reference'} onClick={() => void selectFactoryPatch('barr-reference')}>A / BARR</button>
             <button type="button" aria-pressed={activePatchId === comparisonPatchId} onClick={() => void selectFactoryPatch(comparisonPatchId)}>
-              B / {comparisonPatchId === 'causal-reverse-envelope' ? 'REVERSE ENV' : 'GATED'}
+              B / {comparisonPatchId === 'causal-reverse-envelope' ? 'REVERSE ENV' : comparisonPatchId === 'level-gated-room' ? 'GATED' : 'COSMIC REV'}
             </button>
           </div>
           <button className="energy-toggle" type="button" aria-pressed={energyEnabled} disabled={reducedMotion} onClick={() => setEnergyEnabled((value) => !value)} title={reducedMotion ? 'Disabled by the operating-system reduced-motion preference' : 'Toggle measured node and cable energy'}>

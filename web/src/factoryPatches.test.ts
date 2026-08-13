@@ -15,7 +15,7 @@ const reference: RuntimeSnapshot = {
 
 const visibleTypes = new Set([
   'stereo-input', 'stereo-output', 'sum', 'gain', 'delay', 'allpass', 'lowpass',
-  'envelope-follower', 'hold-gate',
+  'lfo', 'control-map', 'envelope-follower', 'hold-gate',
 ]);
 
 describe('factory patches', () => {
@@ -33,7 +33,7 @@ describe('factory patches', () => {
     };
     expect(catalog.catalogVersion).toBe(1);
     expect(catalog.patches.map((patch) => patch.id)).toEqual(factoryPatches.map((patch) => patch.id));
-    expect(catalog.patches.map((patch) => patch.family)).toEqual(['barr-reference', 'reverse-style', 'gated']);
+    expect(catalog.patches.map((patch) => patch.family)).toEqual(['barr-reference', 'reverse-style', 'gated', 'modulated-reverse-style']);
     for (const patch of catalog.patches) {
       expect(patch.status).toBe('complete');
       expect(['native-runtime', 'checked-in-json']).toContain(patch.document.kind);
@@ -47,13 +47,13 @@ describe('factory patches', () => {
     }
   });
 
-  it('offers the Barr reference, causal reverse envelope, and level-gated room', () => {
+  it('offers all complete reference, reverse, gated, and modulated-space designs', () => {
     expect(factoryPatches.map((patch) => patch.id)).toEqual([
-      'barr-reference', 'causal-reverse-envelope', 'level-gated-room',
+      'barr-reference', 'causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse',
     ]);
   });
 
-  it.each(['causal-reverse-envelope', 'level-gated-room'] as const)(
+  it.each(['causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse'] as const)(
     'loads %s using only visible editable primitives and round trips schema v2',
     (id) => {
       const loaded = loadFactoryPatch(id, reference);
@@ -76,9 +76,19 @@ describe('factory patches', () => {
     expect(reverse.nodes.map((node) => node.id)).not.toEqual(gated.nodes.map((node) => node.id));
   });
 
+  it('exposes the cosmic reverse rise, delayed feedback, damping, and independent slow drift', () => {
+    const cosmic = loadFactoryPatch('modulated-cosmic-reverse', reference);
+    expect(cosmic.nodes.filter((node) => node.data.type === 'delay')).toHaveLength(4);
+    expect(cosmic.nodes.filter((node) => node.data.type === 'lfo')).toHaveLength(2);
+    expect(cosmic.nodes.filter((node) => node.data.type === 'lowpass')).toHaveLength(1);
+    expect(cosmic.edges.filter((edge) => edge.data?.signal === 'control')).toHaveLength(4);
+    expect(cosmic.edges.some((edge) => edge.source === 'feedback-0-58' && edge.target === 'tank-input')).toBe(true);
+  });
+
   it('remembers the selected design while A is the Barr reference', () => {
     expect(comparisonPatchAfterSelection('level-gated-room', 'causal-reverse-envelope')).toBe('level-gated-room');
     expect(comparisonPatchAfterSelection('barr-reference', 'level-gated-room')).toBe('level-gated-room');
     expect(comparisonPatchAfterSelection('custom', 'level-gated-room')).toBe('level-gated-room');
+    expect(comparisonPatchAfterSelection('modulated-cosmic-reverse', 'level-gated-room')).toBe('modulated-cosmic-reverse');
   });
 });

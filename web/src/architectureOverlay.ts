@@ -62,9 +62,11 @@ export function architectureOverlay(
 ): ArchitectureOverlay | null {
   const landmarks = smoothedLandmarks(capture);
   if (!landmarks) return null;
-  if (patchId === 'causal-reverse-envelope') return {
+  if (patchId === 'causal-reverse-envelope' || patchId === 'modulated-cosmic-reverse') return {
     title: 'Why this swells',
-    explanation: 'Visible weighted delays build a causal response toward a late peak. This does not reverse sample order and cannot place wet sound before the triggering event.',
+    explanation: patchId === 'modulated-cosmic-reverse'
+      ? 'Visible weighted delays build a causal rise before a damped feedback space. Slow moving allpass times add pitch-active motion; this is an original large-space design, not a proprietary algorithm reconstruction or true time reversal.'
+      : 'Visible weighted delays build a causal response toward a late peak. This does not reverse sample order and cannot place wet sound before the triggering event.',
     regions: [{ label: 'RISING ENERGY', startFrame: landmarks.onsetFrame, endFrame: landmarks.peakFrame, tone: 'rise' }],
     markers: [
       { label: 'LATE PEAK', frame: landmarks.peakFrame, tone: 'peak' },

@@ -10,6 +10,7 @@ version 1 contains exactly three complete families:
 | `barr-reference` | Barr reference | Native runtime graph | 2 | 0.1 |
 | `causal-reverse-envelope` | Reverse-style | Checked-in generated JSON | 2 | 0.1 |
 | `level-gated-room` | Gated | Checked-in generated JSON | 2 | 0.1 |
+| `modulated-cosmic-reverse` | Modulated reverse-style | Checked-in generated JSON | 2 | 0.1 |
 
 The Barr graph is generated from the same native definitions that execute it,
 so it cannot drift from a duplicated JSON asset. The catalog points to those

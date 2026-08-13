@@ -98,12 +98,12 @@ TEST_CASE("Factory catalog declares the complete licensed and traceable shipped 
 {
     const auto catalog = loadFactoryCatalog();
     REQUIRE(catalog.at("catalogVersion") == 1);
-    REQUIRE(catalog.at("patches").size() == 3);
+    REQUIRE(catalog.at("patches").size() == 4);
     const std::set<std::string> expectedIds {
-        "barr-reference", "causal-reverse-envelope", "level-gated-room",
+        "barr-reference", "causal-reverse-envelope", "level-gated-room", "modulated-cosmic-reverse",
     };
     const std::set<std::string> expectedFamilies {
-        "barr-reference", "reverse-style", "gated",
+        "barr-reference", "reverse-style", "gated", "modulated-reverse-style",
     };
     std::set<std::string> ids;
     std::set<std::string> families;
@@ -223,6 +223,29 @@ TEST_CASE("Level-Gated Room opens for the safe live audition impulse at every su
         REQUIRE(std::ranges::any_of(rendered.right, [](const auto sample) {
             return std::abs(sample) > 1.0e-5F;
         }));
+    }
+}
+
+TEST_CASE("Modulated Cosmic Reverse exposes delayed damped feedback and slow independent drift")
+{
+    const auto graph = loadFactory("modulated-cosmic-reverse.rvp.json");
+    REQUIRE(parameter(graph, "rise-early-80ms", "delay") < parameter(graph, "rise-middle-240ms", "delay"));
+    REQUIRE(parameter(graph, "rise-middle-240ms", "delay") < parameter(graph, "rise-peak-520ms", "delay"));
+    REQUIRE(std::abs(parameter(graph, "weight-early-0-18", "gain")) < std::abs(parameter(graph, "weight-middle-0-42", "gain")));
+    REQUIRE(std::abs(parameter(graph, "weight-middle-0-42", "gain")) < std::abs(parameter(graph, "weight-peak-0-72", "gain")));
+    REQUIRE(parameter(graph, "tank-space-173ms", "delay") >= 1.0);
+    REQUIRE(parameter(graph, "feedback-0-58", "gain") == Catch::Approx(0.58));
+    REQUIRE(parameter(graph, "tail-damping-4-8khz", "cutoff") == Catch::Approx(4'800.0));
+    REQUIRE(parameter(graph, "slow-drift-a-0-11hz", "frequency") == Catch::Approx(0.11));
+    REQUIRE(parameter(graph, "slow-drift-b-0-073hz", "frequency") == Catch::Approx(0.073));
+    for (const auto sampleRate : { 44'100.0, 48'000.0, 96'000.0 }) {
+        const auto rendered = renderImpulseAtLevel(
+            graph, sampleRate, static_cast<std::size_t>(sampleRate * 3.0), 0.1F);
+        requireFiniteBounded(rendered, 0.1);
+        const auto envelope = reverb::render::measureEnvelope(rendered.left, rendered.right, sampleRate);
+        REQUIRE(envelope.timeToPeakMilliseconds.has_value());
+        REQUIRE(*envelope.timeToPeakMilliseconds >= 450.0);
+        REQUIRE(rendered.left != rendered.right);
     }
 }
 

@@ -1,0 +1,1415 @@
+{
+  "schemaVersion": 2,
+  "engineVersion": "0.1",
+  "semantic": {
+    "nodes": [
+      {
+        "id": "input",
+        "type": "stereo-input",
+        "ports": [
+          {
+            "id": "out-l",
+            "signal": "audio",
+            "direction": "output"
+          },
+          {
+            "id": "out-r",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "input-sum",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "input-diffusion-7-9ms",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 7.9,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 100
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.62,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "input-diffusion-13-1ms",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 13.1,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 100
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.66,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "rise-early-80ms",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 80,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 10,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 10000
+            }
+          }
+        ]
+      },
+      {
+        "id": "weight-early-0-18",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.18,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1,
+              "clampMaximum": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "rise-middle-240ms",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 240,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 10,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 10000
+            }
+          }
+        ]
+      },
+      {
+        "id": "weight-middle-0-42",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.42,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1,
+              "clampMaximum": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "rise-peak-520ms",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 520,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 10,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 10000
+            }
+          }
+        ]
+      },
+      {
+        "id": "weight-peak-0-72",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.72,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1,
+              "clampMaximum": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "sum-early-middle",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "sum-rising-envelope",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "tank-input",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "tank-diffusion-a-19-7ms",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 19.7,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 100
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.68,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "tank-diffusion-b-31-3ms",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 31.3,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 100
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.71,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "tank-space-173ms",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 173,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 10,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 10000
+            }
+          }
+        ]
+      },
+      {
+        "id": "tail-damping-4-8khz",
+        "type": "lowpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "cutoff-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "cutoff",
+            "value": 4800,
+            "unit": "hertz",
+            "modulation": {
+              "portId": "cutoff-mod",
+              "amount": 5000,
+              "polarity": "bipolar",
+              "clampMinimum": 20,
+              "clampMaximum": 20000
+            }
+          }
+        ]
+      },
+      {
+        "id": "feedback-0-58",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.58,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1,
+              "clampMaximum": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "output-level-0-55",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.55,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1,
+              "clampMaximum": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "stereo-left-11-9ms",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 11.9,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 100
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.54,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "stereo-right-17-3ms",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 17.3,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 100
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.57,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "slow-drift-a-0-11hz",
+        "type": "lfo",
+        "ports": [
+          {
+            "id": "frequency-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "phase-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "waveform-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "run-mode-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "frequency",
+            "value": 0.11,
+            "unit": "hertz",
+            "modulation": {
+              "portId": "frequency-mod",
+              "amount": 1,
+              "polarity": "bipolar",
+              "clampMinimum": 0.01,
+              "clampMaximum": 100
+            }
+          },
+          {
+            "id": "phase",
+            "value": 0,
+            "unit": "cycles",
+            "modulation": {
+              "portId": "phase-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": 0,
+              "clampMaximum": 0.999
+            }
+          },
+          {
+            "id": "waveform",
+            "value": 0,
+            "unit": "waveform",
+            "modulation": {
+              "portId": "waveform-mod",
+              "amount": 1,
+              "polarity": "bipolar",
+              "clampMinimum": 0,
+              "clampMaximum": 1
+            }
+          },
+          {
+            "id": "run-mode",
+            "value": 0,
+            "unit": "run-mode",
+            "modulation": {
+              "portId": "run-mode-mod",
+              "amount": 1,
+              "polarity": "bipolar",
+              "clampMinimum": 0,
+              "clampMaximum": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "slow-drift-b-0-073hz",
+        "type": "lfo",
+        "ports": [
+          {
+            "id": "frequency-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "phase-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "waveform-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "run-mode-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "frequency",
+            "value": 0.073,
+            "unit": "hertz",
+            "modulation": {
+              "portId": "frequency-mod",
+              "amount": 1,
+              "polarity": "bipolar",
+              "clampMinimum": 0.01,
+              "clampMaximum": 100
+            }
+          },
+          {
+            "id": "phase",
+            "value": 0.37,
+            "unit": "cycles",
+            "modulation": {
+              "portId": "phase-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": 0,
+              "clampMaximum": 0.999
+            }
+          },
+          {
+            "id": "waveform",
+            "value": 1,
+            "unit": "waveform",
+            "modulation": {
+              "portId": "waveform-mod",
+              "amount": 1,
+              "polarity": "bipolar",
+              "clampMinimum": 0,
+              "clampMaximum": 1
+            }
+          },
+          {
+            "id": "run-mode",
+            "value": 0,
+            "unit": "run-mode",
+            "modulation": {
+              "portId": "run-mode-mod",
+              "amount": 1,
+              "polarity": "bipolar",
+              "clampMinimum": 0,
+              "clampMaximum": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "output",
+        "type": "stereo-output",
+        "ports": [
+          {
+            "id": "in-l",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-r",
+            "signal": "audio",
+            "direction": "input"
+          }
+        ],
+        "parameters": []
+      }
+    ],
+    "connections": [
+      {
+        "id": "input-l",
+        "from": {
+          "nodeId": "input",
+          "portId": "out-l"
+        },
+        "to": {
+          "nodeId": "input-sum",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "input-r",
+        "from": {
+          "nodeId": "input",
+          "portId": "out-r"
+        },
+        "to": {
+          "nodeId": "input-sum",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "sum-diffusion-a",
+        "from": {
+          "nodeId": "input-sum",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-diffusion-7-9ms",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "diffusion-a-b",
+        "from": {
+          "nodeId": "input-diffusion-7-9ms",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-diffusion-13-1ms",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "diffuse-early",
+        "from": {
+          "nodeId": "input-diffusion-13-1ms",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "rise-early-80ms",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "early-weight",
+        "from": {
+          "nodeId": "rise-early-80ms",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "weight-early-0-18",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "diffuse-middle",
+        "from": {
+          "nodeId": "input-diffusion-13-1ms",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "rise-middle-240ms",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "middle-weight",
+        "from": {
+          "nodeId": "rise-middle-240ms",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "weight-middle-0-42",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "diffuse-peak",
+        "from": {
+          "nodeId": "input-diffusion-13-1ms",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "rise-peak-520ms",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "peak-weight",
+        "from": {
+          "nodeId": "rise-peak-520ms",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "weight-peak-0-72",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "early-sum",
+        "from": {
+          "nodeId": "weight-early-0-18",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "sum-early-middle",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "middle-sum",
+        "from": {
+          "nodeId": "weight-middle-0-42",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "sum-early-middle",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "early-middle-envelope",
+        "from": {
+          "nodeId": "sum-early-middle",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "sum-rising-envelope",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "peak-envelope",
+        "from": {
+          "nodeId": "weight-peak-0-72",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "sum-rising-envelope",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "envelope-tank",
+        "from": {
+          "nodeId": "sum-rising-envelope",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tank-input",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "feedback-return",
+        "from": {
+          "nodeId": "feedback-0-58",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tank-input",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "tank-diffusion-a",
+        "from": {
+          "nodeId": "tank-input",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tank-diffusion-a-19-7ms",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "tank-diffusion-b",
+        "from": {
+          "nodeId": "tank-diffusion-a-19-7ms",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tank-diffusion-b-31-3ms",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "tank-space",
+        "from": {
+          "nodeId": "tank-diffusion-b-31-3ms",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tank-space-173ms",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "space-damping",
+        "from": {
+          "nodeId": "tank-space-173ms",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tail-damping-4-8khz",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "damping-feedback",
+        "from": {
+          "nodeId": "tail-damping-4-8khz",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "feedback-0-58",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "damping-output",
+        "from": {
+          "nodeId": "tail-damping-4-8khz",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "output-level-0-55",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "level-left",
+        "from": {
+          "nodeId": "output-level-0-55",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stereo-left-11-9ms",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "level-right",
+        "from": {
+          "nodeId": "output-level-0-55",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stereo-right-17-3ms",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "left-out",
+        "from": {
+          "nodeId": "stereo-left-11-9ms",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "output",
+          "portId": "in-l"
+        }
+      },
+      {
+        "id": "right-out",
+        "from": {
+          "nodeId": "stereo-right-17-3ms",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "output",
+          "portId": "in-r"
+        }
+      },
+      {
+        "id": "drift-a-tank-a",
+        "from": {
+          "nodeId": "slow-drift-a-0-11hz",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tank-diffusion-a-19-7ms",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "drift-a-left",
+        "from": {
+          "nodeId": "slow-drift-a-0-11hz",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stereo-left-11-9ms",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "drift-b-tank-b",
+        "from": {
+          "nodeId": "slow-drift-b-0-073hz",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tank-diffusion-b-31-3ms",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "drift-b-right",
+        "from": {
+          "nodeId": "slow-drift-b-0-073hz",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stereo-right-17-3ms",
+          "portId": "delay-mod"
+        }
+      }
+    ]
+  },
+  "layout": {
+    "nodes": [
+      {
+        "nodeId": "input",
+        "x": 0,
+        "y": 260
+      },
+      {
+        "nodeId": "input-sum",
+        "x": 180,
+        "y": 260
+      },
+      {
+        "nodeId": "input-diffusion-7-9ms",
+        "x": 360,
+        "y": 220
+      },
+      {
+        "nodeId": "input-diffusion-13-1ms",
+        "x": 540,
+        "y": 220
+      },
+      {
+        "nodeId": "rise-early-80ms",
+        "x": 730,
+        "y": 0
+      },
+      {
+        "nodeId": "weight-early-0-18",
+        "x": 910,
+        "y": 0
+      },
+      {
+        "nodeId": "rise-middle-240ms",
+        "x": 730,
+        "y": 190
+      },
+      {
+        "nodeId": "weight-middle-0-42",
+        "x": 910,
+        "y": 190
+      },
+      {
+        "nodeId": "rise-peak-520ms",
+        "x": 730,
+        "y": 380
+      },
+      {
+        "nodeId": "weight-peak-0-72",
+        "x": 910,
+        "y": 380
+      },
+      {
+        "nodeId": "sum-early-middle",
+        "x": 1090,
+        "y": 90
+      },
+      {
+        "nodeId": "sum-rising-envelope",
+        "x": 1270,
+        "y": 200
+      },
+      {
+        "nodeId": "tank-input",
+        "x": 1450,
+        "y": 200
+      },
+      {
+        "nodeId": "tank-diffusion-a-19-7ms",
+        "x": 1640,
+        "y": 140
+      },
+      {
+        "nodeId": "tank-diffusion-b-31-3ms",
+        "x": 1830,
+        "y": 140
+      },
+      {
+        "nodeId": "tank-space-173ms",
+        "x": 2020,
+        "y": 140
+      },
+      {
+        "nodeId": "tail-damping-4-8khz",
+        "x": 2210,
+        "y": 140
+      },
+      {
+        "nodeId": "feedback-0-58",
+        "x": 2020,
+        "y": 390
+      },
+      {
+        "nodeId": "output-level-0-55",
+        "x": 2400,
+        "y": 140
+      },
+      {
+        "nodeId": "stereo-left-11-9ms",
+        "x": 2590,
+        "y": 40
+      },
+      {
+        "nodeId": "stereo-right-17-3ms",
+        "x": 2590,
+        "y": 270
+      },
+      {
+        "nodeId": "output",
+        "x": 2800,
+        "y": 150
+      },
+      {
+        "nodeId": "slow-drift-a-0-11hz",
+        "x": 1640,
+        "y": 520
+      },
+      {
+        "nodeId": "slow-drift-b-0-073hz",
+        "x": 1830,
+        "y": 520
+      }
+    ],
+    "viewport": {
+      "x": 0,
+      "y": 0,
+      "zoom": 0.72
+    }
+  }
+}

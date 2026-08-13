@@ -22,6 +22,13 @@ describe('architecture teaching overlays', () => {
     expect(overlay.explanation).toMatch(/does not reverse sample order/i);
   });
 
+  it('teaches the cosmic design without claiming a proprietary reconstruction', () => {
+    const overlay = architectureOverlay(fixture('rise'), 'modulated-cosmic-reverse')!;
+    expect(overlay.title).toBe('Why this swells');
+    expect(overlay.explanation).toMatch(/damped feedback space/i);
+    expect(overlay.explanation).toMatch(/not a proprietary algorithm reconstruction/i);
+  });
+
   it('marks gate, hold, release, and measured cutoff using visible millisecond controls', () => {
     const overlay = architectureOverlay(fixture('gate'), 'level-gated-room', {
       detectorReleaseMilliseconds: 20, holdMilliseconds: 100, releaseMilliseconds: 10,

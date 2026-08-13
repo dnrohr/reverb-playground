@@ -10,6 +10,7 @@ program ROM, captured impulse response, or recorded audio.
   duplicated as a JSON file that could drift.
 - `causal-reverse-envelope.rvp.json` builds a causal rising response from visible increasing Delay/Gain branches.
 - `level-gated-room.rvp.json` builds a diffuse room with a visible Envelope Follower and stereo Hold Gates.
+- `modulated-cosmic-reverse.rvp.json` sends a visible causal rise into a damped delayed feedback space with two independent slow LFOs. It is an original topology, not a proprietary-algorithm reconstruction.
 
 `catalog.json` is the authoritative shipped set. Every entry declares its
 completed family, document kind/path, schema and engine versions, SPDX license
