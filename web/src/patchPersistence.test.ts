@@ -123,6 +123,7 @@ describe('patch persistence', () => {
     const mapper = createModuleNode('control-map', 'gravity-time-map', { x: 330, y: 220 });
     const delay = createModuleNode('delay', 'gravity-delay', { x: 560, y: 180 });
     macro.data.userName = 'Gravity';
+    macro.data.presentation = 'gravity';
     macro.data.parameters.find((parameter) => parameter.id === 'value')!.value = 0.375;
     macro.data.parameters.find((parameter) => parameter.id === 'default-value')!.value = -0.125;
     macro.data.parameters.find((parameter) => parameter.id === 'center-detent')!.value = 1;
@@ -134,11 +135,27 @@ describe('patch persistence', () => {
     const loaded = parsePatchJson(written, reference);
     const restored = loaded.nodes.find((node) => node.id === 'macro-gravity')!;
     expect(restored.data.userName).toBe('Gravity');
+    expect(restored.data.presentation).toBe('gravity');
     expect(restored.data.parameters.map(({ id, value }) => [id, value])).toEqual([
       ['value', 0.375], ['default-value', -0.125], ['center-detent', 1],
     ]);
     expect(loaded.edges.map((edge) => edge.id)).toEqual(['gravity-map', 'gravity-delay-time']);
     expect(writePatchJson(loaded.nodes, loaded.edges, loaded.viewport)).toBe(written);
+  });
+
+  it('rejects unsupported or non-Macro presentation designations', () => {
+    const input = createModuleNode('stereo-input', 'stereo-input-1', { x: 0, y: 0 });
+    const output = createModuleNode('stereo-output', 'stereo-output-1', { x: 400, y: 0 });
+    const macro = createModuleNode('macro', 'macro-1', { x: 200, y: 100 });
+    macro.data.presentation = 'gravity';
+    const raw = JSON.parse(writePatchJson([input, macro, output], [], { x: 0, y: 0, zoom: 1 })) as {
+      semantic: { nodes: Array<Record<string, unknown>> };
+    };
+    raw.semantic.nodes.find((node) => node.id === 'macro-1')!.presentation = 'hidden-special';
+    expect(() => parsePatchJson(JSON.stringify(raw), reference)).toThrow(/unsupported presentation/);
+    raw.semantic.nodes.find((node) => node.id === 'macro-1')!.presentation = undefined;
+    raw.semantic.nodes.find((node) => node.id === 'stereo-input-1')!.presentation = 'gravity';
+    expect(() => parsePatchJson(JSON.stringify(raw), reference)).toThrow(/unsupported presentation/);
   });
 
   it('upgrades legacy schema-v2 Scale / Offset nodes to a linear Curve Mapper', () => {

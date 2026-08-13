@@ -64,7 +64,7 @@ TEST_CASE("Host patch state restores Macro identity and settings")
         { "macro-gravity", "macro", { { "out", SignalType::control, PortDirection::output } }, {
             { "value", 0.375, "normalized" }, { "default-value", -0.125, "normalized" },
             { "center-detent", 1.0, "boolean" },
-        }, "Gravity" },
+        }, "Gravity", "gravity" },
     };
     document.layout.nodes = { { "macro-gravity", 42.0, 84.0 } };
 
@@ -77,6 +77,7 @@ TEST_CASE("Host patch state restores Macro identity and settings")
     REQUIRE(restored->nodes.size() == 1);
     CHECK(restored->nodes.front().id == "macro-gravity");
     CHECK(restored->nodes.front().name == "Gravity");
+    CHECK(restored->nodes.front().presentation == "gravity");
     CHECK(restored->nodes.front().parameters[0].value == Catch::Approx(0.375));
     CHECK(restored->nodes.front().parameters[1].value == Catch::Approx(-0.125));
     CHECK(writePatchJson(*restored) == serialized);

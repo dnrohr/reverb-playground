@@ -196,6 +196,9 @@ void addNodeContractErrors(const Node& node, std::vector<std::string>& errors)
     } else {
         errors.push_back("unsupported node type '" + node.type + "' on '" + node.id + "'");
     }
+    if (!node.presentation.empty()
+        && (node.type != "macro" || node.presentation != "gravity"))
+        errors.push_back("node '" + node.id + "' has an unsupported presentation designation");
 }
 
 OperationKind kindFor(const std::string& type)

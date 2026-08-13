@@ -183,6 +183,8 @@ GraphDocument parsePatchJson(const std::string_view jsonText)
         node.type = nodeJson.at("type").get<std::string>();
         if (const auto name = nodeJson.find("name"); name != nodeJson.end())
             node.name = name->get<std::string>();
+        if (const auto presentation = nodeJson.find("presentation"); presentation != nodeJson.end())
+            node.presentation = presentation->get<std::string>();
         for (const auto& portJson : nodeJson.at("ports"))
             node.ports.push_back(parsePort(portJson));
         for (const auto& parameterJson : nodeJson.at("parameters"))
@@ -238,6 +240,8 @@ std::string writePatchJson(const GraphDocument& document)
         };
         if (!node.name.empty())
             writtenNode["name"] = node.name;
+        if (!node.presentation.empty())
+            writtenNode["presentation"] = node.presentation;
         nodeArray.push_back(std::move(writtenNode));
     }
 

@@ -37,6 +37,7 @@ import { comparisonPatchAfterSelection, factoryPatchDescription, factoryPatches,
 import { architectureOverlay, type GateTeachingParameters, type TeachingPatchId } from './architectureOverlay';
 import { parseHostPatchStateResult } from './hostPatchState';
 import { decorateMacroReachability, inspectMacroReachability } from './macroInspection';
+import { gravityFocusNodeIds, predictGravityEnvelope } from './gravityPresentation';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -256,6 +257,32 @@ function DiagnosticsPanel({ diagnostics, runawayLoop, canUndo, onUndo, onRecover
   </aside>;
 }
 
+function GravityPresentation({ value, destinationCount, onBegin, onValue, onCommit, onFocus }: {
+  value: number; destinationCount: number; onBegin: () => void; onValue: (value: number) => void;
+  onCommit: () => void; onFocus: () => void;
+}) {
+  const prediction = useMemo(() => predictGravityEnvelope(value), [value]);
+  return <section className="gravity-presentation" aria-label="Gravity macro control">
+    <header><span>GRAVITY</span><strong>{prediction.state}</strong></header>
+    <div className="gravity-scale" aria-hidden="true"><span>INVERSE</span><span>BLOOM</span><span>FORWARD</span></div>
+    <input className="gravity-slider" aria-label="Gravity bipolar control" type="range" min={-1} max={1} step={0.001} value={value}
+      onPointerDown={onBegin} onChange={(event) => onValue(Number(event.target.value))} onPointerUp={onCommit}
+      onKeyDown={(event) => { onBegin(); if (event.key === 'Enter') onCommit(); }} onBlur={onCommit} />
+    <label className="gravity-exact-value"><span>EXACT VALUE</span><input aria-label="Gravity exact numeric value" type="number"
+      min={-1} max={1} step={0.001} value={value} onFocus={onBegin} onChange={(event) => onValue(Number(event.target.value))}
+      onKeyDown={(event) => { if (event.key === 'Enter') onCommit(); }} onBlur={onCommit} /></label>
+    <figure className="gravity-envelope">
+      <figcaption><span>DESIGN PREDICTION</span><strong>NOT MEASURED AUDIO</strong></figcaption>
+      <svg viewBox="0 0 100 42" role="img" aria-label={prediction.description} preserveAspectRatio="none">
+        <line x1={prediction.peakPosition * 100} x2={prediction.peakPosition * 100} y1="4" y2="40" />
+        <path d={prediction.path} />
+      </svg>
+      <p>Shape guide from the Gravity coordinate. Capture an impulse to inspect actual response.</p>
+    </figure>
+    <button type="button" className="gravity-focus" onClick={onFocus}>EXPAND / FOCUS {destinationCount} MAPPINGS</button>
+  </section>;
+}
+
 function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const { fitView, setViewport: setFlowViewport, screenToFlowPosition } = useReactFlow();
   const restored = useMemo(() => snapshot.restoredPatch
@@ -340,6 +367,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const displayedGraph = useMemo(() => decorateControlPreview(
     macroDecoratedGraph.nodes, macroDecoratedGraph.edges, controlPreviewTime,
   ), [controlPreviewTime, macroDecoratedGraph]);
+  const focusSelectedMacro = useCallback(() => {
+    if (!selectedMacroInspection) return;
+    const ids = new Set(gravityFocusNodeIds(selectedMacroInspection));
+    void fitView({ nodes: nodes.filter((node) => ids.has(node.id)), padding: 0.22, duration: reducedMotion ? 0 : 350, maxZoom: 1.1 });
+  }, [fitView, nodes, reducedMotion, selectedMacroInspection]);
 
   useEffect(() => {
     if (reducedMotion || !nodes.some((node) => node.data.role === 'control')) return;
@@ -882,6 +914,14 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <div className="selection-kicker">SELECTED BLOCK</div>
               <h2>{selectedNode.data.type === 'macro' ? selectedNode.data.userName : selectedNode.data.label}</h2>
               <code>{selectedNode.id}</code>
+              {selectedNode.data.presentation === 'gravity' && selectedMacroInspection ? <GravityPresentation
+                value={selectedNode.data.parameters.find((parameter) => parameter.id === 'value')?.value ?? 0}
+                destinationCount={selectedMacroInspection.destinations.length}
+                onBegin={() => beginParameterEdit(selectedNode.id, 'value', selectedNode.data.parameters.find((parameter) => parameter.id === 'value')?.value ?? 0)}
+                onValue={(value) => applyParameter(selectedNode.id, 'value', value)}
+                onCommit={commitParameterEdit}
+                onFocus={focusSelectedMacro}
+              /> : null}
               {loopInspection ? <LoopInspector inspection={loopInspection} activeIndex={normalizedLoopIndex} onActiveIndex={setActiveLoopIndex} /> : null}
               <dl className="property-list">
                 <div><dt>TYPE</dt><dd>{selectedNode.data.type}</dd></div>
@@ -917,7 +957,9 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 </section>
               ) : null}
               <h3>PARAMETERS</h3>
-              {selectedNode.data.parameters.length ? selectedNode.data.parameters.map((parameter) => {
+              {selectedNode.data.parameters.length ? selectedNode.data.parameters
+                .filter((parameter) => selectedNode.data.presentation !== 'gravity' || parameter.id !== 'value')
+                .map((parameter) => {
                 const choices = parameterChoices(parameter.unit);
                 return (
                 <div className="parameter-card" key={parameter.id}>

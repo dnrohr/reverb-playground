@@ -30,6 +30,7 @@ function canonicalGraph(state: GraphState, includeLayout: boolean) {
       id: node.id,
       type: node.data.type,
       userName: node.data.userName,
+      presentation: node.data.presentation,
       ...(includeLayout ? { position: { x: node.position.x, y: node.position.y } } : {}),
       ports: node.data.ports.map(({ id, signal, direction }) => ({ id, signal, direction })),
       parameters: node.data.parameters.map(({ id, value, unit, modulation }) => ({ id, value, unit, modulation: modulation ? { ...modulation } : undefined })),

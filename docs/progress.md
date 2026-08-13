@@ -47,6 +47,8 @@ Last updated: 2026-08-13
 | M7.5 Run alpha usability and safety validation | In progress | Protocol/ledger and automated accessibility/preflight gates prepared; external participant sessions still required |
 | M8.1 Specify Gravity behavior and measurements | Complete | Bipolar control contract; causal inverse boundary; deterministic stereo energy metrics; inverse/bloom/forward targets |
 | M8.2 Implement a nonlinear Curve Mapper control block | Complete | Linear/power/exponential mappings; explicit bounds; schema-v2 compatibility; bounded runtime; inspector preview |
+| M8.3 Add a visible Macro control-source block | Complete | Named normalized source; explicit branching; 20 ms runtime ramp; reachability/range inspection; exact persistence |
+| M8.4 Add the Gravity macro presentation | Complete | Explicit designation; inverse/bloom/forward surface; non-measured envelope guide; Expand/Focus; Learn-off independence |
 
 ## M0.2 verification
 
@@ -595,6 +597,29 @@ Results:
   required Macro contract.
 - UI evidence: [`macro-destinations.png`](../artifacts/ui/m8-3-macro-control/macro-destinations.png)
   and [`macro-automation.mp4`](../artifacts/ui/m8-3-macro-control/macro-automation.mp4).
+
+## M8.4 verification
+
+- Schema v2 and native host state preserve an explicit `gravity` presentation
+  designation. It is accepted only for Macro nodes and has no DSP or routing
+  meaning; ordinary Macros remain unchanged.
+- The instrument surface labels Inverse, Bloom, and Forward, retains a signed
+  keyboard-editable value and center detent, and drives the existing 20 ms
+  runtime-only Macro path.
+- A continuously updating envelope guide orders late/center/early design peaks
+  and states **Not Measured Audio** in text and accessibility output. Actual
+  response still requires impulse capture.
+- The dashed/non-color reachability highlight and predicted parameter list
+  remain visible while Gravity moves. Expand / Focus fits the complete
+  Macro/Mapper/destination set from that same bounded traversal; reduced motion
+  removes its animation.
+- Learn Off affects only optional teaching cards and response annotations. It
+  does not remove or disable the Gravity control, exact value, prediction,
+  mapped destinations, highlighting, or focus action.
+- Evidence: [`01-gravity-inverse.png`](../artifacts/ui/m8-4-gravity-presentation/01-gravity-inverse.png),
+  [`02-gravity-bloom.png`](../artifacts/ui/m8-4-gravity-presentation/02-gravity-bloom.png),
+  [`03-gravity-forward-learn-off.png`](../artifacts/ui/m8-4-gravity-presentation/03-gravity-forward-learn-off.png),
+  and [`gravity-sweep-focus.mp4`](../artifacts/ui/m8-4-gravity-presentation/gravity-sweep-focus.mp4).
 
 ## Standalone maximized-window correction
 

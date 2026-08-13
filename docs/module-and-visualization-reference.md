@@ -100,6 +100,12 @@ ramp and do not compile topology. Selecting the block highlights and lists
 reachable mapped parameters and predicted ranges; these are graph-derived
 predictions, not measured audio.
 
+A factory-designated `gravity` presentation adds a prominent bipolar surface:
+Inverse at `-1`, Bloom at `0`, and Forward at `+1`, with an exact keyboard
+field. Its envelope graphic is a labeled design prediction rather than measured
+audio. Expand / Focus frames the visible Macro, mappers, and destinations.
+These controls and inspections remain available when Learn is Off.
+
 ### Curve Mapper
 
 <!-- module: control-map -->

@@ -162,7 +162,7 @@ TEST_CASE("Macro exposes a bounded named source and branches to the fixed contro
     }, {
         { "value", 0.25, "normalized" }, { "default-value", 0.0, "normalized" },
         { "center-detent", 1.0, "boolean" },
-    }, "Gravity" });
+    }, "Gravity", "gravity" });
     for (std::size_t index = 0; index < 63; ++index) {
         const auto id = "target-" + std::to_string(index);
         document.nodes.push_back({ id, "delay", {
