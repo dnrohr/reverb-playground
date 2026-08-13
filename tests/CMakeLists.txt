@@ -11,6 +11,7 @@ add_executable(reverb_tests
     EnvelopeGateRuntimeTests.cpp
     FactoryPatchTests.cpp
     FeedbackRuntimeTests.cpp
+    GravityReferenceTests.cpp
     ImpulseCaptureTests.cpp
     LiveReferenceHarnessTests.cpp
     OfflineRendererTests.cpp

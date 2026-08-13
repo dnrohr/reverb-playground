@@ -1,0 +1,39 @@
+{
+  "formatVersion": 1,
+  "engineVersion": "0.1",
+  "referenceId": "inverse",
+  "sampleRate": 48000.0,
+  "frameCount": 240000,
+  "comparisonHorizonMs": 520.0,
+  "smoothingWindowMs": 20.0,
+  "controls": {
+    "gravity": -1.0,
+    "size": 1.0,
+    "feedback": 0.5,
+    "damping": 0.15,
+    "modulation": 0.25
+  },
+  "raw": {
+    "onsetFrame": 5766,
+    "timeToPeakMs": 419.4791666666667,
+    "earlyLateEnergyRatioDb": -2.5229811308926635,
+    "peakLevelDbfs": -35.435191708000595,
+    "integratedEnergyDb": -20.577556765558803,
+    "postPeakEnergyFraction": 0.6711394327580205,
+    "occupiedTenMsWindowFraction": 0.12857142857142856,
+    "strongestThreeWindowEnergyFraction": 0.7331664458563412
+  },
+  "loudnessMatchGain": 0.9993832414506265,
+  "matched": {
+    "onsetFrame": 5766,
+    "timeToPeakMs": 419.4791666666667,
+    "earlyLateEnergyRatioDb": -2.52298116769631,
+    "peakLevelDbfs": -35.440549995295235,
+    "integratedEnergyDb": -20.582915256652527,
+    "postPeakEnergyFraction": 0.6711394356264316,
+    "occupiedTenMsWindowFraction": 0.12857142857142856,
+    "strongestThreeWindowEnergyFraction": 0.7331664485671174
+  },
+  "leftPcm16Fnv1a": "2580234311813821704",
+  "rightPcm16Fnv1a": "14800760036719100615"
+}

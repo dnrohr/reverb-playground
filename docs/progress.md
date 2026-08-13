@@ -52,6 +52,7 @@ Last updated: 2026-08-13
 | M9.1 Design the eight-stage diffusion topology | Complete | 8 stage delays/taps; 12 allpasses; delayed damped return; odd/even stereo trees; exact 192 kHz memory/control/transition budgets; native compile regression |
 | M9.2 Implement normalized Gravity weighting | Complete | 8 visible Curve Mapper branches; exact constant-sum stereo weights; monotonic measured envelope sweep; 2.1 dB energy ceiling; finite continuous automation |
 | M9.3 Add Size, Feedback, Damping, and Modulation macros | Complete | 5 visible Macros; 35 explicit mappings; independent dual-LFO motion; 32 endpoint combinations; continuous-sweep and safety regressions |
+| M9.4 Tune inverse, bloom, and forward reference states | Complete | Fixed five-Macro states; 5 s loudness-matched stereo WAVs; format-v1 measurements/hashes; causal envelope ordering; reload determinism; audition checklist |
 
 ## M0.2 verification
 
@@ -699,6 +700,27 @@ Results:
 - UI unchanged; the controls use the released Macro/LFO/typed-cable editor
   presentation and are not catalog-shipped until M9.5, so no capture was
   required for this graph/runtime task.
+
+## M9.4 verification
+
+- A checked-in native generator produces three five-second, 48 kHz stereo
+  PCM16 impulse fixtures and adjacent format-v1 measurement JSON from fixed
+  visible Macro values. One documented scalar per state matches complete wet
+  energy to Bloom at `-20.5829 dB` while preserving mandatory raw metrics.
+- Inverse begins causally at frame 5,766, has a `-2.523 dB` early/late ratio,
+  and peaks at `419.48 ms`. Bloom peaks at `153.92 ms` with `73.2%` post-peak
+  energy. Bloom's first 700 ms has 15 occupied 10 ms windows and only 32.5% of
+  its energy in the strongest three. Forward peaks at `8.15 ms` under the centered-smoothing definition;
+  its first actual sample remains causal at frame 852.
+- Native tests lock all six channel PCM16 hashes, finite output, peak ordering,
+  inverse rise, Bloom tail density proxy, matched energy, headroom, and exact
+  floating renders after schema-v2 serialization/reload.
+- [Gravity Diffusion reference states](gravity-reference-states.md) records the
+  generation command, controls, measurements, smoothing edge effect, and a
+  critical listening checklist covering ringing, flutter, coloration, stereo
+  motion, stepping, and failure modes without presenting preference as fact.
+- UI unchanged; this task adds offline evidence rather than the M9.5 shipped
+  factory/teaching view, so no screenshot or video was required.
 
 ## Standalone maximized-window correction
 

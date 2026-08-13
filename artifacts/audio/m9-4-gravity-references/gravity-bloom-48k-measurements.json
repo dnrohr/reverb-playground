@@ -1,0 +1,39 @@
+{
+  "formatVersion": 1,
+  "engineVersion": "0.1",
+  "referenceId": "bloom",
+  "sampleRate": 48000.0,
+  "frameCount": 240000,
+  "comparisonHorizonMs": 520.0,
+  "smoothingWindowMs": 20.0,
+  "controls": {
+    "gravity": 0.0,
+    "size": -0.35,
+    "feedback": 1.0,
+    "damping": 0.0,
+    "modulation": 1.0
+  },
+  "raw": {
+    "onsetFrame": 968,
+    "timeToPeakMs": 153.91666666666666,
+    "earlyLateEnergyRatioDb": 7.384195076429309,
+    "peakLevelDbfs": -35.52876160504461,
+    "integratedEnergyDb": -20.58291551494917,
+    "postPeakEnergyFraction": 0.7322687881896388,
+    "occupiedTenMsWindowFraction": 0.21428571428571427,
+    "strongestThreeWindowEnergyFraction": 0.324938404382171
+  },
+  "loudnessMatchGain": 1.0,
+  "matched": {
+    "onsetFrame": 968,
+    "timeToPeakMs": 153.91666666666666,
+    "earlyLateEnergyRatioDb": 7.384195076429309,
+    "peakLevelDbfs": -35.52876160504461,
+    "integratedEnergyDb": -20.58291551494917,
+    "postPeakEnergyFraction": 0.7322687881896388,
+    "occupiedTenMsWindowFraction": 0.21428571428571427,
+    "strongestThreeWindowEnergyFraction": 0.324938404382171
+  },
+  "leftPcm16Fnv1a": "10620357761719891320",
+  "rightPcm16Fnv1a": "809180521176916468"
+}

@@ -1,5 +1,6 @@
 add_library(reverb_render STATIC
     Source/EnvelopeMeasurements.cpp
+    Source/GravityReference.cpp
     Source/OfflineRenderer.cpp
     Source/ResponseMeasurements.cpp
     Source/WavWriter.cpp)
@@ -22,6 +23,14 @@ add_executable(reverb_render_cli
     Source/RenderCli.cpp)
 
 target_link_libraries(reverb_render_cli
+    PRIVATE
+        reverb_project_options
+        reverb_render)
+
+add_executable(reverb_gravity_reference_cli
+    Source/GravityReferenceCli.cpp)
+
+target_link_libraries(reverb_gravity_reference_cli
     PRIVATE
         reverb_project_options
         reverb_render)
