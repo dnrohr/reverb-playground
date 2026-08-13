@@ -13,6 +13,22 @@ MODULE_SOURCE = ROOT / "web/src/modules.ts"
 MODULE_REFERENCE = ROOT / "docs/module-and-visualization-reference.md"
 DEVELOPMENT_GUIDE = ROOT / "docs/development.md"
 TUTORIAL = ROOT / "docs/getting-started-barr-tutorial.md"
+GRAVITY_CONTRACT = ROOT / "docs/gravity-behavior-and-measurements.md"
+
+REQUIRED_GRAVITY_PHRASES = (
+    "`-1.0...+1.0`",
+    "Default and reset",
+    "timeToPeakMs",
+    "earlyLateEnergyRatioDb",
+    "peakLevelDbfs",
+    "integratedEnergyDb",
+    "rt60Seconds",
+    "Inverse rise",
+    "Clustered/Bloom center",
+    "Forward decay",
+    "must never emit wet energy before its input arrives",
+    "original project work",
+)
 
 REQUIRED_VISUALIZATIONS = (
     "schematic-canvas",
@@ -51,6 +67,7 @@ def check_contract(
     reference: str,
     development: str,
     tutorial: str,
+    gravity: str,
 ) -> list[str]:
     failures: list[str] = []
     modules = shipped_module_types(module_source)
@@ -81,6 +98,11 @@ def check_contract(
     ):
         if phrase not in tutorial:
             failures.append(f"docs/getting-started-barr-tutorial.md: missing tutorial action {phrase!r}")
+    for phrase in REQUIRED_GRAVITY_PHRASES:
+        if phrase not in gravity:
+            failures.append(
+                f"docs/gravity-behavior-and-measurements.md: missing contract phrase {phrase!r}"
+            )
     return failures
 
 
@@ -90,6 +112,7 @@ def main() -> int:
         MODULE_REFERENCE.read_text(encoding="utf-8"),
         DEVELOPMENT_GUIDE.read_text(encoding="utf-8"),
         TUTORIAL.read_text(encoding="utf-8"),
+        GRAVITY_CONTRACT.read_text(encoding="utf-8"),
     )
     if failures:
         print("Documentation contract checks failed:", file=sys.stderr)

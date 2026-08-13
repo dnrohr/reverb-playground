@@ -45,6 +45,7 @@ Last updated: 2026-08-13
 | M7.3 Complete user and developer documentation | Complete | Clean-install tutorial; complete module/view reference; clean-checkout guide; enforced links/commands |
 | M7.4 Add factory patch and compatibility tests | Complete | Authoritative catalog; all-factory finite rendering/round trips; v1-v2 migrations; metadata; clean CI |
 | M7.5 Run alpha usability and safety validation | In progress | Protocol/ledger and automated accessibility/preflight gates prepared; external participant sessions still required |
+| M8.1 Specify Gravity behavior and measurements | Complete | Bipolar control contract; causal inverse boundary; deterministic stereo energy metrics; inverse/bloom/forward targets |
 
 ## M0.2 verification
 
@@ -529,6 +530,25 @@ Results:
   Evidence: [`reverb-playground-alpha-demo.mp4`](../artifacts/ui/m7-6-alpha-release/reverb-playground-alpha-demo.mp4).
 - `check_release.py` locks product/tag/package identity, tag-workflow gates,
   required note disclosures, landing-page links, and a nontrivial demo asset.
+
+## M8.1 verification
+
+- Gravity is fixed as a normalized, unitless `-1...+1` control: negative is
+  Inverse, zero is the default/reset Bloom detent, and positive is Forward.
+- The contract separates envelope shape from Size, Feedback/Decay, Damping,
+  and Modulation, and requires all eventual mappings to remain visible.
+- Negative Gravity is explicitly causal and distinct from sample reversal,
+  reverse-grain processing, offline pre-reverb, and undisclosed lookahead.
+- Stereo energy, 20 ms smoothing, tie handling, time to peak, early/late ratio,
+  peak level, integrated energy, post-peak energy, decay slope, and RT60 refusal
+  behavior have deterministic definitions.
+- Fixed `-1`, `0`, and `+1` reference targets establish ordered inverse-rise,
+  clustered/Bloom, and forward-decay behavior without prematurely tuning M9's
+  numeric topology tolerances.
+- Official Eventide descriptions are cited as behavioral inspiration only; the
+  planned graph, mappings, measurements, and UI are identified as original.
+- The documentation checker and its regression test require the complete
+  Gravity contract. UI unchanged; no screenshot or video was required.
 
 ## Standalone maximized-window correction
 

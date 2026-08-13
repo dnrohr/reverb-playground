@@ -49,6 +49,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Envelope Follower and Hold Gate](envelope-follower-and-hold-gate.md) - detector equation, gate timing/retrigger semantics, restricted routing, persistence, and feedback safety.
 - [Reverse-envelope and gated factory patches](reverse-and-gated-factory-patches.md) - visible topologies, musical controls, deterministic envelope metrics, and audio fixtures.
 - [Large modulated, inverse, and shimmer topologies](large-modulated-and-shimmer-reverb-topologies.md) - public behavioral evidence, the original cosmic-reverse graph, and the pitch-shift contract required for honest shimmer.
+- [Gravity behavior and measurements](gravity-behavior-and-measurements.md) - bipolar control semantics, causal inverse boundary, deterministic shape metrics, and three reference targets.
 - [Visualization teaching overlays and A/B comparison](visualization-teaching-overlays.md) - measured rise/gate landmarks, honest explanatory boundaries, Learn disable behavior, and Barr/design audition switching.
 - [Control-rate graph semantics](control-rate-graph-semantics.md) - typed parameter sockets, fixed-rate interpolation, bounded evaluation, mapping formula, and schema-v2 persistence.
 - [LFO and control-mapping blocks](lfo-and-control-mapping.md) - sine/triangle generation, free-run/restart behavior, explicit scale/offset/polarity, range preview, and branching.
