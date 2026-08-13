@@ -45,6 +45,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Repository policy tests failed.' }
     & $python.Source scripts/check_repository.py
     if ($LASTEXITCODE -ne 0) { throw 'Repository checks failed.' }
+    & $python.Source scripts/check_documentation.py
+    if ($LASTEXITCODE -ne 0) { throw 'Documentation contract checks failed.' }
 
     & $cmakePath --preset windows-msvc
     if ($LASTEXITCODE -ne 0) { throw 'CMake configure failed.' }

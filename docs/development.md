@@ -9,31 +9,64 @@ The primary M0 development environment is:
 - MSVC x64 compiler and Windows SDK installed by that workload;
 - CMake 3.25 or newer;
 - Git;
+- Node.js 24;
+- pnpm 11.16.0 (the version pinned by `web/package.json`);
+- Python 3.11 or newer for repository, documentation, and packaging checks;
 - an internet connection during initial dependency population.
 
 The repository was first verified with CMake 4.4.2 and Visual Studio 2022 Build Tools. The authoritative architecture and licensing decision is [ADR 0001](adr/0001-primary-stack-and-delivery-target.md).
+
+## Clean-checkout quick start
+
+Open a Developer PowerShell, then clone and enter the repository:
+
+```powershell
+git clone https://github.com/dnrohr/reverb-playground.git
+cd reverb-playground
+```
+
+Run the single verification entry point below. It fetches only the pinned
+package/source dependencies declared by the checkout and produces ignored
+outputs under `web/node_modules/`, `web/dist/`, and `build/windows-msvc/`.
+Neither a local BarrVerb clone nor MIDIVerb research material is required.
 
 ## Configure, build, and test
 
 The required local verification command is the same command used by CI:
 
 ```powershell
-./scripts/verify.ps1 -Configuration Debug
+.\scripts\verify.ps1 -Configuration Debug
 ```
 
-It checks tracked repository text and documentation, rejects ROM-derived filenames and developer-local paths, configures the pinned dependencies, builds the standalone/VST3 and test targets, and runs the native tests.
+It installs the locked web dependencies; runs TypeScript, web, repository,
+documentation, native, and audio tests; rejects ROM-derived filenames and
+developer-local paths; builds the web assets, standalone, and VST3; and checks
+all documented local links and canonical contributor commands.
 
 The equivalent individual commands are:
 
 From a Developer PowerShell or any shell where CMake is available:
 
 ```powershell
+pnpm --dir web install --frozen-lockfile
+pnpm --dir web typecheck
+pnpm --dir web test
+pnpm --dir web build
+python -m unittest discover -s scripts -p 'test_*.py'
+python scripts/check_repository.py
+python scripts/check_documentation.py
 cmake --preset windows-msvc
-cmake --build --preset windows-debug
+cmake --build --preset windows-debug --parallel 2
 ctest --preset windows-debug
 ```
 
 The first configure downloads the pinned JUCE and Catch2 source revisions into the ignored build directory. It does not require the local BarrVerb or MIDIVerb_RE research checkouts.
+
+After a successful run, open
+`build/windows-msvc/src/app/ReverbPlayground_artefacts/Debug/Standalone/Reverb Playground.exe`
+for the standalone, or scan
+`build/windows-msvc/src/app/ReverbPlayground_artefacts/Debug/VST3/Reverb Playground.vst3`
+in a VST3 host.
 
 ## Windows release package
 
@@ -51,7 +84,10 @@ Build products are written beneath `build/windows-msvc/`. The relevant smoke pro
 - `src/app/ReverbPlayground_artefacts/Debug/VST3/Reverb Playground.vst3`
 - `tests/Debug/reverb_tests.exe`
 
-The application/plugin currently passes stereo audio through unchanged and displays a minimal editor shell. It is a build and integration smoke target, not yet a reverb implementation.
+The application and VST3 run the editable native graph, including the shipped
+Barr, reverse-envelope, and gated factory designs. The standalone also owns
+audio-device selection; a plugin host owns device and transport settings for
+the VST3.
 
 ## Source layout
 

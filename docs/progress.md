@@ -471,3 +471,12 @@ Results:
 - At 125% Windows scaling, the editor resized from its preferred size to a maximized 1536-by-960 host window and filled all available content bounds. The former 1920-by-1200 maximum is replaced by an effectively non-limiting native bound.
 - Version `0.1.0` and the 12-character source commit are visible in the editor and repeated in the package metadata.
 - Full method and release decision: [`windows-alpha-package-and-host-validation.md`](windows-alpha-package-and-host-validation.md). UI evidence: [`artifacts/ui/m7-2-windows-package/`](../artifacts/ui/m7-2-windows-package/).
+
+## M7.3 verification
+
+- A clean-install [Barr reference tutorial](getting-started-barr-tutorial.md) now covers package identity, safe audition, explicit stereo/mono signal tracing, energy telemetry, bounded impulse capture, waveform/decay inspection, continuous Allpass editing, diagnostics/recovery, and patch save/load.
+- The consolidated [module and visualization reference](module-and-visualization-reference.md) documents all 11 shipped modules and seven visualization families. It records every socket, unit, inclusive range, default, step, modulation boundary, measurement range, and important safety or interpretation constraint.
+- The [development guide](development.md) now begins at `git clone`, lists the complete Windows/Node/pnpm/Python toolchain, provides the one-command CI-equivalent verifier and its canonical component commands, locates both built formats, and explicitly requires no BarrVerb or MIDIVerb research checkout.
+- `check_documentation.py` derives the shipped module set from `web/src/modules.ts`, requires one reference marker per module/visualization, and locks the clean-checkout commands plus required tutorial actions. Three focused regressions prove missing modules, visualizations, commands, and tutorial steps fail the check.
+- The repository's existing Markdown checker verified all local targets, including the new tutorial screenshot and cross-document links. The tutorial uses the reviewed packaged 0.1.0 standalone screenshot from [`artifacts/ui/m7-2-windows-package/03-packaged-standalone.png`](../artifacts/ui/m7-2-windows-package/03-packaged-standalone.png), which was visually inspected against the released editor. UI unchanged; no new capture was required.
+- Full Debug verification passed 19 browser files / 64 tests, six Python policy/documentation tests, the production web build, standalone/VST3 compilation, and all 99 native/audio tests.

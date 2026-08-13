@@ -16,6 +16,8 @@ The project has a deterministic Barr-inspired DSP reference and an embedded sche
 - [Execution roadmap](docs/roadmap.md)
 - [Current progress](docs/progress.md)
 - [Windows package installation](docs/windows-package-installation.md)
+- [Getting started with the Barr reference](docs/getting-started-barr-tutorial.md)
+- [Module and visualization reference](docs/module-and-visualization-reference.md)
 - [Windows package and host validation](docs/windows-alpha-package-and-host-validation.md)
 - [Schematic editor interactions](docs/schematic-editor-interactions.md)
 - [Continuous parameter editing](docs/continuous-parameter-editing.md)

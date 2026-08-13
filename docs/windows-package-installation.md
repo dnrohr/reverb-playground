@@ -29,3 +29,6 @@ Delete the extracted standalone folder and remove `Reverb Playground.vst3` from 
 ## First verification
 
 The editor header shows `v0.1.0 / <commit>`. Compare that commit with `build-info.json`. Load **Causal Reverse Envelope**, move a block, close and reopen the editor, then save/reopen the host project. The same graph, parameters, cable layout, and viewport should return.
+
+For the complete first-run journey, continue with
+[Getting started: hear and inspect the Barr reference](getting-started-barr-tutorial.md).

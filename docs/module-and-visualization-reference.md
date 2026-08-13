@@ -1,0 +1,206 @@
+# Module and visualization reference
+
+This is the user-facing contract for every module and visualization shipped in
+the 0.1.0 alpha. Every cable carries one signal: solid/circular connections are
+mono audio; dashed/diamond connections are normalized control. Stereo exists
+only through explicitly paired mono boundary sockets.
+
+Parameter ranges below are inclusive. A connected control socket applies the
+inspector's visible amount and polarity to the base value, then clamps the
+result to the displayed minimum and maximum. Control evaluation runs at 1 kHz
+with linear interpolation between control frames.
+
+## Modules
+
+### Stereo Input
+
+<!-- module: stereo-input -->
+
+Stereo boundary source with mono audio outputs `out-l` and `out-r`. It has no
+parameters. Branch either output freely; joining channels requires an explicit
+**Sum (+)** block.
+
+### Stereo Output
+
+<!-- module: stereo-output -->
+
+Stereo boundary sink with mono audio inputs `in-l` and `in-r`. It has no
+parameters. Each input accepts one cable.
+
+### Gain / Invert
+
+<!-- module: gain -->
+
+Mono audio input/output with a `gain-mod` control socket. **Gain** is linear,
+`-1.000..+1.000`, step `0.001`, default `+1.000`; negative values invert
+polarity and zero mutes this path. Default modulation depth is `0.5`.
+
+### Sum (+)
+
+<!-- module: sum -->
+
+Adds mono audio inputs `in-a` and `in-b` into one mono output with no hidden
+normalization and no parameters. Use **Gain / Invert** before or after it when
+level or subtraction is required. Connecting a second source to an occupied
+audio input can insert this block automatically after confirmation.
+
+### Delay
+
+<!-- module: delay -->
+
+Mono variable delay with audio input/output and `delay-mod` control socket.
+**Delay** is `0.10..10000.00 ms`, step `0.01 ms`, default `10.00 ms`; default
+modulation depth is `10 ms`. The prepared sample-rate-specific memory plan must
+fit the project delay budget. Its fractional linear tap makes continuous time
+changes click-resistant but intentionally pitch/Doppler active.
+
+### Allpass
+
+<!-- module: allpass -->
+
+Mono Schroeder allpass with audio input/output plus `delay-mod` and
+`coefficient-mod` control sockets. **Delay** is `0.10..100.00 ms`, step
+`0.01 ms`, default `10.00 ms`, with `2 ms` default modulation depth.
+**Coefficient** is unitless `-0.950..+0.950`, step `0.001`, default `+0.500`,
+with `0.25` default modulation depth. The coefficient clamp is a hard
+stability boundary; delay changes use the same pitch-active fractional tap as
+Delay.
+
+### Low-pass
+
+<!-- module: lowpass -->
+
+Mono one-pole low-pass with audio input/output and `cutoff-mod` control socket.
+**Cutoff** is `20..20000 Hz`, step `1 Hz`, default `7000 Hz`; default modulation
+depth is `5000 Hz`. At runtime the effective cutoff is additionally kept below
+Nyquist, so unusual low sample rates remain finite.
+
+### LFO
+
+<!-- module: lfo -->
+
+Control generator with one control output and modulation sockets for all four
+parameters. **Frequency** is `0.01..100.00 Hz`, step `0.01 Hz`, default `1 Hz`.
+**Phase** is `0.000..0.999 cycles`, step `0.001`, default `0`. **Waveform** is
+Sine (`0`) or Triangle (`1`). **Run mode** is Free Run (`0`) or Restart on
+Transport (`1`). Defaults for modulation amount are respectively `1 Hz`,
+`0.25 cycles`, `1`, and `1`; discrete selectors change only at their defined
+integer choices.
+
+### Scale / Offset
+
+<!-- module: control-map -->
+
+Transforms normalized control and exposes one control output. **Scale** is
+linear `-4.00..+4.00`, step `0.01`, default `+1.00`. **Offset** is unitless
+`-1.00..+1.00`, step `0.01`, default `0`. **Polarity** selects Unipolar 0..1
+(`0`) or Bipolar -1..+1 (`1`, default). All three have control sockets; default
+modulation amounts are `1`, `0.5`, and `1`. The inspector previews the bounded
+output range before connection.
+
+### Envelope Follower
+
+<!-- module: envelope-follower -->
+
+Converts mono audio magnitude to normalized `0..1` control. **Attack** is
+`0.1..500.0 ms`, step `0.1 ms`, default `5 ms`. **Release** is `1..5000 ms`,
+step `1 ms`, default `100 ms`. These timing parameters are base-only and have
+no modulation sockets in this release.
+
+### Hold Gate
+
+<!-- module: hold-gate -->
+
+Passes or attenuates its mono audio input under a separate normalized `gate`
+control input. **Threshold** is unitless `0.00..1.00`, step `0.01`, default
+`0.50`. **Attack** is `0.1..100.0 ms`, step `0.1 ms`, default `2 ms`;
+**Hold** is `1..2000 ms`, step `1 ms`, default `250 ms`; **Release** is
+`0.1..1000.0 ms`, step `0.1 ms`, default `20 ms`. All are base-only in this
+release. The detector can connect directly from Envelope Follower or through
+one Scale / Offset block.
+
+## Visualizations and inspectors
+
+### Schematic canvas
+
+<!-- visualization: schematic-canvas -->
+
+The graph is the executable design. Solid audio and dashed control cables,
+separate port shapes, labels, and explicit stereo sockets expose signal type
+without depending on color. Zoom is bounded by React Flow; **Fit** frames the
+whole patch. The minimap is navigational, not an audio measurement.
+
+### Feedback-loop highlighting
+
+<!-- visualization: feedback-loops -->
+
+Selecting a participating node or cable highlights one complete directed loop
+in amber and alternate loops in violet/dashed style. Previous/Next cycles the
+bounded result set. The inspector totals nominal delay and lists gain,
+polarity, and filters on the path. This topology-derived heuristic is not a
+proof of stability.
+
+### Live energy
+
+<!-- visualization: live-energy -->
+
+Five block segments and cable width show measured RMS mapped over
+`-72..0 dBFS`, with `42 ms` visual attack, `260 ms` visual release, and a
+`100 ms` stale-generation release. The 30 Hz native publication is
+presentation-only. **Energy Off** stops polling and native scans; reduced-motion
+preference starts and locks it off.
+
+### Stereo impulse and decay viewer
+
+<!-- visualization: impulse-decay -->
+
+The upper solid lane is left amplitude, the middle dashed lane is right
+amplitude, and the lower white lane is backward-integrated stereo energy in
+decibels. Capture length is `100..10000 ms`; the UI offers 500, 2000, 5000,
+and 10000 ms. Silence threshold is clamped to `-120..-24 dBFS`; the UI offers
+-60, -80, -100, and -120 dBFS. The stimulus is `0.1` peak. Waveform display is
+bounded to 450 min/max buckets; zoom reaches 256x. RT60 is a T30 regression over
+-5 through -35 dB and is withheld when energy, tail, sample count, or slope is
+not defensible.
+
+### Architecture teaching overlays and A/B
+
+<!-- visualization: teaching-overlays -->
+
+For the reverse-envelope factory, measured onset-to-peak and -40 dB landmarks
+label rising energy and the late peak. For the gated factory, gate/open, hold,
+release, and cutoff regions derive from captured samples and visible gate
+timings. **Learn Off** removes overlays and explanatory prose but does not
+change audio. **A / Barr** and **B / Reverse Env** or **B / Gated** load normal
+visible factory graphs through the same runtime transition as other edits.
+
+### Control previews
+
+<!-- visualization: control-previews -->
+
+LFO and Scale / Offset blocks show signed control motion and control cables use
+dashed animation. The inspector's range preview predicts the normalized mapped
+minimum/maximum from polarity, scale, and offset. These are control-rate facts,
+not audio waveforms; reduced motion removes animation without changing values.
+
+### Diagnostics
+
+<!-- visualization: diagnostics -->
+
+The panel labels operation count as a static estimate, callback load and
+clipping as live measurements, and delay memory as exact prepared bytes. Graph
+publication revisions distinguish compiling, active, failed, crossfading, and
+last transition. A safety event records immutable graph revision, channel, and
+sample identity. Recovery remains disabled until safety mute is active and
+clears stored feedback state explicitly.
+
+## Related contracts
+
+- [Patch format](patch-format.md) defines persistence, units, ports, and schema
+  compatibility.
+- [Real-time and safety contract](real-time-safety-contract-v1.md) defines
+  resource limits and failure behavior.
+- [Schematic editor interactions](schematic-editor-interactions.md) lists
+  pointer and keyboard controls.
+- [Control-rate graph semantics](control-rate-graph-semantics.md) defines the
+  exact modulation formula and scheduling policy.
