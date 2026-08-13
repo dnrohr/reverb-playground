@@ -22,6 +22,8 @@ UI tasks require a current screenshot. Interactive, animated, audio-reactive, or
 | M5. Modulation and live editing | Modulated delays/allpasses and safe topology edits work in real time | Patch an LFO, edit a live graph, and remain click-safe/stable |
 | M6. Reverse reverb | Reverse/gated envelope structures are constructible and teachable | Build and audition a reverse-style patch from visible primitives |
 | M7. Open-source alpha | A documented standalone/plugin release is usable by others | Download, install/build, create a patch, save it, and reopen it in a host |
+| M8. Gravity control infrastructure | One visible macro continuously reshapes a network from inverse rise to forward decay | Sweep Gravity while its explicit mappings and predicted envelope remain inspectable |
+| M9. Gravity Diffusion instrument | An eight-stage modulated diffusion network produces a bounded, measurable Gravity family | Audition, inspect, modify, save, and compare inverse/bloom/forward Gravity states |
 
 ---
 
@@ -614,6 +616,160 @@ Acceptance criteria:
 Milestone exit criteria:
 
 - An external user can obtain the project, build or install it, construct and inspect a safe reverb, save it, and reopen it in the supported environment.
+
+---
+
+## M8. Gravity control infrastructure
+
+Goal: add a reusable, transparent macro-control path that can reshape several visible parameters continuously without hiding a reverb algorithm or recompiling topology.
+
+Every M8 task follows the delivery policy: relevant tests and documentation, current screenshot evidence for visible UI changes, a short video for continuous or interactive behavior, one scoped commit, and a verified direct push to `main`.
+
+### M8.1 Specify Gravity behavior and measurements
+
+Define Gravity as a normalized `-1` to `+1` envelope-shape control, with negative values emphasizing progressively deeper network energy and positive values emphasizing early energy. Keep decay length, size, damping, and modulation conceptually separate.
+
+Acceptance criteria:
+
+- Documentation distinguishes Gravity-style inverse decay from sample reversal, reverse-grain processing, and offline pre-reverb.
+- The sign convention, center behavior, units, center detent, automation range, and reset/default value are fixed.
+- Time-to-peak, early/late energy ratio, peak level, integrated energy, and decay metrics have deterministic definitions.
+- At least three reference targets are specified: inverse rise, clustered/bloom center, and forward decay.
+- The contract states that no negative-Gravity state may emit wet energy before causal input arrives.
+- Public Eventide behavior is cited only as inspiration; the project topology is explicitly original.
+
+### M8.2 Implement a nonlinear Curve Mapper control block
+
+Extend visible control routing beyond linear Scale / Offset so one normalized source can create exponential or power-shaped parameter mappings.
+
+Acceptance criteria:
+
+- The block exposes curve family, amount/exponent, scale, offset, polarity, and clamp bounds with documented equations.
+- Linear mode exactly matches the existing Scale / Offset result within tolerance.
+- Exponential and power modes are monotonic for every supported parameter range and remain finite at endpoints.
+- Control-rate evaluation is bounded, allocation-free after preparation, and interpolated without sample discontinuities.
+- Schema-v2 persistence round-trips every mapping field; invalid, non-finite, and unsupported curves fail before publication.
+- The inspector previews input/output ranges and distinguishes the block and its cables without relying on color.
+
+### M8.3 Add a visible Macro control-source block
+
+Create a user-named, automatable control source whose output can branch through ordinary Curve Mapper blocks to multiple parameter sockets.
+
+Acceptance criteria:
+
+- Macro exposes name, normalized value, default value, and optional center detent while retaining one explicit control output.
+- One Macro output can branch to every required Gravity mapping without hidden destinations or factory-only routing.
+- Selecting the Macro lists and highlights all reachable mapped parameters and their predicted ranges.
+- Continuous edits are smoothed according to a documented fixed policy and never trigger topology compilation.
+- Undo/redo, copy/paste, save/load, host state, and schema migration preserve the Macro and all stable IDs.
+- Automated tests cover branching limits, invalid routes, rapid automation, deterministic reset, and saved-state restoration.
+
+### M8.4 Add the Gravity macro presentation
+
+Present a factory-designated Macro as a prominent bipolar Gravity control while preserving the underlying blocks and cables as the source of truth.
+
+Acceptance criteria:
+
+- The control reads `INVERSE` at the negative end, `BLOOM` at center, and `FORWARD` at the positive end.
+- The exact numeric value remains visible and keyboard-editable; zero has a reliable center detent.
+- Moving Gravity highlights affected blocks and shows the currently predicted envelope without claiming measured audio.
+- An Expand/Focus action brings every contributing Macro, Curve Mapper, and destination block into view.
+- Disabling teaching overlays does not disable control or inspection.
+- Screenshot evidence covers inverse, center, and forward states; video shows a continuous sweep and destination highlighting.
+
+Milestone exit criteria:
+
+- A user can construct and inspect a visible Gravity macro, branch it through nonlinear mappings, automate it continuously, save/reload it, and understand every affected base parameter without hidden DSP.
+
+---
+
+## M9. Gravity Diffusion instrument
+
+Goal: build the first musical Gravity implementation as an original eight-stage, progressively diffused, modulated feedback network controlled by the M8 infrastructure.
+
+Every M9 task follows the delivery policy: deterministic DSP/render tests, affected documentation, current screenshot/video evidence, one scoped commit, and a verified direct push to `main`.
+
+### M9.1 Design the eight-stage diffusion topology
+
+Specify stage delays, allpass groups, tap depths, stereo extraction points, damping location, global delayed feedback, and memory/CPU budgets before tuning the macro.
+
+Acceptance criteria:
+
+- The graph uses only public visible primitives plus M8 control blocks and contains no factory-only audio processor.
+- At least eight progressively deeper energy taps and 12–16 allpasses create increasing echo density rather than three isolated echoes.
+- Every directed feedback cycle crosses an explicit Delay and passes the existing legality validator.
+- Left and right outputs use different internal stages or taps while cables remain mono.
+- Maximum delay memory, control mappings, runtime work, and transition cost fit documented project budgets at every supported sample rate.
+- A checked-in diagram identifies input diffusion, depth taps, weighted sum, damping, feedback, modulation, and stereo extraction.
+
+### M9.2 Implement normalized Gravity weighting
+
+Use visible Curve Mapper branches to move energy between early and deep taps while compensating total gain.
+
+Acceptance criteria:
+
+- The implemented weighting equation and normalization method are documented and reproducible outside the UI.
+- Gravity `+1` produces the highest early/late energy ratio; `-1` produces the lowest; measured intermediate states are monotonic within stated tolerance.
+- Negative Gravity increases time-to-peak without reversing samples or producing pre-input output.
+- Equal-power or measured-energy normalization keeps integrated wet energy within a specified tolerance across the sweep.
+- Rapid and block-boundary Gravity automation remains finite and free of discontinuities above the defined threshold.
+- Tests cover endpoints, center, representative intermediate values, reset, and supported sample rates.
+
+### M9.3 Add Size, Feedback, Damping, and Modulation macros
+
+Expose the minimum complementary controls needed to turn the Gravity network into a useful instrument without conflating their responsibilities.
+
+Acceptance criteria:
+
+- Size changes internal time scale and density buildup without changing the Gravity sign convention.
+- Feedback changes recirculation length independently enough that inverse and forward envelopes remain identifiable.
+- Damping prevents repeated shifted/modulated high-frequency energy from accumulating excessively.
+- Two independent slow LFO paths move selected allpass delays with visible bounded mappings.
+- All macro combinations remain finite under silence, impulse, full-scale bounded noise, and continuous parameter sweeps.
+- The numerical safety latch, emergency mute, Undo, and explicit recovery behavior remain operational at extreme settings.
+
+### M9.4 Tune inverse, bloom, and forward reference states
+
+Create measurable reference settings before naming or shipping presets.
+
+Acceptance criteria:
+
+- Inverse reference has a clearly rising smoothed envelope and a substantially later peak than the forward reference.
+- Bloom center has a soft attack and dense clustered tail without obvious three-tap stepping.
+- Forward reference presents early energy followed by a conventional decaying envelope.
+- Loudness-matched stereo audio fixtures and machine-readable measurements are checked in for all three states.
+- Listening notes identify ringing, flutter, coloration, stereo motion, and failure modes without treating preference as measurement.
+- Tuning is deterministic after reset and serialized patch reload.
+
+### M9.5 Ship the Gravity Diffusion factory patch and teaching view
+
+Add the complete graph to the factory catalog and make its macro relationships and measured response understandable in the editor.
+
+Acceptance criteria:
+
+- The patch loads as an ordinary editable schema-v2 graph and round-trips without hidden state.
+- Factory metadata declares project-authored provenance and does not use the Blackhole product name as the patch identity.
+- The teaching view contrasts predicted macro shape with the measured impulse envelope and labels any disagreement honestly.
+- A/B comparison can switch between Barr Reference and the selected Gravity state without losing the selected design.
+- Screenshot evidence shows the entire graph and each principal Gravity state; video shows selection, sweep, measurement, highlighting, save, and reload.
+- User and developer documentation explain how to reconstruct and safely modify the topology.
+
+### M9.6 Validate and package the first Gravity implementation
+
+Run the complete safety, compatibility, UI, and distribution workflow against the new factory graph.
+
+Acceptance criteria:
+
+- Factory impulse and bounded-noise renders remain finite at 44.1, 48, and 96 kHz.
+- Continuous sweeps across every macro and representative combined extremes pass numerical and topology-transition tests.
+- Standalone and VST3 state restore the complete graph and macro values in named validation hosts.
+- Windows 100%, 125%, and 150% physical-resolution captures show the WebView filling its client area with usable controls.
+- The clean package embeds the exact source commit, contains current standalone/VST3 binaries, and passes checksum verification.
+- Local verification and the clean `main` CI run pass before the milestone is declared complete.
+
+Milestone exit criteria:
+
+- An external user can load Gravity Diffusion, sweep continuously between inverse, bloom, and forward behavior, inspect how every visible mapping creates the result, modify and save it, and reopen the same bounded sound in the supported standalone and plugin formats.
 
 ---
 
