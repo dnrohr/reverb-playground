@@ -87,16 +87,22 @@ Transport (`1`). Defaults for modulation amount are respectively `1 Hz`,
 `0.25 cycles`, `1`, and `1`; discrete selectors change only at their defined
 integer choices.
 
-### Scale / Offset
+### Curve Mapper
 
 <!-- module: control-map -->
 
-Transforms normalized control and exposes one control output. **Scale** is
+Transforms normalized control and exposes one control output. **Curve family**
+selects Linear (`0`, default), Power (`1`), or Exponential (`2`). **Curve
+amount** is `-8..+8`, step `0.01`, default `0`; **Exponent** is `0.1..8`, step
+`0.01`, default `1`. **Scale** is
 linear `-4.00..+4.00`, step `0.01`, default `+1.00`. **Offset** is unitless
 `-1.00..+1.00`, step `0.01`, default `0`. **Polarity** selects Unipolar 0..1
 (`0`) or Bipolar -1..+1 (`1`, default). All three have control sockets; default
-modulation amounts are `1`, `0.5`, and `1`. The inspector previews the bounded
-output range before connection.
+modulation amounts are `1`, `0.5`, and `1`. **Clamp min/max** are each
+`-1..+1`, default `-1/+1`, and min must remain below max. The inspector previews
+the bounded output range before connection. Linear mode exactly preserves the
+released Scale / Offset behavior; older schema-v2 nodes migrate to neutral
+Linear curve fields when loaded.
 
 ### Envelope Follower
 

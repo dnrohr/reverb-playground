@@ -44,7 +44,7 @@
       "properties": {
         "id": { "$ref": "#/$defs/identifier" },
         "value": { "type": "number" },
-        "unit": { "enum": ["coefficient", "cycles", "decibels", "hertz", "linear", "milliseconds", "polarity", "run-mode", "unitless", "waveform"] },
+        "unit": { "enum": ["coefficient", "curve-family", "cycles", "decibels", "hertz", "linear", "milliseconds", "polarity", "run-mode", "unitless", "waveform"] },
         "modulation": { "$ref": "#/$defs/modulation" }
       }
     },

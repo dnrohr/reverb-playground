@@ -96,6 +96,11 @@ describe('patch persistence', () => {
     lfo.data.parameters.find((parameter) => parameter.id === 'waveform')!.value = 1;
     mapper.data.parameters.find((parameter) => parameter.id === 'scale')!.value = -0.4;
     mapper.data.parameters.find((parameter) => parameter.id === 'offset')!.value = 0.2;
+    mapper.data.parameters.find((parameter) => parameter.id === 'curve-family')!.value = 2;
+    mapper.data.parameters.find((parameter) => parameter.id === 'curve-amount')!.value = -3.5;
+    mapper.data.parameters.find((parameter) => parameter.id === 'exponent')!.value = 2.25;
+    mapper.data.parameters.find((parameter) => parameter.id === 'clamp-min')!.value = -0.7;
+    mapper.data.parameters.find((parameter) => parameter.id === 'clamp-max')!.value = 0.85;
     const edges = [
       { id: 'lfo-map', source: lfo.id, sourceHandle: 'out', target: mapper.id, targetHandle: 'in' },
       { id: 'map-gain', source: mapper.id, sourceHandle: 'out', target: gain.id, targetHandle: 'gain-mod' },
@@ -105,7 +110,26 @@ describe('patch persistence', () => {
     const loaded = parsePatchJson(written, reference);
     expect(loaded.edges.filter((edge) => edge.source === mapper.id)).toHaveLength(2);
     expect(loaded.nodes.find((node) => node.id === lfo.id)?.data.parameters.find((parameter) => parameter.id === 'waveform')?.value).toBe(1);
+    expect(loaded.nodes.find((node) => node.id === mapper.id)?.data.parameters.map((parameter) => [parameter.id, parameter.value]).slice(3)).toEqual([
+      ['curve-family', 2], ['curve-amount', -3.5], ['exponent', 2.25], ['clamp-min', -0.7], ['clamp-max', 0.85],
+    ]);
     expect(writePatchJson(loaded.nodes, loaded.edges, loaded.viewport)).toBe(written);
+  });
+
+  it('upgrades legacy schema-v2 Scale / Offset nodes to a linear Curve Mapper', () => {
+    const input = createModuleNode('stereo-input', 'stereo-input-1', { x: 0, y: 0 });
+    const output = createModuleNode('stereo-output', 'stereo-output-1', { x: 600, y: 0 });
+    const mapper = createModuleNode('control-map', 'control-map-1', { x: 300, y: 200 });
+    const raw = JSON.parse(writePatchJson([input, mapper, output], [], { x: 0, y: 0, zoom: 1 })) as {
+      semantic: { nodes: Array<{ type: string; parameters: unknown[] }> };
+    };
+    raw.semantic.nodes.find((node) => node.type === 'control-map')!.parameters.splice(3);
+    const loaded = parsePatchJson(JSON.stringify(raw), reference);
+    const values = loaded.nodes.find((node) => node.id === mapper.id)!.data.parameters;
+    expect(values.find((parameter) => parameter.id === 'curve-family')?.value).toBe(0);
+    expect(values.find((parameter) => parameter.id === 'exponent')?.value).toBe(1);
+    expect(values.find((parameter) => parameter.id === 'clamp-min')?.value).toBe(-1);
+    expect(values.find((parameter) => parameter.id === 'clamp-max')?.value).toBe(1);
   });
 
   it('round trips follower and gate base controls without inventing modulation sockets', () => {

@@ -46,6 +46,7 @@ Last updated: 2026-08-13
 | M7.4 Add factory patch and compatibility tests | Complete | Authoritative catalog; all-factory finite rendering/round trips; v1-v2 migrations; metadata; clean CI |
 | M7.5 Run alpha usability and safety validation | In progress | Protocol/ledger and automated accessibility/preflight gates prepared; external participant sessions still required |
 | M8.1 Specify Gravity behavior and measurements | Complete | Bipolar control contract; causal inverse boundary; deterministic stereo energy metrics; inverse/bloom/forward targets |
+| M8.2 Implement a nonlinear Curve Mapper control block | Complete | Linear/power/exponential mappings; explicit bounds; schema-v2 compatibility; bounded runtime; inspector preview |
 
 ## M0.2 verification
 
@@ -549,6 +550,28 @@ Results:
   planned graph, mappings, measurements, and UI are identified as original.
 - The documentation checker and its regression test require the complete
   Gravity contract. UI unchanged; no screenshot or video was required.
+
+## M8.2 verification
+
+- The released `control-map` node is now labeled Curve Mapper and exposes
+  Linear, Power, and Exponential families, curve amount, exponent, scale,
+  offset, polarity, and explicit output clamps.
+- Native and browser evaluators share the documented normalized equations.
+  Linear mode matches the original Scale / Offset result; sampled unipolar and
+  bipolar Power/Exponential sweeps are monotonic and finite at both endpoints.
+- The prepared 1 kHz control runtime performs constant bounded scalar work and
+  uses the existing audio-rate linear ramp for connected parameter targets.
+  Invalid selectors, non-finite fields, out-of-range values, and reversed
+  clamps fail compilation before runtime publication.
+- Newly saved schema-v2 nodes round-trip every curve field exactly. Released
+  three-parameter schema-v2 Scale / Offset nodes load as neutral Linear Curve
+  Mappers and write the complete representation on their next save.
+- The inspector names the active family without relying on color, animates the
+  mapped value, and previews output endpoints after curve, scale, offset, and
+  clamping. Screenshot:
+  [`curve-mapper-inspector.png`](../artifacts/ui/m8-2-curve-mapper/curve-mapper-inspector.png).
+  Six-second interaction evidence:
+  [`curve-mapper-preview.mp4`](../artifacts/ui/m8-2-curve-mapper/curve-mapper-preview.mp4).
 
 ## Standalone maximized-window correction
 

@@ -1,6 +1,13 @@
 # LFO and control-mapping blocks
 
-M5.2 adds two user-creatable control blocks to the schematic: **LFO** and **Scale / Offset**. They use the 1 kHz bounded control plan defined in M5.1. Control cables remain mono, may branch from one output to many parameter sockets, and are visually dashed; control blocks add a dashed outline, double left rule, waveform/mapping label, signed numeric preview, and moving position marker so signal identity does not depend on violet alone.
+M5.2 added two user-creatable control blocks to the schematic: **LFO** and the
+original **Scale / Offset** mapper. M8.2 evolves that same persisted
+`control-map` node into the backward-compatible [Curve Mapper](curve-mapper.md).
+They use the 1 kHz bounded control plan defined in M5.1. Control cables remain
+mono, may branch from one output to many parameter sockets, and are visually
+dashed; control blocks add a dashed outline, double left rule,
+waveform/mapping label, signed numeric preview, and moving position marker so
+signal identity does not depend on violet alone.
 
 ## LFO contract
 

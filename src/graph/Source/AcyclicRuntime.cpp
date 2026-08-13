@@ -45,6 +45,11 @@ struct Operation final {
     double controlScale { 1.0 };
     double controlOffset {};
     ModulationPolarity controlPolarity { ModulationPolarity::unipolar };
+    ControlCurveFamily controlCurveFamily { ControlCurveFamily::linear };
+    double controlCurveAmount {};
+    double controlExponent { 1.0 };
+    double controlClampMinimum { -1.0 };
+    double controlClampMaximum { 1.0 };
 };
 
 enum class ControlOperationKind { lfo, mapper };
@@ -57,6 +62,11 @@ struct ControlOperation final {
     double scale { 1.0 };
     double offset {};
     ModulationPolarity polarity { ModulationPolarity::bipolar };
+    ControlCurveFamily curveFamily { ControlCurveFamily::linear };
+    double curveAmount {};
+    double exponent { 1.0 };
+    double clampMinimum { -1.0 };
+    double clampMaximum { 1.0 };
     double value {};
 };
 
@@ -142,11 +152,19 @@ void addNodeContractErrors(const Node& node, std::vector<std::string>& errors)
             || !hasParameter(node, "waveform", "waveform") || !hasParameter(node, "run-mode", "run-mode"))
             errors.push_back("lfo node '" + node.id + "' requires frequency, phase, waveform, and run-mode");
     } else if (node.type == "control-map") {
+        const auto hasNoCurveFields = parameter(node, "curve-family") == nullptr
+            && parameter(node, "curve-amount") == nullptr && parameter(node, "exponent") == nullptr
+            && parameter(node, "clamp-min") == nullptr && parameter(node, "clamp-max") == nullptr;
+        const auto hasAllCurveFields = hasParameter(node, "curve-family", "curve-family")
+            && hasParameter(node, "curve-amount", "unitless")
+            && hasParameter(node, "exponent", "unitless")
+            && hasParameter(node, "clamp-min", "unitless")
+            && hasParameter(node, "clamp-max", "unitless");
         if (!hasPort(node, "in", SignalType::control, PortDirection::input)
             || !hasPort(node, "out", SignalType::control, PortDirection::output)
             || !hasParameter(node, "scale", "linear") || !hasParameter(node, "offset", "unitless")
-            || !hasParameter(node, "polarity", "polarity"))
-            errors.push_back("control-map node '" + node.id + "' requires scale, offset, and polarity");
+            || !hasParameter(node, "polarity", "polarity") || (!hasNoCurveFields && !hasAllCurveFields))
+            errors.push_back("control-map node '" + node.id + "' requires curve, scale, offset, polarity, and clamps");
     } else if (node.type == "envelope-follower") {
         if (!hasPort(node, "in", SignalType::audio, PortDirection::input)
             || !hasPort(node, "out", SignalType::control, PortDirection::output)
@@ -336,7 +354,10 @@ void PreparedAcyclicRuntime::process(
                     const auto input = control.source == noModulation
                         ? 0.0
                         : implementation_->controlOperations[control.source].value;
-                    control.value = mapControlValue(input, control.scale, control.offset, control.polarity);
+                    control.value = mapControlValue(
+                        input, control.curveFamily, control.curveAmount, control.exponent,
+                        control.scale, control.offset, control.polarity,
+                        control.clampMinimum, control.clampMaximum);
                 }
             }
             for (auto& modulation : implementation_->modulations) {
@@ -394,7 +415,10 @@ void PreparedAcyclicRuntime::process(
                         ? 0.0
                         : mapControlValue(
                             implementation_->buffers[operation.controlInput][0],
-                            operation.controlScale, operation.controlOffset, operation.controlPolarity);
+                            operation.controlCurveFamily, operation.controlCurveAmount,
+                            operation.controlExponent, operation.controlScale, operation.controlOffset,
+                            operation.controlPolarity, operation.controlClampMinimum,
+                            operation.controlClampMaximum);
                     destination.front() = std::get<reverb::dsp::HoldGate>(operation.processor)
                         .processSample(destination.front(), static_cast<float>(control));
                 }
@@ -686,6 +710,11 @@ AcyclicCompileResult compileAcyclicGraph(
                     .scale = mapper->scale,
                     .offset = mapper->offset,
                     .polarity = mapper->inputPolarity,
+                    .curveFamily = mapper->curveFamily,
+                    .curveAmount = mapper->curveAmount,
+                    .exponent = mapper->exponent,
+                    .clampMinimum = mapper->clampMinimum,
+                    .clampMaximum = mapper->clampMaximum,
                 };
                 if (const auto source = implementation->controlOperationById.find(mapper->sourceNodeId);
                     source != implementation->controlOperationById.end())
@@ -758,6 +787,18 @@ AcyclicCompileResult compileAcyclicGraph(
                         operation.controlPolarity = parameter(*controlSource, "polarity")->value >= 0.5
                             ? ModulationPolarity::bipolar
                             : ModulationPolarity::unipolar;
+                        if (const auto* value = parameter(*controlSource, "curve-family"))
+                            operation.controlCurveFamily = value->value >= 1.5 ? ControlCurveFamily::exponential
+                                : value->value >= 0.5 ? ControlCurveFamily::power
+                                                      : ControlCurveFamily::linear;
+                        if (const auto* value = parameter(*controlSource, "curve-amount"))
+                            operation.controlCurveAmount = value->value;
+                        if (const auto* value = parameter(*controlSource, "exponent"))
+                            operation.controlExponent = value->value;
+                        if (const auto* value = parameter(*controlSource, "clamp-min"))
+                            operation.controlClampMinimum = value->value;
+                        if (const auto* value = parameter(*controlSource, "clamp-max"))
+                            operation.controlClampMaximum = value->value;
                     }
                 }
                 operation.processor = std::move(processor);

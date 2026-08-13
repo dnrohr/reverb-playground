@@ -49,8 +49,9 @@ export function parsePatchJson(text: string, reference: RuntimeSnapshot): Loaded
     const expectedPorts = referenceNode?.ports ?? definition!.ports; const expectedParameters = referenceNode?.parameters ?? definition!.parameters; const savedPorts = saved.ports as unknown[]; const savedParameters = saved.parameters as unknown[];
     if (!Array.isArray(saved.ports) || (sourceVersion === 2 && saved.ports.length !== expectedPorts.length)) fail(`ports differ for node '${saved.id}'`);
     savedPorts.forEach((unknownPort, portIndex) => { const port = object(unknownPort, `node '${savedId}' port`); exactKeys(port, ['id', 'signal', 'direction'], `node '${savedId}' port`); const expected = expectedPorts.find((candidate) => candidate.id === port.id); if (!expected || port.signal !== expected.signal || port.direction !== expected.direction) fail(`port ${portIndex} differs for node '${savedId}'`); });
-    if (!Array.isArray(saved.parameters) || saved.parameters.length !== expectedParameters.length) fail(`parameters differ for node '${saved.id}'`);
-    const values = savedParameters.map((unknownParameter, parameterIndex) => {
+    const legacyCurveMapper = savedType === 'control-map' && savedParameters.length === 3 && expectedParameters.length === 8;
+    if (!Array.isArray(saved.parameters) || (saved.parameters.length !== expectedParameters.length && !legacyCurveMapper)) fail(`parameters differ for node '${saved.id}'`);
+    const values: PatchNodeData['parameters'] = savedParameters.map((unknownParameter, parameterIndex) => {
       const parameter = object(unknownParameter, `node '${savedId}' parameter`);
       const expected = expectedParameters[parameterIndex];
       exactKeys(parameter, sourceVersion === 1 || !expected?.modulation ? ['id', 'value', 'unit'] : ['id', 'value', 'unit', 'modulation'], `node '${savedId}' parameter`);
@@ -59,6 +60,7 @@ export function parsePatchJson(text: string, reference: RuntimeSnapshot): Loaded
       if (value < expected.minimum || value > expected.maximum) fail(`${savedId}.${expected.id} is outside ${expected.minimum}..${expected.maximum}`);
       return { ...expected, value, modulation: parseModulation(parameter.modulation, expected, `${savedId}.${expected.id}`, sourceVersion) };
     });
+    if (legacyCurveMapper) values.push(...structuredClone(expectedParameters.slice(3)));
     const base = referenceNode ? { id: savedId, type: 'patchNode', position: { x: 0, y: 0 }, data: { label: referenceNode.label, type: referenceNode.type, role: referenceNode.role, ports: structuredClone(referenceNode.ports), parameters: values, runtimeBound: true } } as Node<PatchNodeData> : createModuleNode(savedType as ModuleType, savedId, { x: 0, y: 0 });
     base.data.parameters = values; nodes.push(base);
   }

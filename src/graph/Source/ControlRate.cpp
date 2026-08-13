@@ -33,6 +33,20 @@ double requiredParameter(
     return parameter->value;
 }
 
+double optionalParameter(
+    const Node& node, const std::string_view id, const double fallback,
+    const double minimum, const double maximum, ControlRatePlan& plan)
+{
+    const auto* parameter = findParameter(node, id);
+    if (parameter == nullptr)
+        return fallback;
+    if (!std::isfinite(parameter->value) || parameter->value < minimum || parameter->value > maximum) {
+        plan.errors.push_back("control node '" + node.id + "' has invalid " + std::string(id));
+        return fallback;
+    }
+    return parameter->value;
+}
+
 } // namespace
 
 ControlRatePlan compileControlRatePlan(
@@ -96,6 +110,18 @@ ControlRatePlan compileControlRatePlan(
             const auto polarity = polarityValue >= 0.5
                 ? ModulationPolarity::bipolar
                 : ModulationPolarity::unipolar;
+            const auto familyValue = optionalParameter(node, "curve-family", 0.0, 0.0, 2.0, plan);
+            if (familyValue != 0.0 && familyValue != 1.0 && familyValue != 2.0)
+                plan.errors.push_back("control node '" + node.id + "' has unsupported curve-family selector");
+            const auto family = familyValue >= 1.5 ? ControlCurveFamily::exponential
+                : familyValue >= 0.5 ? ControlCurveFamily::power
+                                     : ControlCurveFamily::linear;
+            const auto curveAmount = optionalParameter(node, "curve-amount", 0.0, -8.0, 8.0, plan);
+            const auto exponent = optionalParameter(node, "exponent", 1.0, 0.1, 8.0, plan);
+            const auto clampMinimum = optionalParameter(node, "clamp-min", -1.0, -1.0, 1.0, plan);
+            const auto clampMaximum = optionalParameter(node, "clamp-max", 1.0, -1.0, 1.0, plan);
+            if (clampMinimum >= clampMaximum)
+                plan.errors.push_back("control node '" + node.id + "' clamp minimum must be below maximum");
             const auto source = incomingControl.find(portKey(node.id, "in"));
             plan.mappers.push_back({
                 node.id,
@@ -104,7 +130,14 @@ ControlRatePlan compileControlRatePlan(
                 scale,
                 offset,
                 polarity,
-                mappedControlRange(scale, offset, polarity),
+                family,
+                curveAmount,
+                exponent,
+                clampMinimum,
+                clampMaximum,
+                mappedControlRange(
+                    family, curveAmount, exponent, scale, offset, polarity,
+                    clampMinimum, clampMaximum),
             });
         }
     }

@@ -4,8 +4,10 @@
 #include <reverb/graph/ControlModulation.h>
 #include <reverb/graph/ControlRate.h>
 #include <reverb/graph/GraphDocument.h>
+#include <reverb/graph/PatchJson.h>
 
 #include <cmath>
+#include <limits>
 
 TEST_CASE("Sine and triangle LFO frequency phase and waveforms are deterministic")
 {
@@ -57,6 +59,82 @@ TEST_CASE("Explicit scale offset and polarity mapping predicts its bounded outpu
     REQUIRE(mappedControlRange(0.25, 0.5, ModulationPolarity::bipolar).maximum == Catch::Approx(0.75));
     REQUIRE(mappedControlRange(-2.0, 0.25, ModulationPolarity::unipolar).minimum == Catch::Approx(-1.0));
     REQUIRE(mappedControlRange(-2.0, 0.25, ModulationPolarity::unipolar).maximum == Catch::Approx(0.25));
+}
+
+TEST_CASE("Curve mapper families are finite monotonic and linear-compatible")
+{
+    using namespace reverb::graph;
+    for (const auto polarity : { ModulationPolarity::unipolar, ModulationPolarity::bipolar }) {
+        const auto lower = polarity == ModulationPolarity::bipolar ? -1.0 : 0.0;
+        double previousPower = -2.0;
+        double previousExponential = -2.0;
+        for (int index = 0; index <= 100; ++index) {
+            const auto input = lower + (1.0 - lower) * static_cast<double>(index) / 100.0;
+            const auto linear = mapControlValue(input, 0.75, 0.1, polarity);
+            const auto extendedLinear = mapControlValue(
+                input, ControlCurveFamily::linear, 5.0, 3.0, 0.75, 0.1,
+                polarity, -1.0, 1.0);
+            const auto power = mapControlValue(
+                input, ControlCurveFamily::power, 0.0, 2.5, 0.75, 0.1,
+                polarity, -1.0, 1.0);
+            const auto exponential = mapControlValue(
+                input, ControlCurveFamily::exponential, 4.0, 1.0, 0.75, 0.1,
+                polarity, -1.0, 1.0);
+            REQUIRE(extendedLinear == Catch::Approx(linear));
+            REQUIRE(std::isfinite(power));
+            REQUIRE(std::isfinite(exponential));
+            REQUIRE(power >= previousPower);
+            REQUIRE(exponential >= previousExponential);
+            previousPower = power;
+            previousExponential = exponential;
+        }
+    }
+    const auto range = mappedControlRange(
+        ControlCurveFamily::power, 0.0, 2.0, -2.0, 0.25,
+        ModulationPolarity::unipolar, -0.6, 0.8);
+    REQUIRE(range.minimum == Catch::Approx(-0.6));
+    REQUIRE(range.maximum == Catch::Approx(0.25));
+}
+
+TEST_CASE("Curve mapper plan persists every field and rejects invalid curves before publication")
+{
+    using namespace reverb::graph;
+    const auto mapper = [](const double family, const double amount, const double exponent,
+                            const double clampMinimum, const double clampMaximum) {
+        return Node { "map", "control-map", {
+            { "in", SignalType::control, PortDirection::input },
+            { "out", SignalType::control, PortDirection::output },
+        }, {
+            { "scale", 0.8, "linear", {} }, { "offset", -0.1, "unitless", {} },
+            { "polarity", 1.0, "polarity", {} }, { "curve-family", family, "curve-family", {} },
+            { "curve-amount", amount, "unitless", {} }, { "exponent", exponent, "unitless", {} },
+            { "clamp-min", clampMinimum, "unitless", {} }, { "clamp-max", clampMaximum, "unitless", {} },
+        } };
+    };
+
+    GraphDocument valid;
+    valid.nodes = { mapper(2.0, -3.5, 2.25, -0.75, 0.9) };
+    const auto plan = compileControlRatePlan(valid, 48'000.0, 512);
+    REQUIRE(plan.valid());
+    REQUIRE(plan.mappers.front().curveFamily == ControlCurveFamily::exponential);
+    REQUIRE(plan.mappers.front().curveAmount == Catch::Approx(-3.5));
+    REQUIRE(plan.mappers.front().exponent == Catch::Approx(2.25));
+    REQUIRE(plan.mappers.front().clampMinimum == Catch::Approx(-0.75));
+    REQUIRE(plan.mappers.front().clampMaximum == Catch::Approx(0.9));
+    const auto serialized = writePatchJson(valid);
+    const auto restored = parsePatchJson(serialized);
+    REQUIRE(restored == valid);
+    REQUIRE(writePatchJson(restored) == serialized);
+
+    GraphDocument unsupported;
+    unsupported.nodes = { mapper(3.0, 0.0, 1.0, -1.0, 1.0) };
+    REQUIRE_FALSE(compileControlRatePlan(unsupported, 48'000.0, 512).valid());
+    GraphDocument reversedClamp;
+    reversedClamp.nodes = { mapper(1.0, 0.0, 2.0, 0.5, -0.5) };
+    REQUIRE_FALSE(compileControlRatePlan(reversedClamp, 48'000.0, 512).valid());
+    GraphDocument nonFinite;
+    nonFinite.nodes = { mapper(1.0, std::numeric_limits<double>::infinity(), 2.0, -1.0, 1.0) };
+    REQUIRE_FALSE(compileControlRatePlan(nonFinite, 48'000.0, 512).valid());
 }
 
 TEST_CASE("One control output branches to multiple parameter sockets")

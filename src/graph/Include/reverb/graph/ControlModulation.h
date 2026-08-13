@@ -16,6 +16,12 @@ enum class LfoRunMode {
     restart,
 };
 
+enum class ControlCurveFamily {
+    linear,
+    power,
+    exponential,
+};
+
 class ControlLfo final {
 public:
     void prepare(double controlSampleRate) noexcept;
@@ -42,7 +48,17 @@ struct ControlMappingRange final {
 [[nodiscard]] double mapControlValue(
     double input, double scale, double offset, ModulationPolarity inputPolarity) noexcept;
 
+[[nodiscard]] double mapControlValue(
+    double input, ControlCurveFamily curveFamily, double curveAmount, double exponent,
+    double scale, double offset, ModulationPolarity inputPolarity,
+    double clampMinimum, double clampMaximum) noexcept;
+
 [[nodiscard]] ControlMappingRange mappedControlRange(
     double scale, double offset, ModulationPolarity inputPolarity) noexcept;
+
+[[nodiscard]] ControlMappingRange mappedControlRange(
+    ControlCurveFamily curveFamily, double curveAmount, double exponent,
+    double scale, double offset, ModulationPolarity inputPolarity,
+    double clampMinimum, double clampMaximum) noexcept;
 
 } // namespace reverb::graph

@@ -32,7 +32,7 @@ import { decorateEnergy } from './energyDecoration';
 import { parseEnergyTelemetry, shouldRunEnergyTelemetry, smoothEnergy, type EnergyLevels } from './energyTelemetry';
 import { formatBytes, parseRuntimeDiagnostics, type RuntimeDiagnostics } from './runtimeDiagnostics';
 import { audibleGraphFingerprint, parseGraphPublicationResult } from './topologyPublication';
-import { decorateControlPreview, mappingRange } from './controlSemantics';
+import { curveMappingRange, decorateControlPreview, type ControlCurveFamily } from './controlSemantics';
 import { comparisonPatchAfterSelection, factoryPatchDescription, factoryPatches, loadFactoryPatch, type ComparisonPatchId, type FactoryPatchId } from './factoryPatches';
 import { architectureOverlay, type GateTeachingParameters, type TeachingPatchId } from './architectureOverlay';
 import { parseHostPatchStateResult } from './hostPatchState';
@@ -44,6 +44,7 @@ const modules = [
 ];
 
 const parameterChoices = (unit: string): { value: number; label: string }[] | null => {
+  if (unit === 'curve-family') return [{ value: 0, label: 'LINEAR' }, { value: 1, label: 'POWER' }, { value: 2, label: 'EXPONENTIAL' }];
   if (unit === 'waveform') return [{ value: 0, label: 'SINE' }, { value: 1, label: 'TRIANGLE' }];
   if (unit === 'run-mode') return [{ value: 0, label: 'FREE RUN' }, { value: 1, label: 'RESTART ON TRANSPORT' }];
   if (unit === 'polarity') return [{ value: 0, label: 'UNIPOLAR 0…1' }, { value: 1, label: 'BIPOLAR −1…+1' }];
@@ -323,7 +324,12 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const selectedMappingRange = useMemo(() => {
     if (selectedNode?.data.type !== 'control-map') return null;
     const value = (id: string, fallback: number) => selectedNode.data.parameters.find((parameter) => parameter.id === id)?.value ?? fallback;
-    return mappingRange(value('scale', 1), value('offset', 0), value('polarity', 1) >= 0.5 ? 'bipolar' : 'unipolar');
+    const familyValue = value('curve-family', 0);
+    const family: ControlCurveFamily = familyValue >= 1.5 ? 'exponential' : familyValue >= 0.5 ? 'power' : 'linear';
+    return curveMappingRange(
+      family, value('curve-amount', 0), value('exponent', 1), value('scale', 1), value('offset', 0),
+      value('polarity', 1) >= 0.5 ? 'bipolar' : 'unipolar', value('clamp-min', -1), value('clamp-max', 1),
+    );
   }, [selectedNode]);
 
   useEffect(() => {
@@ -862,7 +868,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <section className="control-range-preview" aria-label="Predicted control output range">
                   <header><span>PREDICTED OUTPUT</span><strong>{selectedMappingRange.minimum.toFixed(2)} … {selectedMappingRange.maximum.toFixed(2)}</strong></header>
                   <div><i style={{ left: `${(selectedMappingRange.minimum + 1) * 50}%` }} /><i style={{ left: `${(selectedMappingRange.maximum + 1) * 50}%` }} /></div>
-                  <p>Visible before connection · output is clamped to −1…+1.</p>
+                  <p>CURVE → SCALE → OFFSET → CLAMP · visible before connection.</p>
                 </section>
               ) : null}
               <h3>PARAMETERS</h3>

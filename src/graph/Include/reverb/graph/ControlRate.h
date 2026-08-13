@@ -46,6 +46,11 @@ struct ControlRatePlan final {
         double scale { 1.0 };
         double offset { 0.0 };
         ModulationPolarity inputPolarity { ModulationPolarity::bipolar };
+        ControlCurveFamily curveFamily { ControlCurveFamily::linear };
+        double curveAmount { 0.0 };
+        double exponent { 1.0 };
+        double clampMinimum { -1.0 };
+        double clampMaximum { 1.0 };
         ControlMappingRange predictedRange;
     };
     std::vector<LfoNode> lfos;
