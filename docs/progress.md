@@ -542,6 +542,20 @@ Results:
 - A native sizing-policy regression preserves the stable editor content size
   used before the standalone outer window exists. The repository checker locks
   the explicit maximize request and exact WebView fill.
-- Reviewed 125%-scale cold-start evidence:
-  [`01-standalone-starts-maximized.png`](../artifacts/ui/window-sizing-work-area/01-standalone-starts-maximized.png)
-  shows the automatically maximized schematic flush to every display edge.
+- Standalone startup is automatically maximized; the earlier logical-resolution
+  screenshot was removed after it proved incapable of showing the complete
+  physical display boundary.
+
+## WebView2 physical scaling correction
+
+- Full-resolution review of the packaged build exposed that the earlier evidence
+  captured only the 1536-by-960 logical upper-left portion of a 1920-by-1200
+  physical display. The actual WebView left a 384-pixel right strip and a
+  240-pixel bottom strip at 125% scaling.
+- The build now preserves JUCE's monitor-scale conversion when assigning
+  WebView2 controller bounds. Evidence is captured at the panel's full physical
+  resolution rather than through a DPI-virtualized screenshot API.
+- Reviewed evidence:
+  [`01-webview-fills-physical-125-percent.png`](../artifacts/ui/window-sizing-work-area/01-webview-fills-physical-125-percent.png)
+  shows the packaged-layout candidate filling the complete 1920-by-1200 panel
+  above the Windows taskbar at 125% scaling.

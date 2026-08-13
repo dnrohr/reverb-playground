@@ -24,7 +24,7 @@ Manual emergency mute and numerical safety mute are reported independently. The 
 
 The last event remains visible after recovery as an audit fact; the recovery counter advances. It is not silently reassigned to the newer graph revision.
 
-The embedded WebView receives the editor's full remaining logical bounds. JUCE and WebView2 already translate those bounds for the monitor DPI, so the shell does not divide them by the Windows display scale a second time. This keeps the schematic flush with every edge of the available editor area at 125% and other non-default scales.
+The embedded WebView receives the editor's full remaining logical bounds. JUCE converts those logical bounds to WebView2 controller pixels using the active monitor scale. This keeps the schematic flush with every edge of the available editor area at 125% and other non-default scales.
 
 ## Verification
 

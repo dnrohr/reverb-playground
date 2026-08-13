@@ -18,7 +18,7 @@ Constructed-graph processing retains master audition gain, manual mute, impulse 
 
 ## Windows scaling correction
 
-WebView2 sizes its native child in physical pixels, while JUCE supplies logical component bounds. At Windows display scales above 100%, that mismatch previously left a white area to the right and below the schematic. The editor now compensates at the WebView boundary using the active display scale. The reviewed 125%-scale evidence shows the schematic occupying the complete area below the intentional 88-pixel native control strip.
+WebView2 sizes its native child in physical pixels, while JUCE components use logical bounds. At Windows display scales above 100%, omitting JUCE's controller-bounds conversion leaves a white area to the right and below the schematic. The build preserves that active-display scale conversion. Full-physical-resolution 125% evidence shows the schematic occupying the complete area below the intentional native control strip.
 
 ## Verification and evidence
 
