@@ -49,6 +49,7 @@ Last updated: 2026-08-13
 | M8.2 Implement a nonlinear Curve Mapper control block | Complete | Linear/power/exponential mappings; explicit bounds; schema-v2 compatibility; bounded runtime; inspector preview |
 | M8.3 Add a visible Macro control-source block | Complete | Named normalized source; explicit branching; 20 ms runtime ramp; reachability/range inspection; exact persistence |
 | M8.4 Add the Gravity macro presentation | Complete | Explicit designation; inverse/bloom/forward surface; non-measured envelope guide; Expand/Focus; Learn-off independence |
+| M9.1 Design the eight-stage diffusion topology | Complete | 8 stage delays/taps; 12 allpasses; delayed damped return; odd/even stereo trees; exact 192 kHz memory/control/transition budgets; native compile regression |
 
 ## M0.2 verification
 
@@ -620,6 +621,30 @@ Results:
   [`02-gravity-bloom.png`](../artifacts/ui/m8-4-gravity-presentation/02-gravity-bloom.png),
   [`03-gravity-forward-learn-off.png`](../artifacts/ui/m8-4-gravity-presentation/03-gravity-forward-learn-off.png),
   and [`gravity-sweep-focus.mp4`](../artifacts/ui/m8-4-gravity-presentation/gravity-sweep-focus.mp4).
+
+## M9.1 verification
+
+- The checked-in Mermaid diagram and exact table specify four input Allpasses,
+  eight stage Delay/Allpass pairs, eight progressively deeper tap gains,
+  balanced odd/even stereo Sum trees, return damping/gain, and an explicit
+  97 ms feedback Delay. Every compact diagram box is declared as separate
+  public primitives and mono cables.
+- The fully expanded design is 43 audio nodes and 51 audio cables. A native
+  regression permits only public audio node types, requires 12 Allpasses and
+  eight tap gains, and compiles it through the existing feedback validator at
+  44.1, 48, 96, and 192 kHz.
+- All rates produce exactly one legal feedback component, no algebraic-loop
+  diagnostic, and 21 delay-bearing lines. At 192 kHz the exact arena is 325,836
+  float samples / 1,303,344 bytes, leaving 98.1% of the 64 MiB graph budget.
+- The planned M9.2/M9.3 graph uses five Macros, eight visible Curve Mappers, two
+  LFOs, and 35 explicit parameter mappings: 15/64 control nodes and 35/128
+  mappings. No hidden destination table is introduced.
+- Conservative implementation ceilings are 320 scalar/buffer operations per
+  sample for one runtime and 640 during the existing 10 ms two-runtime
+  transition; maximum crossfade delay arenas total 2,606,688 bytes. M9.6 must
+  replace these planning ceilings with measured host evidence.
+- UI unchanged. The checked-in topology diagram is the visual deliverable for
+  this design-only task; no product screenshot or interaction video was needed.
 
 ## Standalone maximized-window correction
 

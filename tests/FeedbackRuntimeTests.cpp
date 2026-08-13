@@ -21,6 +21,8 @@ Node stereoInput() { return { "input", "stereo-input", { outputPort("out-l"), ou
 Node stereoOutput() { return { "output", "stereo-output", { inputPort("in-l"), inputPort("in-r") }, {} }; }
 Node sumNode(std::string id) { return { std::move(id), "sum", { inputPort("in-a"), inputPort("in-b"), outputPort() }, {} }; }
 Node delayNode(std::string id, const double milliseconds = 1.0) { return { std::move(id), "delay", { inputPort(), outputPort() }, { { "delay", milliseconds, "milliseconds" } } }; }
+Node allpassNode(std::string id, const double milliseconds, const double coefficient = 0.5) { return { std::move(id), "allpass", { inputPort(), outputPort() }, { { "delay", milliseconds, "milliseconds" }, { "coefficient", coefficient, "unitless" } } }; }
+Node lowpassNode(std::string id, const double cutoff = 6'000.0) { return { std::move(id), "lowpass", { inputPort(), outputPort() }, { { "cutoff", cutoff, "hertz" } } }; }
 Node gainNode(std::string id, const double gain = 1.0) { return { std::move(id), "gain", { inputPort(), outputPort() }, { { "gain", gain, "linear" } } }; }
 Connection cable(std::string id, std::string fromNode, std::string fromPort, std::string toNode, std::string toPort)
 { return { std::move(id), { std::move(fromNode), std::move(fromPort) }, { std::move(toNode), std::move(toPort) } }; }
@@ -47,6 +49,70 @@ GraphDocument algebraicLoopGraph()
     };
     return graph;
 }
+
+GraphDocument gravityDiffusionDesignGraph()
+{
+    GraphDocument graph;
+    graph.nodes = {
+        stereoInput(), gainNode("input-l-half", 0.5), gainNode("input-r-half", 0.5), sumNode("input-sum"),
+        allpassNode("input-ap-1", 3.1), allpassNode("input-ap-2", 4.7),
+        allpassNode("input-ap-3", 7.9), allpassNode("input-ap-4", 11.3), sumNode("tank-entry"),
+    };
+    const std::array stageDelays { 23.0, 29.0, 37.0, 43.0, 53.0, 61.0, 71.0, 83.0 };
+    const std::array stageAllpasses { 13.7, 17.9, 19.3, 23.1, 29.7, 31.1, 37.1, 41.3 };
+    for (std::size_t index = 0; index < stageDelays.size(); ++index) {
+        const auto number = std::to_string(index + 1);
+        graph.nodes.push_back(delayNode("stage-delay-" + number, stageDelays[index]));
+        graph.nodes.push_back(allpassNode("stage-ap-" + number, stageAllpasses[index]));
+        graph.nodes.push_back(gainNode("tap-gain-" + number, 0.24));
+    }
+    graph.nodes.insert(graph.nodes.end(), {
+        lowpassNode("feedback-damping", 5'800.0), gainNode("feedback-gain", 0.58),
+        delayNode("feedback-delay", 97.0),
+        sumNode("left-sum-a"), sumNode("left-sum-b"), sumNode("left-sum"),
+        sumNode("right-sum-a"), sumNode("right-sum-b"), sumNode("right-sum"), stereoOutput(),
+    });
+    graph.connections = {
+        cable("input-l-gain", "input", "out-l", "input-l-half", "in"),
+        cable("input-r-gain", "input", "out-r", "input-r-half", "in"),
+        cable("input-l-sum", "input-l-half", "out", "input-sum", "in-a"),
+        cable("input-r-sum", "input-r-half", "out", "input-sum", "in-b"),
+        cable("input-ap-1", "input-sum", "out", "input-ap-1", "in"),
+        cable("input-ap-2", "input-ap-1", "out", "input-ap-2", "in"),
+        cable("input-ap-3", "input-ap-2", "out", "input-ap-3", "in"),
+        cable("input-ap-4", "input-ap-3", "out", "input-ap-4", "in"),
+        cable("input-tank", "input-ap-4", "out", "tank-entry", "in-a"),
+        cable("feedback-tank", "feedback-delay", "out", "tank-entry", "in-b"),
+    };
+    auto previous = std::string("tank-entry");
+    for (std::size_t index = 0; index < stageDelays.size(); ++index) {
+        const auto number = std::to_string(index + 1);
+        graph.connections.push_back(cable("stage-in-" + number, previous, "out", "stage-delay-" + number, "in"));
+        graph.connections.push_back(cable("stage-diffuse-" + number, "stage-delay-" + number, "out", "stage-ap-" + number, "in"));
+        graph.connections.push_back(cable("tap-" + number, "stage-ap-" + number, "out", "tap-gain-" + number, "in"));
+        previous = "stage-ap-" + number;
+    }
+    graph.connections.insert(graph.connections.end(), {
+        cable("stage-8-damping", "stage-ap-8", "out", "feedback-damping", "in"),
+        cable("damping-feedback", "feedback-damping", "out", "feedback-gain", "in"),
+        cable("feedback-return-delay", "feedback-gain", "out", "feedback-delay", "in"),
+        cable("tap-1-left-a", "tap-gain-1", "out", "left-sum-a", "in-a"),
+        cable("tap-3-left-a", "tap-gain-3", "out", "left-sum-a", "in-b"),
+        cable("tap-5-left-b", "tap-gain-5", "out", "left-sum-b", "in-a"),
+        cable("tap-7-left-b", "tap-gain-7", "out", "left-sum-b", "in-b"),
+        cable("left-a-final", "left-sum-a", "out", "left-sum", "in-a"),
+        cable("left-b-final", "left-sum-b", "out", "left-sum", "in-b"),
+        cable("tap-2-right-a", "tap-gain-2", "out", "right-sum-a", "in-a"),
+        cable("tap-4-right-a", "tap-gain-4", "out", "right-sum-a", "in-b"),
+        cable("tap-6-right-b", "tap-gain-6", "out", "right-sum-b", "in-a"),
+        cable("tap-8-right-b", "tap-gain-8", "out", "right-sum-b", "in-b"),
+        cable("right-a-final", "right-sum-a", "out", "right-sum", "in-a"),
+        cable("right-b-final", "right-sum-b", "out", "right-sum", "in-b"),
+        cable("left-output", "left-sum", "out", "output", "in-l"),
+        cable("right-output", "right-sum", "out", "output", "in-r"),
+    });
+    return graph;
+}
 }
 
 TEST_CASE("Delay-containing feedback renders a deterministic causal recurrence")
@@ -64,6 +130,34 @@ TEST_CASE("Delay-containing feedback renders a deterministic causal recurrence")
     partitioned.runtime->process(std::span(inputLeft).subspan(2), std::span(inputRight).subspan(2), std::span(partitionedLeft).subspan(2), std::span(partitionedRight).subspan(2));
     REQUIRE(firstLeft == std::array { 0.0F, 0.5F, 0.25F, 0.125F, 0.0625F });
     REQUIRE(secondLeft == firstLeft); REQUIRE(secondRight == firstRight); REQUIRE(partitionedLeft == firstLeft);
+}
+
+TEST_CASE("Gravity Diffusion design has eight depth taps, twelve allpasses, and bounded delayed feedback")
+{
+    const auto graph = gravityDiffusionDesignGraph();
+    const std::array publicAudioTypes { std::string_view("stereo-input"), std::string_view("stereo-output"),
+        std::string_view("gain"), std::string_view("sum"), std::string_view("delay"),
+        std::string_view("allpass"), std::string_view("lowpass") };
+    REQUIRE(graph.nodes.size() == 43);
+    REQUIRE(graph.connections.size() == 51);
+    REQUIRE(std::ranges::all_of(graph.nodes, [&](const Node& node) {
+        return std::ranges::find(publicAudioTypes, node.type) != publicAudioTypes.end();
+    }));
+    REQUIRE(std::ranges::count_if(graph.nodes, [](const Node& node) { return node.type == "allpass"; }) == 12);
+    REQUIRE(std::ranges::count_if(graph.nodes, [](const Node& node) { return node.id.starts_with("tap-gain-"); }) == 8);
+    for (const auto sampleRate : { 44'100.0, 48'000.0, 96'000.0, 192'000.0 }) {
+        const auto compiled = compileFeedbackGraph(graph, sampleRate, 1'024);
+        REQUIRE(compiled.valid());
+        REQUIRE(compiled.offendingLoops.empty());
+        REQUIRE(compiled.feedbackComponents.size() == 1);
+        REQUIRE(compiled.delayMemory.lineCount == 21);
+        REQUIRE(compiled.delayMemory.allocatedBytes < 2U * 1024U * 1024U);
+        REQUIRE(compiled.delayMemory.withinBudget());
+        if (sampleRate == 192'000.0) {
+            REQUIRE(compiled.delayMemory.allocatedSamples == 325'836);
+            REQUIRE(compiled.delayMemory.allocatedBytes == 1'303'344);
+        }
+    }
 }
 
 TEST_CASE("Modulated delay feedback is finite and deterministic across host block partitions")
