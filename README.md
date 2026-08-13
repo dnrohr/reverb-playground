@@ -8,7 +8,9 @@ The project begins with a visible reconstruction of the Keith Barr/Alesis MIDIVe
 
 ## Project status
 
-The project has a deterministic Barr-inspired DSP reference and an embedded schematic editor whose visible parameters continuously control the native runtime with smoothing, delay crossfades, and undo/redo.
+The project has a deterministic Barr-inspired DSP reference and an embedded schematic editor whose visible parameters continuously control the native runtime with smoothing, delay crossfades, and undo/redo. The current downloadable build is the [Windows v0.1.0 alpha prerelease](https://github.com/dnrohr/reverb-playground/releases/tag/v0.1.0-alpha.1); its notes disclose the supported boundary and deferred external usability validation.
+
+Watch the [alpha demonstration](artifacts/ui/m7-6-alpha-release/reverb-playground-alpha-demo.mp4), or report a reproducible problem through [GitHub Issues](https://github.com/dnrohr/reverb-playground/issues).
 
 ## Documentation
 

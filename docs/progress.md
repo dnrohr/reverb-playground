@@ -509,3 +509,23 @@ Results:
 - Findings and resolution evidence are in [Alpha validation findings](alpha-validation-findings.md). Discovery screenshot: [`01-contrast-reviewed-full-window.png`](../artifacts/ui/m7-5-alpha-validation-preparation/01-contrast-reviewed-full-window.png). Corrected identity/contrast screenshot: [`02-current-identity-and-contrast.png`](../artifacts/ui/m7-5-alpha-validation-preparation/02-current-identity-and-contrast.png).
 - Full preparation verification passed 19 browser files / 66 tests, 13 Python policy/documentation/accessibility/study tests, factory generation and build-identity gates, the production web build, standalone/VST3 compilation, and all 101 native/audio tests.
 - This preparation and internal dry run do **not** satisfy the roadmap's non-implementer requirement. M7.5 remains open pending external sessions, prioritized findings, fixes, and rerun evidence.
+
+## M7.6 release preparation
+
+- M7.5 is explicitly deferred rather than marked complete. The alpha notes say
+  that its three non-implementer sessions have not run and avoid representing
+  this prerelease as externally usability- or accessibility-validated.
+- Tag `v0.1.0-alpha.1` drives a Windows Release verifier, deterministic package
+  build, retained workflow artifact, and GitHub prerelease publication. The
+  release receives the ZIP, adjacent SHA-256 file, checked-in notes, and demo.
+- Release notes enumerate Windows 10/11 x64, Standalone/VST3 support, major
+  construction/inspection capabilities, known platform/processing/factory and
+  validation limitations, and a GitHub Issues feedback channel.
+- The repository landing page links directly to the downloadable prerelease,
+  installation, Barr tutorial, roadmap, issue reporting, and demonstration.
+- The reviewed 38.7-second, 1280-by-720 H.264 demonstration has four labeled
+  chapters: Barr Reference, Construct and Edit, Modulate, and Capture and
+  Inspect. It is generated solely from earlier reviewed project UI recordings.
+  Evidence: [`reverb-playground-alpha-demo.mp4`](../artifacts/ui/m7-6-alpha-release/reverb-playground-alpha-demo.mp4).
+- `check_release.py` locks product/tag/package identity, tag-workflow gates,
+  required note disclosures, landing-page links, and a nontrivial demo asset.

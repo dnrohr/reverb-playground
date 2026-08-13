@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  windows-alpha:
+    name: Build and publish Windows alpha
+    runs-on: windows-2022
+    timeout-minutes: 35
+
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.16.0
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - name: Verify tag and release contract
+        shell: pwsh
+        run: python scripts/check_release.py --tag "${{ github.ref_name }}"
+      - name: Verify release build and tests
+        shell: pwsh
+        run: ./scripts/verify.ps1 -Configuration Release
+      - name: Build deterministic Windows package
+        shell: pwsh
+        run: ./scripts/package_windows.ps1
+      - name: Upload immutable workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReverbPlayground-0.1.0-windows-x64
+          path: |
+            out/packages/ReverbPlayground-0.1.0-windows-x64.zip
+            out/packages/ReverbPlayground-0.1.0-windows-x64.zip.sha256
+          if-no-files-found: error
+          retention-days: 90
+      - name: Publish GitHub prerelease
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: true
+          body_path: docs/releases/v0.1.0-alpha.1.md
+          files: |
+            out/packages/ReverbPlayground-0.1.0-windows-x64.zip
+            out/packages/ReverbPlayground-0.1.0-windows-x64.zip.sha256
+            artifacts/ui/m7-6-alpha-release/reverb-playground-alpha-demo.mp4

@@ -54,6 +54,8 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Accessibility contract checks failed.' }
     & $python.Source scripts/check_alpha_validation.py
     if ($LASTEXITCODE -ne 0) { throw 'Alpha validation preparation checks failed.' }
+    & $python.Source scripts/check_release.py
+    if ($LASTEXITCODE -ne 0) { throw 'Release publication contract checks failed.' }
 
     & $cmakePath --preset windows-msvc
     if ($LASTEXITCODE -ne 0) { throw 'CMake configure failed.' }
