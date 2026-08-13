@@ -24,6 +24,10 @@ UI tasks require a current screenshot. Interactive, animated, audio-reactive, or
 | M7. Open-source alpha | A documented standalone/plugin release is usable by others | Download, install/build, create a patch, save it, and reopen it in a host |
 | M8. Gravity control infrastructure | One visible macro continuously reshapes a network from inverse rise to forward decay | Sweep Gravity while its explicit mappings and predicted envelope remain inspectable |
 | M9. Gravity Diffusion instrument | An eight-stage modulated diffusion network produces a bounded, measurable Gravity family | Audition, inspect, modify, save, and compare inverse/bloom/forward Gravity states |
+| M10. Visible pitch-shift primitive | A deterministic dual-grain Pitch Shift block provides honest semitone transposition | Patch a visible octave shifter, inspect its grains and latency, and verify the octave in rendered audio |
+| M11. Safe Parallel Shimmer | A non-recirculating octave branch adds a stable controllable halo | Build and audition a parallel +12-semitone reverb without cumulative pitch rise |
+| M12. Split-Feedback Shimmer | Independent normal and shifted feedback paths create controllable harmonic ascent | Hear successive octave energy build while both feedback paths remain visible and bounded |
+| M13. Reverse Cosmic Shimmer | Reverse grains, causal rise, modulation, and stereo diffusion form the flagship evolving shimmer | Audition and inspect a swelling, harmonically rising, darkened stereo space |
 
 ---
 
@@ -770,6 +774,198 @@ Acceptance criteria:
 Milestone exit criteria:
 
 - An external user can load Gravity Diffusion, sweep continuously between inverse, bloom, and forward behavior, inspect how every visible mapping creates the result, modify and save it, and reopen the same bounded sound in the supported standalone and plugin formats.
+
+---
+
+## M10. Visible pitch-shift primitive
+
+Goal: add the smallest honest, inspectable pitch-shifting block that can support shimmer without hiding time-domain behavior or compromising the audio-thread contract.
+
+Every M10 task follows the delivery policy: deterministic DSP tests, documentation, current screenshot/video evidence for visible or moving behavior, one scoped commit, and a verified direct push to `main`.
+
+### M10.1 Specify pitch-shift semantics and budgets
+
+Define a mono dual-read-head granular shifter with semitone ratio, grain/window length, overlap, forward/reverse direction, latency, reset, modulation, and channel composition rules.
+
+Acceptance criteria:
+
+- Semitones map to resampling ratio as `2^(semitones / 12)` over a documented bounded range.
+- Grain length and overlap use explicit millisecond/normalized units with safe defaults and limits.
+- Forward and reverse describe individual grain playback direction and never imply whole-response reversal or pre-input output.
+- Reported latency, maximum prepared storage, worst-case work per sample/block, and supported sample rates are specified.
+- Parameter automation, reset, silence, discontinuity, aliasing, and feedback-use expectations are testable and documented.
+
+### M10.2 Implement the prepared dual-grain DSP
+
+Implement overlapping windowed read heads using storage allocated during preparation, with deterministic reset and no audio-thread allocation, locking, logging, or resizing.
+
+Acceptance criteria:
+
+- A sine input shifted by +12/-12 semitones measures within the defined frequency tolerance at 44.1, 48, and 96 kHz.
+- Overlapping windows maintain bounded output and suppress grain-boundary discontinuities below the specified threshold.
+- Silence remains silence; finite bounded input produces finite bounded output for every supported parameter extreme.
+- Reset and identical serialized configuration produce sample-deterministic offline renders on the primary toolchain.
+- Continuous semitone/grain edits use a documented smoothing or crossfade policy and never read outside prepared storage.
+
+### M10.3 Add the visible Pitch Shift block
+
+Expose one mono audio input/output and visible controls for semitones, grain length, overlap, and grain direction, plus read-only latency and quality information.
+
+Acceptance criteria:
+
+- The module can be created, connected, copied, deleted, undone/redone, saved, loaded, and restored by the host.
+- Inspector and block labels distinguish Pitch Shift from Frequency Shift, delay modulation, and sample-order reversal.
+- The graph schema migrates older documents deterministically and round-trips every new field without hidden factory-only state.
+- The moving grain/read-head visualization has a reduced-motion alternative and does not imply sample-accurate telemetry unless measured.
+- Screenshot evidence shows the complete block/inspector; video shows continuous edits and grain motion while audio remains active.
+
+### M10.4 Validate octave identity and feedback safety
+
+Establish reusable measurements before any shimmer factory patch is named complete.
+
+Acceptance criteria:
+
+- Spectral fixtures demonstrate energy moving from representative tones/chords to the expected octave bands rather than only chorusing.
+- Tests distinguish musical pitch shift from fixed-hertz frequency shift and Doppler delay modulation.
+- A conservative delayed feedback harness remains finite for forward and reverse grains under impulse and bounded noise.
+- Numerical-safety latch, emergency mute, topology crossfade, and explicit recovery work with Pitch Shift in a loop.
+- CPU, storage, latency, and aliasing measurements are recorded for all supported sample rates and quality settings.
+
+Milestone exit criteria:
+
+- A user can place one visible Pitch Shift block, hear and measure a true octave shift, understand its grains and latency, automate it safely, and save/reopen the same graph.
+
+---
+
+## M11. Safe Parallel Shimmer
+
+Goal: prove a musical shimmer voice outside feedback before allowing cumulative octave recirculation.
+
+Every M11 task follows the delivery policy, including deterministic audio fixtures and current screenshot/video evidence.
+
+### M11.1 Design the parallel topology
+
+Split the diffused input into an ordinary reverb branch and a +12-semitone branch, diffuse the shifted branch, damp it, and recombine both explicitly.
+
+Acceptance criteria:
+
+- The complete construction uses ordinary visible blocks and mono cables with no hidden shimmer processor.
+- Shimmer level, damping, and wet balance have separate responsibilities from reverb decay.
+- The shifted branch cannot recirculate through Pitch Shift, so successive octave accumulation is structurally absent.
+- Stereo extraction uses documented unequal taps/diffusion while preserving deterministic mono-cable semantics.
+- Delay memory, latency alignment, and mix normalization fit documented resource and loudness budgets.
+
+### M11.2 Ship and teach Safe Parallel Shimmer
+
+Add the graph to the factory catalog with a teaching view that identifies normal and octave paths.
+
+Acceptance criteria:
+
+- Factory selection, A/B comparison, save/load, Undo, and host-state restoration preserve the complete schema graph.
+- Spectral measurements show a +12-semitone halo while later frames do not form an octave staircase.
+- Impulse and bounded-noise renders remain finite at 44.1, 48, and 96 kHz.
+- Teaching copy calls the design parallel shimmer and explicitly contrasts it with classic feedback shimmer.
+- Screenshot evidence shows both branches; video demonstrates selection, shimmer-level editing, measurement, save, and reload.
+
+Milestone exit criteria:
+
+- A user can audition, inspect, modify, and save a stable octave-halo reverb whose decay and shimmer level remain independently understandable.
+
+---
+
+## M12. Split-Feedback Shimmer
+
+Goal: create the canonical evolving shimmer with independent ordinary and pitch-shifted feedback gains.
+
+Every M12 task follows the delivery policy, with feedback legality, real-time safety, spectral evolution, and failure recovery treated as release gates.
+
+### M12.1 Implement independently bounded feedback paths
+
+Branch the tank return into a damped normal loop and a high-passed, +12-semitone, low-passed shifted loop before their explicit recombination.
+
+Acceptance criteria:
+
+- Every directed cycle crosses an explicit Delay and passes the existing feedback validator.
+- Normal feedback can lengthen decay with shifted feedback at zero; shifted feedback controls harmonic ascent without owning the whole decay.
+- Pre-shift high-pass and post-shift low-pass locations and slopes are visible and documented.
+- Conservative parameter limits and normalization keep combined loop gain within the defined operating region.
+- Invalid edits leave the last valid runtime audible and extreme settings remain recoverable through the existing safety UX.
+
+### M12.2 Prove cumulative harmonic ascent
+
+Add measurements that distinguish feedback shimmer from a parallel octave layer.
+
+Acceptance criteria:
+
+- Time-resolved spectral fixtures show octave energy increasing on later circulations.
+- Tests identify expected +12 and +24-semitone regions within documented tolerance without requiring inaudible higher stages.
+- Increasing shifted feedback measurably increases later octave energy while normal feedback can change decay independently.
+- Forward-grain artifacts, aliasing, damping loss, and stereo correlation are measured and disclosed.
+- Automation of both loop gains, pitch, damping, and size remains finite and click-safe at supported sample rates.
+
+### M12.3 Ship the Split-Feedback Shimmer factory patch
+
+Publish a musical reference graph and make both feedback stories legible in the editor.
+
+Acceptance criteria:
+
+- Loop highlighting can isolate the normal loop, shifted loop, and their shared delayed region.
+- The teaching overlay relates visible circulation count to measured harmonic buildup without claiming proprietary reconstruction.
+- Factory metadata, compatibility checks, schema round-trip, deterministic audio fixtures, and host restore all pass.
+- Screenshot evidence shows both complete loops; video shows highlighting, continuous feedback edits, impulse/spectral inspection, save, and reload.
+- Full local verification and clean `main` CI pass before completion.
+
+Milestone exit criteria:
+
+- A user can separately control decay and harmonic ascent, see exactly which loop produces each behavior, and hear a bounded classic feedback shimmer survive save/reload and host restoration.
+
+---
+
+## M13. Reverse Cosmic Shimmer
+
+Goal: combine reverse-grain octave shifting with the existing causal-rise vocabulary, slow allpass motion, dark feedback, and decorrelated stereo extraction.
+
+Every M13 task follows the delivery policy and retains the naming boundary between reverse grains, causal reverse-style envelopes, and true sample-order reverse reverb.
+
+### M13.1 Add reverse-grain mode and stereo decorrelation
+
+Extend Pitch Shift so individual grains can run backward and two mono instances can use decorrelated phase/read-head state without nondeterminism.
+
+Acceptance criteria:
+
+- Reverse-grain playback remains causal and cannot emit wet output before input and declared latency.
+- Forward/reverse modes preserve the requested pitch ratio within their separately documented tolerances.
+- Seed/phase behavior is deterministic after reset while paired instances avoid identical grain boundaries.
+- Reverse grains reduce or reshape forward splice attacks according to checked-in transient/envelope measurements.
+- CPU, storage, latency, and feedback-safety budgets remain satisfied at every supported sample rate.
+
+### M13.2 Construct the cosmic shimmer topology
+
+Feed the existing causal-rise front end into split normal/shifted feedback, reverse-grain octave voices, slow independent allpass modulation, damping, and unequal stereo output diffusion.
+
+Acceptance criteria:
+
+- The graph is composed entirely of visible public primitives and contains no Blackhole, Valhalla, or other proprietary product identity.
+- The response has a measured late rise followed by sustained harmonic evolution rather than an immediate pitched echo.
+- Each circulation is darkened sufficiently to prevent uncontrolled high-frequency/alias accumulation.
+- Left/right outputs remain related but non-identical, with stereo correlation and mono compatibility measured.
+- Macro or exposed controls keep rise shape, size, normal feedback, shimmer feedback, damping, and modulation conceptually separable.
+
+### M13.3 Tune and publish Reverse Cosmic Shimmer
+
+Create conservative reference settings, factory metadata, teaching overlays, audio fixtures, and distribution evidence.
+
+Acceptance criteria:
+
+- Checked-in impulse, chord, and bounded-noise fixtures demonstrate causal swell, octave evolution, stereo motion, and finite decay at 44.1, 48, and 96 kHz.
+- Teaching text distinguishes reverse grains from true reversed audio and describes the design as project-authored behavioral synthesis.
+- A/B comparison includes Barr Reference, Modulated Cosmic Reverse, Split-Feedback Shimmer, and the new design without losing selection.
+- Screenshot evidence shows the fitted complete graph and principal inspectors; video demonstrates selection, modulation, measurement, continuous editing, safety recovery, save, and reload.
+- Standalone/VST3 restoration, compatibility tests, package identity, local verification, and clean `main` CI pass.
+
+Milestone exit criteria:
+
+- An external user can load a swelling, modulated, harmonically ascending stereo reverb; trace every causal, reverse-grain, feedback, damping, and modulation path; modify it safely; and reopen the same sound in supported formats.
 
 ---
 
