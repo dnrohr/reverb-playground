@@ -722,6 +722,33 @@ Results:
 - UI unchanged; this task adds offline evidence rather than the M9.5 shipped
   factory/teaching view, so no screenshot or video was required.
 
+## M9.5 verification
+
+- Gravity Diffusion is the fifth complete catalog entry. Its checked schema-v2
+  document is exported from the project-authored native builder and admitted by
+  exact hash; catalog metadata uses the original `gravity-diffusion` identity
+  and explicitly rejects proprietary-algorithm reconstruction claims.
+- Native and browser round-trip tests load the 58-node / 94-cable document using
+  only public blocks, validate and compile it, serialize it twice identically,
+  and retain every stored layout position without factory-only state.
+- The prominent Gravity inspector overlays the violet coordinate prediction
+  with a teal checked M9.4 envelope and exact reference controls. Its text says
+  the fixture is not the current capture; the response viewer describes a live
+  capture as authoritative and leaves disagreement visible.
+- Barr/Gravity A/B preserves Gravity as the selected B design, labels it
+  **B / Gravity**, and continues to use ordinary graph replacement rather than
+  a hidden second engine.
+- [Gravity Diffusion factory patch and teaching view](gravity-diffusion-factory-and-teaching.md)
+  documents provenance, deterministic regeneration, reconstruction order,
+  feedback/control safety rules, save/reload, evidence hierarchy, and the three
+  principal states.
+- Reviewed evidence under `artifacts/ui/m9-5-gravity-factory/` includes the
+  complete fitted graph, Inverse/Bloom/Forward inspector states, and a 12-second
+  workflow recording covering A/B selection, sweep, capture presentation,
+  mapping focus, schema-v2 save, and reload. The recording's deterministic
+  local capture transport was removed before verification; production capture
+  behavior remains test-backed and M9.6 owns packaged-host validation.
+
 ## Standalone maximized-window correction
 
 - The first work-area correction was rejected by visual review because its

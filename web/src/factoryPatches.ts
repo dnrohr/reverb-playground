@@ -5,8 +5,9 @@ import { parsePatchJson } from './patchPersistence';
 import reverseEnvelopePatch from '../../factory-patches/causal-reverse-envelope.rvp.json?raw';
 import levelGatedPatch from '../../factory-patches/level-gated-room.rvp.json?raw';
 import cosmicReversePatch from '../../factory-patches/modulated-cosmic-reverse.rvp.json?raw';
+import gravityDiffusionPatch from '../../factory-patches/gravity-diffusion.rvp.json?raw';
 
-export type FactoryPatchId = 'barr-reference' | 'causal-reverse-envelope' | 'level-gated-room' | 'modulated-cosmic-reverse';
+export type FactoryPatchId = 'barr-reference' | 'causal-reverse-envelope' | 'level-gated-room' | 'modulated-cosmic-reverse' | 'gravity-diffusion';
 export type ComparisonPatchId = Exclude<FactoryPatchId, 'barr-reference'>;
 
 export interface FactoryPatchDescription {
@@ -52,12 +53,20 @@ export const factoryPatches: readonly FactoryPatchDescription[] = [
     filename: 'modulated-cosmic-reverse.rvp.json',
     summary: 'Rising taps enter a damped, slowly modulated feedback space',
   },
+  {
+    id: 'gravity-diffusion',
+    label: 'Gravity Diffusion',
+    graphName: 'GRAVITY-DIFFUSION.graph',
+    filename: 'gravity-diffusion.rvp.json',
+    summary: 'Eight-stage causal inverse, bloom, and forward diffusion instrument',
+  },
 ] as const;
 
 const rawPatches: Partial<Record<FactoryPatchId, string>> = {
   'causal-reverse-envelope': reverseEnvelopePatch,
   'level-gated-room': levelGatedPatch,
   'modulated-cosmic-reverse': cosmicReversePatch,
+  'gravity-diffusion': gravityDiffusionPatch,
 };
 
 export function factoryPatchDescription(id: FactoryPatchId): FactoryPatchDescription {
@@ -66,6 +75,15 @@ export function factoryPatchDescription(id: FactoryPatchId): FactoryPatchDescrip
 
 export function comparisonPatchAfterSelection(id: FactoryPatchId | 'custom', current: ComparisonPatchId): ComparisonPatchId {
   return id === 'barr-reference' || id === 'custom' ? current : id;
+}
+
+export function comparisonPatchLabel(id: ComparisonPatchId): string {
+  switch (id) {
+    case 'causal-reverse-envelope': return 'REVERSE ENV';
+    case 'level-gated-room': return 'GATED';
+    case 'modulated-cosmic-reverse': return 'COSMIC REV';
+    case 'gravity-diffusion': return 'GRAVITY';
+  }
 }
 
 export function loadFactoryPatch(id: FactoryPatchId, snapshot: RuntimeSnapshot): FactoryPatchGraph {

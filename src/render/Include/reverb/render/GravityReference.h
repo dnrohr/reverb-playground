@@ -10,6 +10,16 @@
 
 namespace reverb::render {
 
+inline constexpr reverb::graph::GravityDiffusionControls gravityInverseReferenceControls {
+    -1.0, 1.0, 0.5, 0.15, 0.25,
+};
+inline constexpr reverb::graph::GravityDiffusionControls gravityBloomReferenceControls {
+    0.0, -0.35, 1.0, 0.0, 1.0,
+};
+inline constexpr reverb::graph::GravityDiffusionControls gravityForwardReferenceControls {
+    1.0, -0.65, -0.8, 0.1, 0.15,
+};
+
 struct GravityShapeMetrics final {
     std::size_t onsetFrame {};
     double timeToPeakMs {};

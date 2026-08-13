@@ -33,11 +33,12 @@ import { parseEnergyTelemetry, shouldRunEnergyTelemetry, smoothEnergy, type Ener
 import { formatBytes, parseRuntimeDiagnostics, type RuntimeDiagnostics } from './runtimeDiagnostics';
 import { audibleGraphFingerprint, parseGraphPublicationResult } from './topologyPublication';
 import { curveMappingRange, decorateControlPreview, type ControlCurveFamily } from './controlSemantics';
-import { comparisonPatchAfterSelection, factoryPatchDescription, factoryPatches, loadFactoryPatch, type ComparisonPatchId, type FactoryPatchId } from './factoryPatches';
+import { comparisonPatchAfterSelection, comparisonPatchLabel, factoryPatchDescription, factoryPatches, loadFactoryPatch, type ComparisonPatchId, type FactoryPatchId } from './factoryPatches';
 import { architectureOverlay, type GateTeachingParameters, type TeachingPatchId } from './architectureOverlay';
 import { parseHostPatchStateResult } from './hostPatchState';
 import { decorateMacroReachability, inspectMacroReachability } from './macroInspection';
 import { gravityFocusNodeIds, predictGravityEnvelope } from './gravityPresentation';
+import { gravityMeasuredReference } from './gravityReference';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -257,11 +258,12 @@ function DiagnosticsPanel({ diagnostics, runawayLoop, canUndo, onUndo, onRecover
   </aside>;
 }
 
-function GravityPresentation({ value, destinationCount, onBegin, onValue, onCommit, onFocus }: {
+function GravityPresentation({ value, destinationCount, showMeasuredReference, onBegin, onValue, onCommit, onFocus }: {
   value: number; destinationCount: number; onBegin: () => void; onValue: (value: number) => void;
-  onCommit: () => void; onFocus: () => void;
+  onCommit: () => void; onFocus: () => void; showMeasuredReference: boolean;
 }) {
   const prediction = useMemo(() => predictGravityEnvelope(value), [value]);
+  const measured = useMemo(() => showMeasuredReference ? gravityMeasuredReference(value) : null, [showMeasuredReference, value]);
   return <section className="gravity-presentation" aria-label="Gravity macro control">
     <header><span>GRAVITY</span><strong>{prediction.state}</strong></header>
     <div className="gravity-scale" aria-hidden="true"><span>INVERSE</span><span>BLOOM</span><span>FORWARD</span></div>
@@ -276,8 +278,14 @@ function GravityPresentation({ value, destinationCount, onBegin, onValue, onComm
       <svg viewBox="0 0 100 42" role="img" aria-label={prediction.description} preserveAspectRatio="none">
         <line x1={prediction.peakPosition * 100} x2={prediction.peakPosition * 100} y1="4" y2="40" />
         <path d={prediction.path} />
+        {measured ? <path className="gravity-measured-envelope" d={measured.path} /> : null}
       </svg>
       <p>Shape guide from the Gravity coordinate. Capture an impulse to inspect actual response.</p>
+      {measured ? <aside className="gravity-reference-comparison" aria-label={measured.description}>
+        <strong>{measured.label}</strong>
+        <span>PEAK {measured.peakMilliseconds.toFixed(1)} ms · EARLY/LATE {measured.earlyLateEnergyRatioDb.toFixed(1)} dB</span>
+        <p>Checked fixture ({measured.controlsDescription}). Reference evidence—not the current capture. Any disagreement with the prediction is shown, not corrected.</p>
+      </aside> : null}
     </figure>
     <button type="button" className="gravity-focus" onClick={onFocus}>EXPAND / FOCUS {destinationCount} MAPPINGS</button>
   </section>;
@@ -748,7 +756,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           <div className="comparison-switch" role="group" aria-label="Compare Barr reference with selected design">
             <button type="button" aria-pressed={activePatchId === 'barr-reference'} onClick={() => void selectFactoryPatch('barr-reference')}>A / BARR</button>
             <button type="button" aria-pressed={activePatchId === comparisonPatchId} onClick={() => void selectFactoryPatch(comparisonPatchId)}>
-              B / {comparisonPatchId === 'causal-reverse-envelope' ? 'REVERSE ENV' : comparisonPatchId === 'level-gated-room' ? 'GATED' : 'COSMIC REV'}
+              B / {comparisonPatchLabel(comparisonPatchId)}
             </button>
           </div>
           <button className="energy-toggle" type="button" aria-pressed={energyEnabled} disabled={reducedMotion} onClick={() => setEnergyEnabled((value) => !value)} title={reducedMotion ? 'Disabled by the operating-system reduced-motion preference' : 'Toggle measured node and cable energy'}>
@@ -917,6 +925,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               {selectedNode.data.presentation === 'gravity' && selectedMacroInspection ? <GravityPresentation
                 value={selectedNode.data.parameters.find((parameter) => parameter.id === 'value')?.value ?? 0}
                 destinationCount={selectedMacroInspection.destinations.length}
+                showMeasuredReference={activePatchId === 'gravity-diffusion'}
                 onBegin={() => beginParameterEdit(selectedNode.id, 'value', selectedNode.data.parameters.find((parameter) => parameter.id === 'value')?.value ?? 0)}
                 onValue={(value) => applyParameter(selectedNode.id, 'value', value)}
                 onCommit={commitParameterEdit}

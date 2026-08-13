@@ -40,6 +40,14 @@ describe('architecture teaching overlays', () => {
     expect(overlay.explanation).toMatch(/retrigger/i);
   });
 
+  it('makes the current Gravity capture authoritative over prediction and checked reference', () => {
+    const overlay = architectureOverlay(fixture('rise'), 'gravity-diffusion')!;
+    expect(overlay.title).toBe('Measured Gravity response');
+    expect(overlay.markers[0]).toEqual({ label: 'MEASURED PEAK', frame: 185, tone: 'peak' });
+    expect(overlay.explanation).toMatch(/current captured samples.*authoritative/i);
+    expect(overlay.explanation).toMatch(/disagreement remains visible/i);
+  });
+
   it('does not invent architecture teaching for Barr, custom, or silent captures', () => {
     expect(architectureOverlay(fixture('rise'), 'barr-reference')).toBeNull();
     expect(architectureOverlay(fixture('rise'), 'custom')).toBeNull();

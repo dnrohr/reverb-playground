@@ -89,5 +89,14 @@ export function architectureOverlay(
       markers: [{ label: 'CUTOFF', frame: landmarks.cutoffFrame, tone: 'cutoff' }],
     };
   }
+  if (patchId === 'gravity-diffusion') return {
+    title: 'Measured Gravity response',
+    explanation: 'These landmarks come from the current captured samples and are authoritative for this capture. The Gravity panel’s violet design guide and teal checked-reference curve are comparisons; neither replaces this measurement, and disagreement remains visible.',
+    regions: [{ label: 'MEASURED BUILDUP', startFrame: landmarks.onsetFrame, endFrame: landmarks.peakFrame, tone: 'rise' }],
+    markers: [
+      { label: 'MEASURED PEAK', frame: landmarks.peakFrame, tone: 'peak' },
+      { label: '-40 dB', frame: landmarks.cutoffFrame, tone: 'cutoff' },
+    ],
+  };
   return null;
 }

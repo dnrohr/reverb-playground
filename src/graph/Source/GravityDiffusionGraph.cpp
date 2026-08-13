@@ -13,12 +13,10 @@ Port controlIn(std::string id = "in") { return { std::move(id), SignalType::cont
 Port controlOut() { return { "out", SignalType::control, PortDirection::output }; }
 Node gain(std::string id, double value, bool modulated = false)
 {
-    auto ports = std::vector { audioIn(), audioOut() };
-    std::optional<ParameterModulation> modulation;
-    if (modulated) {
-        ports.insert(ports.begin() + 1, controlIn("gain-mod"));
-        modulation = ParameterModulation { "gain-mod", 1.0, ModulationPolarity::bipolar, 0.0, 0.25 };
-    }
+    auto ports = std::vector { audioIn(), controlIn("gain-mod"), audioOut() };
+    std::optional<ParameterModulation> modulation = modulated
+        ? ParameterModulation { "gain-mod", 1.0, ModulationPolarity::bipolar, 0.0, 0.25 }
+        : ParameterModulation { "gain-mod", 0.5, ModulationPolarity::bipolar, -1.0, 1.0 };
     return { std::move(id), "gain", std::move(ports), { { "gain", value, "linear", modulation } } };
 }
 Node feedbackGain()
@@ -31,10 +29,10 @@ Node feedbackGain()
 Node sum(std::string id) { return { std::move(id), "sum", { audioIn("in-a"), audioIn("in-b"), audioOut() }, {} }; }
 Node delay(std::string id, double milliseconds, bool sized = false)
 {
-    auto ports = std::vector { audioIn(), audioOut() };
-    std::optional<ParameterModulation> modulation;
+    auto ports = std::vector { audioIn(), controlIn("delay-mod"), audioOut() };
+    std::optional<ParameterModulation> modulation = ParameterModulation {
+        "delay-mod", 10.0, ModulationPolarity::bipolar, 0.1, 10'000.0 };
     if (sized) {
-        ports.insert(ports.begin() + 1, controlIn("delay-mod"));
         modulation = ParameterModulation { "delay-mod", milliseconds * 0.35, ModulationPolarity::bipolar,
             milliseconds * 0.65, milliseconds * 1.35 };
     }
@@ -42,18 +40,18 @@ Node delay(std::string id, double milliseconds, bool sized = false)
 }
 Node allpass(std::string id, double milliseconds, bool sized = false, bool moving = false, bool diffusionControlled = false)
 {
-    auto ports = std::vector { audioIn(), audioOut() };
-    std::optional<ParameterModulation> modulation;
+    auto ports = std::vector { audioIn(), controlIn("delay-mod"), controlIn("coefficient-mod"), audioOut() };
+    std::optional<ParameterModulation> modulation = ParameterModulation {
+        "delay-mod", 2.0, ModulationPolarity::bipolar, 0.1, 100.0 };
     if (sized || moving) {
-        ports.insert(ports.begin() + 1, controlIn("delay-mod"));
         const auto amount = sized ? milliseconds * 0.35 : 1.25;
         modulation = ParameterModulation { "delay-mod", amount, ModulationPolarity::bipolar,
             sized ? milliseconds * 0.65 : milliseconds - 1.25,
             sized ? milliseconds * 1.35 : milliseconds + 1.25 };
     }
-    std::optional<ParameterModulation> coefficientModulation;
+    std::optional<ParameterModulation> coefficientModulation = ParameterModulation {
+        "coefficient-mod", 0.25, ModulationPolarity::bipolar, -0.95, 0.95 };
     if (diffusionControlled) {
-        ports.insert(ports.end() - 1, controlIn("coefficient-mod"));
         coefficientModulation = ParameterModulation {
             "coefficient-mod", 0.18, ModulationPolarity::bipolar, 0.32, 0.68 };
     }
@@ -116,14 +114,18 @@ GraphDocument makeGravityDiffusionGraph(const GravityDiffusionControls& controls
         macro("gravity", "Gravity", controls.gravity, "gravity"),
         macro("size", "Size", controls.size), macro("feedback", "Feedback", controls.feedback),
         macro("damping", "Damping", controls.damping), macro("modulation", "Modulation", controls.modulation),
-        { "motion-a", "lfo", { controlOut() }, {
-            { "frequency", 0.11, "hertz" },
-            { "phase", 0.0, "cycles" }, { "waveform", 0.0, "waveform" }, { "run-mode", 0.0, "run-mode" },
-        }, "Motion A" },
-        { "motion-b", "lfo", { controlOut() }, {
-            { "frequency", 0.073, "hertz" },
-            { "phase", 0.25, "cycles" }, { "waveform", 1.0, "waveform" }, { "run-mode", 0.0, "run-mode" },
-        }, "Motion B" },
+        { "motion-a", "lfo", { controlIn("frequency-mod"), controlIn("phase-mod"), controlIn("waveform-mod"), controlIn("run-mode-mod"), controlOut() }, {
+            { "frequency", 0.11, "hertz", ParameterModulation { "frequency-mod", 1.0, ModulationPolarity::bipolar, 0.01, 100.0 } },
+            { "phase", 0.0, "cycles", ParameterModulation { "phase-mod", 0.25, ModulationPolarity::bipolar, 0.0, 0.999 } },
+            { "waveform", 0.0, "waveform", ParameterModulation { "waveform-mod", 1.0, ModulationPolarity::bipolar, 0.0, 1.0 } },
+            { "run-mode", 0.0, "run-mode", ParameterModulation { "run-mode-mod", 1.0, ModulationPolarity::bipolar, 0.0, 1.0 } },
+        } },
+        { "motion-b", "lfo", { controlIn("frequency-mod"), controlIn("phase-mod"), controlIn("waveform-mod"), controlIn("run-mode-mod"), controlOut() }, {
+            { "frequency", 0.073, "hertz", ParameterModulation { "frequency-mod", 1.0, ModulationPolarity::bipolar, 0.01, 100.0 } },
+            { "phase", 0.25, "cycles", ParameterModulation { "phase-mod", 0.25, ModulationPolarity::bipolar, 0.0, 0.999 } },
+            { "waveform", 1.0, "waveform", ParameterModulation { "waveform-mod", 1.0, ModulationPolarity::bipolar, 0.0, 1.0 } },
+            { "run-mode", 0.0, "run-mode", ParameterModulation { "run-mode-mod", 1.0, ModulationPolarity::bipolar, 0.0, 1.0 } },
+        } },
     };
     const std::array stageDelays { 23.0, 29.0, 37.0, 43.0, 53.0, 61.0, 71.0, 83.0 };
     const std::array stageAllpasses { 13.7, 17.9, 19.3, 23.1, 29.7, 31.1, 37.1, 41.3 };
@@ -132,12 +134,15 @@ GraphDocument makeGravityDiffusionGraph(const GravityDiffusionControls& controls
         graph.nodes.push_back(delay("stage-delay-" + number, stageDelays[index], true));
         graph.nodes.push_back(allpass("stage-ap-" + number, stageAllpasses[index], false, true));
         graph.nodes.push_back(gain("tap-gain-" + number, gravityTapBases[index], true));
-        graph.nodes.push_back({ "gravity-map-" + number, "control-map", { controlIn(), controlOut() }, {
-            { "scale", gravityTapSlopes[index], "linear" }, { "offset", 0.0, "unitless" },
-            { "polarity", 1.0, "polarity" }, { "curve-family", 0.0, "curve-family" },
+        graph.nodes.push_back({ "gravity-map-" + number, "control-map", {
+            controlIn(), controlIn("scale-mod"), controlIn("offset-mod"), controlIn("polarity-mod"), controlOut() }, {
+            { "scale", gravityTapSlopes[index], "linear", ParameterModulation { "scale-mod", 1.0, ModulationPolarity::bipolar, -4.0, 4.0 } },
+            { "offset", 0.0, "unitless", ParameterModulation { "offset-mod", 0.5, ModulationPolarity::bipolar, -1.0, 1.0 } },
+            { "polarity", 1.0, "polarity", ParameterModulation { "polarity-mod", 1.0, ModulationPolarity::bipolar, 0.0, 1.0 } },
+            { "curve-family", 0.0, "curve-family" },
             { "curve-amount", 0.0, "unitless" }, { "exponent", 1.0, "unitless" },
             { "clamp-min", -0.25, "unitless" }, { "clamp-max", 0.25, "unitless" },
-        }, "Depth " + number + " weight" });
+        } });
     }
     graph.nodes.insert(graph.nodes.end(), {
         { "feedback-damping", "lowpass", { audioIn(), controlIn("cutoff-mod"), audioOut() }, {
@@ -185,21 +190,31 @@ GraphDocument makeGravityDiffusionGraph(const GravityDiffusionControls& controls
         cable("right-a-final", "right-sum-a", "out", "right-sum", "in-a"), cable("right-b-final", "right-sum-b", "out", "right-sum", "in-b"),
         cable("left-output", "left-sum", "out", "output", "in-l"), cable("right-output", "right-sum", "out", "output", "in-r"),
     });
+    graph.layout.nodes = {
+        { "input", -760.0, -180.0 }, { "input-l-half", -580.0, -240.0 },
+        { "input-r-half", -580.0, -100.0 }, { "input-sum", -380.0, -180.0 },
+        { "input-ap-1", -180.0, -180.0 }, { "input-ap-2", 20.0, -180.0 },
+        { "input-ap-3", 220.0, -180.0 }, { "input-ap-4", 420.0, -180.0 },
+        { "tank-entry", 640.0, -180.0 },
+        { "gravity", -560.0, 500.0 }, { "size", -800.0, 240.0 },
+        { "feedback", -800.0, 390.0 }, { "damping", -800.0, 540.0 },
+        { "modulation", -800.0, 690.0 }, { "motion-a", -560.0, 1'360.0 },
+        { "motion-b", -320.0, 1'360.0 },
+        { "left-sum-a", 800.0, 330.0 }, { "left-sum-b", 800.0, 610.0 },
+        { "left-sum", 1'020.0, 470.0 }, { "right-sum-a", 800.0, 750.0 },
+        { "right-sum-b", 800.0, 1'030.0 }, { "right-sum", 1'020.0, 890.0 },
+        { "output", 1'250.0, 680.0 }, { "feedback-damping", 700.0, 1'360.0 },
+        { "feedback-gain", 470.0, 1'360.0 }, { "feedback-delay", 230.0, 1'360.0 },
+    };
     for (std::size_t index = 0; index < 8; ++index) {
         const auto number = std::to_string(index + 1);
-        graph.layout.nodes.push_back({ "gravity-map-" + number, -40.0, 180.0 + 120.0 * static_cast<double>(index) });
-        graph.layout.nodes.push_back({ "tap-gain-" + number, 180.0, 180.0 + 120.0 * static_cast<double>(index) });
-        graph.layout.nodes.push_back({ "stage-delay-" + number, 400.0, 180.0 + 120.0 * static_cast<double>(index) });
-        graph.layout.nodes.push_back({ "stage-ap-" + number, 620.0, 180.0 + 120.0 * static_cast<double>(index) });
+        const auto y = 100.0 + 150.0 * static_cast<double>(index);
+        graph.layout.nodes.push_back({ "gravity-map-" + number, -320.0, y });
+        graph.layout.nodes.push_back({ "stage-delay-" + number, -80.0, y });
+        graph.layout.nodes.push_back({ "stage-ap-" + number, 160.0, y });
+        graph.layout.nodes.push_back({ "tap-gain-" + number, 430.0, y });
     }
-    graph.layout.nodes.push_back({ "gravity", -280.0, 520.0 });
-    graph.layout.nodes.push_back({ "size", -520.0, 300.0 });
-    graph.layout.nodes.push_back({ "feedback", -520.0, 430.0 });
-    graph.layout.nodes.push_back({ "damping", -520.0, 560.0 });
-    graph.layout.nodes.push_back({ "modulation", -520.0, 690.0 });
-    graph.layout.nodes.push_back({ "motion-a", -280.0, 800.0 });
-    graph.layout.nodes.push_back({ "motion-b", -280.0, 930.0 });
-    graph.layout.viewport = { 320.0, 80.0, 0.65 };
+    graph.layout.viewport = { 640.0, 210.0, 0.52 };
     return graph;
 }
 

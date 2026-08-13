@@ -83,13 +83,10 @@ ControlRatePlan compileControlRatePlan(
     std::unordered_map<std::string, const Connection*> incomingControl;
     std::unordered_set<std::string> controlNodes;
     for (const auto& node : document.nodes) {
-        if (std::ranges::any_of(node.ports, [](const Port& port) {
-                return port.signal == SignalType::control;
-            }))
+        if (node.type == "macro" || node.type == "lfo" || node.type == "control-map"
+            || node.type == "envelope-follower")
             controlNodes.insert(node.id);
     }
-    if (controlNodes.size() > maximumControlNodes)
-        plan.errors.push_back("control graph exceeds 64 participating nodes");
 
     for (const auto& connection : document.connections) {
         const auto targetNode = std::ranges::find(document.nodes, connection.to.nodeId, &Node::id);
@@ -98,12 +95,16 @@ ControlRatePlan compileControlRatePlan(
         const auto targetPort = std::ranges::find(targetNode->ports, connection.to.portId, &Port::id);
         if (targetPort == targetNode->ports.end() || targetPort->signal != SignalType::control)
             continue;
+        controlNodes.insert(connection.from.nodeId);
+        controlNodes.insert(connection.to.nodeId);
         const auto [_, inserted] = incomingControl.emplace(
             portKey(connection.to.nodeId, connection.to.portId), &connection);
         if (!inserted)
             plan.errors.push_back("control input '" + connection.to.nodeId + "." + connection.to.portId
                 + "' has more than one cable");
     }
+    if (controlNodes.size() > maximumControlNodes)
+        plan.errors.push_back("control graph exceeds 64 participating nodes");
 
     for (const auto& node : document.nodes) {
         if (node.type == "macro") {

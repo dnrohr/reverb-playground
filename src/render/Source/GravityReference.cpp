@@ -63,6 +63,32 @@ nlohmann::ordered_json metricsJson(const GravityShapeMetrics& metrics)
         { "strongestThreeWindowEnergyFraction", metrics.strongestThreeWindowEnergyFraction } };
 }
 
+nlohmann::ordered_json envelopeJson(
+    const RenderResult& result, const GravityShapeMetrics& metrics, const double sampleRate)
+{
+    constexpr std::size_t pointCount = 49;
+    constexpr double horizonSeconds = 0.52;
+    const auto energy = stereoEnergy(result);
+    const auto halfWindow = std::max<std::size_t>(1, static_cast<std::size_t>(0.010 * sampleRate));
+    std::array<double, pointCount> values {};
+    double maximum {};
+    for (std::size_t index = 0; index < pointCount; ++index) {
+        const auto center = metrics.onsetFrame + static_cast<std::size_t>(std::llround(
+            static_cast<double>(index) / static_cast<double>(pointCount - 1) * horizonSeconds * sampleRate));
+        const auto first = center > halfWindow ? center - halfWindow : 0;
+        const auto last = std::min(energy.size(), center + halfWindow + 1);
+        if (first < last)
+            values[index] = std::accumulate(energy.begin() + static_cast<std::ptrdiff_t>(first),
+                energy.begin() + static_cast<std::ptrdiff_t>(last), 0.0) / static_cast<double>(last - first);
+        maximum = std::max(maximum, values[index]);
+    }
+    nlohmann::ordered_json points = nlohmann::ordered_json::array();
+    for (std::size_t index = 0; index < pointCount; ++index)
+        points.push_back({ static_cast<double>(index) / static_cast<double>(pointCount - 1),
+            values[index] / (maximum + epsilon) });
+    return points;
+}
+
 } // namespace
 
 GravityShapeMetrics measureGravityShape(
@@ -133,9 +159,9 @@ std::vector<GravityReferenceRender> renderGravityReferences(
 {
     const auto frameCount = static_cast<std::size_t>(std::llround(sampleRate * durationSeconds));
     const std::array definitions {
-        std::pair { "inverse", reverb::graph::GravityDiffusionControls { -1.0, 1.0, 0.50, 0.15, 0.25 } },
-        std::pair { "bloom", reverb::graph::GravityDiffusionControls { 0.0, -0.35, 1.0, 0.0, 1.0 } },
-        std::pair { "forward", reverb::graph::GravityDiffusionControls { 1.0, -0.65, -0.80, 0.10, 0.15 } },
+        std::pair { "inverse", gravityInverseReferenceControls },
+        std::pair { "bloom", gravityBloomReferenceControls },
+        std::pair { "forward", gravityForwardReferenceControls },
     };
     std::vector<GravityReferenceRender> references;
     for (const auto& [id, controls] : definitions) {
@@ -166,6 +192,7 @@ std::string writeGravityReferenceJson(
         { "controls", controlsJson(reference.controls) }, { "raw", metricsJson(reference.rawMetrics) },
         { "loudnessMatchGain", reference.loudnessMatchGain },
         { "matched", metricsJson(reference.matchedMetrics) },
+        { "matchedEnvelope", envelopeJson(reference.loudnessMatched, reference.matchedMetrics, sampleRate) },
         { "leftPcm16Fnv1a", std::to_string(reference.leftPcm16Fnv1a) },
         { "rightPcm16Fnv1a", std::to_string(reference.rightPcm16Fnv1a) },
     };

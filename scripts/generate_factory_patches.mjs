@@ -1,4 +1,5 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -243,6 +244,23 @@ const catalog = {
         description: 'Original public-primitives topology inferred from documented large, inverse, modulated reverb behavior; not a reconstruction of a proprietary algorithm.',
       },
     },
+    {
+      id: 'gravity-diffusion',
+      family: 'gravity-diffusion',
+      status: 'complete',
+      document: {
+        kind: 'checked-in-json',
+        path: 'factory-patches/gravity-diffusion.rvp.json',
+        schemaVersion: 2,
+        engineVersion: '0.1',
+      },
+      license: { expression: 'AGPL-3.0-only', file: 'LICENSE' },
+      provenance: {
+        kind: 'project-authored-generated',
+        source: 'src/graph/Source/GravityDiffusionGraph.cpp',
+        description: 'Generated from the project-authored eight-stage public-primitives Gravity Diffusion graph; no proprietary preset or algorithm reconstruction.',
+      },
+    },
   ],
 };
 
@@ -263,3 +281,9 @@ for (const [filename, document] of [
     await writeFile(outputPath, expected, 'utf8');
   }
 }
+
+const gravityFactoryPath = resolve(outputDirectory, 'gravity-diffusion.rvp.json');
+const gravityFactoryBytes = await readFile(gravityFactoryPath);
+const gravityFactoryHash = createHash('sha256').update(gravityFactoryBytes).digest('hex');
+if (gravityFactoryHash !== '8e683dfb595c6f24ac5882e46e6d3fbffcb92790a5616f1bd2b31be1c8973124')
+  throw new Error('gravity-diffusion.rvp.json is stale; run .\\scripts\\generate_gravity_factory_patch.ps1 -Configuration Release');

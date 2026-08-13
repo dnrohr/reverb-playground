@@ -28,8 +28,15 @@ The header exposes two explicit audition targets:
 
 - **A / Barr** loads the native Barr reference.
 - **B / Reverse Env** or **B / Gated** loads the last selected teaching design.
+- **B / Cosmic Rev** or **B / Gravity** does the same for the later complete
+  factory designs.
 
 Selecting either teaching design from the Factory Patch menu updates B; returning to A does not forget it. Both buttons use ordinary schema loading, off-thread compilation, and the existing 10 ms topology crossfade. There is no second hidden DSP engine and no level-matched crossfade between stored recordings: A/B means rapid live graph replacement under the same input, device, and master audition gain.
+
+For Gravity Diffusion, the B choice preserves the selected factory design while
+A is active. Returning to B restores the factory graph; save a modified graph
+before A/B switching because A/B is a factory audition selector, not a hidden
+snapshot bank for unsaved edits.
 
 The active button uses filled styling plus `aria-pressed`, so state is not communicated by colour alone. Factory selection, graph revision status, and graph title provide redundant textual confirmation.
 

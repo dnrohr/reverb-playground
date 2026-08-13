@@ -1,4 +1,5 @@
 #include <reverb/render/GravityReference.h>
+#include <reverb/graph/PatchJson.h>
 #include <reverb/render/WavWriter.h>
 
 #include <filesystem>
@@ -21,8 +22,13 @@ void writeText(const std::filesystem::path& path, const std::string& text)
 int main(const int argc, char** argv)
 {
     try {
+        if (argc == 3 && std::string_view(argv[1]) == "--export-factory-patch") {
+            writeText(argv[2], reverb::graph::writePatchJson(
+                reverb::graph::makeGravityDiffusionGraph(reverb::render::gravityBloomReferenceControls)));
+            return 0;
+        }
         if (argc != 3 || std::string_view(argv[1]) != "--output-dir")
-            throw std::invalid_argument("usage: reverb_gravity_reference_cli --output-dir <directory>");
+            throw std::invalid_argument("usage: reverb_gravity_reference_cli --output-dir <directory> | --export-factory-patch <path>");
         const std::filesystem::path outputDirectory = argv[2];
         std::filesystem::create_directories(outputDirectory);
         constexpr double sampleRate = 48'000.0;

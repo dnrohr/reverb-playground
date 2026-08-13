@@ -3276,4 +3276,4687 @@ These are the strongest lessons for a new design inspired by Barr rather than a 
     }
   }
 }
-`,Gp=[{id:`barr-reference`,label:`Barr Reference`,graphName:`BARR-REFERENCE.graph`,filename:`barr-reference.rvp.json`,summary:`Keith Barr-style recirculating diffusion tank`},{id:`causal-reverse-envelope`,label:`Causal Reverse Envelope`,graphName:`CAUSAL-REVERSE.graph`,filename:`causal-reverse-envelope.rvp.json`,summary:`Weighted delay taps build toward a late peak`},{id:`level-gated-room`,label:`Level-Gated Room`,graphName:`LEVEL-GATED-ROOM.graph`,filename:`level-gated-room.rvp.json`,summary:`Envelope follower and hold gates cut a diffuse room tail`},{id:`modulated-cosmic-reverse`,label:`Modulated Cosmic Reverse`,graphName:`MODULATED-COSMIC-REVERSE.graph`,filename:`modulated-cosmic-reverse.rvp.json`,summary:`Rising taps enter a damped, slowly modulated feedback space`}],Kp={"causal-reverse-envelope":Hp,"level-gated-room":Up,"modulated-cosmic-reverse":Wp};function qp(e){return Gp.find(t=>t.id===e)}function Jp(e,t){return e===`barr-reference`||e===`custom`?t:e}function Yp(e,t){return e===`barr-reference`?{...af(t),viewport:{x:0,y:0,zoom:1}}:sp(Kp[e],t)}function Xp(e){let t=Math.max(1,Math.round(e.sampleRate*.01)),n=Math.ceil(e.frameCount/t),r=Array(n).fill(0);for(let n=0;n<e.frameCount;n+=1)r[Math.floor(n/t)]+=e.left[n]**2+e.right[n]**2;let i=Math.max(...r);if(!(i>0))return null;let a=r.indexOf(i),o=r.findIndex(e=>e>i*1e-8),s=r.findIndex((e,t)=>t>a&&e<=i*1e-4);return s<0&&(s=n-1),{onsetFrame:Math.min(e.frameCount-1,o*t),peakFrame:Math.min(e.frameCount-1,a*t+Math.floor(t/2)),cutoffFrame:Math.min(e.frameCount-1,s*t)}}function Zp(e,t,n={detectorReleaseMilliseconds:20,holdMilliseconds:120,releaseMilliseconds:8}){let r=Xp(e);if(!r)return null;if(t===`causal-reverse-envelope`||t===`modulated-cosmic-reverse`)return{title:`Why this swells`,explanation:t===`modulated-cosmic-reverse`?`Visible weighted delays build a causal rise before a damped feedback space. Slow moving allpass times add pitch-active motion; this is an original large-space design, not a proprietary algorithm reconstruction or true time reversal.`:`Visible weighted delays build a causal response toward a late peak. This does not reverse sample order and cannot place wet sound before the triggering event.`,regions:[{label:`RISING ENERGY`,startFrame:r.onsetFrame,endFrame:r.peakFrame,tone:`rise`}],markers:[{label:`LATE PEAK`,frame:r.peakFrame,tone:`peak`},{label:`-40 dB`,frame:r.cutoffFrame,tone:`cutoff`}]};if(t===`level-gated-room`){let t=t=>Math.round(e.sampleRate*t/1e3),i=Math.min(r.cutoffFrame,r.onsetFrame+t(n.detectorReleaseMilliseconds)),a=Math.min(r.cutoffFrame,i+t(n.holdMilliseconds)),o=Math.min(r.cutoffFrame,a+t(n.releaseMilliseconds));return{title:`Why this stops`,explanation:`The input-derived detector opens the visible gates, their hold keeps the diffuse room audible, and release closes it. Repeated or sustained input can retrigger this level gate.`,regions:[{label:`GATE OPEN`,startFrame:r.onsetFrame,endFrame:i,tone:`gate`},{label:`HOLD`,startFrame:i,endFrame:a,tone:`hold`},{label:`RELEASE`,startFrame:a,endFrame:o,tone:`release`}],markers:[{label:`CUTOFF`,frame:r.cutoffFrame,tone:`cutoff`}]}}return null}function Qp(e){let t=e;if(typeof t==`string`)try{t=JSON.parse(t)}catch{throw Error(`Host state response is not valid JSON`)}if(typeof t!=`object`||!t||Array.isArray(t))throw Error(`Host state response is not an object`);let n=t;if(typeof n.accepted!=`boolean`||typeof n.error!=`string`)throw Error(`Host state response fields are invalid`);return n}var $p=(e,t,n)=>e.data.parameters.find(e=>e.id===t)?.value??n;function em(e,t){let n=$p(e,`curve-family`,0),r=n>=1.5?`exponential`:n>=.5?`power`:`linear`,i=$p(e,`polarity`,1)>=.5?`bipolar`:`unipolar`,a=t=>zp(t,r,$p(e,`curve-amount`,0),$p(e,`exponent`,1),$p(e,`scale`,1),$p(e,`offset`,0),i,$p(e,`clamp-min`,-1),$p(e,`clamp-max`,1)),o=a(t.minimum),s=a(t.maximum);return{minimum:Math.min(o,s),maximum:Math.max(o,s)}}function tm(e,t,n,r=128){let i=new Map(t.map(e=>[e.id,e])),a=new Map;for(let e of n.filter(e=>e.data?.signal===`control`)){let t=a.get(e.source)??[];t.push(e),a.set(e.source,t)}let o=new Set([e]),s=new Set,c=[],l=[{nodeId:e,range:{minimum:-1,maximum:1}}],u=new Set;for(;l.length&&c.length<r;){let e=l.shift(),t=`${e.nodeId}:${e.range.minimum}:${e.range.maximum}`;if(!u.has(t)){u.add(t);for(let t of a.get(e.nodeId)??[]){s.add(t.id),o.add(t.target);let n=i.get(t.target);if(!n)continue;if(n.data.type===`control-map`&&t.targetHandle===`in`){l.push({nodeId:n.id,range:em(n,e.range)});continue}let r=n.data.parameters.find(e=>e.modulation?.portId===t.targetHandle);if(!r?.modulation)continue;let a=r.modulation,u=e=>a.polarity===`bipolar`?Math.min(1,Math.max(-1,e)):Math.min(1,Math.max(0,e)),d=e=>Math.min(a.clampMaximum,Math.max(a.clampMinimum,r.value+a.amount*u(e))),f=d(e.range.minimum),p=d(e.range.maximum);c.push({nodeId:n.id,parameterId:r.id,minimum:Math.min(f,p),maximum:Math.max(f,p),unit:r.unit})}}}return{nodeIds:[...o],edgeIds:[...s],destinations:c}}function nm(e,t,n){if(!n)return{nodes:e,edges:t};let r=new Set(n.nodeIds),i=new Set(n.edgeIds);return{nodes:e.map(e=>r.has(e.id)?{...e,className:`${e.className??``} macro-reachable`.trim()}:e),edges:t.map(e=>i.has(e.id)?{...e,className:`${e.className??``} macro-reachable`.trim()}:e)}}var rm=e=>Math.min(1,Math.max(-1,Number.isFinite(e)?e:0));function im(e){let t=rm(e);return Math.abs(t)<5e-4?`BLOOM`:t<0?`INVERSE`:`FORWARD`}function am(e,t=49){let n=rm(e),r=.48-.35*n,i=Math.max(3,t),a=Array.from({length:i},(e,t)=>{let n=t/(i-1),a=n<=r?.06+.94*(n/r)**1.65:Math.exp(-3.2*(n-r)/(1-r));return`${(n*100).toFixed(2)},${(38-a*32).toFixed(2)}`}),o=im(n);return{state:o,peakPosition:r,path:`M ${a.join(` L `)}`,description:`${o} design prediction; energy peak at ${Math.round(r*100)}% of the displayed horizon. Not measured audio.`}}function om(e){return[...new Set(e.nodeIds)]}var sm=[{group:`I/O`,items:hf.filter(e=>e.role===`io`)},{group:`SIGNAL`,items:hf.filter(e=>e.role!==`io`&&e.role!==`control`)},{group:`CONTROL`,items:hf.filter(e=>e.role===`control`)}],cm=e=>e===`boolean`?[{value:0,label:`OFF`},{value:1,label:`ON`}]:e===`curve-family`?[{value:0,label:`LINEAR`},{value:1,label:`POWER`},{value:2,label:`EXPONENTIAL`}]:e===`waveform`?[{value:0,label:`SINE`},{value:1,label:`TRIANGLE`}]:e===`run-mode`?[{value:0,label:`FREE RUN`},{value:1,label:`RESTART ON TRANSPORT`}]:e===`polarity`?[{value:0,label:`UNIPOLAR 0…1`},{value:1,label:`BIPOLAR −1…+1`}]:null;function lm({topic:e,onDismiss:t,onResearch:n}){return(0,b.jsxs)(`section`,{className:`teaching-card`,"aria-label":`Contextual explanation`,children:[(0,b.jsxs)(`div`,{className:`teaching-title`,children:[(0,b.jsx)(`span`,{children:`LEARN / CONTEXT`}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Dismiss explanation`,onClick:t,children:`×`})]}),(0,b.jsx)(`h3`,{children:e.title}),(0,b.jsx)(`h4`,{children:`DOCUMENTED BARR / MIDIVERB`}),(0,b.jsx)(`p`,{children:e.documented}),(0,b.jsx)(`h4`,{children:`THIS RECONSTRUCTION`}),(0,b.jsx)(`p`,{children:e.reconstruction}),(0,b.jsx)(`h4`,{children:`LISTEN / NOTICE`}),(0,b.jsx)(`p`,{children:e.takeaway}),(0,b.jsx)(`button`,{className:`research-link`,type:`button`,onClick:n,children:`READ OFFLINE ARCHITECTURE RESEARCH`})]})}function um({inspection:e,activeIndex:t,onActiveIndex:n}){let r=e.loops[t];return r?(0,b.jsxs)(`section`,{className:`loop-inspector`,"aria-label":`Feedback loop inspection`,children:[(0,b.jsxs)(`div`,{className:`loop-heading`,children:[(0,b.jsx)(`span`,{children:`FEEDBACK LOOP`}),(0,b.jsxs)(`strong`,{children:[t+1,` / `,e.loops.length]})]}),e.loops.length>1?(0,b.jsxs)(`div`,{className:`loop-navigation`,children:[(0,b.jsx)(`button`,{type:`button`,"aria-label":`Previous feedback loop`,onClick:()=>n((t+e.loops.length-1)%e.loops.length),children:`PREV`}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Next feedback loop`,onClick:()=>n((t+1)%e.loops.length),children:`NEXT`})]}):null,(0,b.jsxs)(`dl`,{className:`loop-facts`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`NOMINAL DELAY`}),(0,b.jsxs)(`dd`,{children:[r.nominalDelayMilliseconds.toFixed(2),` ms`]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`BLOCKS`}),(0,b.jsx)(`dd`,{children:r.nodeIds.length})]})]}),(0,b.jsx)(`h3`,{children:`CONSTITUENT BLOCKS`}),(0,b.jsx)(`code`,{className:`loop-path`,children:[...r.nodeIds,r.nodeIds[0]].join(` → `)}),(0,b.jsx)(`h3`,{children:`POLARITY / GAIN`}),r.gainElements.length?(0,b.jsx)(`ul`,{children:r.gainElements.map(e=>(0,b.jsxs)(`li`,{children:[(0,b.jsx)(`code`,{children:e.nodeId}),(0,b.jsxs)(`span`,{children:[e.parameter,` `,e.value.toLocaleString()]})]},`${e.nodeId}.${e.parameter}`))}):(0,b.jsx)(`p`,{children:`None in this loop.`}),(0,b.jsx)(`h3`,{children:`FILTERS`}),r.filters.length?(0,b.jsx)(`ul`,{children:r.filters.map(e=>(0,b.jsxs)(`li`,{children:[(0,b.jsx)(`code`,{children:e.nodeId}),(0,b.jsxs)(`span`,{children:[e.value.toLocaleString(),` Hz`]})]},`${e.nodeId}.${e.parameter}`))}):(0,b.jsx)(`p`,{children:`None in this loop.`}),e.truncated?(0,b.jsx)(`p`,{className:`loop-truncated`,children:`Additional loops omitted at the bounded inspection limit.`}):null]}):(0,b.jsxs)(`section`,{className:`loop-inspector loop-empty`,"aria-label":`Feedback loop inspection`,children:[(0,b.jsxs)(`div`,{className:`loop-heading`,children:[(0,b.jsx)(`span`,{children:`FEEDBACK LOOPS`}),(0,b.jsx)(`strong`,{children:`NONE`})]}),(0,b.jsx)(`p`,{children:`No directed feedback loop contains this selection.`})]})}function dm({sampleRate:e,onCapture:t}){let[n,r]=(0,_.useState)(2e3),[i,a]=(0,_.useState)(-80),[o,s]=(0,_.useState)(!0),[c,l]=(0,_.useState)(null),[u,d]=(0,_.useState)(null),[f,p]=(0,_.useState)(``),m=(0,_.useCallback)(async()=>{p(``),d(null);try{let e=await ep(`startImpulseCapture`,n,i,o);if(e===void 0){p(`NATIVE AUDIO REQUIRED FOR CAPTURE`);return}l(pp(e))}catch(e){p(e instanceof Error?e.message:`Capture could not start`)}},[n,o,i]);(0,_.useEffect)(()=>{if(c?.state!==`armed`&&c?.state!==`capturing`)return;let e=window.setInterval(()=>{ep(`getImpulseCaptureStatus`).then(n=>{let r=pp(n);if(l(r),r.state===`complete`)return window.clearInterval(e),ep(`getImpulseCapture`).then(e=>{let n=mp(e);d(n),t(n)})}).catch(e=>p(e instanceof Error?e.message:`Capture status failed`))},100);return()=>window.clearInterval(e)},[t,c?.state]);let h=c?.state===`armed`||c?.state===`capturing`;return(0,b.jsxs)(`section`,{className:`measurement-bar ${h?`is-capturing`:``}`,"aria-label":`Impulse response capture`,children:[(0,b.jsxs)(`div`,{className:`measurement-title`,children:[(0,b.jsx)(`span`,{children:`MEASURE`}),(0,b.jsx)(`strong`,{children:`IMPULSE RESPONSE`})]}),(0,b.jsxs)(`label`,{children:[`MAX LENGTH `,(0,b.jsxs)(`select`,{"aria-label":`Capture maximum length`,value:n,disabled:h,onChange:e=>r(Number(e.target.value)),children:[(0,b.jsx)(`option`,{value:500,children:`500 ms`}),(0,b.jsx)(`option`,{value:2e3,children:`2,000 ms`}),(0,b.jsx)(`option`,{value:5e3,children:`5,000 ms`}),(0,b.jsx)(`option`,{value:1e4,children:`10,000 ms`})]})]}),(0,b.jsxs)(`label`,{children:[`STOP BELOW `,(0,b.jsxs)(`select`,{"aria-label":`Capture stop threshold`,value:i,disabled:h,onChange:e=>a(Number(e.target.value)),children:[(0,b.jsx)(`option`,{value:-60,children:`-60 dBFS`}),(0,b.jsx)(`option`,{value:-80,children:`-80 dBFS`}),(0,b.jsx)(`option`,{value:-100,children:`-100 dBFS`}),(0,b.jsx)(`option`,{value:-120,children:`-120 dBFS`})]})]}),(0,b.jsxs)(`label`,{className:`measurement-check`,children:[(0,b.jsx)(`input`,{type:`checkbox`,checked:o,disabled:h,onChange:e=>s(e.target.checked)}),` MUTE LIVE INPUT`]}),(0,b.jsx)(`button`,{type:`button`,disabled:h||e<=0,onClick:()=>void m(),children:h?`CAPTURING…`:`CAPTURE IMPULSE`}),(0,b.jsx)(`div`,{className:`measurement-readout`,role:`status`,children:f||(e<=0?`WAITING FOR AUDIO DEVICE`:u?`${u.frameCount.toLocaleString()} FRAMES / ${(u.frameCount/u.sampleRate*1e3).toFixed(1)} ms / STOP: ${u.stopReason===`threshold`?`${u.stopThresholdDb} dBFS`:`MAX LENGTH`}`:h&&c?`${c.capturedMilliseconds.toFixed(1)} / ${c.maximumLengthMilliseconds.toFixed(0)} ms`:`0.1 PEAK / READY`)})]})}function fm({capture:e,patchId:t,gateTeaching:n,teachingEnabled:r,onClose:i}){let a=(0,_.useMemo)(()=>vp(e),[e]),o=t===`level-gated-room`?null:a.rt60Seconds,s=t===`level-gated-room`?`abrupt-cutoff`:a.rt60Refusal,c=(0,_.useMemo)(()=>r?Zp(e,t,n):null,[e,n,t,r]),[l,u]=(0,_.useState)(1),[d,f]=(0,_.useState)(0),p=hp(e.frameCount,l,d),m=gp(e.left,p,450),h=gp(e.right,p,450),g=_p(a.decayDb,p,450),v=e=>70+900*(e-p.start)/Math.max(1,p.end-p.start-1),y=Math.max(a.peakLeft,a.peakRight,1e-9),x=(e,t)=>e.map(e=>`M${v(e.frame).toFixed(1)},${(t-34*e.maximum/y).toFixed(1)}L${v(e.frame).toFixed(1)},${(t-34*e.minimum/y).toFixed(1)}`).join(``),S=g.map((e,t)=>`${t?`L`:`M`}${v(e.frame).toFixed(1)},${(228+Math.min(90,Math.max(0,-e.decibels))).toFixed(1)}`).join(``),C=c?.regions.map(e=>({...e,startFrame:Math.max(p.start,e.startFrame),endFrame:Math.min(p.end-1,e.endFrame)})).filter(e=>e.endFrame>e.startFrame)??[],w=c?.markers.filter(e=>e.frame>=p.start&&e.frame<p.end)??[],T=p.start/e.sampleRate*1e3,E=p.end/e.sampleRate*1e3,D=e=>u(Math.max(1,Math.min(256,e)));return(0,b.jsxs)(`section`,{className:`response-viewer`,"aria-label":`Stereo impulse response viewer`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsxs)(`div`,{children:[(0,b.jsxs)(`span`,{children:[`CAPTURE #`,e.generation,` / STEREO RESPONSE`]}),(0,b.jsx)(`h2`,{children:`Impulse and energy decay`})]}),(0,b.jsx)(`button`,{type:`button`,onClick:i,children:`CLOSE ×`})]}),(0,b.jsxs)(`div`,{className:`response-metrics`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`WINDOW`}),(0,b.jsxs)(`strong`,{children:[T.toFixed(2),`–`,E.toFixed(2),` ms`]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`PEAK L / R`}),(0,b.jsxs)(`strong`,{children:[a.peakLeft.toFixed(4),` / `,a.peakRight.toFixed(4)]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`ONSET`}),(0,b.jsx)(`strong`,{children:a.onsetFrame===null?`NONE`:`${(a.onsetFrame/e.sampleRate*1e3).toFixed(2)} ms`})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`RT60 / T30 FIT`}),(0,b.jsx)(`strong`,{children:o===null?t===`level-gated-room`?`NOT MEANINGFUL`:`NOT ESTIMATED`:`${o.toFixed(3)} s`})]})]}),(0,b.jsxs)(`div`,{className:`response-navigation`,children:[(0,b.jsx)(`button`,{type:`button`,onClick:()=>{D(16),f(0)},children:`EARLY / 16×`}),(0,b.jsx)(`button`,{type:`button`,disabled:l>=256,onClick:()=>D(l*2),children:`ZOOM IN`}),(0,b.jsx)(`button`,{type:`button`,disabled:l<=1,onClick:()=>D(l/2),children:`ZOOM OUT`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>{D(1),f(0)},children:`FULL TAIL`}),(0,b.jsxs)(`label`,{children:[`PAN `,(0,b.jsx)(`input`,{"aria-label":`Pan response window`,type:`range`,min:`0`,max:`1`,step:`0.001`,value:d,disabled:l===1,onChange:e=>f(Number(e.target.value))})]}),(0,b.jsxs)(`output`,{children:[l.toFixed(0),`×`]})]}),(0,b.jsxs)(`div`,{className:`response-legend`,"aria-label":`Channel line styles`,children:[(0,b.jsxs)(`span`,{children:[(0,b.jsx)(`i`,{className:`legend-left`}),`L / SOLID / UPPER`]}),(0,b.jsxs)(`span`,{children:[(0,b.jsx)(`i`,{className:`legend-right`}),`R / DASHED / LOWER`]}),(0,b.jsxs)(`span`,{children:[(0,b.jsx)(`i`,{className:`legend-decay`}),`ENERGY DECAY / SCHROEDER`]})]}),(0,b.jsxs)(`svg`,{className:`response-chart`,viewBox:`0 0 1000 330`,role:`img`,"aria-label":`Left solid upper waveform, right dashed lower waveform, and combined energy decay from ${T.toFixed(2)} to ${E.toFixed(2)} milliseconds${c?`, with ${c.regions.map(e=>e.label).join(`, `)} regions`:``}`,onWheel:e=>{e.preventDefault(),D(e.deltaY<0?l*2:l/2)},children:[(0,b.jsxs)(`g`,{className:`chart-grid`,children:[(0,b.jsx)(`path`,{d:`M70 75H970M70 160H970M70 228H970M70 263H970M70 298H970M70 318H970`}),(0,b.jsx)(`text`,{x:`12`,y:`79`,children:`L`}),(0,b.jsx)(`text`,{x:`12`,y:`164`,children:`R`}),(0,b.jsx)(`text`,{x:`12`,y:`232`,children:`0 dB`}),(0,b.jsx)(`text`,{x:`12`,y:`267`,children:`-35`}),(0,b.jsx)(`text`,{x:`12`,y:`322`,children:`-90`})]}),c?(0,b.jsxs)(`g`,{className:`architecture-overlay`,"aria-label":c.title,children:[C.map(e=>(0,b.jsxs)(`g`,{className:`overlay-${e.tone}`,children:[(0,b.jsx)(`rect`,{x:v(e.startFrame),y:`203`,width:Math.max(2,v(e.endFrame)-v(e.startFrame)),height:`115`}),(0,b.jsx)(`text`,{x:v(e.startFrame)+5,y:`219`,children:e.label})]},`${e.label}-${e.startFrame}`)),w.map(e=>(0,b.jsxs)(`g`,{className:`overlay-marker overlay-${e.tone}`,children:[(0,b.jsx)(`path`,{d:`M${v(e.frame).toFixed(1)} 42V318`}),(0,b.jsx)(`text`,{x:Math.min(905,v(e.frame)+5),y:`52`,children:e.label})]},`${e.label}-${e.frame}`))]}):null,(0,b.jsx)(`path`,{className:`wave-left`,d:x(m,75)}),(0,b.jsx)(`path`,{className:`wave-right`,d:x(h,160)}),(0,b.jsx)(`path`,{className:`decay-line`,d:S}),(0,b.jsx)(`path`,{className:`fit-band`,d:`M70 233H970M70 263H970`}),(0,b.jsxs)(`text`,{className:`axis-label`,x:`70`,y:`328`,children:[T.toFixed(2),` ms`]}),(0,b.jsxs)(`text`,{className:`axis-label axis-end`,x:`970`,y:`328`,children:[E.toFixed(2),` ms`]})]}),c?(0,b.jsxs)(`section`,{className:`architecture-explanation`,"aria-label":`Architecture explanation`,children:[(0,b.jsx)(`strong`,{children:c.title}),(0,b.jsx)(`span`,{children:c.explanation})]}):null,s?(0,b.jsxs)(`div`,{className:`rt60-refusal`,role:`note`,children:[(0,b.jsx)(`strong`,{children:`RT60 withheld`}),(0,b.jsx)(`span`,{children:yp(s)})]}):(0,b.jsxs)(`div`,{className:`rt60-method`,children:[(0,b.jsx)(`strong`,{children:`T30 estimate`}),(0,b.jsx)(`span`,{children:`Linear fit from -5 to -35 dB, extrapolated to -60 dB.`})]})]})}function pm({diagnostics:e,runawayLoop:t,canUndo:n,onUndo:r,onRecover:i,onClose:a}){return(0,b.jsxs)(`aside`,{className:`diagnostics-panel ${e?.mute.safetyLatched?`has-safety-latch`:``}`,"aria-label":`Runtime resource and safety diagnostics`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`RUNTIME DIAGNOSTICS`}),(0,b.jsx)(`h2`,{children:`Resources and safety`})]}),(0,b.jsx)(`button`,{type:`button`,onClick:a,children:`CLOSE ×`})]}),e?(0,b.jsxs)(b.Fragment,{children:[(0,b.jsxs)(`div`,{className:`mute-diagnostic ${e.mute.active?`is-muted`:``}`,role:e.mute.safetyLatched?`alert`:`status`,children:[(0,b.jsx)(`strong`,{children:e.mute.safetyLatched?`SAFETY MUTE LATCHED`:e.mute.manual?`MANUAL MUTE ACTIVE`:`AUDIO SAFETY READY`}),(0,b.jsx)(`span`,{children:e.mute.safetyLatched?`Editing and Undo remain available. Reduce gain or undo the risky edit, then recover explicitly.`:`No numerical safety latch is active.`})]}),(0,b.jsxs)(`div`,{className:`diagnostic-grid`,children:[(0,b.jsxs)(`section`,{children:[(0,b.jsx)(`span`,{children:`ESTIMATE / STATIC`}),(0,b.jsxs)(`strong`,{children:[e.workloadEstimate.scalarOperationsPerSample,` ops/sample`]}),(0,b.jsxs)(`small`,{children:[(e.workloadEstimate.scalarOperationsPerSecond/1e6).toFixed(2),` M scalar ops/s`]})]}),(0,b.jsxs)(`section`,{children:[(0,b.jsx)(`span`,{children:`LIVE / MEASURED`}),(0,b.jsxs)(`strong`,{children:[e.liveCpu.loadPercent.toFixed(2),`% CPU`]}),(0,b.jsxs)(`small`,{children:[e.liveCpu.peakLoadPercent.toFixed(2),`% peak · `,e.liveCpu.processedBlocks.toLocaleString(),` blocks`]})]}),(0,b.jsxs)(`section`,{children:[(0,b.jsx)(`span`,{children:`MEMORY / PREPARED`}),(0,b.jsx)(`strong`,{children:Np(e.delayMemory.bytes)}),(0,b.jsxs)(`small`,{children:[e.delayMemory.lineCount,` delay-bearing lines`]})]}),(0,b.jsxs)(`section`,{children:[(0,b.jsx)(`span`,{children:`CLIPPING / MEASURED`}),(0,b.jsxs)(`strong`,{children:[e.clipping.samples.toLocaleString(),` samples`]}),(0,b.jsxs)(`small`,{children:[e.clipping.blocks.toLocaleString(),` affected blocks`]})]})]}),(0,b.jsxs)(`dl`,{className:`revision-diagnostic`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`ACTIVE GRAPH REVISION`}),(0,b.jsxs)(`dd`,{children:[`#`,e.topologyPublication.activeRevision||e.activeGraphRevision]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`PENDING / FAILED`}),(0,b.jsxs)(`dd`,{children:[e.topologyPublication.pendingRevision?`#${e.topologyPublication.pendingRevision}`:`—`,` / `,e.topologyPublication.failedRevision?`#${e.topologyPublication.failedRevision}`:`—`]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`TOPOLOGY CROSSFADE`}),(0,b.jsx)(`dd`,{children:e.topologyPublication.crossfadeTotalSamples?`${e.topologyPublication.crossfadePositionSamples}/${e.topologyPublication.crossfadeTotalSamples} samples`:`IDLE`})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`LAST CROSSFADE`}),(0,b.jsx)(`dd`,{children:e.topologyPublication.completedCrossfades?`#${e.topologyPublication.lastCrossfadeFromRevision} → #${e.topologyPublication.lastCrossfadeToRevision}`:`—`})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`SUPERSEDED / RECLAIMED`}),(0,b.jsxs)(`dd`,{children:[e.topologyPublication.supersededRequests,` / `,e.topologyPublication.reclaimedRuntimes]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`SUCCESSFUL RECOVERIES`}),(0,b.jsx)(`dd`,{children:e.recoveryCount})]})]}),e.topologyPublication.failure?(0,b.jsxs)(`p`,{className:`topology-failure`,children:[`REVISION #`,e.topologyPublication.failedRevision,`: `,e.topologyPublication.failure]}):null,e.lastSafetyEvent?(0,b.jsxs)(`section`,{className:`safety-event`,children:[(0,b.jsxs)(`span`,{children:[`LAST SAFETY EVENT #`,e.lastSafetyEvent.generation]}),(0,b.jsxs)(`strong`,{children:[e.lastSafetyEvent.kind.toUpperCase(),` / `,e.lastSafetyEvent.channel.toUpperCase()]}),(0,b.jsxs)(`p`,{children:[`Sample `,e.lastSafetyEvent.sampleIndex.toLocaleString(),` of graph revision `,(0,b.jsxs)(`b`,{children:[`#`,e.lastSafetyEvent.graphRevision]}),`. This identity remains fixed when later edits change the active revision.`]})]}):(0,b.jsx)(`p`,{className:`no-safety-event`,children:`No NaN, infinity, or runaway event recorded.`}),e.mute.safetyLatched?t?.loops[0]?(0,b.jsxs)(`section`,{className:`runaway-loop-event`,children:[(0,b.jsx)(`span`,{children:`LIKELY FEEDBACK LOOP / HEURISTIC`}),(0,b.jsxs)(`strong`,{children:[t.loops[0].nominalDelayMilliseconds.toFixed(2),` ms · `,t.loops[0].nodeIds.length,` blocks`]}),(0,b.jsx)(`code`,{children:[...t.loops[0].nodeIds,t.loops[0].nodeIds[0]].join(` → `)}),(0,b.jsx)(`p`,{children:`Marked red on the graph. Ranking uses visible loop gain and nominal delay; it is guidance, not a stability proof.`})]}):(0,b.jsx)(`p`,{className:`no-safety-event`,children:`No explicit delayed feedback loop could be identified for this event.`}):null,(0,b.jsxs)(`div`,{className:`diagnostic-actions`,children:[(0,b.jsx)(`button`,{type:`button`,disabled:!n,onClick:r,children:`UNDO LAST EDIT`}),(0,b.jsx)(`button`,{type:`button`,disabled:!e.mute.safetyLatched,onClick:i,children:`RECOVER AUDIO`})]})]}):(0,b.jsx)(`p`,{className:`diagnostics-waiting`,children:`Waiting for a coherent native snapshot…`})]})}function mm({value:e,destinationCount:t,onBegin:n,onValue:r,onCommit:i,onFocus:a}){let o=(0,_.useMemo)(()=>am(e),[e]);return(0,b.jsxs)(`section`,{className:`gravity-presentation`,"aria-label":`Gravity macro control`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:`GRAVITY`}),(0,b.jsx)(`strong`,{children:o.state})]}),(0,b.jsxs)(`div`,{className:`gravity-scale`,"aria-hidden":`true`,children:[(0,b.jsx)(`span`,{children:`INVERSE`}),(0,b.jsx)(`span`,{children:`BLOOM`}),(0,b.jsx)(`span`,{children:`FORWARD`})]}),(0,b.jsx)(`input`,{className:`gravity-slider`,"aria-label":`Gravity bipolar control`,type:`range`,min:-1,max:1,step:.001,value:e,onPointerDown:n,onChange:e=>r(Number(e.target.value)),onPointerUp:i,onKeyDown:e=>{n(),e.key===`Enter`&&i()},onBlur:i}),(0,b.jsxs)(`label`,{className:`gravity-exact-value`,children:[(0,b.jsx)(`span`,{children:`EXACT VALUE`}),(0,b.jsx)(`input`,{"aria-label":`Gravity exact numeric value`,type:`number`,min:-1,max:1,step:.001,value:e,onFocus:n,onChange:e=>r(Number(e.target.value)),onKeyDown:e=>{e.key===`Enter`&&i()},onBlur:i})]}),(0,b.jsxs)(`figure`,{className:`gravity-envelope`,children:[(0,b.jsxs)(`figcaption`,{children:[(0,b.jsx)(`span`,{children:`DESIGN PREDICTION`}),(0,b.jsx)(`strong`,{children:`NOT MEASURED AUDIO`})]}),(0,b.jsxs)(`svg`,{viewBox:`0 0 100 42`,role:`img`,"aria-label":o.description,preserveAspectRatio:`none`,children:[(0,b.jsx)(`line`,{x1:o.peakPosition*100,x2:o.peakPosition*100,y1:`4`,y2:`40`}),(0,b.jsx)(`path`,{d:o.path})]}),(0,b.jsx)(`p`,{children:`Shape guide from the Gravity coordinate. Capture an impulse to inspect actual response.`})]}),(0,b.jsxs)(`button`,{type:`button`,className:`gravity-focus`,onClick:a,children:[`EXPAND / FOCUS `,t,` MAPPINGS`]})]})}function hm({snapshot:e}){let{fitView:t,setViewport:n,screenToFlowPosition:r}=hl(),i=(0,_.useMemo)(()=>e.restoredPatch?sp(JSON.stringify(e.restoredPatch),e):null,[e]),a=(0,_.useMemo)(()=>i??{...af(e),viewport:{x:0,y:0,zoom:1}},[i,e]),[o,s,c]=vd(a.nodes),[l,u,d]=yd(a.edges),[f,p]=(0,_.useState)(null),[m,h]=(0,_.useState)(null),[g,v]=(0,_.useState)(a.viewport),y=(0,_.useRef)(null),x=(0,_.useRef)(null),S=(0,_.useRef)(null),C=(0,_.useRef)(0),w=(0,_.useRef)(null),[T,E]=(0,_.useState)(null),[D,O]=(0,_.useState)(i?`custom`:`barr-reference`),[k,A]=(0,_.useState)(`causal-reverse-envelope`),[j,M]=(0,_.useState)(()=>{try{return window.localStorage.getItem(`reverb-playground-teaching`)!==`off`}catch{return!0}}),[ee,N]=(0,_.useState)(null),[te,P]=(0,_.useState)(!1),[F,I]=(0,_.useState)(()=>Tf(a)),[ne,L]=(0,_.useState)(null),[R,z]=(0,_.useState)(null),[B,re]=(0,_.useState)(0),[ie,ae]=(0,_.useState)(null),oe=(0,_.useCallback)(e=>{let t=(e,t,n)=>o.find(t=>t.data.type===e)?.data.parameters.find(e=>e.id===t)?.value??n;ae({capture:e,patchId:D,gateTeaching:{detectorReleaseMilliseconds:t(`envelope-follower`,`release`,20),holdMilliseconds:t(`hold-gate`,`hold`,120),releaseMilliseconds:t(`hold-gate`,`release`,8)}})},[D,o]),[se,ce]=(0,_.useState)(()=>window.matchMedia(`(prefers-reduced-motion: reduce)`).matches),[le,ue]=(0,_.useState)(()=>!window.matchMedia(`(prefers-reduced-motion: reduce)`).matches),[de,fe]=(0,_.useState)({}),[pe,me]=(0,_.useState)(!1),[he,ge]=(0,_.useState)(null),[_e,ve]=(0,_.useState)(()=>performance.now()/1e3),ye=(0,_.useMemo)(()=>Pp(o,l),[l,o]),be=(0,_.useMemo)(()=>op(o,l,g),[l,o,g]),xe=D===`custom`?null:qp(D),Se=(0,_.useMemo)(()=>f?zf(o,l,{nodeId:f.id}):m?zf(o,l,{edgeId:m.id}):null,[l,o,m,f]),Ce=(0,_.useMemo)(()=>he?.mute.safetyLatched?Vf(o,l):null,[he?.mute.safetyLatched,l,o]),we=Se?.loops.length?B%Se.loops.length:0,Te=(0,_.useMemo)(()=>Ff(o,l,Se,we),[l,Se,o,we]),Ee=(0,_.useMemo)(()=>If(Te.nodes,Te.edges,Ce),[Te,Ce]),De=(0,_.useMemo)(()=>Dp(Ee.nodes,Ee.edges,de),[de,Ee]),Oe=(0,_.useMemo)(()=>{if(f?.data.type!==`control-map`)return null;let e=(e,t)=>f.data.parameters.find(t=>t.id===e)?.value??t,t=e(`curve-family`,0);return Bp(t>=1.5?`exponential`:t>=.5?`power`:`linear`,e(`curve-amount`,0),e(`exponent`,1),e(`scale`,1),e(`offset`,0),e(`polarity`,1)>=.5?`bipolar`:`unipolar`,e(`clamp-min`,-1),e(`clamp-max`,1))},[f]),ke=(0,_.useMemo)(()=>f?.data.type===`macro`?tm(f.id,o,l):null,[l,o,f]),Ae=(0,_.useMemo)(()=>nm(De.nodes,De.edges,ke),[De,ke]),je=(0,_.useMemo)(()=>Vp(Ae.nodes,Ae.edges,_e),[_e,Ae]),Me=(0,_.useCallback)(()=>{if(!ke)return;let e=new Set(om(ke));t({nodes:o.filter(t=>e.has(t.id)),padding:.22,duration:se?0:350,maxZoom:1.1})},[t,o,se,ke]);(0,_.useEffect)(()=>{if(se||!o.some(e=>e.data.role===`control`))return;let e=window.setInterval(()=>ve(performance.now()/1e3),33);return()=>window.clearInterval(e)},[o,se]),(0,_.useEffect)(()=>{let e=window.matchMedia(`(prefers-reduced-motion: reduce)`),t=()=>{ce(e.matches),e.matches&&ue(!1)};return e.addEventListener(`change`,t),()=>e.removeEventListener(`change`,t)},[]),(0,_.useEffect)(()=>{let e=!1,t=window.setTimeout(async()=>{try{let t=Fp(await ep(`publishGraph`,op(o,l,g)));e||L(t.accepted?{kind:`ok`,message:`GRAPH REVISION #${t.revision} QUEUED FOR AUDITION`}:{kind:`error`,message:t.error})}catch(t){e||L({kind:`error`,message:t instanceof Error?t.message:`Graph publication failed`})}},35);return()=>{e=!0,window.clearTimeout(t)}},[ye]),(0,_.useEffect)(()=>{let e=!1,t=window.setTimeout(async()=>{try{let t=await ep(`storePatchState`,be);if(t!==void 0){let n=Qp(t);!e&&!n.accepted&&L({kind:`error`,message:n.error||`Host state rejected`})}}catch(t){e||L({kind:`error`,message:t instanceof Error?t.message:`Host state failed`})}},120);return()=>{e=!0,window.clearTimeout(t)}},[be]),(0,_.useEffect)(()=>{if(!Tp(le,se)){fe({}),ep(`setEnergyTelemetryEnabled`,!1).catch(()=>void 0);return}let e=!1,t=!1,n=performance.now(),r=-1,i=n;ep(`setEnergyTelemetryEnabled`,!0).catch(()=>void 0);let a=async()=>{if(!t){t=!0;try{let t=xp(await ep(`getEnergyTelemetry`)),a=performance.now();t.generation===r?a-i>100&&(t={...t,nodes:t.nodes.map(e=>({...e,rms:0}))}):(r=t.generation,i=a),e||fe(e=>Cp(e,t,a-n)),n=a}catch{}finally{t=!1}}};a();let o=window.setInterval(()=>void a(),33);return()=>{e=!0,window.clearInterval(o),ep(`setEnergyTelemetryEnabled`,!1).catch(()=>void 0)}},[le,se]),(0,_.useEffect)(()=>{let e=!1,t=!1,n=async()=>{if(!t){t=!0;try{let t=Mp(await ep(`getRuntimeDiagnostics`));e||(ge(t),t.topologyPublication.failedRevision>0&&t.topologyPublication.failedRevision===t.topologyPublication.requestedRevision&&t.topologyPublication.failure&&L({kind:`error`,message:`REVISION #${t.topologyPublication.failedRevision} REJECTED: ${t.topologyPublication.failure}`}),t.mute.safetyLatched&&me(!0))}catch{}finally{t=!1}}};n();let r=window.setInterval(()=>void n(),250);return()=>{e=!0,window.clearInterval(r)}},[]);let V=(0,_.useCallback)(e=>{s(e.nodes),u(e.edges),p(null),h(null)},[u,s]),Ne=(0,_.useCallback)(e=>{for(let t of e.nodes)for(let e of t.data.parameters)if(t.data.runtimeBound||t.data.type===`macro`&&e.id===`value`)try{ep(`setRuntimeParameter`,t.id,e.id,e.value).catch(()=>void 0)}catch{}},[]),Pe=(0,_.useCallback)(e=>{if((e===`stereo-input`||e===`stereo-output`)&&o.some(t=>t.data.type===e)){L({kind:`error`,message:`Exactly one ${e===`stereo-input`?`Stereo Input`:`Stereo Output`} is required and already exists.`});return}let t={nodes:o,edges:l},n=o.filter(e=>!e.data.runtimeBound).length,i=r({x:window.innerWidth*.5,y:window.innerHeight*.5}),a=vf(e,_f(e,o),{x:i.x-190+n%3*190,y:i.y-100+Math.floor(n/3)*130}),s={nodes:[...o.map(e=>({...e,selected:!1})),{...a,selected:!0}],edges:l};V(s),p(a),I(e=>Ef(e,`Create ${a.data.label}`,t,s)),L({kind:`ok`,message:`CREATED ${a.id} / DRAFT GRAPH`})},[V,l,o,r]),Fe=(0,_.useCallback)(()=>{let e=o.find(e=>e.selected&&(e.data.type===`stereo-input`||e.data.type===`stereo-output`));if(e){L({kind:`error`,message:`${e.data.label} is required and cannot be deleted.`});return}let t={nodes:o,edges:l},n=sf(o,l);(n.nodes.length!==o.length||n.edges.length!==l.length)&&(V(n),I(e=>Ef(e,`Delete selection`,t,n)),L({kind:`ok`,message:`DELETED SELECTION + INCIDENT CABLES / UNDO AVAILABLE`}))},[V,l,o]),Ie=(0,_.useCallback)(()=>{let e=Df(F);e.edit&&(V(e.edit.before),Ne(e.edit.before),I(e.history),L({kind:`ok`,message:`UNDID ${e.edit.label.toUpperCase()}`}))},[V,F,Ne]),Le=(0,_.useCallback)(()=>{let e=Of(F);e.edit&&(V(e.edit.after),Ne(e.edit.after),I(e.history),L({kind:`ok`,message:`REDID ${e.edit.label.toUpperCase()}`}))},[V,F,Ne]),Re=(0,_.useCallback)(e=>{let t={nodes:o,edges:l},n=Uf(o,l,e);if(n.kind===`invalid`){L({kind:`error`,message:n.message});return}if(n.kind===`occupied`){z(e),L({kind:`error`,message:`INPUT OCCUPIED / REPLACE ITS CABLE OR INSERT +`});return}let r=Kf(t,e);V(r),I(e=>Ef(e,`Create cable`,t,r)),L({kind:`ok`,message:`CONNECTED ${n.signal.toUpperCase()} CABLE`})},[V,l,o]),ze=(0,_.useCallback)(e=>{let t=R;if(z(null),!t||e===`cancel`){L(null);return}let n=Uf(o,l,t);if(e===`sum`&&(n.kind!==`occupied`||n.signal!==`audio`)){L({kind:`error`,message:`CONTROL INPUTS CANNOT INSERT AN AUDIO SUM`});return}let r={nodes:o,edges:l},i=e===`replace`?Kf(r,t,!0):qf(r,t);V(i),I(t=>Ef(t,e===`replace`?`Replace cable`:`Insert +`,r,i)),L({kind:`ok`,message:e===`replace`?`REPLACED OCCUPIED INPUT CABLE`:`INSERTED + AND REWIRED BOTH SOURCES`})},[V,l,o,R]),Be=(0,_.useCallback)((e,t,n)=>{let r=o.find(t=>t.id===e),i=r?.data.type===`macro`&&r.data.parameters.find(e=>e.id===`center-detent`)?.value===1,a=r?.data.type===`macro`&&t===`value`&&i&&Math.abs(n)<=.02?0:n,c=n=>n.id===e?{...n,data:{...n.data,parameters:n.data.parameters.map(e=>e.id===t?{...e,value:a}:e)}}:n;if(s(e=>e.map(c)),p(e=>e?c(e):null),r?.data.runtimeBound||r?.data.type===`macro`&&t===`value`)try{ep(`setRuntimeParameter`,e,t,a).catch(()=>void 0)}catch{}},[o,s]),Ve=(0,_.useCallback)((e,t,n)=>{let r=r=>r.id===e?{...r,data:{...r.data,parameters:r.data.parameters.map(e=>e.id!==t||!e.modulation?e:{...e,modulation:{...e.modulation,...n}})}}:r;s(e=>e.map(r)),p(e=>e?r(e):null)},[s]),He=(0,_.useCallback)((e,t)=>{let n=t.slice(0,64),r=t=>t.id===e?{...t,data:{...t.data,userName:n}}:t;s(e=>e.map(r)),p(e=>e?r(e):null)},[s]),Ue=(0,_.useCallback)(()=>{let n=D===`custom`?`barr-reference`:D,r=Yp(n,e),i={nodes:o,edges:l};V(r),Ne(r),I(e=>Ef(e,`Reset patch`,i,r)),z(null),O(n),requestAnimationFrame(()=>void t({padding:.16,minZoom:.25,maxZoom:1.1}))},[D,V,l,t,o,Ne,e]),We=(0,_.useCallback)(async r=>{try{let i=Yp(r,e);V(i),Ne(i),v(i.viewport),await n(i.viewport),I(Tf(i)),z(null),O(r),A(e=>Jp(r,e));let a=qp(r);E({kind:`ok`,message:`LOADED FACTORY / ${a.label.toUpperCase()}`}),requestAnimationFrame(()=>void t({padding:.16,minZoom:.25,maxZoom:1.1}))}catch(e){E({kind:`error`,message:e instanceof Error?e.message:`Factory patch load failed`})}},[V,t,Ne,n,e]),Ge=(0,_.useCallback)(()=>{let e=jf({nodes:o,edges:l});if(!e){L({kind:`error`,message:`SELECT ONE OR MORE NON-I/O BLOCKS TO COPY`});return}S.current=e,C.current=0,navigator.clipboard?.writeText(JSON.stringify({format:`reverb-playground-subgraph-v1`,...e})).catch(()=>void 0),L({kind:`ok`,message:`COPIED ${e.nodes.length} BLOCK${e.nodes.length===1?``:`S`} + ${e.edges.length} INTERNAL CABLE${e.edges.length===1?``:`S`}`})},[l,o]),Ke=(0,_.useCallback)(()=>{if(!S.current){L({kind:`error`,message:`GRAPH CLIPBOARD IS EMPTY`});return}let e={nodes:o,edges:l},t=Nf(e,S.current,40*++C.current);V(t),I(n=>Ef(n,`Paste selection`,e,t)),L({kind:`ok`,message:`PASTED ${S.current.nodes.length} BLOCK${S.current.nodes.length===1?``:`S`} / NEW IDS ASSIGNED`})},[V,l,o]),qe=(0,_.useCallback)(({nodes:e,edges:t})=>{p(e[0]??null),h(t[0]??null),re(0)},[]);(0,_.useEffect)(()=>{let e=e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===`z`){e.preventDefault(),e.shiftKey?Le():Ie();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===`y`){e.preventDefault(),Le();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===`c`&&!(e.target instanceof HTMLInputElement)){e.preventDefault(),Ge();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===`v`&&!(e.target instanceof HTMLInputElement)){e.preventDefault(),Ke();return}if((e.key===`Delete`||e.key===`Backspace`)&&!(e.target instanceof HTMLInputElement)){e.preventDefault(),Fe();return}e.key.toLowerCase()===`r`&&!(e.target instanceof HTMLInputElement)&&Ue()};return window.addEventListener(`keydown`,e),()=>window.removeEventListener(`keydown`,e)},[Ge,Ke,Le,Fe,Ue,Ie]);let Je=(0,_.useCallback)((e,t,n)=>{y.current={label:`Edit ${e}.${t}`,before:xf({nodes:o,edges:l})}},[l,o]),Ye=(0,_.useCallback)((e,t,n)=>{Be(e,t,n)},[Be]),Xe=(0,_.useCallback)(()=>{let e=y.current;y.current=null,e&&I(t=>Ef(t,e.label,e.before,{nodes:o,edges:l}))},[l,o]),Ze=(0,_.useCallback)(()=>{try{let t=op(o,l,g);sp(t,e);let n=URL.createObjectURL(new Blob([t],{type:`application/json`})),r=document.createElement(`a`);r.href=n;let i=xe?.filename??`custom-patch.rvp.json`;r.download=i,document.body.appendChild(r),r.click(),r.remove(),window.setTimeout(()=>URL.revokeObjectURL(n),0),I(e=>kf(e,{nodes:o,edges:l})),E({kind:`ok`,message:`SAVED ${i.toUpperCase()} / SCHEMA V2`})}catch(e){E({kind:`error`,message:e instanceof Error?e.message:`Patch save failed`})}},[xe,l,o,e,g]),Qe=(0,_.useCallback)(async t=>{try{let r=sp(await t.text(),e);s(r.nodes),u(r.edges),v(r.viewport),await n(r.viewport);for(let e of r.nodes)for(let t of e.data.parameters)(e.data.runtimeBound||e.data.type===`macro`&&t.id===`value`)&&await ep(`setRuntimeParameter`,e.id,t.id,t.value);p(null),h(null),I(Tf(r)),z(null),O(`custom`),E({kind:`ok`,message:`LOADED ${t.name.toUpperCase()} / SCHEMA V2`})}catch(e){E({kind:`error`,message:e instanceof Error?e.message:`Patch load failed`})}},[u,n,s,e]),$e=f?.id??`overview`,et=R?Uf(o,l,R):null,tt=et?.kind===`occupied`?et.signal:null,nt=j&&ee!==$e,rt=(0,_.useCallback)(()=>{M(e=>{let t=!e;try{window.localStorage.setItem(`reverb-playground-teaching`,t?`on`:`off`)}catch{}return t})},[]);return(0,b.jsxs)(`main`,{className:`editor-shell`,children:[(0,b.jsxs)(`header`,{className:`editor-header`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsxs)(`div`,{className:`eyebrow`,children:[`SCHEMATIC EDITOR / `,xe?.label.toUpperCase()??`CUSTOM PATCH`]}),(0,b.jsx)(`h1`,{children:`Patch architecture`}),e.productVersion&&e.buildCommit?(0,b.jsxs)(`span`,{className:`build-identity`,children:[`v`,e.productVersion,` / `,e.buildCommit]}):null]}),(0,b.jsxs)(`div`,{className:`header-runtime`,children:[(0,b.jsxs)(`label`,{className:`factory-picker`,children:[(0,b.jsx)(`span`,{children:`FACTORY PATCH`}),(0,b.jsxs)(`select`,{"aria-label":`Factory patch`,value:D,onChange:e=>{let t=e.target.value;t!==`custom`&&We(t)},children:[D===`custom`?(0,b.jsx)(`option`,{value:`custom`,children:`Custom / loaded file`}):null,Gp.map(e=>(0,b.jsx)(`option`,{value:e.id,children:e.label},e.id))]})]}),(0,b.jsxs)(`div`,{className:`comparison-switch`,role:`group`,"aria-label":`Compare Barr reference with selected design`,children:[(0,b.jsx)(`button`,{type:`button`,"aria-pressed":D===`barr-reference`,onClick:()=>void We(`barr-reference`),children:`A / BARR`}),(0,b.jsxs)(`button`,{type:`button`,"aria-pressed":D===k,onClick:()=>void We(k),children:[`B / `,k===`causal-reverse-envelope`?`REVERSE ENV`:k===`level-gated-room`?`GATED`:`COSMIC REV`]})]}),(0,b.jsxs)(`button`,{className:`energy-toggle`,type:`button`,"aria-pressed":le,disabled:se,onClick:()=>ue(e=>!e),title:se?`Disabled by the operating-system reduced-motion preference`:`Toggle measured node and cable energy`,children:[`ENERGY `,se?`REDUCED`:le?`ON`:`OFF`]}),(0,b.jsx)(`button`,{className:`diagnostics-toggle`,type:`button`,"aria-expanded":pe,onClick:()=>me(e=>!e),children:`DIAGNOSTICS`}),(0,b.jsxs)(`div`,{className:`header-status`,"aria-label":`Audition status`,children:[(0,b.jsx)(`span`,{className:`status-dot`,"aria-hidden":`true`}),(0,b.jsx)(`span`,{children:he?.topologyPublication.crossfadeTotalSamples?`CROSSFADING #${he.topologyPublication.crossfadeFromRevision} → #${he.topologyPublication.activeRevision}`:he?.topologyPublication.pendingRevision?`COMPILING #${he.topologyPublication.pendingRevision}`:he?.topologyPublication.activeRevision?`GRAPH ACTIVE #${he.topologyPublication.activeRevision}`:`RUNTIME BOUND / ${e.sampleRate>0?`${(e.sampleRate/1e3).toFixed(1)} kHz`:`awaiting audio`}`})]})]})]}),(0,b.jsx)(dm,{sampleRate:e.sampleRate,onCapture:oe}),ie?(0,b.jsx)(fm,{capture:ie.capture,patchId:ie.patchId,gateTeaching:ie.gateTeaching,teachingEnabled:j,onClose:()=>ae(null)},ie.capture.generation):null,pe?(0,b.jsx)(pm,{diagnostics:he,runawayLoop:Ce,canUndo:F.undo.length>0,onUndo:Ie,onRecover:()=>{ep(`resetSafety`).catch(()=>void 0)},onClose:()=>me(!1)}):null,(0,b.jsxs)(`section`,{className:`workspace`,children:[(0,b.jsxs)(`aside`,{className:`module-library`,"aria-label":`Module library`,children:[(0,b.jsxs)(`div`,{className:`pane-heading`,children:[(0,b.jsx)(`span`,{children:`MODULES`}),(0,b.jsx)(`span`,{className:`pane-count`,children:hf.length})]}),(0,b.jsx)(`p`,{className:`pane-help`,children:`Click a primitive to place it near the canvas center. Audio cables are mono.`}),sm.map(e=>(0,b.jsxs)(`section`,{className:`module-group`,children:[(0,b.jsx)(`h2`,{children:e.group}),e.items.map(e=>(0,b.jsxs)(`button`,{className:`module-item${e.role===`control`?` module-control`:``}`,type:`button`,onClick:()=>Pe(e.type),children:[(0,b.jsx)(`span`,{className:`module-glyph`,"aria-hidden":`true`}),(0,b.jsx)(`span`,{children:e.label})]},e.type))]},e.group)),(0,b.jsxs)(`div`,{className:`signal-legend`,"aria-label":`Cable styles`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{className:`legend-line audio-line`}),` AUDIO / SOLID`]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{className:`legend-line control-line`}),` CONTROL / DASHED`]})]})]}),(0,b.jsxs)(`section`,{className:`canvas-pane`,"aria-label":`Patch canvas`,children:[(0,b.jsxs)(`div`,{className:`canvas-toolbar`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`strong`,{children:xe?.graphName??`CUSTOM.graph`}),(0,b.jsxs)(`span`,{children:[o.length,` blocks / `,l.length,` cables`]})]}),(0,b.jsxs)(`div`,{className:`canvas-actions`,children:[(0,b.jsxs)(`span`,{children:[Math.round(g.zoom*100),`%`]}),(0,b.jsx)(`span`,{className:`clean-state ${Af(F,{nodes:o,edges:l})?`is-clean`:`is-dirty`}`,children:Af(F,{nodes:o,edges:l})?`SAVED`:`UNSAVED`}),(0,b.jsx)(`button`,{type:`button`,onClick:Ze,children:`SAVE PATCH`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>w.current?.click(),children:`LOAD PATCH`}),(0,b.jsx)(`button`,{type:`button`,disabled:!F.undo.length,onClick:Ie,children:`UNDO`}),(0,b.jsx)(`button`,{type:`button`,disabled:!F.redo.length,onClick:Le,children:`REDO`}),(0,b.jsx)(`button`,{type:`button`,onClick:Ge,children:`COPY`}),(0,b.jsx)(`button`,{type:`button`,disabled:!S.current,onClick:Ke,children:`PASTE`}),(0,b.jsx)(`button`,{type:`button`,onClick:Fe,children:`DELETE`}),(0,b.jsx)(`button`,{type:`button`,onClick:Ue,children:`RESET PATCH`}),(0,b.jsx)(`input`,{ref:w,className:`file-input`,"aria-label":`Load patch file`,type:`file`,accept:`.json,application/json`,onChange:e=>{let t=e.target.files?.[0];t&&Qe(t),e.target.value=``}})]})]}),T?(0,b.jsxs)(`div`,{className:`file-status file-status-${T.kind}`,role:T.kind===`error`?`alert`:`status`,children:[(0,b.jsx)(`span`,{children:T.message}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Dismiss file status`,onClick:()=>E(null),children:`×`})]}):null,ne?(0,b.jsxs)(`div`,{className:`file-status file-status-${ne.kind}`,role:ne.kind===`error`?`alert`:`status`,children:[(0,b.jsx)(`span`,{children:ne.message}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Dismiss graph status`,onClick:()=>L(null),children:`×`})]}):null,R?(0,b.jsxs)(`div`,{className:`connection-offer`,role:`dialog`,"aria-label":`Occupied input options`,children:[(0,b.jsx)(`strong`,{children:`INPUT ALREADY HAS A CABLE`}),(0,b.jsx)(`span`,{children:tt===`control`?`A parameter socket accepts one control cable. Replace it or cancel.`:`Replace it, or insert an explicit Sum (+) block to preserve both audio sources.`}),(0,b.jsxs)(`div`,{children:[tt===`audio`?(0,b.jsx)(`button`,{type:`button`,onClick:()=>ze(`sum`),children:`INSERT +`}):null,(0,b.jsx)(`button`,{type:`button`,onClick:()=>ze(`replace`),children:`REPLACE CABLE`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>ze(`cancel`),children:`CANCEL`})]})]}):null,(0,b.jsxs)(`div`,{className:`flow-wrap`,children:[(0,b.jsxs)(_d,{nodes:je.nodes,edges:je.edges,nodeTypes:{patchNode:Yf},onNodesChange:c,onEdgesChange:d,onNodeDragStart:()=>{x.current=xf({nodes:o,edges:l})},onNodeDragStop:(e,t,n)=>{let r=x.current;if(x.current=null,!r)return;let i=new Map(n.map(e=>[e.id,e.position]));i.set(t.id,t.position);let a={nodes:o.map(e=>i.has(e.id)?{...e,position:{...i.get(e.id)}}:e),edges:l};I(e=>Ef(e,`Move ${t.id}`,r,a))},onConnect:Re,isValidConnection:e=>Uf(o,l,{source:e.source,sourceHandle:e.sourceHandle??null,target:e.target,targetHandle:e.targetHandle??null}).kind!==`invalid`,defaultEdgeOptions:{interactionWidth:24},onSelectionChange:qe,onViewportChange:v,defaultViewport:a.viewport,fitView:!i,fitViewOptions:{padding:.16,minZoom:.58,maxZoom:1.1},minZoom:.2,maxZoom:1.8,deleteKeyCode:null,selectionKeyCode:`Shift`,multiSelectionKeyCode:`Shift`,panActivationKeyCode:`Space`,panOnDrag:[1,2],selectionOnDrag:!0,nodesFocusable:!0,edgesFocusable:!0,elevateEdgesOnSelect:!0,proOptions:{hideAttribution:!1},"aria-label":`${xe?.label??`Custom`} patch graph`,children:[(0,b.jsx)(Td,{color:`#34414a`,gap:22,size:1.2,variant:xd.Dots}),(0,b.jsx)(Pd,{position:`bottom-left`,showInteractive:!1}),(0,b.jsx)(Zd,{pannable:!0,zoomable:!0,position:`bottom-right`,nodeColor:e=>e.selected?`#f2b44e`:`#52616d`,maskColor:`rgba(9, 12, 15, 0.78)`})]}),(0,b.jsx)(`div`,{className:`interaction-hint`,children:`SPACE + DRAG PAN · WHEEL ZOOM · SHIFT BOX SELECT · DELETE REMOVE · R RESET`})]})]}),(0,b.jsxs)(`aside`,{className:`inspector`,"aria-label":`Inspector`,children:[(0,b.jsxs)(`div`,{className:`pane-heading`,children:[(0,b.jsx)(`span`,{children:`INSPECTOR`}),(0,b.jsxs)(`button`,{className:`teaching-toggle`,type:`button`,"aria-pressed":j,title:`Toggle contextual cards and response architecture overlays`,onClick:rt,children:[`LEARN `,j?`ON`:`OFF`]})]}),f?(0,b.jsxs)(`div`,{className:`inspector-content`,children:[(0,b.jsx)(`div`,{className:`selection-kicker`,children:`SELECTED BLOCK`}),(0,b.jsx)(`h2`,{children:f.data.type===`macro`?f.data.userName:f.data.label}),(0,b.jsx)(`code`,{children:f.id}),f.data.presentation===`gravity`&&ke?(0,b.jsx)(mm,{value:f.data.parameters.find(e=>e.id===`value`)?.value??0,destinationCount:ke.destinations.length,onBegin:()=>Je(f.id,`value`,f.data.parameters.find(e=>e.id===`value`)?.value??0),onValue:e=>Be(f.id,`value`,e),onCommit:Xe,onFocus:Me}):null,Se?(0,b.jsx)(um,{inspection:Se,activeIndex:we,onActiveIndex:re}):null,(0,b.jsxs)(`dl`,{className:`property-list`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`TYPE`}),(0,b.jsx)(`dd`,{children:f.data.type})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`ROLE`}),(0,b.jsx)(`dd`,{children:f.data.role})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`PORTS`}),(0,b.jsxs)(`dd`,{children:[f.data.ports.length,` mono`]})]})]}),f.data.type===`macro`?(0,b.jsxs)(`label`,{className:`macro-name-field`,children:[(0,b.jsx)(`span`,{children:`MACRO NAME`}),(0,b.jsx)(`input`,{"aria-label":`Macro name`,maxLength:64,value:f.data.userName??``,onFocus:()=>Je(f.id,`name`,0),onChange:e=>He(f.id,e.target.value),onBlur:()=>{(f.data.userName??``).trim()||He(f.id,`Macro`),Xe()}})]}):null,ke?(0,b.jsxs)(`section`,{className:`macro-destinations`,"aria-label":`Reachable mapped parameters`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:`REACHABLE MAPPINGS`}),(0,b.jsx)(`strong`,{children:ke.destinations.length})]}),ke.destinations.length?(0,b.jsx)(`ul`,{children:ke.destinations.map(e=>(0,b.jsxs)(`li`,{children:[(0,b.jsxs)(`code`,{children:[e.nodeId,`.`,e.parameterId]}),(0,b.jsxs)(`span`,{children:[e.minimum.toFixed(2),` … `,e.maximum.toFixed(2),` `,e.unit]})]},`${e.nodeId}.${e.parameterId}`))}):(0,b.jsx)(`p`,{children:`Connect the explicit output through Curve Mapper blocks to parameter sockets.`})]}):null,Oe?(0,b.jsxs)(`section`,{className:`control-range-preview`,"aria-label":`Predicted control output range`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:`PREDICTED OUTPUT`}),(0,b.jsxs)(`strong`,{children:[Oe.minimum.toFixed(2),` … `,Oe.maximum.toFixed(2)]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`i`,{style:{left:`${(Oe.minimum+1)*50}%`}}),(0,b.jsx)(`i`,{style:{left:`${(Oe.maximum+1)*50}%`}})]}),(0,b.jsx)(`p`,{children:`CURVE → SCALE → OFFSET → CLAMP · visible before connection.`})]}):null,(0,b.jsx)(`h3`,{children:`PARAMETERS`}),f.data.parameters.length?f.data.parameters.filter(e=>f.data.presentation!==`gravity`||e.id!==`value`).map(e=>{let t=cm(e.unit);return(0,b.jsxs)(`div`,{className:`parameter-card`,children:[(0,b.jsx)(`span`,{children:e.id.toUpperCase()}),(0,b.jsxs)(`label`,{className:`parameter-value`,children:[(0,b.jsx)(`span`,{className:`sr-only`,children:`${f.data.label} ${e.id} numeric value`}),t?(0,b.jsx)(`select`,{"aria-label":`${f.data.label} ${e.id}`,value:e.value,onFocus:()=>Je(f.id,e.id,e.value),onChange:t=>Ye(f.id,e.id,Number(t.target.value)),onBlur:Xe,children:t.map(e=>(0,b.jsx)(`option`,{value:e.value,children:e.label},e.value))}):(0,b.jsx)(`input`,{className:`parameter-number`,type:`number`,min:e.minimum,max:e.maximum,step:e.step,value:e.value,onFocus:()=>Je(f.id,e.id,e.value),onChange:t=>Ye(f.id,e.id,Number(t.target.value)),onKeyDown:e=>{e.key===`Enter`&&Xe()},onBlur:Xe}),(0,b.jsx)(`strong`,{children:e.unit===`milliseconds`?`ms`:e.unit===`hertz`?`Hz`:``})]}),(0,b.jsx)(`small`,{children:e.unit}),t?null:(0,b.jsx)(`input`,{"aria-label":`${f.data.label} ${e.id}`,type:`range`,min:e.minimum,max:e.maximum,step:e.step,value:e.value,onPointerDown:()=>Je(f.id,e.id,e.value),onChange:t=>Ye(f.id,e.id,Number(t.target.value)),onPointerUp:Xe,onKeyDown:t=>{y.current||Je(f.id,e.id,e.value),t.key===`Enter`&&Xe()},onBlur:Xe}),e.modulation?(0,b.jsxs)(`section`,{className:`modulation-mapping`,"aria-label":`${f.data.label} ${e.id} modulation mapping`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:`CONTROL SOCKET`}),(0,b.jsx)(`code`,{children:e.modulation.portId})]}),(0,b.jsx)(`div`,{className:`mapping-formula`,children:`effective = clamp(base + amount × control)`}),(0,b.jsxs)(`label`,{children:[(0,b.jsx)(`span`,{children:`POLARITY`}),(0,b.jsxs)(`select`,{value:e.modulation.polarity,onFocus:()=>Je(f.id,`${e.id} modulation`,e.value),onChange:t=>Ve(f.id,e.id,{polarity:t.target.value}),onBlur:Xe,children:[(0,b.jsx)(`option`,{value:`bipolar`,children:`BIPOLAR −1…+1`}),(0,b.jsx)(`option`,{value:`unipolar`,children:`UNIPOLAR 0…1`})]})]}),(0,b.jsxs)(`label`,{children:[(0,b.jsx)(`span`,{children:`AMOUNT`}),(0,b.jsx)(`input`,{type:`number`,step:e.step,value:e.modulation.amount,onFocus:()=>Je(f.id,`${e.id} modulation`,e.value),onChange:t=>Ve(f.id,e.id,{amount:Number(t.target.value)}),onBlur:Xe})]}),(0,b.jsxs)(`div`,{className:`mapping-clamp`,children:[(0,b.jsxs)(`label`,{children:[(0,b.jsx)(`span`,{children:`CLAMP MIN`}),(0,b.jsx)(`input`,{type:`number`,min:e.minimum,max:e.modulation.clampMaximum,step:e.step,value:e.modulation.clampMinimum,onFocus:()=>Je(f.id,`${e.id} modulation`,e.value),onChange:t=>Ve(f.id,e.id,{clampMinimum:Number(t.target.value)}),onBlur:Xe})]}),(0,b.jsxs)(`label`,{children:[(0,b.jsx)(`span`,{children:`CLAMP MAX`}),(0,b.jsx)(`input`,{type:`number`,min:e.modulation.clampMinimum,max:e.maximum,step:e.step,value:e.modulation.clampMaximum,onFocus:()=>Je(f.id,`${e.id} modulation`,e.value),onChange:t=>Ve(f.id,e.id,{clampMaximum:Number(t.target.value)}),onBlur:Xe})]})]}),(0,b.jsx)(`footer`,{children:e.id===`delay`&&(f.data.type===`delay`||f.data.type===`allpass`)?`1 kHz control ticks / linear audio-rate ramp / fractional linear delay tap. Moving time intentionally produces Doppler and pitch effects; control sources are limited to 100 Hz.`:e.id===`coefficient`&&f.data.type===`allpass`?`1 kHz control ticks / linear audio-rate ramp / coefficient hard-limited to -0.95 through +0.95.`:`1 kHz control ticks / linear interpolation to audio rate`})]}):null]},e.id)}):(0,b.jsx)(`p`,{className:`empty-parameters`,children:`No editable parameters.`}),(0,b.jsxs)(`div`,{className:`history-actions`,children:[(0,b.jsx)(`button`,{type:`button`,disabled:!F.undo.length,onClick:Ie,children:`UNDO`}),(0,b.jsx)(`button`,{type:`button`,disabled:!F.redo.length,onClick:Le,children:`REDO`})]}),(0,b.jsx)(`div`,{className:`selection-note`,children:f.data.type===`macro`?`Macro value changes use a fixed 20 ms runtime ramp and do not compile topology. Default and detent edits republish the visible graph.`:f.data.runtimeBound?`Live value from native DSP runtime contract v${e.contractVersion}.`:`Constructed graph block. Audible edits compile off-thread and crossfade into the live plugin at an audio-block boundary.`}),nt?(0,b.jsx)(lm,{topic:up(f.id),onDismiss:()=>N($e),onResearch:()=>P(!0)}):null]},f.id):m?(0,b.jsxs)(`div`,{className:`inspector-content`,children:[(0,b.jsx)(`div`,{className:`selection-kicker`,children:`SELECTED CABLE`}),(0,b.jsx)(`h2`,{children:m.data?.signal===`control`?`Control connection`:`Audio connection`}),(0,b.jsx)(`code`,{children:m.id}),Se?(0,b.jsx)(um,{inspection:Se,activeIndex:we,onActiveIndex:re}):null,(0,b.jsxs)(`dl`,{className:`property-list`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`FROM`}),(0,b.jsx)(`dd`,{children:m.source})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`TO`}),(0,b.jsx)(`dd`,{children:m.target})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`SIGNAL`}),(0,b.jsx)(`dd`,{children:m.data?.signal===`control`?`CONTROL / DASHED`:`AUDIO / SOLID`})]})]})]}):(0,b.jsxs)(`div`,{className:`inspector-empty`,children:[(0,b.jsx)(`div`,{className:`empty-crosshair`,"aria-hidden":`true`,children:`+`}),(0,b.jsx)(`h2`,{children:`Nothing selected`}),(0,b.jsx)(`p`,{children:`Select a block or cable to inspect its identity, ports, and saved parameter values.`}),(0,b.jsx)(`kbd`,{children:`TAB`}),(0,b.jsx)(`span`,{children:`focus graph elements`}),(0,b.jsx)(`kbd`,{children:`ENTER`}),(0,b.jsx)(`span`,{children:`select focused item`}),(0,b.jsx)(`kbd`,{children:`⌘/CTRL C`}),(0,b.jsx)(`span`,{children:`copy selected non-I/O blocks`}),(0,b.jsx)(`kbd`,{children:`⌘/CTRL V`}),(0,b.jsx)(`span`,{children:`paste with new block and cable IDs`}),(0,b.jsx)(`kbd`,{children:`DELETE`}),(0,b.jsx)(`span`,{children:`remove selected blocks or cables`}),nt?(0,b.jsx)(lm,{topic:up(),onDismiss:()=>N($e),onResearch:()=>P(!0)}):null]})]})]}),te?(0,b.jsx)(`div`,{className:`research-backdrop`,role:`presentation`,onMouseDown:()=>P(!1),children:(0,b.jsxs)(`section`,{className:`research-reader`,role:`dialog`,"aria-modal":`true`,"aria-label":`Keith Barr architecture research`,onMouseDown:e=>e.stopPropagation(),children:[(0,b.jsxs)(`header`,{children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`OFFLINE RESEARCH / DOCUMENTED SOURCES`}),(0,b.jsx)(`h2`,{children:`Keith Barr reverb architectures`})]}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Close architecture research`,onClick:()=>P(!1),children:`CLOSE ×`})]}),(0,b.jsx)(`pre`,{children:cp})]})}):null]})}function gm(){let[e,t]=(0,_.useState)(null),[n,r]=(0,_.useState)(``);return(0,_.useEffect)(()=>{let e=new AbortController;return fetch(new URL(`./runtime-snapshot.json`,window.location.href),{signal:e.signal,cache:`no-store`}).then(e=>{if(!e.ok)throw Error(`Native runtime returned HTTP ${e.status}`);return e.json()}).then(e=>t(rf(e))).catch(t=>{e.signal.aborted||r(t instanceof Error?t.message:`Unknown runtime binding failure`)}),()=>e.abort()},[]),n?(0,b.jsxs)(`main`,{className:`binding-state binding-error`,children:[(0,b.jsx)(`strong`,{children:`RUNTIME BINDING FAILED`}),(0,b.jsx)(`span`,{children:n})]}):e?(0,b.jsx)(pd,{children:(0,b.jsx)(hm,{snapshot:e})}):(0,b.jsx)(`main`,{className:`binding-state`,children:(0,b.jsx)(`strong`,{children:`BINDING NATIVE RUNTIME…`})})}(0,v.createRoot)(document.getElementById(`root`)).render((0,b.jsx)(_.StrictMode,{children:(0,b.jsx)(gm,{})}));
+`,Gp=`{
+  "schemaVersion": 2,
+  "engineVersion": "0.1",
+  "semantic": {
+    "nodes": [
+      {
+        "id": "input",
+        "type": "stereo-input",
+        "ports": [
+          {
+            "id": "out-l",
+            "signal": "audio",
+            "direction": "output"
+          },
+          {
+            "id": "out-r",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "input-l-half",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.5,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "input-r-half",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.5,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "input-sum",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "input-ap-1",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 3.1,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 1.085,
+              "polarity": "bipolar",
+              "clampMinimum": 2.015,
+              "clampMaximum": 4.1850000000000005
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.18,
+              "polarity": "bipolar",
+              "clampMinimum": 0.32,
+              "clampMaximum": 0.68
+            }
+          }
+        ]
+      },
+      {
+        "id": "input-ap-2",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 4.7,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 1.645,
+              "polarity": "bipolar",
+              "clampMinimum": 3.055,
+              "clampMaximum": 6.345000000000001
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.18,
+              "polarity": "bipolar",
+              "clampMinimum": 0.32,
+              "clampMaximum": 0.68
+            }
+          }
+        ]
+      },
+      {
+        "id": "input-ap-3",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 7.9,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2.765,
+              "polarity": "bipolar",
+              "clampMinimum": 5.135000000000001,
+              "clampMaximum": 10.665000000000001
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.18,
+              "polarity": "bipolar",
+              "clampMinimum": 0.32,
+              "clampMaximum": 0.68
+            }
+          }
+        ]
+      },
+      {
+        "id": "input-ap-4",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 11.3,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 3.955,
+              "polarity": "bipolar",
+              "clampMinimum": 7.345000000000001,
+              "clampMaximum": 15.255000000000003
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.18,
+              "polarity": "bipolar",
+              "clampMinimum": 0.32,
+              "clampMaximum": 0.68
+            }
+          }
+        ]
+      },
+      {
+        "id": "tank-entry",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "gravity",
+        "type": "macro",
+        "ports": [
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "value",
+            "value": 0.0,
+            "unit": "normalized"
+          },
+          {
+            "id": "default-value",
+            "value": 0.0,
+            "unit": "normalized"
+          },
+          {
+            "id": "center-detent",
+            "value": 1.0,
+            "unit": "boolean"
+          }
+        ],
+        "name": "Gravity",
+        "presentation": "gravity"
+      },
+      {
+        "id": "size",
+        "type": "macro",
+        "ports": [
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "value",
+            "value": -0.35,
+            "unit": "normalized"
+          },
+          {
+            "id": "default-value",
+            "value": -0.35,
+            "unit": "normalized"
+          },
+          {
+            "id": "center-detent",
+            "value": 1.0,
+            "unit": "boolean"
+          }
+        ],
+        "name": "Size"
+      },
+      {
+        "id": "feedback",
+        "type": "macro",
+        "ports": [
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "value",
+            "value": 1.0,
+            "unit": "normalized"
+          },
+          {
+            "id": "default-value",
+            "value": 1.0,
+            "unit": "normalized"
+          },
+          {
+            "id": "center-detent",
+            "value": 1.0,
+            "unit": "boolean"
+          }
+        ],
+        "name": "Feedback"
+      },
+      {
+        "id": "damping",
+        "type": "macro",
+        "ports": [
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "value",
+            "value": 0.0,
+            "unit": "normalized"
+          },
+          {
+            "id": "default-value",
+            "value": 0.0,
+            "unit": "normalized"
+          },
+          {
+            "id": "center-detent",
+            "value": 1.0,
+            "unit": "boolean"
+          }
+        ],
+        "name": "Damping"
+      },
+      {
+        "id": "modulation",
+        "type": "macro",
+        "ports": [
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "value",
+            "value": 1.0,
+            "unit": "normalized"
+          },
+          {
+            "id": "default-value",
+            "value": 1.0,
+            "unit": "normalized"
+          },
+          {
+            "id": "center-detent",
+            "value": 1.0,
+            "unit": "boolean"
+          }
+        ],
+        "name": "Modulation"
+      },
+      {
+        "id": "motion-a",
+        "type": "lfo",
+        "ports": [
+          {
+            "id": "frequency-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "phase-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "waveform-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "run-mode-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "frequency",
+            "value": 0.11,
+            "unit": "hertz",
+            "modulation": {
+              "portId": "frequency-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.01,
+              "clampMaximum": 100.0
+            }
+          },
+          {
+            "id": "phase",
+            "value": 0.0,
+            "unit": "cycles",
+            "modulation": {
+              "portId": "phase-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 0.999
+            }
+          },
+          {
+            "id": "waveform",
+            "value": 0.0,
+            "unit": "waveform",
+            "modulation": {
+              "portId": "waveform-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "run-mode",
+            "value": 0.0,
+            "unit": "run-mode",
+            "modulation": {
+              "portId": "run-mode-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "motion-b",
+        "type": "lfo",
+        "ports": [
+          {
+            "id": "frequency-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "phase-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "waveform-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "run-mode-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "frequency",
+            "value": 0.073,
+            "unit": "hertz",
+            "modulation": {
+              "portId": "frequency-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.01,
+              "clampMaximum": 100.0
+            }
+          },
+          {
+            "id": "phase",
+            "value": 0.25,
+            "unit": "cycles",
+            "modulation": {
+              "portId": "phase-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 0.999
+            }
+          },
+          {
+            "id": "waveform",
+            "value": 1.0,
+            "unit": "waveform",
+            "modulation": {
+              "portId": "waveform-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "run-mode",
+            "value": 0.0,
+            "unit": "run-mode",
+            "modulation": {
+              "portId": "run-mode-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "stage-delay-1",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 23.0,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 8.049999999999999,
+              "polarity": "bipolar",
+              "clampMinimum": 14.950000000000001,
+              "clampMaximum": 31.05
+            }
+          }
+        ]
+      },
+      {
+        "id": "stage-ap-1",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 13.7,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 1.25,
+              "polarity": "bipolar",
+              "clampMinimum": 12.45,
+              "clampMaximum": 14.95
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "tap-gain-1",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.09,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 0.25
+            }
+          }
+        ]
+      },
+      {
+        "id": "gravity-map-1",
+        "type": "control-map",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "scale-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "offset-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "polarity-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "scale",
+            "value": 0.09,
+            "unit": "linear",
+            "modulation": {
+              "portId": "scale-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": -4.0,
+              "clampMaximum": 4.0
+            }
+          },
+          {
+            "id": "offset",
+            "value": 0.0,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "offset-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "polarity",
+            "value": 1.0,
+            "unit": "polarity",
+            "modulation": {
+              "portId": "polarity-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "curve-family",
+            "value": 0.0,
+            "unit": "curve-family"
+          },
+          {
+            "id": "curve-amount",
+            "value": 0.0,
+            "unit": "unitless"
+          },
+          {
+            "id": "exponent",
+            "value": 1.0,
+            "unit": "unitless"
+          },
+          {
+            "id": "clamp-min",
+            "value": -0.25,
+            "unit": "unitless"
+          },
+          {
+            "id": "clamp-max",
+            "value": 0.25,
+            "unit": "unitless"
+          }
+        ]
+      },
+      {
+        "id": "stage-delay-2",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 29.0,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 10.149999999999999,
+              "polarity": "bipolar",
+              "clampMinimum": 18.85,
+              "clampMaximum": 39.150000000000006
+            }
+          }
+        ]
+      },
+      {
+        "id": "stage-ap-2",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 17.9,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 1.25,
+              "polarity": "bipolar",
+              "clampMinimum": 16.65,
+              "clampMaximum": 19.15
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "tap-gain-2",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.09,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 0.25
+            }
+          }
+        ]
+      },
+      {
+        "id": "gravity-map-2",
+        "type": "control-map",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "scale-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "offset-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "polarity-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "scale",
+            "value": 0.09,
+            "unit": "linear",
+            "modulation": {
+              "portId": "scale-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": -4.0,
+              "clampMaximum": 4.0
+            }
+          },
+          {
+            "id": "offset",
+            "value": 0.0,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "offset-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "polarity",
+            "value": 1.0,
+            "unit": "polarity",
+            "modulation": {
+              "portId": "polarity-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "curve-family",
+            "value": 0.0,
+            "unit": "curve-family"
+          },
+          {
+            "id": "curve-amount",
+            "value": 0.0,
+            "unit": "unitless"
+          },
+          {
+            "id": "exponent",
+            "value": 1.0,
+            "unit": "unitless"
+          },
+          {
+            "id": "clamp-min",
+            "value": -0.25,
+            "unit": "unitless"
+          },
+          {
+            "id": "clamp-max",
+            "value": 0.25,
+            "unit": "unitless"
+          }
+        ]
+      },
+      {
+        "id": "stage-delay-3",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 37.0,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 12.95,
+              "polarity": "bipolar",
+              "clampMinimum": 24.05,
+              "clampMaximum": 49.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "stage-ap-3",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 19.3,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 1.25,
+              "polarity": "bipolar",
+              "clampMinimum": 18.05,
+              "clampMaximum": 20.55
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "tap-gain-3",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.12,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 0.25
+            }
+          }
+        ]
+      },
+      {
+        "id": "gravity-map-3",
+        "type": "control-map",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "scale-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "offset-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "polarity-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "scale",
+            "value": 0.06,
+            "unit": "linear",
+            "modulation": {
+              "portId": "scale-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": -4.0,
+              "clampMaximum": 4.0
+            }
+          },
+          {
+            "id": "offset",
+            "value": 0.0,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "offset-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "polarity",
+            "value": 1.0,
+            "unit": "polarity",
+            "modulation": {
+              "portId": "polarity-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "curve-family",
+            "value": 0.0,
+            "unit": "curve-family"
+          },
+          {
+            "id": "curve-amount",
+            "value": 0.0,
+            "unit": "unitless"
+          },
+          {
+            "id": "exponent",
+            "value": 1.0,
+            "unit": "unitless"
+          },
+          {
+            "id": "clamp-min",
+            "value": -0.25,
+            "unit": "unitless"
+          },
+          {
+            "id": "clamp-max",
+            "value": 0.25,
+            "unit": "unitless"
+          }
+        ]
+      },
+      {
+        "id": "stage-delay-4",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 43.0,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 15.049999999999999,
+              "polarity": "bipolar",
+              "clampMinimum": 27.95,
+              "clampMaximum": 58.050000000000004
+            }
+          }
+        ]
+      },
+      {
+        "id": "stage-ap-4",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 23.1,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 1.25,
+              "polarity": "bipolar",
+              "clampMinimum": 21.85,
+              "clampMaximum": 24.35
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "tap-gain-4",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.12,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 0.25
+            }
+          }
+        ]
+      },
+      {
+        "id": "gravity-map-4",
+        "type": "control-map",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "scale-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "offset-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "polarity-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "scale",
+            "value": 0.06,
+            "unit": "linear",
+            "modulation": {
+              "portId": "scale-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": -4.0,
+              "clampMaximum": 4.0
+            }
+          },
+          {
+            "id": "offset",
+            "value": 0.0,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "offset-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "polarity",
+            "value": 1.0,
+            "unit": "polarity",
+            "modulation": {
+              "portId": "polarity-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "curve-family",
+            "value": 0.0,
+            "unit": "curve-family"
+          },
+          {
+            "id": "curve-amount",
+            "value": 0.0,
+            "unit": "unitless"
+          },
+          {
+            "id": "exponent",
+            "value": 1.0,
+            "unit": "unitless"
+          },
+          {
+            "id": "clamp-min",
+            "value": -0.25,
+            "unit": "unitless"
+          },
+          {
+            "id": "clamp-max",
+            "value": 0.25,
+            "unit": "unitless"
+          }
+        ]
+      },
+      {
+        "id": "stage-delay-5",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 53.0,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 18.549999999999997,
+              "polarity": "bipolar",
+              "clampMinimum": 34.45,
+              "clampMaximum": 71.55000000000001
+            }
+          }
+        ]
+      },
+      {
+        "id": "stage-ap-5",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 29.7,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 1.25,
+              "polarity": "bipolar",
+              "clampMinimum": 28.45,
+              "clampMaximum": 30.95
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "tap-gain-5",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.14,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 0.25
+            }
+          }
+        ]
+      },
+      {
+        "id": "gravity-map-5",
+        "type": "control-map",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "scale-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "offset-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "polarity-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "scale",
+            "value": -0.06,
+            "unit": "linear",
+            "modulation": {
+              "portId": "scale-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": -4.0,
+              "clampMaximum": 4.0
+            }
+          },
+          {
+            "id": "offset",
+            "value": 0.0,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "offset-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "polarity",
+            "value": 1.0,
+            "unit": "polarity",
+            "modulation": {
+              "portId": "polarity-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "curve-family",
+            "value": 0.0,
+            "unit": "curve-family"
+          },
+          {
+            "id": "curve-amount",
+            "value": 0.0,
+            "unit": "unitless"
+          },
+          {
+            "id": "exponent",
+            "value": 1.0,
+            "unit": "unitless"
+          },
+          {
+            "id": "clamp-min",
+            "value": -0.25,
+            "unit": "unitless"
+          },
+          {
+            "id": "clamp-max",
+            "value": 0.25,
+            "unit": "unitless"
+          }
+        ]
+      },
+      {
+        "id": "stage-delay-6",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 61.0,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 21.349999999999998,
+              "polarity": "bipolar",
+              "clampMinimum": 39.65,
+              "clampMaximum": 82.35000000000001
+            }
+          }
+        ]
+      },
+      {
+        "id": "stage-ap-6",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 31.1,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 1.25,
+              "polarity": "bipolar",
+              "clampMinimum": 29.85,
+              "clampMaximum": 32.35
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "tap-gain-6",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.14,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 0.25
+            }
+          }
+        ]
+      },
+      {
+        "id": "gravity-map-6",
+        "type": "control-map",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "scale-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "offset-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "polarity-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "scale",
+            "value": -0.06,
+            "unit": "linear",
+            "modulation": {
+              "portId": "scale-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": -4.0,
+              "clampMaximum": 4.0
+            }
+          },
+          {
+            "id": "offset",
+            "value": 0.0,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "offset-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "polarity",
+            "value": 1.0,
+            "unit": "polarity",
+            "modulation": {
+              "portId": "polarity-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "curve-family",
+            "value": 0.0,
+            "unit": "curve-family"
+          },
+          {
+            "id": "curve-amount",
+            "value": 0.0,
+            "unit": "unitless"
+          },
+          {
+            "id": "exponent",
+            "value": 1.0,
+            "unit": "unitless"
+          },
+          {
+            "id": "clamp-min",
+            "value": -0.25,
+            "unit": "unitless"
+          },
+          {
+            "id": "clamp-max",
+            "value": 0.25,
+            "unit": "unitless"
+          }
+        ]
+      },
+      {
+        "id": "stage-delay-7",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 71.0,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 24.849999999999998,
+              "polarity": "bipolar",
+              "clampMinimum": 46.15,
+              "clampMaximum": 95.85000000000001
+            }
+          }
+        ]
+      },
+      {
+        "id": "stage-ap-7",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 37.1,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 1.25,
+              "polarity": "bipolar",
+              "clampMinimum": 35.85,
+              "clampMaximum": 38.35
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "tap-gain-7",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.15,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 0.25
+            }
+          }
+        ]
+      },
+      {
+        "id": "gravity-map-7",
+        "type": "control-map",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "scale-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "offset-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "polarity-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "scale",
+            "value": -0.09,
+            "unit": "linear",
+            "modulation": {
+              "portId": "scale-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": -4.0,
+              "clampMaximum": 4.0
+            }
+          },
+          {
+            "id": "offset",
+            "value": 0.0,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "offset-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "polarity",
+            "value": 1.0,
+            "unit": "polarity",
+            "modulation": {
+              "portId": "polarity-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "curve-family",
+            "value": 0.0,
+            "unit": "curve-family"
+          },
+          {
+            "id": "curve-amount",
+            "value": 0.0,
+            "unit": "unitless"
+          },
+          {
+            "id": "exponent",
+            "value": 1.0,
+            "unit": "unitless"
+          },
+          {
+            "id": "clamp-min",
+            "value": -0.25,
+            "unit": "unitless"
+          },
+          {
+            "id": "clamp-max",
+            "value": 0.25,
+            "unit": "unitless"
+          }
+        ]
+      },
+      {
+        "id": "stage-delay-8",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 83.0,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 29.049999999999997,
+              "polarity": "bipolar",
+              "clampMinimum": 53.95,
+              "clampMaximum": 112.05000000000001
+            }
+          }
+        ]
+      },
+      {
+        "id": "stage-ap-8",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 41.3,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 1.25,
+              "polarity": "bipolar",
+              "clampMinimum": 40.05,
+              "clampMaximum": 42.55
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "tap-gain-8",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.15,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 0.25
+            }
+          }
+        ]
+      },
+      {
+        "id": "gravity-map-8",
+        "type": "control-map",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "scale-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "offset-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "polarity-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "scale",
+            "value": -0.09,
+            "unit": "linear",
+            "modulation": {
+              "portId": "scale-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": -4.0,
+              "clampMaximum": 4.0
+            }
+          },
+          {
+            "id": "offset",
+            "value": 0.0,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "offset-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "polarity",
+            "value": 1.0,
+            "unit": "polarity",
+            "modulation": {
+              "portId": "polarity-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "curve-family",
+            "value": 0.0,
+            "unit": "curve-family"
+          },
+          {
+            "id": "curve-amount",
+            "value": 0.0,
+            "unit": "unitless"
+          },
+          {
+            "id": "exponent",
+            "value": 1.0,
+            "unit": "unitless"
+          },
+          {
+            "id": "clamp-min",
+            "value": -0.25,
+            "unit": "unitless"
+          },
+          {
+            "id": "clamp-max",
+            "value": 0.25,
+            "unit": "unitless"
+          }
+        ]
+      },
+      {
+        "id": "feedback-damping",
+        "type": "lowpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "cutoff-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "cutoff",
+            "value": 5800.0,
+            "unit": "hertz",
+            "modulation": {
+              "portId": "cutoff-mod",
+              "amount": -4200.0,
+              "polarity": "bipolar",
+              "clampMinimum": 1600.0,
+              "clampMaximum": 10000.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "feedback-gain",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.58,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 0.23,
+              "polarity": "bipolar",
+              "clampMinimum": 0.35,
+              "clampMaximum": 0.81
+            }
+          }
+        ]
+      },
+      {
+        "id": "feedback-delay",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 97.0,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 33.949999999999996,
+              "polarity": "bipolar",
+              "clampMinimum": 63.050000000000004,
+              "clampMaximum": 130.95000000000002
+            }
+          }
+        ]
+      },
+      {
+        "id": "left-sum-a",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "left-sum-b",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "left-sum",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "right-sum-a",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "right-sum-b",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "right-sum",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "output",
+        "type": "stereo-output",
+        "ports": [
+          {
+            "id": "in-l",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-r",
+            "signal": "audio",
+            "direction": "input"
+          }
+        ],
+        "parameters": []
+      }
+    ],
+    "connections": [
+      {
+        "id": "input-l-gain",
+        "from": {
+          "nodeId": "input",
+          "portId": "out-l"
+        },
+        "to": {
+          "nodeId": "input-l-half",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "input-r-gain",
+        "from": {
+          "nodeId": "input",
+          "portId": "out-r"
+        },
+        "to": {
+          "nodeId": "input-r-half",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "input-l-sum",
+        "from": {
+          "nodeId": "input-l-half",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-sum",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "input-r-sum",
+        "from": {
+          "nodeId": "input-r-half",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-sum",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "input-ap-1",
+        "from": {
+          "nodeId": "input-sum",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-ap-1",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "input-ap-2",
+        "from": {
+          "nodeId": "input-ap-1",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-ap-2",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "input-ap-3",
+        "from": {
+          "nodeId": "input-ap-2",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-ap-3",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "input-ap-4",
+        "from": {
+          "nodeId": "input-ap-3",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-ap-4",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "input-tank",
+        "from": {
+          "nodeId": "input-ap-4",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tank-entry",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "feedback-tank",
+        "from": {
+          "nodeId": "feedback-delay",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tank-entry",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "feedback-control",
+        "from": {
+          "nodeId": "feedback",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "feedback-gain",
+          "portId": "gain-mod"
+        }
+      },
+      {
+        "id": "damping-control",
+        "from": {
+          "nodeId": "damping",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "feedback-damping",
+          "portId": "cutoff-mod"
+        }
+      },
+      {
+        "id": "size-input-ap-1",
+        "from": {
+          "nodeId": "size",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-ap-1",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "modulation-input-ap-1",
+        "from": {
+          "nodeId": "modulation",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-ap-1",
+          "portId": "coefficient-mod"
+        }
+      },
+      {
+        "id": "size-input-ap-2",
+        "from": {
+          "nodeId": "size",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-ap-2",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "modulation-input-ap-2",
+        "from": {
+          "nodeId": "modulation",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-ap-2",
+          "portId": "coefficient-mod"
+        }
+      },
+      {
+        "id": "size-input-ap-3",
+        "from": {
+          "nodeId": "size",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-ap-3",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "modulation-input-ap-3",
+        "from": {
+          "nodeId": "modulation",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-ap-3",
+          "portId": "coefficient-mod"
+        }
+      },
+      {
+        "id": "size-input-ap-4",
+        "from": {
+          "nodeId": "size",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-ap-4",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "modulation-input-ap-4",
+        "from": {
+          "nodeId": "modulation",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-ap-4",
+          "portId": "coefficient-mod"
+        }
+      },
+      {
+        "id": "stage-in-1",
+        "from": {
+          "nodeId": "tank-entry",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-delay-1",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "stage-diffuse-1",
+        "from": {
+          "nodeId": "stage-delay-1",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-ap-1",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "tap-1",
+        "from": {
+          "nodeId": "stage-ap-1",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tap-gain-1",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "gravity-map-in-1",
+        "from": {
+          "nodeId": "gravity",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "gravity-map-1",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "gravity-map-out-1",
+        "from": {
+          "nodeId": "gravity-map-1",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tap-gain-1",
+          "portId": "gain-mod"
+        }
+      },
+      {
+        "id": "size-stage-1",
+        "from": {
+          "nodeId": "size",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-delay-1",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "motion-stage-1",
+        "from": {
+          "nodeId": "motion-a",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-ap-1",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "stage-in-2",
+        "from": {
+          "nodeId": "stage-ap-1",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-delay-2",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "stage-diffuse-2",
+        "from": {
+          "nodeId": "stage-delay-2",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-ap-2",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "tap-2",
+        "from": {
+          "nodeId": "stage-ap-2",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tap-gain-2",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "gravity-map-in-2",
+        "from": {
+          "nodeId": "gravity",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "gravity-map-2",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "gravity-map-out-2",
+        "from": {
+          "nodeId": "gravity-map-2",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tap-gain-2",
+          "portId": "gain-mod"
+        }
+      },
+      {
+        "id": "size-stage-2",
+        "from": {
+          "nodeId": "size",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-delay-2",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "motion-stage-2",
+        "from": {
+          "nodeId": "motion-b",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-ap-2",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "stage-in-3",
+        "from": {
+          "nodeId": "stage-ap-2",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-delay-3",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "stage-diffuse-3",
+        "from": {
+          "nodeId": "stage-delay-3",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-ap-3",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "tap-3",
+        "from": {
+          "nodeId": "stage-ap-3",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tap-gain-3",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "gravity-map-in-3",
+        "from": {
+          "nodeId": "gravity",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "gravity-map-3",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "gravity-map-out-3",
+        "from": {
+          "nodeId": "gravity-map-3",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tap-gain-3",
+          "portId": "gain-mod"
+        }
+      },
+      {
+        "id": "size-stage-3",
+        "from": {
+          "nodeId": "size",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-delay-3",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "motion-stage-3",
+        "from": {
+          "nodeId": "motion-a",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-ap-3",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "stage-in-4",
+        "from": {
+          "nodeId": "stage-ap-3",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-delay-4",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "stage-diffuse-4",
+        "from": {
+          "nodeId": "stage-delay-4",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-ap-4",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "tap-4",
+        "from": {
+          "nodeId": "stage-ap-4",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tap-gain-4",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "gravity-map-in-4",
+        "from": {
+          "nodeId": "gravity",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "gravity-map-4",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "gravity-map-out-4",
+        "from": {
+          "nodeId": "gravity-map-4",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tap-gain-4",
+          "portId": "gain-mod"
+        }
+      },
+      {
+        "id": "size-stage-4",
+        "from": {
+          "nodeId": "size",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-delay-4",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "motion-stage-4",
+        "from": {
+          "nodeId": "motion-b",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-ap-4",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "stage-in-5",
+        "from": {
+          "nodeId": "stage-ap-4",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-delay-5",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "stage-diffuse-5",
+        "from": {
+          "nodeId": "stage-delay-5",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-ap-5",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "tap-5",
+        "from": {
+          "nodeId": "stage-ap-5",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tap-gain-5",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "gravity-map-in-5",
+        "from": {
+          "nodeId": "gravity",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "gravity-map-5",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "gravity-map-out-5",
+        "from": {
+          "nodeId": "gravity-map-5",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tap-gain-5",
+          "portId": "gain-mod"
+        }
+      },
+      {
+        "id": "size-stage-5",
+        "from": {
+          "nodeId": "size",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-delay-5",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "motion-stage-5",
+        "from": {
+          "nodeId": "motion-a",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-ap-5",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "stage-in-6",
+        "from": {
+          "nodeId": "stage-ap-5",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-delay-6",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "stage-diffuse-6",
+        "from": {
+          "nodeId": "stage-delay-6",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-ap-6",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "tap-6",
+        "from": {
+          "nodeId": "stage-ap-6",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tap-gain-6",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "gravity-map-in-6",
+        "from": {
+          "nodeId": "gravity",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "gravity-map-6",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "gravity-map-out-6",
+        "from": {
+          "nodeId": "gravity-map-6",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tap-gain-6",
+          "portId": "gain-mod"
+        }
+      },
+      {
+        "id": "size-stage-6",
+        "from": {
+          "nodeId": "size",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-delay-6",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "motion-stage-6",
+        "from": {
+          "nodeId": "motion-b",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-ap-6",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "stage-in-7",
+        "from": {
+          "nodeId": "stage-ap-6",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-delay-7",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "stage-diffuse-7",
+        "from": {
+          "nodeId": "stage-delay-7",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-ap-7",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "tap-7",
+        "from": {
+          "nodeId": "stage-ap-7",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tap-gain-7",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "gravity-map-in-7",
+        "from": {
+          "nodeId": "gravity",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "gravity-map-7",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "gravity-map-out-7",
+        "from": {
+          "nodeId": "gravity-map-7",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tap-gain-7",
+          "portId": "gain-mod"
+        }
+      },
+      {
+        "id": "size-stage-7",
+        "from": {
+          "nodeId": "size",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-delay-7",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "motion-stage-7",
+        "from": {
+          "nodeId": "motion-a",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-ap-7",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "stage-in-8",
+        "from": {
+          "nodeId": "stage-ap-7",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-delay-8",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "stage-diffuse-8",
+        "from": {
+          "nodeId": "stage-delay-8",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-ap-8",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "tap-8",
+        "from": {
+          "nodeId": "stage-ap-8",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tap-gain-8",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "gravity-map-in-8",
+        "from": {
+          "nodeId": "gravity",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "gravity-map-8",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "gravity-map-out-8",
+        "from": {
+          "nodeId": "gravity-map-8",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tap-gain-8",
+          "portId": "gain-mod"
+        }
+      },
+      {
+        "id": "size-stage-8",
+        "from": {
+          "nodeId": "size",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-delay-8",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "motion-stage-8",
+        "from": {
+          "nodeId": "motion-b",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "stage-ap-8",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "stage-8-damping",
+        "from": {
+          "nodeId": "stage-ap-8",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "feedback-damping",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "damping-feedback",
+        "from": {
+          "nodeId": "feedback-damping",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "feedback-gain",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "feedback-return-delay",
+        "from": {
+          "nodeId": "feedback-gain",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "feedback-delay",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "size-feedback-delay",
+        "from": {
+          "nodeId": "size",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "feedback-delay",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "tap-1-left-a",
+        "from": {
+          "nodeId": "tap-gain-1",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "left-sum-a",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "tap-3-left-a",
+        "from": {
+          "nodeId": "tap-gain-3",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "left-sum-a",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "tap-5-left-b",
+        "from": {
+          "nodeId": "tap-gain-5",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "left-sum-b",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "tap-7-left-b",
+        "from": {
+          "nodeId": "tap-gain-7",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "left-sum-b",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "left-a-final",
+        "from": {
+          "nodeId": "left-sum-a",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "left-sum",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "left-b-final",
+        "from": {
+          "nodeId": "left-sum-b",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "left-sum",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "tap-2-right-a",
+        "from": {
+          "nodeId": "tap-gain-2",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "right-sum-a",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "tap-4-right-a",
+        "from": {
+          "nodeId": "tap-gain-4",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "right-sum-a",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "tap-6-right-b",
+        "from": {
+          "nodeId": "tap-gain-6",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "right-sum-b",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "tap-8-right-b",
+        "from": {
+          "nodeId": "tap-gain-8",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "right-sum-b",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "right-a-final",
+        "from": {
+          "nodeId": "right-sum-a",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "right-sum",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "right-b-final",
+        "from": {
+          "nodeId": "right-sum-b",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "right-sum",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "left-output",
+        "from": {
+          "nodeId": "left-sum",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "output",
+          "portId": "in-l"
+        }
+      },
+      {
+        "id": "right-output",
+        "from": {
+          "nodeId": "right-sum",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "output",
+          "portId": "in-r"
+        }
+      }
+    ]
+  },
+  "layout": {
+    "nodes": [
+      {
+        "nodeId": "input",
+        "x": -760.0,
+        "y": -180.0
+      },
+      {
+        "nodeId": "input-l-half",
+        "x": -580.0,
+        "y": -240.0
+      },
+      {
+        "nodeId": "input-r-half",
+        "x": -580.0,
+        "y": -100.0
+      },
+      {
+        "nodeId": "input-sum",
+        "x": -380.0,
+        "y": -180.0
+      },
+      {
+        "nodeId": "input-ap-1",
+        "x": -180.0,
+        "y": -180.0
+      },
+      {
+        "nodeId": "input-ap-2",
+        "x": 20.0,
+        "y": -180.0
+      },
+      {
+        "nodeId": "input-ap-3",
+        "x": 220.0,
+        "y": -180.0
+      },
+      {
+        "nodeId": "input-ap-4",
+        "x": 420.0,
+        "y": -180.0
+      },
+      {
+        "nodeId": "tank-entry",
+        "x": 640.0,
+        "y": -180.0
+      },
+      {
+        "nodeId": "gravity",
+        "x": -560.0,
+        "y": 500.0
+      },
+      {
+        "nodeId": "size",
+        "x": -800.0,
+        "y": 240.0
+      },
+      {
+        "nodeId": "feedback",
+        "x": -800.0,
+        "y": 390.0
+      },
+      {
+        "nodeId": "damping",
+        "x": -800.0,
+        "y": 540.0
+      },
+      {
+        "nodeId": "modulation",
+        "x": -800.0,
+        "y": 690.0
+      },
+      {
+        "nodeId": "motion-a",
+        "x": -560.0,
+        "y": 1360.0
+      },
+      {
+        "nodeId": "motion-b",
+        "x": -320.0,
+        "y": 1360.0
+      },
+      {
+        "nodeId": "left-sum-a",
+        "x": 800.0,
+        "y": 330.0
+      },
+      {
+        "nodeId": "left-sum-b",
+        "x": 800.0,
+        "y": 610.0
+      },
+      {
+        "nodeId": "left-sum",
+        "x": 1020.0,
+        "y": 470.0
+      },
+      {
+        "nodeId": "right-sum-a",
+        "x": 800.0,
+        "y": 750.0
+      },
+      {
+        "nodeId": "right-sum-b",
+        "x": 800.0,
+        "y": 1030.0
+      },
+      {
+        "nodeId": "right-sum",
+        "x": 1020.0,
+        "y": 890.0
+      },
+      {
+        "nodeId": "output",
+        "x": 1250.0,
+        "y": 680.0
+      },
+      {
+        "nodeId": "feedback-damping",
+        "x": 700.0,
+        "y": 1360.0
+      },
+      {
+        "nodeId": "feedback-gain",
+        "x": 470.0,
+        "y": 1360.0
+      },
+      {
+        "nodeId": "feedback-delay",
+        "x": 230.0,
+        "y": 1360.0
+      },
+      {
+        "nodeId": "gravity-map-1",
+        "x": -320.0,
+        "y": 100.0
+      },
+      {
+        "nodeId": "stage-delay-1",
+        "x": -80.0,
+        "y": 100.0
+      },
+      {
+        "nodeId": "stage-ap-1",
+        "x": 160.0,
+        "y": 100.0
+      },
+      {
+        "nodeId": "tap-gain-1",
+        "x": 430.0,
+        "y": 100.0
+      },
+      {
+        "nodeId": "gravity-map-2",
+        "x": -320.0,
+        "y": 250.0
+      },
+      {
+        "nodeId": "stage-delay-2",
+        "x": -80.0,
+        "y": 250.0
+      },
+      {
+        "nodeId": "stage-ap-2",
+        "x": 160.0,
+        "y": 250.0
+      },
+      {
+        "nodeId": "tap-gain-2",
+        "x": 430.0,
+        "y": 250.0
+      },
+      {
+        "nodeId": "gravity-map-3",
+        "x": -320.0,
+        "y": 400.0
+      },
+      {
+        "nodeId": "stage-delay-3",
+        "x": -80.0,
+        "y": 400.0
+      },
+      {
+        "nodeId": "stage-ap-3",
+        "x": 160.0,
+        "y": 400.0
+      },
+      {
+        "nodeId": "tap-gain-3",
+        "x": 430.0,
+        "y": 400.0
+      },
+      {
+        "nodeId": "gravity-map-4",
+        "x": -320.0,
+        "y": 550.0
+      },
+      {
+        "nodeId": "stage-delay-4",
+        "x": -80.0,
+        "y": 550.0
+      },
+      {
+        "nodeId": "stage-ap-4",
+        "x": 160.0,
+        "y": 550.0
+      },
+      {
+        "nodeId": "tap-gain-4",
+        "x": 430.0,
+        "y": 550.0
+      },
+      {
+        "nodeId": "gravity-map-5",
+        "x": -320.0,
+        "y": 700.0
+      },
+      {
+        "nodeId": "stage-delay-5",
+        "x": -80.0,
+        "y": 700.0
+      },
+      {
+        "nodeId": "stage-ap-5",
+        "x": 160.0,
+        "y": 700.0
+      },
+      {
+        "nodeId": "tap-gain-5",
+        "x": 430.0,
+        "y": 700.0
+      },
+      {
+        "nodeId": "gravity-map-6",
+        "x": -320.0,
+        "y": 850.0
+      },
+      {
+        "nodeId": "stage-delay-6",
+        "x": -80.0,
+        "y": 850.0
+      },
+      {
+        "nodeId": "stage-ap-6",
+        "x": 160.0,
+        "y": 850.0
+      },
+      {
+        "nodeId": "tap-gain-6",
+        "x": 430.0,
+        "y": 850.0
+      },
+      {
+        "nodeId": "gravity-map-7",
+        "x": -320.0,
+        "y": 1000.0
+      },
+      {
+        "nodeId": "stage-delay-7",
+        "x": -80.0,
+        "y": 1000.0
+      },
+      {
+        "nodeId": "stage-ap-7",
+        "x": 160.0,
+        "y": 1000.0
+      },
+      {
+        "nodeId": "tap-gain-7",
+        "x": 430.0,
+        "y": 1000.0
+      },
+      {
+        "nodeId": "gravity-map-8",
+        "x": -320.0,
+        "y": 1150.0
+      },
+      {
+        "nodeId": "stage-delay-8",
+        "x": -80.0,
+        "y": 1150.0
+      },
+      {
+        "nodeId": "stage-ap-8",
+        "x": 160.0,
+        "y": 1150.0
+      },
+      {
+        "nodeId": "tap-gain-8",
+        "x": 430.0,
+        "y": 1150.0
+      }
+    ],
+    "viewport": {
+      "x": 640.0,
+      "y": 210.0,
+      "zoom": 0.52
+    }
+  }
+}
+`,Kp=[{id:`barr-reference`,label:`Barr Reference`,graphName:`BARR-REFERENCE.graph`,filename:`barr-reference.rvp.json`,summary:`Keith Barr-style recirculating diffusion tank`},{id:`causal-reverse-envelope`,label:`Causal Reverse Envelope`,graphName:`CAUSAL-REVERSE.graph`,filename:`causal-reverse-envelope.rvp.json`,summary:`Weighted delay taps build toward a late peak`},{id:`level-gated-room`,label:`Level-Gated Room`,graphName:`LEVEL-GATED-ROOM.graph`,filename:`level-gated-room.rvp.json`,summary:`Envelope follower and hold gates cut a diffuse room tail`},{id:`modulated-cosmic-reverse`,label:`Modulated Cosmic Reverse`,graphName:`MODULATED-COSMIC-REVERSE.graph`,filename:`modulated-cosmic-reverse.rvp.json`,summary:`Rising taps enter a damped, slowly modulated feedback space`},{id:`gravity-diffusion`,label:`Gravity Diffusion`,graphName:`GRAVITY-DIFFUSION.graph`,filename:`gravity-diffusion.rvp.json`,summary:`Eight-stage causal inverse, bloom, and forward diffusion instrument`}],qp={"causal-reverse-envelope":Hp,"level-gated-room":Up,"modulated-cosmic-reverse":Wp,"gravity-diffusion":Gp};function Jp(e){return Kp.find(t=>t.id===e)}function Yp(e,t){return e===`barr-reference`||e===`custom`?t:e}function Xp(e){switch(e){case`causal-reverse-envelope`:return`REVERSE ENV`;case`level-gated-room`:return`GATED`;case`modulated-cosmic-reverse`:return`COSMIC REV`;case`gravity-diffusion`:return`GRAVITY`}}function Zp(e,t){return e===`barr-reference`?{...af(t),viewport:{x:0,y:0,zoom:1}}:sp(qp[e],t)}function Qp(e){let t=Math.max(1,Math.round(e.sampleRate*.01)),n=Math.ceil(e.frameCount/t),r=Array(n).fill(0);for(let n=0;n<e.frameCount;n+=1)r[Math.floor(n/t)]+=e.left[n]**2+e.right[n]**2;let i=Math.max(...r);if(!(i>0))return null;let a=r.indexOf(i),o=r.findIndex(e=>e>i*1e-8),s=r.findIndex((e,t)=>t>a&&e<=i*1e-4);return s<0&&(s=n-1),{onsetFrame:Math.min(e.frameCount-1,o*t),peakFrame:Math.min(e.frameCount-1,a*t+Math.floor(t/2)),cutoffFrame:Math.min(e.frameCount-1,s*t)}}function $p(e,t,n={detectorReleaseMilliseconds:20,holdMilliseconds:120,releaseMilliseconds:8}){let r=Qp(e);if(!r)return null;if(t===`causal-reverse-envelope`||t===`modulated-cosmic-reverse`)return{title:`Why this swells`,explanation:t===`modulated-cosmic-reverse`?`Visible weighted delays build a causal rise before a damped feedback space. Slow moving allpass times add pitch-active motion; this is an original large-space design, not a proprietary algorithm reconstruction or true time reversal.`:`Visible weighted delays build a causal response toward a late peak. This does not reverse sample order and cannot place wet sound before the triggering event.`,regions:[{label:`RISING ENERGY`,startFrame:r.onsetFrame,endFrame:r.peakFrame,tone:`rise`}],markers:[{label:`LATE PEAK`,frame:r.peakFrame,tone:`peak`},{label:`-40 dB`,frame:r.cutoffFrame,tone:`cutoff`}]};if(t===`level-gated-room`){let t=t=>Math.round(e.sampleRate*t/1e3),i=Math.min(r.cutoffFrame,r.onsetFrame+t(n.detectorReleaseMilliseconds)),a=Math.min(r.cutoffFrame,i+t(n.holdMilliseconds)),o=Math.min(r.cutoffFrame,a+t(n.releaseMilliseconds));return{title:`Why this stops`,explanation:`The input-derived detector opens the visible gates, their hold keeps the diffuse room audible, and release closes it. Repeated or sustained input can retrigger this level gate.`,regions:[{label:`GATE OPEN`,startFrame:r.onsetFrame,endFrame:i,tone:`gate`},{label:`HOLD`,startFrame:i,endFrame:a,tone:`hold`},{label:`RELEASE`,startFrame:a,endFrame:o,tone:`release`}],markers:[{label:`CUTOFF`,frame:r.cutoffFrame,tone:`cutoff`}]}}return t===`gravity-diffusion`?{title:`Measured Gravity response`,explanation:`These landmarks come from the current captured samples and are authoritative for this capture. The Gravity panel’s violet design guide and teal checked-reference curve are comparisons; neither replaces this measurement, and disagreement remains visible.`,regions:[{label:`MEASURED BUILDUP`,startFrame:r.onsetFrame,endFrame:r.peakFrame,tone:`rise`}],markers:[{label:`MEASURED PEAK`,frame:r.peakFrame,tone:`peak`},{label:`-40 dB`,frame:r.cutoffFrame,tone:`cutoff`}]}:null}function em(e){let t=e;if(typeof t==`string`)try{t=JSON.parse(t)}catch{throw Error(`Host state response is not valid JSON`)}if(typeof t!=`object`||!t||Array.isArray(t))throw Error(`Host state response is not an object`);let n=t;if(typeof n.accepted!=`boolean`||typeof n.error!=`string`)throw Error(`Host state response fields are invalid`);return n}var tm=(e,t,n)=>e.data.parameters.find(e=>e.id===t)?.value??n;function nm(e,t){let n=tm(e,`curve-family`,0),r=n>=1.5?`exponential`:n>=.5?`power`:`linear`,i=tm(e,`polarity`,1)>=.5?`bipolar`:`unipolar`,a=t=>zp(t,r,tm(e,`curve-amount`,0),tm(e,`exponent`,1),tm(e,`scale`,1),tm(e,`offset`,0),i,tm(e,`clamp-min`,-1),tm(e,`clamp-max`,1)),o=a(t.minimum),s=a(t.maximum);return{minimum:Math.min(o,s),maximum:Math.max(o,s)}}function rm(e,t,n,r=128){let i=new Map(t.map(e=>[e.id,e])),a=new Map;for(let e of n.filter(e=>e.data?.signal===`control`)){let t=a.get(e.source)??[];t.push(e),a.set(e.source,t)}let o=new Set([e]),s=new Set,c=[],l=[{nodeId:e,range:{minimum:-1,maximum:1}}],u=new Set;for(;l.length&&c.length<r;){let e=l.shift(),t=`${e.nodeId}:${e.range.minimum}:${e.range.maximum}`;if(!u.has(t)){u.add(t);for(let t of a.get(e.nodeId)??[]){s.add(t.id),o.add(t.target);let n=i.get(t.target);if(!n)continue;if(n.data.type===`control-map`&&t.targetHandle===`in`){l.push({nodeId:n.id,range:nm(n,e.range)});continue}let r=n.data.parameters.find(e=>e.modulation?.portId===t.targetHandle);if(!r?.modulation)continue;let a=r.modulation,u=e=>a.polarity===`bipolar`?Math.min(1,Math.max(-1,e)):Math.min(1,Math.max(0,e)),d=e=>Math.min(a.clampMaximum,Math.max(a.clampMinimum,r.value+a.amount*u(e))),f=d(e.range.minimum),p=d(e.range.maximum);c.push({nodeId:n.id,parameterId:r.id,minimum:Math.min(f,p),maximum:Math.max(f,p),unit:r.unit})}}}return{nodeIds:[...o],edgeIds:[...s],destinations:c}}function im(e,t,n){if(!n)return{nodes:e,edges:t};let r=new Set(n.nodeIds),i=new Set(n.edgeIds);return{nodes:e.map(e=>r.has(e.id)?{...e,className:`${e.className??``} macro-reachable`.trim()}:e),edges:t.map(e=>i.has(e.id)?{...e,className:`${e.className??``} macro-reachable`.trim()}:e)}}var am=e=>Math.min(1,Math.max(-1,Number.isFinite(e)?e:0));function om(e){let t=am(e);return Math.abs(t)<5e-4?`BLOOM`:t<0?`INVERSE`:`FORWARD`}function sm(e,t=49){let n=am(e),r=.48-.35*n,i=Math.max(3,t),a=Array.from({length:i},(e,t)=>{let n=t/(i-1),a=n<=r?.06+.94*(n/r)**1.65:Math.exp(-3.2*(n-r)/(1-r));return`${(n*100).toFixed(2)},${(38-a*32).toFixed(2)}`}),o=om(n);return{state:o,peakPosition:r,path:`M ${a.join(` L `)}`,description:`${o} design prediction; energy peak at ${Math.round(r*100)}% of the displayed horizon. Not measured audio.`}}function cm(e){return[...new Set(e.nodeIds)]}var lm=new Map([[`INVERSE`,JSON.parse(`{
+  "formatVersion": 1,
+  "engineVersion": "0.1",
+  "referenceId": "inverse",
+  "sampleRate": 48000.0,
+  "frameCount": 240000,
+  "comparisonHorizonMs": 520.0,
+  "smoothingWindowMs": 20.0,
+  "controls": {
+    "gravity": -1.0,
+    "size": 1.0,
+    "feedback": 0.5,
+    "damping": 0.15,
+    "modulation": 0.25
+  },
+  "raw": {
+    "onsetFrame": 5766,
+    "timeToPeakMs": 419.4791666666667,
+    "earlyLateEnergyRatioDb": -2.5229811308926635,
+    "peakLevelDbfs": -35.435191708000595,
+    "integratedEnergyDb": -20.577556765558803,
+    "postPeakEnergyFraction": 0.6711394327580205,
+    "occupiedTenMsWindowFraction": 0.12857142857142856,
+    "strongestThreeWindowEnergyFraction": 0.7331664458563412
+  },
+  "loudnessMatchGain": 0.9993832414506265,
+  "matched": {
+    "onsetFrame": 5766,
+    "timeToPeakMs": 419.4791666666667,
+    "earlyLateEnergyRatioDb": -2.52298116769631,
+    "peakLevelDbfs": -35.440549995295235,
+    "integratedEnergyDb": -20.582915256652527,
+    "postPeakEnergyFraction": 0.6711394356264316,
+    "occupiedTenMsWindowFraction": 0.12857142857142856,
+    "strongestThreeWindowEnergyFraction": 0.7331664485671174
+  },
+  "matchedEnvelope": [
+    [
+      0.0,
+      0.09146332837108613
+    ],
+    [
+      0.020833333333333332,
+      3.897385898466081e-09
+    ],
+    [
+      0.041666666666666664,
+      0.0
+    ],
+    [
+      0.0625,
+      0.0
+    ],
+    [
+      0.08333333333333333,
+      0.0
+    ],
+    [
+      0.10416666666666667,
+      0.07863397916085328
+    ],
+    [
+      0.125,
+      0.07863397916085328
+    ],
+    [
+      0.14583333333333334,
+      0.0
+    ],
+    [
+      0.16666666666666666,
+      0.0
+    ],
+    [
+      0.1875,
+      0.0
+    ],
+    [
+      0.20833333333333334,
+      0.0
+    ],
+    [
+      0.22916666666666666,
+      0.0
+    ],
+    [
+      0.25,
+      0.779189529090116
+    ],
+    [
+      0.2708333333333333,
+      3.617439628114777e-13
+    ],
+    [
+      0.2916666666666667,
+      5.520981218172897e-85
+    ],
+    [
+      0.3125,
+      5.520981218172897e-85
+    ],
+    [
+      0.3333333333333333,
+      5.520981218172897e-85
+    ],
+    [
+      0.3541666666666667,
+      5.520981218172897e-85
+    ],
+    [
+      0.375,
+      5.520981218172897e-85
+    ],
+    [
+      0.3958333333333333,
+      0.7333169335058296
+    ],
+    [
+      0.4166666666666667,
+      0.7333169335058296
+    ],
+    [
+      0.4375,
+      1.1041962436345794e-84
+    ],
+    [
+      0.4583333333333333,
+      1.1041962436345794e-84
+    ],
+    [
+      0.4791666666666667,
+      1.1041962436345794e-84
+    ],
+    [
+      0.5,
+      1.1041962436345794e-84
+    ],
+    [
+      0.5208333333333334,
+      1.1041962436345794e-84
+    ],
+    [
+      0.5416666666666666,
+      1.1041962436345794e-84
+    ],
+    [
+      0.5625,
+      1.1041962436345794e-84
+    ],
+    [
+      0.5833333333333334,
+      0.9999999999999944
+    ],
+    [
+      0.6041666666666666,
+      0.9999999999999944
+    ],
+    [
+      0.625,
+      2.7604906090864487e-84
+    ],
+    [
+      0.6458333333333334,
+      2.7604906090864487e-84
+    ],
+    [
+      0.6666666666666666,
+      2.7604906090864487e-84
+    ],
+    [
+      0.6875,
+      2.7604906090864487e-84
+    ],
+    [
+      0.7083333333333334,
+      2.7604906090864487e-84
+    ],
+    [
+      0.7291666666666666,
+      2.7604906090864487e-84
+    ],
+    [
+      0.75,
+      2.7604906090864487e-84
+    ],
+    [
+      0.7708333333333334,
+      2.7604906090864487e-84
+    ],
+    [
+      0.7916666666666666,
+      0.9277943518485294
+    ],
+    [
+      0.8125,
+      0.9277943518485294
+    ],
+    [
+      0.8333333333333334,
+      8.511200714311532e-59
+    ],
+    [
+      0.8541666666666666,
+      4.416784974538318e-84
+    ],
+    [
+      0.875,
+      4.416784974538318e-84
+    ],
+    [
+      0.8958333333333334,
+      4.416784974538318e-84
+    ],
+    [
+      0.9166666666666666,
+      4.416784974538318e-84
+    ],
+    [
+      0.9375,
+      4.416784974538318e-84
+    ],
+    [
+      0.9583333333333334,
+      4.416784974538318e-84
+    ],
+    [
+      0.9791666666666666,
+      4.416784974538318e-84
+    ],
+    [
+      1.0,
+      4.416784974538318e-84
+    ]
+  ],
+  "leftPcm16Fnv1a": "2580234311813821704",
+  "rightPcm16Fnv1a": "14800760036719100615"
+}
+`)],[`BLOOM`,JSON.parse(`{
+  "formatVersion": 1,
+  "engineVersion": "0.1",
+  "referenceId": "bloom",
+  "sampleRate": 48000.0,
+  "frameCount": 240000,
+  "comparisonHorizonMs": 520.0,
+  "smoothingWindowMs": 20.0,
+  "controls": {
+    "gravity": 0.0,
+    "size": -0.35,
+    "feedback": 1.0,
+    "damping": 0.0,
+    "modulation": 1.0
+  },
+  "raw": {
+    "onsetFrame": 968,
+    "timeToPeakMs": 153.91666666666666,
+    "earlyLateEnergyRatioDb": 7.384195076429309,
+    "peakLevelDbfs": -35.52876160504461,
+    "integratedEnergyDb": -20.58291551494917,
+    "postPeakEnergyFraction": 0.7322687881896388,
+    "occupiedTenMsWindowFraction": 0.21428571428571427,
+    "strongestThreeWindowEnergyFraction": 0.324938404382171
+  },
+  "loudnessMatchGain": 1.0,
+  "matched": {
+    "onsetFrame": 968,
+    "timeToPeakMs": 153.91666666666666,
+    "earlyLateEnergyRatioDb": 7.384195076429309,
+    "peakLevelDbfs": -35.52876160504461,
+    "integratedEnergyDb": -20.58291551494917,
+    "postPeakEnergyFraction": 0.7322687881896388,
+    "occupiedTenMsWindowFraction": 0.21428571428571427,
+    "strongestThreeWindowEnergyFraction": 0.324938404382171
+  },
+  "matchedEnvelope": [
+    [
+      0.0,
+      0.9230196427494013
+    ],
+    [
+      0.020833333333333332,
+      1.137065405847119e-09
+    ],
+    [
+      0.041666666666666664,
+      0.6075544634113353
+    ],
+    [
+      0.0625,
+      0.6075544634113353
+    ],
+    [
+      0.08333333333333333,
+      0.0
+    ],
+    [
+      0.10416666666666667,
+      0.8842322225572101
+    ],
+    [
+      0.125,
+      0.8842322225572101
+    ],
+    [
+      0.14583333333333334,
+      0.0
+    ],
+    [
+      0.16666666666666666,
+      0.8222556482388328
+    ],
+    [
+      0.1875,
+      0.8222556508156121
+    ],
+    [
+      0.20833333333333334,
+      1.2833035663642679e-33
+    ],
+    [
+      0.22916666666666666,
+      0.0
+    ],
+    [
+      0.25,
+      0.0
+    ],
+    [
+      0.2708333333333333,
+      0.9999999999999868
+    ],
+    [
+      0.2916666666666667,
+      0.9999999999999868
+    ],
+    [
+      0.3125,
+      0.0
+    ],
+    [
+      0.3333333333333333,
+      0.0
+    ],
+    [
+      0.3541666666666667,
+      0.0
+    ],
+    [
+      0.375,
+      0.9185447753338856
+    ],
+    [
+      0.3958333333333333,
+      0.9018673691633086
+    ],
+    [
+      0.4166666666666667,
+      0.0
+    ],
+    [
+      0.4375,
+      0.0
+    ],
+    [
+      0.4583333333333333,
+      0.0
+    ],
+    [
+      0.4791666666666667,
+      0.9706843956107064
+    ],
+    [
+      0.5,
+      0.97068442033926
+    ],
+    [
+      0.5208333333333334,
+      1.0287361444424124e-32
+    ],
+    [
+      0.5416666666666666,
+      0.0
+    ],
+    [
+      0.5625,
+      0.0
+    ],
+    [
+      0.5833333333333334,
+      0.0
+    ],
+    [
+      0.6041666666666666,
+      0.0
+    ],
+    [
+      0.625,
+      0.9606162758904994
+    ],
+    [
+      0.6458333333333334,
+      0.9606162758904994
+    ],
+    [
+      0.6666666666666666,
+      7.991576900320163e-78
+    ],
+    [
+      0.6875,
+      0.0
+    ],
+    [
+      0.7083333333333334,
+      0.0
+    ],
+    [
+      0.7291666666666666,
+      0.0
+    ],
+    [
+      0.75,
+      0.0
+    ],
+    [
+      0.7708333333333334,
+      0.0
+    ],
+    [
+      0.7916666666666666,
+      0.0
+    ],
+    [
+      0.8125,
+      0.0
+    ],
+    [
+      0.8333333333333334,
+      0.1634835639773983
+    ],
+    [
+      0.8541666666666666,
+      0.1634835639773983
+    ],
+    [
+      0.875,
+      0.15737591861607872
+    ],
+    [
+      0.8958333333333334,
+      0.15737591861607872
+    ],
+    [
+      0.9166666666666666,
+      3.4701772130719985e-64
+    ],
+    [
+      0.9375,
+      0.2703365449394989
+    ],
+    [
+      0.9583333333333334,
+      0.2703365449394989
+    ],
+    [
+      0.9791666666666666,
+      2.3880148760104098e-63
+    ],
+    [
+      1.0,
+      0.0
+    ]
+  ],
+  "leftPcm16Fnv1a": "10620357761719891320",
+  "rightPcm16Fnv1a": "809180521176916468"
+}
+`)],[`FORWARD`,JSON.parse(`{
+  "formatVersion": 1,
+  "engineVersion": "0.1",
+  "referenceId": "forward",
+  "sampleRate": 48000.0,
+  "frameCount": 240000,
+  "comparisonHorizonMs": 520.0,
+  "smoothingWindowMs": 20.0,
+  "controls": {
+    "gravity": 1.0,
+    "size": -0.65,
+    "feedback": -0.8,
+    "damping": 0.1,
+    "modulation": 0.15
+  },
+  "raw": {
+    "onsetFrame": 852,
+    "timeToPeakMs": 8.145833333333334,
+    "earlyLateEnergyRatioDb": 14.282551507380226,
+    "peakLevelDbfs": -28.284414634810283,
+    "integratedEnergyDb": -20.273164205993556,
+    "postPeakEnergyFraction": 1.0,
+    "occupiedTenMsWindowFraction": 0.24285714285714285,
+    "strongestThreeWindowEnergyFraction": 0.7230428386530037
+  },
+  "loudnessMatchGain": 0.9649669399715668,
+  "matched": {
+    "onsetFrame": 852,
+    "timeToPeakMs": 8.145833333333334,
+    "earlyLateEnergyRatioDb": 14.282551584537895,
+    "peakLevelDbfs": -28.594165858196206,
+    "integratedEnergyDb": -20.582915380753573,
+    "postPeakEnergyFraction": 1.0,
+    "occupiedTenMsWindowFraction": 0.24285714285714285,
+    "strongestThreeWindowEnergyFraction": 0.7230428418002719
+  },
+  "matchedEnvelope": [
+    [
+      0.0,
+      0.9999999999999964
+    ],
+    [
+      0.020833333333333332,
+      3.2675618624042503e-12
+    ],
+    [
+      0.041666666666666664,
+      0.6465692695740599
+    ],
+    [
+      0.0625,
+      0.526524799592171
+    ],
+    [
+      0.08333333333333333,
+      0.6218433048639629
+    ],
+    [
+      0.10416666666666667,
+      0.6218433048639629
+    ],
+    [
+      0.125,
+      1.7093004402454955e-84
+    ],
+    [
+      0.14583333333333334,
+      0.4761494085743546
+    ],
+    [
+      0.16666666666666666,
+      0.4761494085743546
+    ],
+    [
+      0.1875,
+      3.576869978305413e-66
+    ],
+    [
+      0.20833333333333334,
+      2.725238860349931e-84
+    ],
+    [
+      0.22916666666666666,
+      0.08364845480508895
+    ],
+    [
+      0.25,
+      0.08364845480508895
+    ],
+    [
+      0.2708333333333333,
+      2.725238860349931e-84
+    ],
+    [
+      0.2916666666666667,
+      2.725238860349931e-84
+    ],
+    [
+      0.3125,
+      0.015322182926858352
+    ],
+    [
+      0.3333333333333333,
+      0.07922105284635735
+    ],
+    [
+      0.3541666666666667,
+      7.622130891865116e-28
+    ],
+    [
+      0.375,
+      2.725238860349931e-84
+    ],
+    [
+      0.3958333333333333,
+      2.725238860349931e-84
+    ],
+    [
+      0.4166666666666667,
+      2.725238860349931e-84
+    ],
+    [
+      0.4375,
+      0.04011067518083139
+    ],
+    [
+      0.4583333333333333,
+      2.184833811361897e-11
+    ],
+    [
+      0.4791666666666667,
+      2.725238860349931e-84
+    ],
+    [
+      0.5,
+      2.725238860349931e-84
+    ],
+    [
+      0.5208333333333334,
+      2.725238860349931e-84
+    ],
+    [
+      0.5416666666666666,
+      0.010941213665297479
+    ],
+    [
+      0.5625,
+      0.03660287777491502
+    ],
+    [
+      0.5833333333333334,
+      8.147653553794994e-29
+    ],
+    [
+      0.6041666666666666,
+      2.725238860349931e-84
+    ],
+    [
+      0.625,
+      2.725238860349931e-84
+    ],
+    [
+      0.6458333333333334,
+      2.725238860349931e-84
+    ],
+    [
+      0.6666666666666666,
+      2.725238860349931e-84
+    ],
+    [
+      0.6875,
+      2.725238860349931e-84
+    ],
+    [
+      0.7083333333333334,
+      2.725238860349931e-84
+    ],
+    [
+      0.7291666666666666,
+      0.03499675757078163
+    ],
+    [
+      0.75,
+      0.03499675757078163
+    ],
+    [
+      0.7708333333333334,
+      0.03367320695939973
+    ],
+    [
+      0.7916666666666666,
+      0.03367320695939973
+    ],
+    [
+      0.8125,
+      2.725238860349931e-84
+    ],
+    [
+      0.8333333333333334,
+      0.03346739220058036
+    ],
+    [
+      0.8541666666666666,
+      0.03346739220058036
+    ],
+    [
+      0.875,
+      2.725238860349931e-84
+    ],
+    [
+      0.8958333333333334,
+      0.032171954143355344
+    ],
+    [
+      0.9166666666666666,
+      0.032171954143355344
+    ],
+    [
+      0.9375,
+      2.725238860349931e-84
+    ],
+    [
+      0.9583333333333334,
+      2.725238860349931e-84
+    ],
+    [
+      0.9791666666666666,
+      0.006188443330892529
+    ],
+    [
+      1.0,
+      0.004149778933562474
+    ]
+  ],
+  "leftPcm16Fnv1a": "1957219577285692479",
+  "rightPcm16Fnv1a": "3302036075149738871"
+}
+`)]]);function um(e){let t=om(e),n=lm.get(t),r=n.matchedEnvelope.map(([e,t])=>`${(e*100).toFixed(2)},${(38-Math.max(0,Math.min(1,t))*32).toFixed(2)}`),i=Object.entries(n.controls).map(([e,t])=>`${e} ${t>=0?`+`:``}${t.toFixed(2)}`).join(`, `);return{state:t,label:`MEASURED ${t} REFERENCE`,path:`M ${r.join(` L `)}`,peakMilliseconds:n.matched.timeToPeakMs,earlyLateEnergyRatioDb:n.matched.earlyLateEnergyRatioDb,controlsDescription:i,description:`Checked ${t.toLowerCase()} impulse fixture: peak ${n.matched.timeToPeakMs.toFixed(1)} milliseconds, early/late ratio ${n.matched.earlyLateEnergyRatioDb.toFixed(1)} decibels. Reference evidence, not the current live capture.`}}var dm=[{group:`I/O`,items:hf.filter(e=>e.role===`io`)},{group:`SIGNAL`,items:hf.filter(e=>e.role!==`io`&&e.role!==`control`)},{group:`CONTROL`,items:hf.filter(e=>e.role===`control`)}],fm=e=>e===`boolean`?[{value:0,label:`OFF`},{value:1,label:`ON`}]:e===`curve-family`?[{value:0,label:`LINEAR`},{value:1,label:`POWER`},{value:2,label:`EXPONENTIAL`}]:e===`waveform`?[{value:0,label:`SINE`},{value:1,label:`TRIANGLE`}]:e===`run-mode`?[{value:0,label:`FREE RUN`},{value:1,label:`RESTART ON TRANSPORT`}]:e===`polarity`?[{value:0,label:`UNIPOLAR 0…1`},{value:1,label:`BIPOLAR −1…+1`}]:null;function pm({topic:e,onDismiss:t,onResearch:n}){return(0,b.jsxs)(`section`,{className:`teaching-card`,"aria-label":`Contextual explanation`,children:[(0,b.jsxs)(`div`,{className:`teaching-title`,children:[(0,b.jsx)(`span`,{children:`LEARN / CONTEXT`}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Dismiss explanation`,onClick:t,children:`×`})]}),(0,b.jsx)(`h3`,{children:e.title}),(0,b.jsx)(`h4`,{children:`DOCUMENTED BARR / MIDIVERB`}),(0,b.jsx)(`p`,{children:e.documented}),(0,b.jsx)(`h4`,{children:`THIS RECONSTRUCTION`}),(0,b.jsx)(`p`,{children:e.reconstruction}),(0,b.jsx)(`h4`,{children:`LISTEN / NOTICE`}),(0,b.jsx)(`p`,{children:e.takeaway}),(0,b.jsx)(`button`,{className:`research-link`,type:`button`,onClick:n,children:`READ OFFLINE ARCHITECTURE RESEARCH`})]})}function mm({inspection:e,activeIndex:t,onActiveIndex:n}){let r=e.loops[t];return r?(0,b.jsxs)(`section`,{className:`loop-inspector`,"aria-label":`Feedback loop inspection`,children:[(0,b.jsxs)(`div`,{className:`loop-heading`,children:[(0,b.jsx)(`span`,{children:`FEEDBACK LOOP`}),(0,b.jsxs)(`strong`,{children:[t+1,` / `,e.loops.length]})]}),e.loops.length>1?(0,b.jsxs)(`div`,{className:`loop-navigation`,children:[(0,b.jsx)(`button`,{type:`button`,"aria-label":`Previous feedback loop`,onClick:()=>n((t+e.loops.length-1)%e.loops.length),children:`PREV`}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Next feedback loop`,onClick:()=>n((t+1)%e.loops.length),children:`NEXT`})]}):null,(0,b.jsxs)(`dl`,{className:`loop-facts`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`NOMINAL DELAY`}),(0,b.jsxs)(`dd`,{children:[r.nominalDelayMilliseconds.toFixed(2),` ms`]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`BLOCKS`}),(0,b.jsx)(`dd`,{children:r.nodeIds.length})]})]}),(0,b.jsx)(`h3`,{children:`CONSTITUENT BLOCKS`}),(0,b.jsx)(`code`,{className:`loop-path`,children:[...r.nodeIds,r.nodeIds[0]].join(` → `)}),(0,b.jsx)(`h3`,{children:`POLARITY / GAIN`}),r.gainElements.length?(0,b.jsx)(`ul`,{children:r.gainElements.map(e=>(0,b.jsxs)(`li`,{children:[(0,b.jsx)(`code`,{children:e.nodeId}),(0,b.jsxs)(`span`,{children:[e.parameter,` `,e.value.toLocaleString()]})]},`${e.nodeId}.${e.parameter}`))}):(0,b.jsx)(`p`,{children:`None in this loop.`}),(0,b.jsx)(`h3`,{children:`FILTERS`}),r.filters.length?(0,b.jsx)(`ul`,{children:r.filters.map(e=>(0,b.jsxs)(`li`,{children:[(0,b.jsx)(`code`,{children:e.nodeId}),(0,b.jsxs)(`span`,{children:[e.value.toLocaleString(),` Hz`]})]},`${e.nodeId}.${e.parameter}`))}):(0,b.jsx)(`p`,{children:`None in this loop.`}),e.truncated?(0,b.jsx)(`p`,{className:`loop-truncated`,children:`Additional loops omitted at the bounded inspection limit.`}):null]}):(0,b.jsxs)(`section`,{className:`loop-inspector loop-empty`,"aria-label":`Feedback loop inspection`,children:[(0,b.jsxs)(`div`,{className:`loop-heading`,children:[(0,b.jsx)(`span`,{children:`FEEDBACK LOOPS`}),(0,b.jsx)(`strong`,{children:`NONE`})]}),(0,b.jsx)(`p`,{children:`No directed feedback loop contains this selection.`})]})}function hm({sampleRate:e,onCapture:t}){let[n,r]=(0,_.useState)(2e3),[i,a]=(0,_.useState)(-80),[o,s]=(0,_.useState)(!0),[c,l]=(0,_.useState)(null),[u,d]=(0,_.useState)(null),[f,p]=(0,_.useState)(``),m=(0,_.useCallback)(async()=>{p(``),d(null);try{let e=await ep(`startImpulseCapture`,n,i,o);if(e===void 0){p(`NATIVE AUDIO REQUIRED FOR CAPTURE`);return}l(pp(e))}catch(e){p(e instanceof Error?e.message:`Capture could not start`)}},[n,o,i]);(0,_.useEffect)(()=>{if(c?.state!==`armed`&&c?.state!==`capturing`)return;let e=window.setInterval(()=>{ep(`getImpulseCaptureStatus`).then(n=>{let r=pp(n);if(l(r),r.state===`complete`)return window.clearInterval(e),ep(`getImpulseCapture`).then(e=>{let n=mp(e);d(n),t(n)})}).catch(e=>p(e instanceof Error?e.message:`Capture status failed`))},100);return()=>window.clearInterval(e)},[t,c?.state]);let h=c?.state===`armed`||c?.state===`capturing`;return(0,b.jsxs)(`section`,{className:`measurement-bar ${h?`is-capturing`:``}`,"aria-label":`Impulse response capture`,children:[(0,b.jsxs)(`div`,{className:`measurement-title`,children:[(0,b.jsx)(`span`,{children:`MEASURE`}),(0,b.jsx)(`strong`,{children:`IMPULSE RESPONSE`})]}),(0,b.jsxs)(`label`,{children:[`MAX LENGTH `,(0,b.jsxs)(`select`,{"aria-label":`Capture maximum length`,value:n,disabled:h,onChange:e=>r(Number(e.target.value)),children:[(0,b.jsx)(`option`,{value:500,children:`500 ms`}),(0,b.jsx)(`option`,{value:2e3,children:`2,000 ms`}),(0,b.jsx)(`option`,{value:5e3,children:`5,000 ms`}),(0,b.jsx)(`option`,{value:1e4,children:`10,000 ms`})]})]}),(0,b.jsxs)(`label`,{children:[`STOP BELOW `,(0,b.jsxs)(`select`,{"aria-label":`Capture stop threshold`,value:i,disabled:h,onChange:e=>a(Number(e.target.value)),children:[(0,b.jsx)(`option`,{value:-60,children:`-60 dBFS`}),(0,b.jsx)(`option`,{value:-80,children:`-80 dBFS`}),(0,b.jsx)(`option`,{value:-100,children:`-100 dBFS`}),(0,b.jsx)(`option`,{value:-120,children:`-120 dBFS`})]})]}),(0,b.jsxs)(`label`,{className:`measurement-check`,children:[(0,b.jsx)(`input`,{type:`checkbox`,checked:o,disabled:h,onChange:e=>s(e.target.checked)}),` MUTE LIVE INPUT`]}),(0,b.jsx)(`button`,{type:`button`,disabled:h||e<=0,onClick:()=>void m(),children:h?`CAPTURING…`:`CAPTURE IMPULSE`}),(0,b.jsx)(`div`,{className:`measurement-readout`,role:`status`,children:f||(e<=0?`WAITING FOR AUDIO DEVICE`:u?`${u.frameCount.toLocaleString()} FRAMES / ${(u.frameCount/u.sampleRate*1e3).toFixed(1)} ms / STOP: ${u.stopReason===`threshold`?`${u.stopThresholdDb} dBFS`:`MAX LENGTH`}`:h&&c?`${c.capturedMilliseconds.toFixed(1)} / ${c.maximumLengthMilliseconds.toFixed(0)} ms`:`0.1 PEAK / READY`)})]})}function gm({capture:e,patchId:t,gateTeaching:n,teachingEnabled:r,onClose:i}){let a=(0,_.useMemo)(()=>vp(e),[e]),o=t===`level-gated-room`?null:a.rt60Seconds,s=t===`level-gated-room`?`abrupt-cutoff`:a.rt60Refusal,c=(0,_.useMemo)(()=>r?$p(e,t,n):null,[e,n,t,r]),[l,u]=(0,_.useState)(1),[d,f]=(0,_.useState)(0),p=hp(e.frameCount,l,d),m=gp(e.left,p,450),h=gp(e.right,p,450),g=_p(a.decayDb,p,450),v=e=>70+900*(e-p.start)/Math.max(1,p.end-p.start-1),y=Math.max(a.peakLeft,a.peakRight,1e-9),x=(e,t)=>e.map(e=>`M${v(e.frame).toFixed(1)},${(t-34*e.maximum/y).toFixed(1)}L${v(e.frame).toFixed(1)},${(t-34*e.minimum/y).toFixed(1)}`).join(``),S=g.map((e,t)=>`${t?`L`:`M`}${v(e.frame).toFixed(1)},${(228+Math.min(90,Math.max(0,-e.decibels))).toFixed(1)}`).join(``),C=c?.regions.map(e=>({...e,startFrame:Math.max(p.start,e.startFrame),endFrame:Math.min(p.end-1,e.endFrame)})).filter(e=>e.endFrame>e.startFrame)??[],w=c?.markers.filter(e=>e.frame>=p.start&&e.frame<p.end)??[],T=p.start/e.sampleRate*1e3,E=p.end/e.sampleRate*1e3,D=e=>u(Math.max(1,Math.min(256,e)));return(0,b.jsxs)(`section`,{className:`response-viewer`,"aria-label":`Stereo impulse response viewer`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsxs)(`div`,{children:[(0,b.jsxs)(`span`,{children:[`CAPTURE #`,e.generation,` / STEREO RESPONSE`]}),(0,b.jsx)(`h2`,{children:`Impulse and energy decay`})]}),(0,b.jsx)(`button`,{type:`button`,onClick:i,children:`CLOSE ×`})]}),(0,b.jsxs)(`div`,{className:`response-metrics`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`WINDOW`}),(0,b.jsxs)(`strong`,{children:[T.toFixed(2),`–`,E.toFixed(2),` ms`]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`PEAK L / R`}),(0,b.jsxs)(`strong`,{children:[a.peakLeft.toFixed(4),` / `,a.peakRight.toFixed(4)]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`ONSET`}),(0,b.jsx)(`strong`,{children:a.onsetFrame===null?`NONE`:`${(a.onsetFrame/e.sampleRate*1e3).toFixed(2)} ms`})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`RT60 / T30 FIT`}),(0,b.jsx)(`strong`,{children:o===null?t===`level-gated-room`?`NOT MEANINGFUL`:`NOT ESTIMATED`:`${o.toFixed(3)} s`})]})]}),(0,b.jsxs)(`div`,{className:`response-navigation`,children:[(0,b.jsx)(`button`,{type:`button`,onClick:()=>{D(16),f(0)},children:`EARLY / 16×`}),(0,b.jsx)(`button`,{type:`button`,disabled:l>=256,onClick:()=>D(l*2),children:`ZOOM IN`}),(0,b.jsx)(`button`,{type:`button`,disabled:l<=1,onClick:()=>D(l/2),children:`ZOOM OUT`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>{D(1),f(0)},children:`FULL TAIL`}),(0,b.jsxs)(`label`,{children:[`PAN `,(0,b.jsx)(`input`,{"aria-label":`Pan response window`,type:`range`,min:`0`,max:`1`,step:`0.001`,value:d,disabled:l===1,onChange:e=>f(Number(e.target.value))})]}),(0,b.jsxs)(`output`,{children:[l.toFixed(0),`×`]})]}),(0,b.jsxs)(`div`,{className:`response-legend`,"aria-label":`Channel line styles`,children:[(0,b.jsxs)(`span`,{children:[(0,b.jsx)(`i`,{className:`legend-left`}),`L / SOLID / UPPER`]}),(0,b.jsxs)(`span`,{children:[(0,b.jsx)(`i`,{className:`legend-right`}),`R / DASHED / LOWER`]}),(0,b.jsxs)(`span`,{children:[(0,b.jsx)(`i`,{className:`legend-decay`}),`ENERGY DECAY / SCHROEDER`]})]}),(0,b.jsxs)(`svg`,{className:`response-chart`,viewBox:`0 0 1000 330`,role:`img`,"aria-label":`Left solid upper waveform, right dashed lower waveform, and combined energy decay from ${T.toFixed(2)} to ${E.toFixed(2)} milliseconds${c?`, with ${c.regions.map(e=>e.label).join(`, `)} regions`:``}`,onWheel:e=>{e.preventDefault(),D(e.deltaY<0?l*2:l/2)},children:[(0,b.jsxs)(`g`,{className:`chart-grid`,children:[(0,b.jsx)(`path`,{d:`M70 75H970M70 160H970M70 228H970M70 263H970M70 298H970M70 318H970`}),(0,b.jsx)(`text`,{x:`12`,y:`79`,children:`L`}),(0,b.jsx)(`text`,{x:`12`,y:`164`,children:`R`}),(0,b.jsx)(`text`,{x:`12`,y:`232`,children:`0 dB`}),(0,b.jsx)(`text`,{x:`12`,y:`267`,children:`-35`}),(0,b.jsx)(`text`,{x:`12`,y:`322`,children:`-90`})]}),c?(0,b.jsxs)(`g`,{className:`architecture-overlay`,"aria-label":c.title,children:[C.map(e=>(0,b.jsxs)(`g`,{className:`overlay-${e.tone}`,children:[(0,b.jsx)(`rect`,{x:v(e.startFrame),y:`203`,width:Math.max(2,v(e.endFrame)-v(e.startFrame)),height:`115`}),(0,b.jsx)(`text`,{x:v(e.startFrame)+5,y:`219`,children:e.label})]},`${e.label}-${e.startFrame}`)),w.map(e=>(0,b.jsxs)(`g`,{className:`overlay-marker overlay-${e.tone}`,children:[(0,b.jsx)(`path`,{d:`M${v(e.frame).toFixed(1)} 42V318`}),(0,b.jsx)(`text`,{x:Math.min(905,v(e.frame)+5),y:`52`,children:e.label})]},`${e.label}-${e.frame}`))]}):null,(0,b.jsx)(`path`,{className:`wave-left`,d:x(m,75)}),(0,b.jsx)(`path`,{className:`wave-right`,d:x(h,160)}),(0,b.jsx)(`path`,{className:`decay-line`,d:S}),(0,b.jsx)(`path`,{className:`fit-band`,d:`M70 233H970M70 263H970`}),(0,b.jsxs)(`text`,{className:`axis-label`,x:`70`,y:`328`,children:[T.toFixed(2),` ms`]}),(0,b.jsxs)(`text`,{className:`axis-label axis-end`,x:`970`,y:`328`,children:[E.toFixed(2),` ms`]})]}),c?(0,b.jsxs)(`section`,{className:`architecture-explanation`,"aria-label":`Architecture explanation`,children:[(0,b.jsx)(`strong`,{children:c.title}),(0,b.jsx)(`span`,{children:c.explanation})]}):null,s?(0,b.jsxs)(`div`,{className:`rt60-refusal`,role:`note`,children:[(0,b.jsx)(`strong`,{children:`RT60 withheld`}),(0,b.jsx)(`span`,{children:yp(s)})]}):(0,b.jsxs)(`div`,{className:`rt60-method`,children:[(0,b.jsx)(`strong`,{children:`T30 estimate`}),(0,b.jsx)(`span`,{children:`Linear fit from -5 to -35 dB, extrapolated to -60 dB.`})]})]})}function _m({diagnostics:e,runawayLoop:t,canUndo:n,onUndo:r,onRecover:i,onClose:a}){return(0,b.jsxs)(`aside`,{className:`diagnostics-panel ${e?.mute.safetyLatched?`has-safety-latch`:``}`,"aria-label":`Runtime resource and safety diagnostics`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`RUNTIME DIAGNOSTICS`}),(0,b.jsx)(`h2`,{children:`Resources and safety`})]}),(0,b.jsx)(`button`,{type:`button`,onClick:a,children:`CLOSE ×`})]}),e?(0,b.jsxs)(b.Fragment,{children:[(0,b.jsxs)(`div`,{className:`mute-diagnostic ${e.mute.active?`is-muted`:``}`,role:e.mute.safetyLatched?`alert`:`status`,children:[(0,b.jsx)(`strong`,{children:e.mute.safetyLatched?`SAFETY MUTE LATCHED`:e.mute.manual?`MANUAL MUTE ACTIVE`:`AUDIO SAFETY READY`}),(0,b.jsx)(`span`,{children:e.mute.safetyLatched?`Editing and Undo remain available. Reduce gain or undo the risky edit, then recover explicitly.`:`No numerical safety latch is active.`})]}),(0,b.jsxs)(`div`,{className:`diagnostic-grid`,children:[(0,b.jsxs)(`section`,{children:[(0,b.jsx)(`span`,{children:`ESTIMATE / STATIC`}),(0,b.jsxs)(`strong`,{children:[e.workloadEstimate.scalarOperationsPerSample,` ops/sample`]}),(0,b.jsxs)(`small`,{children:[(e.workloadEstimate.scalarOperationsPerSecond/1e6).toFixed(2),` M scalar ops/s`]})]}),(0,b.jsxs)(`section`,{children:[(0,b.jsx)(`span`,{children:`LIVE / MEASURED`}),(0,b.jsxs)(`strong`,{children:[e.liveCpu.loadPercent.toFixed(2),`% CPU`]}),(0,b.jsxs)(`small`,{children:[e.liveCpu.peakLoadPercent.toFixed(2),`% peak · `,e.liveCpu.processedBlocks.toLocaleString(),` blocks`]})]}),(0,b.jsxs)(`section`,{children:[(0,b.jsx)(`span`,{children:`MEMORY / PREPARED`}),(0,b.jsx)(`strong`,{children:Np(e.delayMemory.bytes)}),(0,b.jsxs)(`small`,{children:[e.delayMemory.lineCount,` delay-bearing lines`]})]}),(0,b.jsxs)(`section`,{children:[(0,b.jsx)(`span`,{children:`CLIPPING / MEASURED`}),(0,b.jsxs)(`strong`,{children:[e.clipping.samples.toLocaleString(),` samples`]}),(0,b.jsxs)(`small`,{children:[e.clipping.blocks.toLocaleString(),` affected blocks`]})]})]}),(0,b.jsxs)(`dl`,{className:`revision-diagnostic`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`ACTIVE GRAPH REVISION`}),(0,b.jsxs)(`dd`,{children:[`#`,e.topologyPublication.activeRevision||e.activeGraphRevision]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`PENDING / FAILED`}),(0,b.jsxs)(`dd`,{children:[e.topologyPublication.pendingRevision?`#${e.topologyPublication.pendingRevision}`:`—`,` / `,e.topologyPublication.failedRevision?`#${e.topologyPublication.failedRevision}`:`—`]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`TOPOLOGY CROSSFADE`}),(0,b.jsx)(`dd`,{children:e.topologyPublication.crossfadeTotalSamples?`${e.topologyPublication.crossfadePositionSamples}/${e.topologyPublication.crossfadeTotalSamples} samples`:`IDLE`})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`LAST CROSSFADE`}),(0,b.jsx)(`dd`,{children:e.topologyPublication.completedCrossfades?`#${e.topologyPublication.lastCrossfadeFromRevision} → #${e.topologyPublication.lastCrossfadeToRevision}`:`—`})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`SUPERSEDED / RECLAIMED`}),(0,b.jsxs)(`dd`,{children:[e.topologyPublication.supersededRequests,` / `,e.topologyPublication.reclaimedRuntimes]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`SUCCESSFUL RECOVERIES`}),(0,b.jsx)(`dd`,{children:e.recoveryCount})]})]}),e.topologyPublication.failure?(0,b.jsxs)(`p`,{className:`topology-failure`,children:[`REVISION #`,e.topologyPublication.failedRevision,`: `,e.topologyPublication.failure]}):null,e.lastSafetyEvent?(0,b.jsxs)(`section`,{className:`safety-event`,children:[(0,b.jsxs)(`span`,{children:[`LAST SAFETY EVENT #`,e.lastSafetyEvent.generation]}),(0,b.jsxs)(`strong`,{children:[e.lastSafetyEvent.kind.toUpperCase(),` / `,e.lastSafetyEvent.channel.toUpperCase()]}),(0,b.jsxs)(`p`,{children:[`Sample `,e.lastSafetyEvent.sampleIndex.toLocaleString(),` of graph revision `,(0,b.jsxs)(`b`,{children:[`#`,e.lastSafetyEvent.graphRevision]}),`. This identity remains fixed when later edits change the active revision.`]})]}):(0,b.jsx)(`p`,{className:`no-safety-event`,children:`No NaN, infinity, or runaway event recorded.`}),e.mute.safetyLatched?t?.loops[0]?(0,b.jsxs)(`section`,{className:`runaway-loop-event`,children:[(0,b.jsx)(`span`,{children:`LIKELY FEEDBACK LOOP / HEURISTIC`}),(0,b.jsxs)(`strong`,{children:[t.loops[0].nominalDelayMilliseconds.toFixed(2),` ms · `,t.loops[0].nodeIds.length,` blocks`]}),(0,b.jsx)(`code`,{children:[...t.loops[0].nodeIds,t.loops[0].nodeIds[0]].join(` → `)}),(0,b.jsx)(`p`,{children:`Marked red on the graph. Ranking uses visible loop gain and nominal delay; it is guidance, not a stability proof.`})]}):(0,b.jsx)(`p`,{className:`no-safety-event`,children:`No explicit delayed feedback loop could be identified for this event.`}):null,(0,b.jsxs)(`div`,{className:`diagnostic-actions`,children:[(0,b.jsx)(`button`,{type:`button`,disabled:!n,onClick:r,children:`UNDO LAST EDIT`}),(0,b.jsx)(`button`,{type:`button`,disabled:!e.mute.safetyLatched,onClick:i,children:`RECOVER AUDIO`})]})]}):(0,b.jsx)(`p`,{className:`diagnostics-waiting`,children:`Waiting for a coherent native snapshot…`})]})}function vm({value:e,destinationCount:t,showMeasuredReference:n,onBegin:r,onValue:i,onCommit:a,onFocus:o}){let s=(0,_.useMemo)(()=>sm(e),[e]),c=(0,_.useMemo)(()=>n?um(e):null,[n,e]);return(0,b.jsxs)(`section`,{className:`gravity-presentation`,"aria-label":`Gravity macro control`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:`GRAVITY`}),(0,b.jsx)(`strong`,{children:s.state})]}),(0,b.jsxs)(`div`,{className:`gravity-scale`,"aria-hidden":`true`,children:[(0,b.jsx)(`span`,{children:`INVERSE`}),(0,b.jsx)(`span`,{children:`BLOOM`}),(0,b.jsx)(`span`,{children:`FORWARD`})]}),(0,b.jsx)(`input`,{className:`gravity-slider`,"aria-label":`Gravity bipolar control`,type:`range`,min:-1,max:1,step:.001,value:e,onPointerDown:r,onChange:e=>i(Number(e.target.value)),onPointerUp:a,onKeyDown:e=>{r(),e.key===`Enter`&&a()},onBlur:a}),(0,b.jsxs)(`label`,{className:`gravity-exact-value`,children:[(0,b.jsx)(`span`,{children:`EXACT VALUE`}),(0,b.jsx)(`input`,{"aria-label":`Gravity exact numeric value`,type:`number`,min:-1,max:1,step:.001,value:e,onFocus:r,onChange:e=>i(Number(e.target.value)),onKeyDown:e=>{e.key===`Enter`&&a()},onBlur:a})]}),(0,b.jsxs)(`figure`,{className:`gravity-envelope`,children:[(0,b.jsxs)(`figcaption`,{children:[(0,b.jsx)(`span`,{children:`DESIGN PREDICTION`}),(0,b.jsx)(`strong`,{children:`NOT MEASURED AUDIO`})]}),(0,b.jsxs)(`svg`,{viewBox:`0 0 100 42`,role:`img`,"aria-label":s.description,preserveAspectRatio:`none`,children:[(0,b.jsx)(`line`,{x1:s.peakPosition*100,x2:s.peakPosition*100,y1:`4`,y2:`40`}),(0,b.jsx)(`path`,{d:s.path}),c?(0,b.jsx)(`path`,{className:`gravity-measured-envelope`,d:c.path}):null]}),(0,b.jsx)(`p`,{children:`Shape guide from the Gravity coordinate. Capture an impulse to inspect actual response.`}),c?(0,b.jsxs)(`aside`,{className:`gravity-reference-comparison`,"aria-label":c.description,children:[(0,b.jsx)(`strong`,{children:c.label}),(0,b.jsxs)(`span`,{children:[`PEAK `,c.peakMilliseconds.toFixed(1),` ms · EARLY/LATE `,c.earlyLateEnergyRatioDb.toFixed(1),` dB`]}),(0,b.jsxs)(`p`,{children:[`Checked fixture (`,c.controlsDescription,`). Reference evidence—not the current capture. Any disagreement with the prediction is shown, not corrected.`]})]}):null]}),(0,b.jsxs)(`button`,{type:`button`,className:`gravity-focus`,onClick:o,children:[`EXPAND / FOCUS `,t,` MAPPINGS`]})]})}function ym({snapshot:e}){let{fitView:t,setViewport:n,screenToFlowPosition:r}=hl(),i=(0,_.useMemo)(()=>e.restoredPatch?sp(JSON.stringify(e.restoredPatch),e):null,[e]),a=(0,_.useMemo)(()=>i??{...af(e),viewport:{x:0,y:0,zoom:1}},[i,e]),[o,s,c]=vd(a.nodes),[l,u,d]=yd(a.edges),[f,p]=(0,_.useState)(null),[m,h]=(0,_.useState)(null),[g,v]=(0,_.useState)(a.viewport),y=(0,_.useRef)(null),x=(0,_.useRef)(null),S=(0,_.useRef)(null),C=(0,_.useRef)(0),w=(0,_.useRef)(null),[T,E]=(0,_.useState)(null),[D,O]=(0,_.useState)(i?`custom`:`barr-reference`),[k,A]=(0,_.useState)(`causal-reverse-envelope`),[j,M]=(0,_.useState)(()=>{try{return window.localStorage.getItem(`reverb-playground-teaching`)!==`off`}catch{return!0}}),[ee,N]=(0,_.useState)(null),[te,P]=(0,_.useState)(!1),[F,I]=(0,_.useState)(()=>Tf(a)),[ne,L]=(0,_.useState)(null),[R,z]=(0,_.useState)(null),[B,re]=(0,_.useState)(0),[ie,ae]=(0,_.useState)(null),oe=(0,_.useCallback)(e=>{let t=(e,t,n)=>o.find(t=>t.data.type===e)?.data.parameters.find(e=>e.id===t)?.value??n;ae({capture:e,patchId:D,gateTeaching:{detectorReleaseMilliseconds:t(`envelope-follower`,`release`,20),holdMilliseconds:t(`hold-gate`,`hold`,120),releaseMilliseconds:t(`hold-gate`,`release`,8)}})},[D,o]),[se,ce]=(0,_.useState)(()=>window.matchMedia(`(prefers-reduced-motion: reduce)`).matches),[le,ue]=(0,_.useState)(()=>!window.matchMedia(`(prefers-reduced-motion: reduce)`).matches),[de,fe]=(0,_.useState)({}),[pe,me]=(0,_.useState)(!1),[he,ge]=(0,_.useState)(null),[_e,ve]=(0,_.useState)(()=>performance.now()/1e3),ye=(0,_.useMemo)(()=>Pp(o,l),[l,o]),be=(0,_.useMemo)(()=>op(o,l,g),[l,o,g]),xe=D===`custom`?null:Jp(D),Se=(0,_.useMemo)(()=>f?zf(o,l,{nodeId:f.id}):m?zf(o,l,{edgeId:m.id}):null,[l,o,m,f]),Ce=(0,_.useMemo)(()=>he?.mute.safetyLatched?Vf(o,l):null,[he?.mute.safetyLatched,l,o]),we=Se?.loops.length?B%Se.loops.length:0,Te=(0,_.useMemo)(()=>Ff(o,l,Se,we),[l,Se,o,we]),Ee=(0,_.useMemo)(()=>If(Te.nodes,Te.edges,Ce),[Te,Ce]),De=(0,_.useMemo)(()=>Dp(Ee.nodes,Ee.edges,de),[de,Ee]),Oe=(0,_.useMemo)(()=>{if(f?.data.type!==`control-map`)return null;let e=(e,t)=>f.data.parameters.find(t=>t.id===e)?.value??t,t=e(`curve-family`,0);return Bp(t>=1.5?`exponential`:t>=.5?`power`:`linear`,e(`curve-amount`,0),e(`exponent`,1),e(`scale`,1),e(`offset`,0),e(`polarity`,1)>=.5?`bipolar`:`unipolar`,e(`clamp-min`,-1),e(`clamp-max`,1))},[f]),ke=(0,_.useMemo)(()=>f?.data.type===`macro`?rm(f.id,o,l):null,[l,o,f]),Ae=(0,_.useMemo)(()=>im(De.nodes,De.edges,ke),[De,ke]),je=(0,_.useMemo)(()=>Vp(Ae.nodes,Ae.edges,_e),[_e,Ae]),Me=(0,_.useCallback)(()=>{if(!ke)return;let e=new Set(cm(ke));t({nodes:o.filter(t=>e.has(t.id)),padding:.22,duration:se?0:350,maxZoom:1.1})},[t,o,se,ke]);(0,_.useEffect)(()=>{if(se||!o.some(e=>e.data.role===`control`))return;let e=window.setInterval(()=>ve(performance.now()/1e3),33);return()=>window.clearInterval(e)},[o,se]),(0,_.useEffect)(()=>{let e=window.matchMedia(`(prefers-reduced-motion: reduce)`),t=()=>{ce(e.matches),e.matches&&ue(!1)};return e.addEventListener(`change`,t),()=>e.removeEventListener(`change`,t)},[]),(0,_.useEffect)(()=>{let e=!1,t=window.setTimeout(async()=>{try{let t=Fp(await ep(`publishGraph`,op(o,l,g)));e||L(t.accepted?{kind:`ok`,message:`GRAPH REVISION #${t.revision} QUEUED FOR AUDITION`}:{kind:`error`,message:t.error})}catch(t){e||L({kind:`error`,message:t instanceof Error?t.message:`Graph publication failed`})}},35);return()=>{e=!0,window.clearTimeout(t)}},[ye]),(0,_.useEffect)(()=>{let e=!1,t=window.setTimeout(async()=>{try{let t=await ep(`storePatchState`,be);if(t!==void 0){let n=em(t);!e&&!n.accepted&&L({kind:`error`,message:n.error||`Host state rejected`})}}catch(t){e||L({kind:`error`,message:t instanceof Error?t.message:`Host state failed`})}},120);return()=>{e=!0,window.clearTimeout(t)}},[be]),(0,_.useEffect)(()=>{if(!Tp(le,se)){fe({}),ep(`setEnergyTelemetryEnabled`,!1).catch(()=>void 0);return}let e=!1,t=!1,n=performance.now(),r=-1,i=n;ep(`setEnergyTelemetryEnabled`,!0).catch(()=>void 0);let a=async()=>{if(!t){t=!0;try{let t=xp(await ep(`getEnergyTelemetry`)),a=performance.now();t.generation===r?a-i>100&&(t={...t,nodes:t.nodes.map(e=>({...e,rms:0}))}):(r=t.generation,i=a),e||fe(e=>Cp(e,t,a-n)),n=a}catch{}finally{t=!1}}};a();let o=window.setInterval(()=>void a(),33);return()=>{e=!0,window.clearInterval(o),ep(`setEnergyTelemetryEnabled`,!1).catch(()=>void 0)}},[le,se]),(0,_.useEffect)(()=>{let e=!1,t=!1,n=async()=>{if(!t){t=!0;try{let t=Mp(await ep(`getRuntimeDiagnostics`));e||(ge(t),t.topologyPublication.failedRevision>0&&t.topologyPublication.failedRevision===t.topologyPublication.requestedRevision&&t.topologyPublication.failure&&L({kind:`error`,message:`REVISION #${t.topologyPublication.failedRevision} REJECTED: ${t.topologyPublication.failure}`}),t.mute.safetyLatched&&me(!0))}catch{}finally{t=!1}}};n();let r=window.setInterval(()=>void n(),250);return()=>{e=!0,window.clearInterval(r)}},[]);let V=(0,_.useCallback)(e=>{s(e.nodes),u(e.edges),p(null),h(null)},[u,s]),Ne=(0,_.useCallback)(e=>{for(let t of e.nodes)for(let e of t.data.parameters)if(t.data.runtimeBound||t.data.type===`macro`&&e.id===`value`)try{ep(`setRuntimeParameter`,t.id,e.id,e.value).catch(()=>void 0)}catch{}},[]),Pe=(0,_.useCallback)(e=>{if((e===`stereo-input`||e===`stereo-output`)&&o.some(t=>t.data.type===e)){L({kind:`error`,message:`Exactly one ${e===`stereo-input`?`Stereo Input`:`Stereo Output`} is required and already exists.`});return}let t={nodes:o,edges:l},n=o.filter(e=>!e.data.runtimeBound).length,i=r({x:window.innerWidth*.5,y:window.innerHeight*.5}),a=vf(e,_f(e,o),{x:i.x-190+n%3*190,y:i.y-100+Math.floor(n/3)*130}),s={nodes:[...o.map(e=>({...e,selected:!1})),{...a,selected:!0}],edges:l};V(s),p(a),I(e=>Ef(e,`Create ${a.data.label}`,t,s)),L({kind:`ok`,message:`CREATED ${a.id} / DRAFT GRAPH`})},[V,l,o,r]),Fe=(0,_.useCallback)(()=>{let e=o.find(e=>e.selected&&(e.data.type===`stereo-input`||e.data.type===`stereo-output`));if(e){L({kind:`error`,message:`${e.data.label} is required and cannot be deleted.`});return}let t={nodes:o,edges:l},n=sf(o,l);(n.nodes.length!==o.length||n.edges.length!==l.length)&&(V(n),I(e=>Ef(e,`Delete selection`,t,n)),L({kind:`ok`,message:`DELETED SELECTION + INCIDENT CABLES / UNDO AVAILABLE`}))},[V,l,o]),Ie=(0,_.useCallback)(()=>{let e=Df(F);e.edit&&(V(e.edit.before),Ne(e.edit.before),I(e.history),L({kind:`ok`,message:`UNDID ${e.edit.label.toUpperCase()}`}))},[V,F,Ne]),Le=(0,_.useCallback)(()=>{let e=Of(F);e.edit&&(V(e.edit.after),Ne(e.edit.after),I(e.history),L({kind:`ok`,message:`REDID ${e.edit.label.toUpperCase()}`}))},[V,F,Ne]),Re=(0,_.useCallback)(e=>{let t={nodes:o,edges:l},n=Uf(o,l,e);if(n.kind===`invalid`){L({kind:`error`,message:n.message});return}if(n.kind===`occupied`){z(e),L({kind:`error`,message:`INPUT OCCUPIED / REPLACE ITS CABLE OR INSERT +`});return}let r=Kf(t,e);V(r),I(e=>Ef(e,`Create cable`,t,r)),L({kind:`ok`,message:`CONNECTED ${n.signal.toUpperCase()} CABLE`})},[V,l,o]),ze=(0,_.useCallback)(e=>{let t=R;if(z(null),!t||e===`cancel`){L(null);return}let n=Uf(o,l,t);if(e===`sum`&&(n.kind!==`occupied`||n.signal!==`audio`)){L({kind:`error`,message:`CONTROL INPUTS CANNOT INSERT AN AUDIO SUM`});return}let r={nodes:o,edges:l},i=e===`replace`?Kf(r,t,!0):qf(r,t);V(i),I(t=>Ef(t,e===`replace`?`Replace cable`:`Insert +`,r,i)),L({kind:`ok`,message:e===`replace`?`REPLACED OCCUPIED INPUT CABLE`:`INSERTED + AND REWIRED BOTH SOURCES`})},[V,l,o,R]),Be=(0,_.useCallback)((e,t,n)=>{let r=o.find(t=>t.id===e),i=r?.data.type===`macro`&&r.data.parameters.find(e=>e.id===`center-detent`)?.value===1,a=r?.data.type===`macro`&&t===`value`&&i&&Math.abs(n)<=.02?0:n,c=n=>n.id===e?{...n,data:{...n.data,parameters:n.data.parameters.map(e=>e.id===t?{...e,value:a}:e)}}:n;if(s(e=>e.map(c)),p(e=>e?c(e):null),r?.data.runtimeBound||r?.data.type===`macro`&&t===`value`)try{ep(`setRuntimeParameter`,e,t,a).catch(()=>void 0)}catch{}},[o,s]),Ve=(0,_.useCallback)((e,t,n)=>{let r=r=>r.id===e?{...r,data:{...r.data,parameters:r.data.parameters.map(e=>e.id!==t||!e.modulation?e:{...e,modulation:{...e.modulation,...n}})}}:r;s(e=>e.map(r)),p(e=>e?r(e):null)},[s]),He=(0,_.useCallback)((e,t)=>{let n=t.slice(0,64),r=t=>t.id===e?{...t,data:{...t.data,userName:n}}:t;s(e=>e.map(r)),p(e=>e?r(e):null)},[s]),Ue=(0,_.useCallback)(()=>{let n=D===`custom`?`barr-reference`:D,r=Zp(n,e),i={nodes:o,edges:l};V(r),Ne(r),I(e=>Ef(e,`Reset patch`,i,r)),z(null),O(n),requestAnimationFrame(()=>void t({padding:.16,minZoom:.25,maxZoom:1.1}))},[D,V,l,t,o,Ne,e]),We=(0,_.useCallback)(async r=>{try{let i=Zp(r,e);V(i),Ne(i),v(i.viewport),await n(i.viewport),I(Tf(i)),z(null),O(r),A(e=>Yp(r,e));let a=Jp(r);E({kind:`ok`,message:`LOADED FACTORY / ${a.label.toUpperCase()}`}),requestAnimationFrame(()=>void t({padding:.16,minZoom:.25,maxZoom:1.1}))}catch(e){E({kind:`error`,message:e instanceof Error?e.message:`Factory patch load failed`})}},[V,t,Ne,n,e]),Ge=(0,_.useCallback)(()=>{let e=jf({nodes:o,edges:l});if(!e){L({kind:`error`,message:`SELECT ONE OR MORE NON-I/O BLOCKS TO COPY`});return}S.current=e,C.current=0,navigator.clipboard?.writeText(JSON.stringify({format:`reverb-playground-subgraph-v1`,...e})).catch(()=>void 0),L({kind:`ok`,message:`COPIED ${e.nodes.length} BLOCK${e.nodes.length===1?``:`S`} + ${e.edges.length} INTERNAL CABLE${e.edges.length===1?``:`S`}`})},[l,o]),Ke=(0,_.useCallback)(()=>{if(!S.current){L({kind:`error`,message:`GRAPH CLIPBOARD IS EMPTY`});return}let e={nodes:o,edges:l},t=Nf(e,S.current,40*++C.current);V(t),I(n=>Ef(n,`Paste selection`,e,t)),L({kind:`ok`,message:`PASTED ${S.current.nodes.length} BLOCK${S.current.nodes.length===1?``:`S`} / NEW IDS ASSIGNED`})},[V,l,o]),qe=(0,_.useCallback)(({nodes:e,edges:t})=>{p(e[0]??null),h(t[0]??null),re(0)},[]);(0,_.useEffect)(()=>{let e=e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===`z`){e.preventDefault(),e.shiftKey?Le():Ie();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===`y`){e.preventDefault(),Le();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===`c`&&!(e.target instanceof HTMLInputElement)){e.preventDefault(),Ge();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===`v`&&!(e.target instanceof HTMLInputElement)){e.preventDefault(),Ke();return}if((e.key===`Delete`||e.key===`Backspace`)&&!(e.target instanceof HTMLInputElement)){e.preventDefault(),Fe();return}e.key.toLowerCase()===`r`&&!(e.target instanceof HTMLInputElement)&&Ue()};return window.addEventListener(`keydown`,e),()=>window.removeEventListener(`keydown`,e)},[Ge,Ke,Le,Fe,Ue,Ie]);let Je=(0,_.useCallback)((e,t,n)=>{y.current={label:`Edit ${e}.${t}`,before:xf({nodes:o,edges:l})}},[l,o]),Ye=(0,_.useCallback)((e,t,n)=>{Be(e,t,n)},[Be]),Xe=(0,_.useCallback)(()=>{let e=y.current;y.current=null,e&&I(t=>Ef(t,e.label,e.before,{nodes:o,edges:l}))},[l,o]),Ze=(0,_.useCallback)(()=>{try{let t=op(o,l,g);sp(t,e);let n=URL.createObjectURL(new Blob([t],{type:`application/json`})),r=document.createElement(`a`);r.href=n;let i=xe?.filename??`custom-patch.rvp.json`;r.download=i,document.body.appendChild(r),r.click(),r.remove(),window.setTimeout(()=>URL.revokeObjectURL(n),0),I(e=>kf(e,{nodes:o,edges:l})),E({kind:`ok`,message:`SAVED ${i.toUpperCase()} / SCHEMA V2`})}catch(e){E({kind:`error`,message:e instanceof Error?e.message:`Patch save failed`})}},[xe,l,o,e,g]),Qe=(0,_.useCallback)(async t=>{try{let r=sp(await t.text(),e);s(r.nodes),u(r.edges),v(r.viewport),await n(r.viewport);for(let e of r.nodes)for(let t of e.data.parameters)(e.data.runtimeBound||e.data.type===`macro`&&t.id===`value`)&&await ep(`setRuntimeParameter`,e.id,t.id,t.value);p(null),h(null),I(Tf(r)),z(null),O(`custom`),E({kind:`ok`,message:`LOADED ${t.name.toUpperCase()} / SCHEMA V2`})}catch(e){E({kind:`error`,message:e instanceof Error?e.message:`Patch load failed`})}},[u,n,s,e]),$e=f?.id??`overview`,et=R?Uf(o,l,R):null,tt=et?.kind===`occupied`?et.signal:null,nt=j&&ee!==$e,rt=(0,_.useCallback)(()=>{M(e=>{let t=!e;try{window.localStorage.setItem(`reverb-playground-teaching`,t?`on`:`off`)}catch{}return t})},[]);return(0,b.jsxs)(`main`,{className:`editor-shell`,children:[(0,b.jsxs)(`header`,{className:`editor-header`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsxs)(`div`,{className:`eyebrow`,children:[`SCHEMATIC EDITOR / `,xe?.label.toUpperCase()??`CUSTOM PATCH`]}),(0,b.jsx)(`h1`,{children:`Patch architecture`}),e.productVersion&&e.buildCommit?(0,b.jsxs)(`span`,{className:`build-identity`,children:[`v`,e.productVersion,` / `,e.buildCommit]}):null]}),(0,b.jsxs)(`div`,{className:`header-runtime`,children:[(0,b.jsxs)(`label`,{className:`factory-picker`,children:[(0,b.jsx)(`span`,{children:`FACTORY PATCH`}),(0,b.jsxs)(`select`,{"aria-label":`Factory patch`,value:D,onChange:e=>{let t=e.target.value;t!==`custom`&&We(t)},children:[D===`custom`?(0,b.jsx)(`option`,{value:`custom`,children:`Custom / loaded file`}):null,Kp.map(e=>(0,b.jsx)(`option`,{value:e.id,children:e.label},e.id))]})]}),(0,b.jsxs)(`div`,{className:`comparison-switch`,role:`group`,"aria-label":`Compare Barr reference with selected design`,children:[(0,b.jsx)(`button`,{type:`button`,"aria-pressed":D===`barr-reference`,onClick:()=>void We(`barr-reference`),children:`A / BARR`}),(0,b.jsxs)(`button`,{type:`button`,"aria-pressed":D===k,onClick:()=>void We(k),children:[`B / `,Xp(k)]})]}),(0,b.jsxs)(`button`,{className:`energy-toggle`,type:`button`,"aria-pressed":le,disabled:se,onClick:()=>ue(e=>!e),title:se?`Disabled by the operating-system reduced-motion preference`:`Toggle measured node and cable energy`,children:[`ENERGY `,se?`REDUCED`:le?`ON`:`OFF`]}),(0,b.jsx)(`button`,{className:`diagnostics-toggle`,type:`button`,"aria-expanded":pe,onClick:()=>me(e=>!e),children:`DIAGNOSTICS`}),(0,b.jsxs)(`div`,{className:`header-status`,"aria-label":`Audition status`,children:[(0,b.jsx)(`span`,{className:`status-dot`,"aria-hidden":`true`}),(0,b.jsx)(`span`,{children:he?.topologyPublication.crossfadeTotalSamples?`CROSSFADING #${he.topologyPublication.crossfadeFromRevision} → #${he.topologyPublication.activeRevision}`:he?.topologyPublication.pendingRevision?`COMPILING #${he.topologyPublication.pendingRevision}`:he?.topologyPublication.activeRevision?`GRAPH ACTIVE #${he.topologyPublication.activeRevision}`:`RUNTIME BOUND / ${e.sampleRate>0?`${(e.sampleRate/1e3).toFixed(1)} kHz`:`awaiting audio`}`})]})]})]}),(0,b.jsx)(hm,{sampleRate:e.sampleRate,onCapture:oe}),ie?(0,b.jsx)(gm,{capture:ie.capture,patchId:ie.patchId,gateTeaching:ie.gateTeaching,teachingEnabled:j,onClose:()=>ae(null)},ie.capture.generation):null,pe?(0,b.jsx)(_m,{diagnostics:he,runawayLoop:Ce,canUndo:F.undo.length>0,onUndo:Ie,onRecover:()=>{ep(`resetSafety`).catch(()=>void 0)},onClose:()=>me(!1)}):null,(0,b.jsxs)(`section`,{className:`workspace`,children:[(0,b.jsxs)(`aside`,{className:`module-library`,"aria-label":`Module library`,children:[(0,b.jsxs)(`div`,{className:`pane-heading`,children:[(0,b.jsx)(`span`,{children:`MODULES`}),(0,b.jsx)(`span`,{className:`pane-count`,children:hf.length})]}),(0,b.jsx)(`p`,{className:`pane-help`,children:`Click a primitive to place it near the canvas center. Audio cables are mono.`}),dm.map(e=>(0,b.jsxs)(`section`,{className:`module-group`,children:[(0,b.jsx)(`h2`,{children:e.group}),e.items.map(e=>(0,b.jsxs)(`button`,{className:`module-item${e.role===`control`?` module-control`:``}`,type:`button`,onClick:()=>Pe(e.type),children:[(0,b.jsx)(`span`,{className:`module-glyph`,"aria-hidden":`true`}),(0,b.jsx)(`span`,{children:e.label})]},e.type))]},e.group)),(0,b.jsxs)(`div`,{className:`signal-legend`,"aria-label":`Cable styles`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{className:`legend-line audio-line`}),` AUDIO / SOLID`]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{className:`legend-line control-line`}),` CONTROL / DASHED`]})]})]}),(0,b.jsxs)(`section`,{className:`canvas-pane`,"aria-label":`Patch canvas`,children:[(0,b.jsxs)(`div`,{className:`canvas-toolbar`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`strong`,{children:xe?.graphName??`CUSTOM.graph`}),(0,b.jsxs)(`span`,{children:[o.length,` blocks / `,l.length,` cables`]})]}),(0,b.jsxs)(`div`,{className:`canvas-actions`,children:[(0,b.jsxs)(`span`,{children:[Math.round(g.zoom*100),`%`]}),(0,b.jsx)(`span`,{className:`clean-state ${Af(F,{nodes:o,edges:l})?`is-clean`:`is-dirty`}`,children:Af(F,{nodes:o,edges:l})?`SAVED`:`UNSAVED`}),(0,b.jsx)(`button`,{type:`button`,onClick:Ze,children:`SAVE PATCH`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>w.current?.click(),children:`LOAD PATCH`}),(0,b.jsx)(`button`,{type:`button`,disabled:!F.undo.length,onClick:Ie,children:`UNDO`}),(0,b.jsx)(`button`,{type:`button`,disabled:!F.redo.length,onClick:Le,children:`REDO`}),(0,b.jsx)(`button`,{type:`button`,onClick:Ge,children:`COPY`}),(0,b.jsx)(`button`,{type:`button`,disabled:!S.current,onClick:Ke,children:`PASTE`}),(0,b.jsx)(`button`,{type:`button`,onClick:Fe,children:`DELETE`}),(0,b.jsx)(`button`,{type:`button`,onClick:Ue,children:`RESET PATCH`}),(0,b.jsx)(`input`,{ref:w,className:`file-input`,"aria-label":`Load patch file`,type:`file`,accept:`.json,application/json`,onChange:e=>{let t=e.target.files?.[0];t&&Qe(t),e.target.value=``}})]})]}),T?(0,b.jsxs)(`div`,{className:`file-status file-status-${T.kind}`,role:T.kind===`error`?`alert`:`status`,children:[(0,b.jsx)(`span`,{children:T.message}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Dismiss file status`,onClick:()=>E(null),children:`×`})]}):null,ne?(0,b.jsxs)(`div`,{className:`file-status file-status-${ne.kind}`,role:ne.kind===`error`?`alert`:`status`,children:[(0,b.jsx)(`span`,{children:ne.message}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Dismiss graph status`,onClick:()=>L(null),children:`×`})]}):null,R?(0,b.jsxs)(`div`,{className:`connection-offer`,role:`dialog`,"aria-label":`Occupied input options`,children:[(0,b.jsx)(`strong`,{children:`INPUT ALREADY HAS A CABLE`}),(0,b.jsx)(`span`,{children:tt===`control`?`A parameter socket accepts one control cable. Replace it or cancel.`:`Replace it, or insert an explicit Sum (+) block to preserve both audio sources.`}),(0,b.jsxs)(`div`,{children:[tt===`audio`?(0,b.jsx)(`button`,{type:`button`,onClick:()=>ze(`sum`),children:`INSERT +`}):null,(0,b.jsx)(`button`,{type:`button`,onClick:()=>ze(`replace`),children:`REPLACE CABLE`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>ze(`cancel`),children:`CANCEL`})]})]}):null,(0,b.jsxs)(`div`,{className:`flow-wrap`,children:[(0,b.jsxs)(_d,{nodes:je.nodes,edges:je.edges,nodeTypes:{patchNode:Yf},onNodesChange:c,onEdgesChange:d,onNodeDragStart:()=>{x.current=xf({nodes:o,edges:l})},onNodeDragStop:(e,t,n)=>{let r=x.current;if(x.current=null,!r)return;let i=new Map(n.map(e=>[e.id,e.position]));i.set(t.id,t.position);let a={nodes:o.map(e=>i.has(e.id)?{...e,position:{...i.get(e.id)}}:e),edges:l};I(e=>Ef(e,`Move ${t.id}`,r,a))},onConnect:Re,isValidConnection:e=>Uf(o,l,{source:e.source,sourceHandle:e.sourceHandle??null,target:e.target,targetHandle:e.targetHandle??null}).kind!==`invalid`,defaultEdgeOptions:{interactionWidth:24},onSelectionChange:qe,onViewportChange:v,defaultViewport:a.viewport,fitView:!i,fitViewOptions:{padding:.16,minZoom:.58,maxZoom:1.1},minZoom:.2,maxZoom:1.8,deleteKeyCode:null,selectionKeyCode:`Shift`,multiSelectionKeyCode:`Shift`,panActivationKeyCode:`Space`,panOnDrag:[1,2],selectionOnDrag:!0,nodesFocusable:!0,edgesFocusable:!0,elevateEdgesOnSelect:!0,proOptions:{hideAttribution:!1},"aria-label":`${xe?.label??`Custom`} patch graph`,children:[(0,b.jsx)(Td,{color:`#34414a`,gap:22,size:1.2,variant:xd.Dots}),(0,b.jsx)(Pd,{position:`bottom-left`,showInteractive:!1}),(0,b.jsx)(Zd,{pannable:!0,zoomable:!0,position:`bottom-right`,nodeColor:e=>e.selected?`#f2b44e`:`#52616d`,maskColor:`rgba(9, 12, 15, 0.78)`})]}),(0,b.jsx)(`div`,{className:`interaction-hint`,children:`SPACE + DRAG PAN · WHEEL ZOOM · SHIFT BOX SELECT · DELETE REMOVE · R RESET`})]})]}),(0,b.jsxs)(`aside`,{className:`inspector`,"aria-label":`Inspector`,children:[(0,b.jsxs)(`div`,{className:`pane-heading`,children:[(0,b.jsx)(`span`,{children:`INSPECTOR`}),(0,b.jsxs)(`button`,{className:`teaching-toggle`,type:`button`,"aria-pressed":j,title:`Toggle contextual cards and response architecture overlays`,onClick:rt,children:[`LEARN `,j?`ON`:`OFF`]})]}),f?(0,b.jsxs)(`div`,{className:`inspector-content`,children:[(0,b.jsx)(`div`,{className:`selection-kicker`,children:`SELECTED BLOCK`}),(0,b.jsx)(`h2`,{children:f.data.type===`macro`?f.data.userName:f.data.label}),(0,b.jsx)(`code`,{children:f.id}),f.data.presentation===`gravity`&&ke?(0,b.jsx)(vm,{value:f.data.parameters.find(e=>e.id===`value`)?.value??0,destinationCount:ke.destinations.length,showMeasuredReference:D===`gravity-diffusion`,onBegin:()=>Je(f.id,`value`,f.data.parameters.find(e=>e.id===`value`)?.value??0),onValue:e=>Be(f.id,`value`,e),onCommit:Xe,onFocus:Me}):null,Se?(0,b.jsx)(mm,{inspection:Se,activeIndex:we,onActiveIndex:re}):null,(0,b.jsxs)(`dl`,{className:`property-list`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`TYPE`}),(0,b.jsx)(`dd`,{children:f.data.type})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`ROLE`}),(0,b.jsx)(`dd`,{children:f.data.role})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`PORTS`}),(0,b.jsxs)(`dd`,{children:[f.data.ports.length,` mono`]})]})]}),f.data.type===`macro`?(0,b.jsxs)(`label`,{className:`macro-name-field`,children:[(0,b.jsx)(`span`,{children:`MACRO NAME`}),(0,b.jsx)(`input`,{"aria-label":`Macro name`,maxLength:64,value:f.data.userName??``,onFocus:()=>Je(f.id,`name`,0),onChange:e=>He(f.id,e.target.value),onBlur:()=>{(f.data.userName??``).trim()||He(f.id,`Macro`),Xe()}})]}):null,ke?(0,b.jsxs)(`section`,{className:`macro-destinations`,"aria-label":`Reachable mapped parameters`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:`REACHABLE MAPPINGS`}),(0,b.jsx)(`strong`,{children:ke.destinations.length})]}),ke.destinations.length?(0,b.jsx)(`ul`,{children:ke.destinations.map(e=>(0,b.jsxs)(`li`,{children:[(0,b.jsxs)(`code`,{children:[e.nodeId,`.`,e.parameterId]}),(0,b.jsxs)(`span`,{children:[e.minimum.toFixed(2),` … `,e.maximum.toFixed(2),` `,e.unit]})]},`${e.nodeId}.${e.parameterId}`))}):(0,b.jsx)(`p`,{children:`Connect the explicit output through Curve Mapper blocks to parameter sockets.`})]}):null,Oe?(0,b.jsxs)(`section`,{className:`control-range-preview`,"aria-label":`Predicted control output range`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:`PREDICTED OUTPUT`}),(0,b.jsxs)(`strong`,{children:[Oe.minimum.toFixed(2),` … `,Oe.maximum.toFixed(2)]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`i`,{style:{left:`${(Oe.minimum+1)*50}%`}}),(0,b.jsx)(`i`,{style:{left:`${(Oe.maximum+1)*50}%`}})]}),(0,b.jsx)(`p`,{children:`CURVE → SCALE → OFFSET → CLAMP · visible before connection.`})]}):null,(0,b.jsx)(`h3`,{children:`PARAMETERS`}),f.data.parameters.length?f.data.parameters.filter(e=>f.data.presentation!==`gravity`||e.id!==`value`).map(e=>{let t=fm(e.unit);return(0,b.jsxs)(`div`,{className:`parameter-card`,children:[(0,b.jsx)(`span`,{children:e.id.toUpperCase()}),(0,b.jsxs)(`label`,{className:`parameter-value`,children:[(0,b.jsx)(`span`,{className:`sr-only`,children:`${f.data.label} ${e.id} numeric value`}),t?(0,b.jsx)(`select`,{"aria-label":`${f.data.label} ${e.id}`,value:e.value,onFocus:()=>Je(f.id,e.id,e.value),onChange:t=>Ye(f.id,e.id,Number(t.target.value)),onBlur:Xe,children:t.map(e=>(0,b.jsx)(`option`,{value:e.value,children:e.label},e.value))}):(0,b.jsx)(`input`,{className:`parameter-number`,type:`number`,min:e.minimum,max:e.maximum,step:e.step,value:e.value,onFocus:()=>Je(f.id,e.id,e.value),onChange:t=>Ye(f.id,e.id,Number(t.target.value)),onKeyDown:e=>{e.key===`Enter`&&Xe()},onBlur:Xe}),(0,b.jsx)(`strong`,{children:e.unit===`milliseconds`?`ms`:e.unit===`hertz`?`Hz`:``})]}),(0,b.jsx)(`small`,{children:e.unit}),t?null:(0,b.jsx)(`input`,{"aria-label":`${f.data.label} ${e.id}`,type:`range`,min:e.minimum,max:e.maximum,step:e.step,value:e.value,onPointerDown:()=>Je(f.id,e.id,e.value),onChange:t=>Ye(f.id,e.id,Number(t.target.value)),onPointerUp:Xe,onKeyDown:t=>{y.current||Je(f.id,e.id,e.value),t.key===`Enter`&&Xe()},onBlur:Xe}),e.modulation?(0,b.jsxs)(`section`,{className:`modulation-mapping`,"aria-label":`${f.data.label} ${e.id} modulation mapping`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:`CONTROL SOCKET`}),(0,b.jsx)(`code`,{children:e.modulation.portId})]}),(0,b.jsx)(`div`,{className:`mapping-formula`,children:`effective = clamp(base + amount × control)`}),(0,b.jsxs)(`label`,{children:[(0,b.jsx)(`span`,{children:`POLARITY`}),(0,b.jsxs)(`select`,{value:e.modulation.polarity,onFocus:()=>Je(f.id,`${e.id} modulation`,e.value),onChange:t=>Ve(f.id,e.id,{polarity:t.target.value}),onBlur:Xe,children:[(0,b.jsx)(`option`,{value:`bipolar`,children:`BIPOLAR −1…+1`}),(0,b.jsx)(`option`,{value:`unipolar`,children:`UNIPOLAR 0…1`})]})]}),(0,b.jsxs)(`label`,{children:[(0,b.jsx)(`span`,{children:`AMOUNT`}),(0,b.jsx)(`input`,{type:`number`,step:e.step,value:e.modulation.amount,onFocus:()=>Je(f.id,`${e.id} modulation`,e.value),onChange:t=>Ve(f.id,e.id,{amount:Number(t.target.value)}),onBlur:Xe})]}),(0,b.jsxs)(`div`,{className:`mapping-clamp`,children:[(0,b.jsxs)(`label`,{children:[(0,b.jsx)(`span`,{children:`CLAMP MIN`}),(0,b.jsx)(`input`,{type:`number`,min:e.minimum,max:e.modulation.clampMaximum,step:e.step,value:e.modulation.clampMinimum,onFocus:()=>Je(f.id,`${e.id} modulation`,e.value),onChange:t=>Ve(f.id,e.id,{clampMinimum:Number(t.target.value)}),onBlur:Xe})]}),(0,b.jsxs)(`label`,{children:[(0,b.jsx)(`span`,{children:`CLAMP MAX`}),(0,b.jsx)(`input`,{type:`number`,min:e.modulation.clampMinimum,max:e.maximum,step:e.step,value:e.modulation.clampMaximum,onFocus:()=>Je(f.id,`${e.id} modulation`,e.value),onChange:t=>Ve(f.id,e.id,{clampMaximum:Number(t.target.value)}),onBlur:Xe})]})]}),(0,b.jsx)(`footer`,{children:e.id===`delay`&&(f.data.type===`delay`||f.data.type===`allpass`)?`1 kHz control ticks / linear audio-rate ramp / fractional linear delay tap. Moving time intentionally produces Doppler and pitch effects; control sources are limited to 100 Hz.`:e.id===`coefficient`&&f.data.type===`allpass`?`1 kHz control ticks / linear audio-rate ramp / coefficient hard-limited to -0.95 through +0.95.`:`1 kHz control ticks / linear interpolation to audio rate`})]}):null]},e.id)}):(0,b.jsx)(`p`,{className:`empty-parameters`,children:`No editable parameters.`}),(0,b.jsxs)(`div`,{className:`history-actions`,children:[(0,b.jsx)(`button`,{type:`button`,disabled:!F.undo.length,onClick:Ie,children:`UNDO`}),(0,b.jsx)(`button`,{type:`button`,disabled:!F.redo.length,onClick:Le,children:`REDO`})]}),(0,b.jsx)(`div`,{className:`selection-note`,children:f.data.type===`macro`?`Macro value changes use a fixed 20 ms runtime ramp and do not compile topology. Default and detent edits republish the visible graph.`:f.data.runtimeBound?`Live value from native DSP runtime contract v${e.contractVersion}.`:`Constructed graph block. Audible edits compile off-thread and crossfade into the live plugin at an audio-block boundary.`}),nt?(0,b.jsx)(pm,{topic:up(f.id),onDismiss:()=>N($e),onResearch:()=>P(!0)}):null]},f.id):m?(0,b.jsxs)(`div`,{className:`inspector-content`,children:[(0,b.jsx)(`div`,{className:`selection-kicker`,children:`SELECTED CABLE`}),(0,b.jsx)(`h2`,{children:m.data?.signal===`control`?`Control connection`:`Audio connection`}),(0,b.jsx)(`code`,{children:m.id}),Se?(0,b.jsx)(mm,{inspection:Se,activeIndex:we,onActiveIndex:re}):null,(0,b.jsxs)(`dl`,{className:`property-list`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`FROM`}),(0,b.jsx)(`dd`,{children:m.source})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`TO`}),(0,b.jsx)(`dd`,{children:m.target})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`SIGNAL`}),(0,b.jsx)(`dd`,{children:m.data?.signal===`control`?`CONTROL / DASHED`:`AUDIO / SOLID`})]})]})]}):(0,b.jsxs)(`div`,{className:`inspector-empty`,children:[(0,b.jsx)(`div`,{className:`empty-crosshair`,"aria-hidden":`true`,children:`+`}),(0,b.jsx)(`h2`,{children:`Nothing selected`}),(0,b.jsx)(`p`,{children:`Select a block or cable to inspect its identity, ports, and saved parameter values.`}),(0,b.jsx)(`kbd`,{children:`TAB`}),(0,b.jsx)(`span`,{children:`focus graph elements`}),(0,b.jsx)(`kbd`,{children:`ENTER`}),(0,b.jsx)(`span`,{children:`select focused item`}),(0,b.jsx)(`kbd`,{children:`⌘/CTRL C`}),(0,b.jsx)(`span`,{children:`copy selected non-I/O blocks`}),(0,b.jsx)(`kbd`,{children:`⌘/CTRL V`}),(0,b.jsx)(`span`,{children:`paste with new block and cable IDs`}),(0,b.jsx)(`kbd`,{children:`DELETE`}),(0,b.jsx)(`span`,{children:`remove selected blocks or cables`}),nt?(0,b.jsx)(pm,{topic:up(),onDismiss:()=>N($e),onResearch:()=>P(!0)}):null]})]})]}),te?(0,b.jsx)(`div`,{className:`research-backdrop`,role:`presentation`,onMouseDown:()=>P(!1),children:(0,b.jsxs)(`section`,{className:`research-reader`,role:`dialog`,"aria-modal":`true`,"aria-label":`Keith Barr architecture research`,onMouseDown:e=>e.stopPropagation(),children:[(0,b.jsxs)(`header`,{children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`OFFLINE RESEARCH / DOCUMENTED SOURCES`}),(0,b.jsx)(`h2`,{children:`Keith Barr reverb architectures`})]}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Close architecture research`,onClick:()=>P(!1),children:`CLOSE ×`})]}),(0,b.jsx)(`pre`,{children:cp})]})}):null]})}function bm(){let[e,t]=(0,_.useState)(null),[n,r]=(0,_.useState)(``);return(0,_.useEffect)(()=>{let e=new AbortController;return fetch(new URL(`./runtime-snapshot.json`,window.location.href),{signal:e.signal,cache:`no-store`}).then(e=>{if(!e.ok)throw Error(`Native runtime returned HTTP ${e.status}`);return e.json()}).then(e=>t(rf(e))).catch(t=>{e.signal.aborted||r(t instanceof Error?t.message:`Unknown runtime binding failure`)}),()=>e.abort()},[]),n?(0,b.jsxs)(`main`,{className:`binding-state binding-error`,children:[(0,b.jsx)(`strong`,{children:`RUNTIME BINDING FAILED`}),(0,b.jsx)(`span`,{children:n})]}):e?(0,b.jsx)(pd,{children:(0,b.jsx)(ym,{snapshot:e})}):(0,b.jsx)(`main`,{className:`binding-state`,children:(0,b.jsx)(`strong`,{children:`BINDING NATIVE RUNTIME…`})})}(0,v.createRoot)(document.getElementById(`root`)).render((0,b.jsx)(_.StrictMode,{children:(0,b.jsx)(bm,{})}));

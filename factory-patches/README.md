@@ -11,6 +11,10 @@ program ROM, captured impulse response, or recorded audio.
 - `causal-reverse-envelope.rvp.json` builds a causal rising response from visible increasing Delay/Gain branches.
 - `level-gated-room.rvp.json` builds a diffuse room with a visible Envelope Follower and stereo Hold Gates.
 - `modulated-cosmic-reverse.rvp.json` sends a visible causal rise into a damped delayed feedback space with two independent slow LFOs. It is an original topology, not a proprietary-algorithm reconstruction.
+- `gravity-diffusion.rvp.json` is exported from the project-authored native
+  builder. Its 58 visible nodes expose the eight-stage tank, normalized Gravity
+  weighting, complementary Macros, independent LFO motion, and delayed damped
+  return; it is not a proprietary-algorithm reconstruction.
 
 `catalog.json` is the authoritative shipped set. Every entry declares its
 completed family, document kind/path, schema and engine versions, SPDX license
@@ -20,6 +24,13 @@ Native and browser tests reject catalog/UI/asset drift.
 Run the generator from the repository root after intentionally changing a factory topology:
 
 ```powershell
+node scripts/generate_factory_patches.mjs
+```
+
+Gravity's native document is exported first and then admitted by exact hash:
+
+```powershell
+.\scripts\generate_gravity_factory_patch.ps1
 node scripts/generate_factory_patches.mjs
 ```
 

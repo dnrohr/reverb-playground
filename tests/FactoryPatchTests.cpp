@@ -98,12 +98,12 @@ TEST_CASE("Factory catalog declares the complete licensed and traceable shipped 
 {
     const auto catalog = loadFactoryCatalog();
     REQUIRE(catalog.at("catalogVersion") == 1);
-    REQUIRE(catalog.at("patches").size() == 4);
+    REQUIRE(catalog.at("patches").size() == 5);
     const std::set<std::string> expectedIds {
-        "barr-reference", "causal-reverse-envelope", "level-gated-room", "modulated-cosmic-reverse",
+        "barr-reference", "causal-reverse-envelope", "level-gated-room", "modulated-cosmic-reverse", "gravity-diffusion",
     };
     const std::set<std::string> expectedFamilies {
-        "barr-reference", "reverse-style", "gated", "modulated-reverse-style",
+        "barr-reference", "reverse-style", "gated", "modulated-reverse-style", "gravity-diffusion",
     };
     std::set<std::string> ids;
     std::set<std::string> families;
@@ -129,7 +129,7 @@ TEST_CASE("Every catalog factory loads validates renders finite and round trips"
 {
     const std::set<std::string> publicTypes {
         "stereo-input", "stereo-output", "gain", "sum", "delay", "allpass",
-        "lowpass", "lfo", "control-map", "envelope-follower", "hold-gate",
+        "lowpass", "macro", "lfo", "control-map", "envelope-follower", "hold-gate",
     };
     const auto catalog = loadFactoryCatalog();
     for (const auto& entry : catalog.at("patches")) {
@@ -150,6 +150,26 @@ TEST_CASE("Every catalog factory loads validates renders finite and round trips"
         });
         requireFiniteBounded(rendered, 1.0);
     }
+}
+
+TEST_CASE("Gravity Diffusion factory is the complete editable measured graph")
+{
+    const auto graph = loadFactory("gravity-diffusion.rvp.json");
+    REQUIRE(graph.nodes.size() == 58);
+    REQUIRE(graph.connections.size() == 94);
+    REQUIRE(graph.layout.nodes.size() == graph.nodes.size());
+    REQUIRE(std::ranges::count_if(graph.nodes, [](const auto& node) { return node.type == "macro"; }) == 5);
+    REQUIRE(std::ranges::count_if(graph.nodes, [](const auto& node) { return node.type == "control-map"; }) == 8);
+    REQUIRE(std::ranges::count_if(graph.nodes, [](const auto& node) { return node.type == "lfo"; }) == 2);
+    REQUIRE(parameter(graph, "gravity", "value") == Catch::Approx(0.0));
+    REQUIRE(parameter(graph, "size", "value") == Catch::Approx(-0.35));
+    REQUIRE(parameter(graph, "feedback", "value") == Catch::Approx(1.0));
+    REQUIRE(parameter(graph, "damping", "value") == Catch::Approx(0.0));
+    REQUIRE(parameter(graph, "modulation", "value") == Catch::Approx(1.0));
+    const auto gravity = std::ranges::find(graph.nodes, "gravity", &reverb::graph::Node::id);
+    REQUIRE(gravity != graph.nodes.end());
+    REQUIRE(gravity->presentation == "gravity");
+    REQUIRE(gravity->name == "Gravity");
 }
 
 TEST_CASE("Reverse Envelope exposes strictly increasing visible delay weights")
