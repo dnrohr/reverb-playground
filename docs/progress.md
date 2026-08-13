@@ -53,6 +53,8 @@ Last updated: 2026-08-13
 | M9.2 Implement normalized Gravity weighting | Complete | 8 visible Curve Mapper branches; exact constant-sum stereo weights; monotonic measured envelope sweep; 2.1 dB energy ceiling; finite continuous automation |
 | M9.3 Add Size, Feedback, Damping, and Modulation macros | Complete | 5 visible Macros; 35 explicit mappings; independent dual-LFO motion; 32 endpoint combinations; continuous-sweep and safety regressions |
 | M9.4 Tune inverse, bloom, and forward reference states | Complete | Fixed five-Macro states; 5 s loudness-matched stereo WAVs; format-v1 measurements/hashes; causal envelope ordering; reload determinism; audition checklist |
+| M9.5 Ship the factory patch and teaching view | Complete | Editable 58-node/94-cable factory; honest predicted/measured overlays; Barr/Gravity A/B; reconstruction guide; screenshots/video |
+| M9.6 Validate and package the first Gravity implementation | Complete | Multi-rate factory renders; five-Macro sweeps; exact host-state restore; 100/125/150% physical captures; strict pluginval; binary identity/checksum gate |
 
 ## M0.2 verification
 
@@ -748,6 +750,29 @@ Results:
   mapping focus, schema-v2 save, and reload. The recording's deterministic
   local capture transport was removed before verification; production capture
   behavior remains test-backed and M9.6 owns packaged-host validation.
+
+## M9.6 verification
+
+- The checked factory file renders finite, bounded, non-silent stereo impulses
+  and bounded noise at 44.1, 48, and 96 kHz. Its five Macros sweep continuously
+  through a 4,000-block combined trajectory without recompilation or a
+  full-scale discontinuity; the earlier 32-endpoint safety matrix remains green.
+- A fresh JUCE host processor restores all 58 nodes, 94 cables, 58 stored
+  positions, and five deliberately non-default macro values before preparation
+  and retains them after 96 kHz preparation.
+- Tracktion pluginval 1.0.4 passes strictness 10 with editor, state,
+  restoration, automation, thread, bus, fuzz, and 44.1/48/96 kHz processing
+  coverage. The complete log is checked in under
+  `artifacts/validation/m9-6-gravity/`.
+- Native physical-window captures at real Windows 100%, 125%, and 150% scale
+  show the maximized Release standalone and WebView meeting at every client
+  edge. The 150% capture shows the selected complete Gravity factory and usable
+  library, canvas, inspector, measurement, A/B, and editing controls. The
+  workstation was restored to its original 125% setting afterward.
+- Package validation now verifies the adjacent SHA-256, required distribution
+  members, Standalone/VST3 declaration, exact `build-info.json` commit, and the
+  same embedded commit string in both binaries. See
+  [Gravity Diffusion validation and Windows package](gravity-validation-and-package.md).
 
 ## Standalone maximized-window correction
 

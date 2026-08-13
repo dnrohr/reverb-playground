@@ -282,3 +282,68 @@ TEST_CASE("Factory patches remain finite under bounded stereo noise at every sup
         }
     }
 }
+
+TEST_CASE("Gravity Diffusion factory impulse is finite at every supported rate")
+{
+    const auto graph = loadFactory("gravity-diffusion.rvp.json");
+    for (const auto sampleRate : { 44'100.0, 48'000.0, 96'000.0 }) {
+        const auto rendered = reverb::render::renderOffline({
+            graph, reverb::render::InputKind::impulse, sampleRate,
+            static_cast<std::size_t>(sampleRate * 3.0),
+        });
+        CAPTURE(sampleRate);
+        requireFiniteBounded(rendered, 1.0);
+        REQUIRE(std::ranges::any_of(rendered.left, [](const auto sample) {
+            return std::abs(sample) > 1.0e-6F;
+        }));
+        REQUIRE(std::ranges::any_of(rendered.right, [](const auto sample) {
+            return std::abs(sample) > 1.0e-6F;
+        }));
+    }
+}
+
+TEST_CASE("Gravity Diffusion factory macros sweep continuously without recompilation")
+{
+    constexpr std::size_t blockSize = 64;
+    constexpr std::array macroIds { "gravity", "size", "feedback", "damping", "modulation" };
+    auto compiled = reverb::graph::compileFeedbackGraph(
+        loadFactory("gravity-diffusion.rvp.json"), 48'000.0, blockSize);
+    REQUIRE(compiled.valid());
+
+    std::array<float, blockSize> inputLeft {}, inputRight {}, outputLeft {}, outputRight {};
+    std::uint32_t random = 0x96a441U;
+    float previousLeft = 0.0F;
+    float previousRight = 0.0F;
+    double largestStep = 0.0;
+    for (int block = 0; block < 4'000; ++block) {
+        const auto phase = static_cast<double>(block) / 3'999.0;
+        const std::array values {
+            phase * 2.0 - 1.0,
+            std::sin(phase * 6.283185307179586),
+            std::cos(phase * 6.283185307179586),
+            1.0 - phase * 2.0,
+            std::sin(phase * 12.566370614359172),
+        };
+        for (std::size_t index = 0; index < macroIds.size(); ++index)
+            REQUIRE(compiled.runtime->setMacroValue(macroIds[index], values[index]));
+        for (std::size_t sample = 0; sample < blockSize; ++sample) {
+            random = random * 1'664'525U + 1'013'904'223U;
+            inputLeft[sample] = static_cast<float>(((random >> 8) / 16'777'215.0) * 0.2 - 0.1);
+            random = random * 1'664'525U + 1'013'904'223U;
+            inputRight[sample] = static_cast<float>(((random >> 8) / 16'777'215.0) * 0.2 - 0.1);
+        }
+        compiled.runtime->process(inputLeft, inputRight, outputLeft, outputRight);
+        for (std::size_t sample = 0; sample < blockSize; ++sample) {
+            REQUIRE(std::isfinite(outputLeft[sample]));
+            REQUIRE(std::isfinite(outputRight[sample]));
+            largestStep = std::max(largestStep,
+                std::abs(static_cast<double>(outputLeft[sample] - previousLeft)));
+            largestStep = std::max(largestStep,
+                std::abs(static_cast<double>(outputRight[sample] - previousRight)));
+            previousLeft = outputLeft[sample];
+            previousRight = outputRight[sample];
+        }
+    }
+    CAPTURE(largestStep);
+    REQUIRE(largestStep < 1.0);
+}

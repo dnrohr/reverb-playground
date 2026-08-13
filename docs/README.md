@@ -58,6 +58,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Gravity Diffusion complementary controls](gravity-diffusion-controls.md) - visible Size, Feedback, Damping, and Modulation mappings, dual-LFO motion, runtime boundaries, and extreme-state safety.
 - [Gravity Diffusion reference states](gravity-reference-states.md) - tuned inverse/bloom/forward controls, loudness-matched audio, machine-readable shape evidence, and critical audition notes.
 - [Gravity Diffusion factory patch and teaching view](gravity-diffusion-factory-and-teaching.md) - project-authored provenance, reconstruction and modification guide, honest prediction/reference/live-measurement hierarchy, A/B workflow, and UI evidence.
+- [Gravity Diffusion validation and Windows package](gravity-validation-and-package.md) - multi-rate safety, macro sweeps, named-host restore, physical scaling evidence, and exact package identity.
 - [Visualization teaching overlays and A/B comparison](visualization-teaching-overlays.md) - measured rise/gate landmarks, honest explanatory boundaries, Learn disable behavior, and Barr/design audition switching.
 - [Control-rate graph semantics](control-rate-graph-semantics.md) - typed parameter sockets, fixed-rate interpolation, bounded evaluation, mapping formula, and schema-v2 persistence.
 - [LFO and control-mapping blocks](lfo-and-control-mapping.md) - sine/triangle generation, free-run/restart behavior, explicit scale/offset/polarity, range preview, and branching.

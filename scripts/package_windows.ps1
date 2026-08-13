@@ -67,6 +67,8 @@ try {
     $archive = Join-Path $outputDirectory "$packageName.zip"
     & $python scripts/create_release_archive.py --source $stage --output $archive --epoch $epoch
     if ($LASTEXITCODE -ne 0) { throw 'Release archive creation failed.' }
+    & $python scripts/validate_windows_package.py $archive --commit (git rev-parse HEAD)
+    if ($LASTEXITCODE -ne 0) { throw 'Release archive identity or checksum validation failed.' }
     Write-Host "Packaged version $version commit $commit at $archive"
 } finally {
     Pop-Location
