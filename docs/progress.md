@@ -480,3 +480,14 @@ Results:
 - `check_documentation.py` derives the shipped module set from `web/src/modules.ts`, requires one reference marker per module/visualization, and locks the clean-checkout commands plus required tutorial actions. Three focused regressions prove missing modules, visualizations, commands, and tutorial steps fail the check.
 - The repository's existing Markdown checker verified all local targets, including the new tutorial screenshot and cross-document links. The tutorial uses the reviewed packaged 0.1.0 standalone screenshot from [`artifacts/ui/m7-2-windows-package/03-packaged-standalone.png`](../artifacts/ui/m7-2-windows-package/03-packaged-standalone.png), which was visually inspected against the released editor. UI unchanged; no new capture was required.
 - Full Debug verification passed 19 browser files / 64 tests, six Python policy/documentation tests, the production web build, standalone/VST3 compilation, and all 99 native/audio tests.
+
+## M7.4 verification
+
+- [`factory-patches/catalog.json`](../factory-patches/catalog.json) is now the authoritative shipped set: Barr reference, reverse-style, and gated. Every entry is marked complete and declares document kind/path, schema and engine versions, SPDX license/file, and project-authored provenance/source/description.
+- Barr remains generated from the native graph/runtime identity instead of a duplicate JSON document. Reverse-envelope, gated, and the catalog itself are deterministic output from the factory generator; `--check` is now a full-verifier gate against checked-in drift.
+- One catalog-derived native loop loads, graph-validates, compiles, impulse-renders, version-checks, serializes, reparses, and byte-stably rewrites all three factories. A second loop applies bounded stereo noise to every catalog entry at 44.1, 48, and 96 kHz and requires finite output at or below unity.
+- Browser tests independently require exact catalog/menu identity and complete license/provenance metadata while preserving existing visible-public-primitive and schema-v2 round trips for checked-in documents.
+- A shared schema-v1 fixture now proves native and browser readers preserve a legacy Gain value, graph, layout, and viewport; add the defined `gain-mod` mapping; emit schema v2; reparse identically; and produce a byte-stable second write. The tests explicitly bind the released readable range of v1 through v2.
+- Short-room/baseline and Bloom-like families remain intentionally absent until their product topology, behavioral fixtures, metadata, and full compatibility evidence are complete. The admission rule is documented in [Factory patch catalog and compatibility](factory-patch-compatibility.md).
+- Full Debug verification passed 19 browser files / 66 tests, six Python policy/documentation tests, deterministic factory generation, the production web build, standalone/VST3 compilation, and all 101 native/audio tests.
+- UI unchanged; no screenshot or video was required.

@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -106,10 +106,76 @@ const levelGatedRoom = patch([
   position('left-level-gate', 1520, 120), position('right-level-gate', 1520, 360), position('output', 1730, 240),
 ]);
 
+const catalog = {
+  catalogVersion: 1,
+  patches: [
+    {
+      id: 'barr-reference',
+      family: 'barr-reference',
+      status: 'complete',
+      document: {
+        kind: 'native-runtime',
+        path: 'src/graph/Source/BarrReferenceGraph.cpp',
+        schemaVersion: 2,
+        engineVersion: '0.1',
+      },
+      license: { expression: 'AGPL-3.0-only', file: 'LICENSE' },
+      provenance: {
+        kind: 'project-authored',
+        source: 'src/dsp/Source/BarrReferenceRuntime.cpp',
+        description: 'Public primitives and project-authored parameters; no ROM-derived data.',
+      },
+    },
+    {
+      id: 'causal-reverse-envelope',
+      family: 'reverse-style',
+      status: 'complete',
+      document: {
+        kind: 'checked-in-json',
+        path: 'factory-patches/causal-reverse-envelope.rvp.json',
+        schemaVersion: 2,
+        engineVersion: '0.1',
+      },
+      license: { expression: 'AGPL-3.0-only', file: 'LICENSE' },
+      provenance: {
+        kind: 'project-authored-generated',
+        source: 'scripts/generate_factory_patches.mjs',
+        description: 'Generated from project-authored public-primitives topology and parameters.',
+      },
+    },
+    {
+      id: 'level-gated-room',
+      family: 'gated',
+      status: 'complete',
+      document: {
+        kind: 'checked-in-json',
+        path: 'factory-patches/level-gated-room.rvp.json',
+        schemaVersion: 2,
+        engineVersion: '0.1',
+      },
+      license: { expression: 'AGPL-3.0-only', file: 'LICENSE' },
+      provenance: {
+        kind: 'project-authored-generated',
+        source: 'scripts/generate_factory_patches.mjs',
+        description: 'Generated from project-authored public-primitives topology and parameters.',
+      },
+    },
+  ],
+};
+
 await mkdir(outputDirectory, { recursive: true });
+const checkOnly = process.argv.includes('--check');
 for (const [filename, document] of [
   ['causal-reverse-envelope.rvp.json', reverseEnvelope],
   ['level-gated-room.rvp.json', levelGatedRoom],
+  ['catalog.json', catalog],
 ]) {
-  await writeFile(resolve(outputDirectory, filename), `${JSON.stringify(document, null, 2)}\n`, 'utf8');
+  const outputPath = resolve(outputDirectory, filename);
+  const expected = `${JSON.stringify(document, null, 2)}\n`;
+  if (checkOnly) {
+    const actual = await readFile(outputPath, 'utf8');
+    if (actual !== expected) throw new Error(`${filename} is stale; run node scripts/generate_factory_patches.mjs`);
+  } else {
+    await writeFile(outputPath, expected, 'utf8');
+  }
 }

@@ -45,6 +45,7 @@ DOCUMENTED_ASSET_RULES = (
     re.compile(r"^artifacts/audio/.+\.(json|wav)$", re.IGNORECASE),
     re.compile(r"^artifacts/ui/.+\.(jpe?g|mp4|png)$", re.IGNORECASE),
     re.compile(r"^factory-patches/[^/]+\.rvp\.json$", re.IGNORECASE),
+    re.compile(r"^factory-patches/catalog\.json$", re.IGNORECASE),
     re.compile(r"^schemas/[^/]+\.json$", re.IGNORECASE),
     re.compile(r"^src/ui/WebAssets/(editor\.(css|js)|index\.html)$", re.IGNORECASE),
     re.compile(r"^tests/fixtures/.+\.(json|wav)$", re.IGNORECASE),

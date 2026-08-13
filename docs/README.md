@@ -18,6 +18,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Windows package installation](windows-package-installation.md) - install, run, verify, and remove the standalone/VST3 alpha package.
 - [Barr reference tutorial](getting-started-barr-tutorial.md) - clean-install first run, safe audition, measurement, editing, diagnostics, and save/reload.
 - [Module and visualization reference](module-and-visualization-reference.md) - every shipped block, unit, range, socket, display, and constraint.
+- [Factory patch catalog and compatibility](factory-patch-compatibility.md) - shipped families, metadata, admission rules, schema migrations, and CI guarantees.
 - [Windows alpha package and host validation](windows-alpha-package-and-host-validation.md) - reproducible archive contract and named-host evidence.
 - [Progress log](progress.md) - completed roadmap tasks and verification evidence.
 - [Project license](../LICENSE), [third-party notices](../THIRD_PARTY_NOTICES.md), [asset provenance](../ASSET_PROVENANCE.md), and [contribution/DCO policy](../CONTRIBUTING.md) - open-source distribution boundaries.

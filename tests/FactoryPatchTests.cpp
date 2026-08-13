@@ -2,9 +2,12 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <reverb/graph/AcyclicRuntime.h>
+#include <reverb/graph/BarrReferenceGraph.h>
 #include <reverb/graph/PatchJson.h>
 #include <reverb/render/EnvelopeMeasurements.h>
 #include <reverb/render/OfflineRenderer.h>
+
+#include <nlohmann/json.hpp>
 
 #include <algorithm>
 #include <array>
@@ -30,6 +33,20 @@ reverb::graph::GraphDocument loadFactory(const std::string& filename)
 {
     return reverb::graph::parsePatchJson(
         readFile(std::filesystem::path { REVERB_FACTORY_PATCH_DIR } / filename));
+}
+
+nlohmann::json loadFactoryCatalog()
+{
+    return nlohmann::json::parse(readFile(
+        std::filesystem::path { REVERB_FACTORY_PATCH_DIR } / "catalog.json"));
+}
+
+reverb::graph::GraphDocument loadCatalogFactory(const nlohmann::json& entry)
+{
+    if (entry.at("document").at("kind") == "native-runtime")
+        return reverb::graph::makeBarrReferenceGraph();
+    return loadFactory(std::filesystem::path {
+        entry.at("document").at("path").get<std::string>() }.filename().string());
 }
 
 double parameter(const reverb::graph::GraphDocument& graph, const std::string& nodeId, const std::string& parameterId)
@@ -77,16 +94,46 @@ reverb::render::RenderResult renderImpulseAtLevel(
 
 } // namespace
 
-TEST_CASE("Factory patches load round trip and use only visible public primitives")
+TEST_CASE("Factory catalog declares the complete licensed and traceable shipped set")
+{
+    const auto catalog = loadFactoryCatalog();
+    REQUIRE(catalog.at("catalogVersion") == 1);
+    REQUIRE(catalog.at("patches").size() == 3);
+    const std::set<std::string> expectedIds {
+        "barr-reference", "causal-reverse-envelope", "level-gated-room",
+    };
+    const std::set<std::string> expectedFamilies {
+        "barr-reference", "reverse-style", "gated",
+    };
+    std::set<std::string> ids;
+    std::set<std::string> families;
+    const auto root = std::filesystem::path { REVERB_FACTORY_PATCH_DIR }.parent_path();
+    for (const auto& entry : catalog.at("patches")) {
+        ids.insert(entry.at("id").get<std::string>());
+        families.insert(entry.at("family").get<std::string>());
+        REQUIRE(entry.at("status") == "complete");
+        REQUIRE(entry.at("document").at("schemaVersion") == 2);
+        REQUIRE(entry.at("document").at("engineVersion") == "0.1");
+        REQUIRE(entry.at("license").at("expression") == "AGPL-3.0-only");
+        REQUIRE(std::filesystem::is_regular_file(root / entry.at("license").at("file").get<std::string>()));
+        REQUIRE(std::filesystem::is_regular_file(root / entry.at("document").at("path").get<std::string>()));
+        REQUIRE(std::filesystem::is_regular_file(root / entry.at("provenance").at("source").get<std::string>()));
+        REQUIRE_FALSE(entry.at("provenance").at("kind").get<std::string>().empty());
+        REQUIRE_FALSE(entry.at("provenance").at("description").get<std::string>().empty());
+    }
+    REQUIRE(ids == expectedIds);
+    REQUIRE(families == expectedFamilies);
+}
+
+TEST_CASE("Every catalog factory loads validates renders finite and round trips")
 {
     const std::set<std::string> publicTypes {
         "stereo-input", "stereo-output", "gain", "sum", "delay", "allpass",
-        "lowpass", "envelope-follower", "hold-gate",
+        "lowpass", "lfo", "control-map", "envelope-follower", "hold-gate",
     };
-    for (const auto filename : {
-             "causal-reverse-envelope.rvp.json", "level-gated-room.rvp.json",
-         }) {
-        const auto graph = loadFactory(filename);
+    const auto catalog = loadFactoryCatalog();
+    for (const auto& entry : catalog.at("patches")) {
+        const auto graph = loadCatalogFactory(entry);
         REQUIRE(reverb::graph::validate(graph).valid());
         REQUIRE(std::ranges::all_of(graph.nodes, [&publicTypes](const auto& node) {
             return publicTypes.contains(node.type);
@@ -94,7 +141,14 @@ TEST_CASE("Factory patches load round trip and use only visible public primitive
         const auto compiled = reverb::graph::compileFeedbackGraph(graph, 48'000.0, 256);
         REQUIRE(compiled.valid());
         const auto written = reverb::graph::writePatchJson(graph);
+        const auto serialized = nlohmann::json::parse(written);
+        REQUIRE(serialized.at("schemaVersion") == entry.at("document").at("schemaVersion"));
+        REQUIRE(serialized.at("engineVersion") == entry.at("document").at("engineVersion"));
         REQUIRE(reverb::graph::parsePatchJson(written) == graph);
+        const auto rendered = reverb::render::renderOffline({
+            graph, reverb::render::InputKind::impulse, 48'000.0, 24'000,
+        });
+        requireFiniteBounded(rendered, 1.0);
     }
 }
 
@@ -174,12 +228,11 @@ TEST_CASE("Level-Gated Room opens for the safe live audition impulse at every su
 
 TEST_CASE("Factory patches remain finite under bounded stereo noise at every supported rate")
 {
+    const auto catalog = loadFactoryCatalog();
     for (const auto sampleRate : { 44'100.0, 48'000.0, 96'000.0 }) {
-        for (const auto filename : {
-                 "causal-reverse-envelope.rvp.json", "level-gated-room.rvp.json",
-             }) {
+        for (const auto& entry : catalog.at("patches")) {
             const auto rendered = reverb::render::renderOffline({
-                loadFactory(filename), reverb::render::InputKind::boundedNoise,
+                loadCatalogFactory(entry), reverb::render::InputKind::boundedNoise,
                 sampleRate, static_cast<std::size_t>(sampleRate / 2.0),
             });
             requireFiniteBounded(rendered, 1.0);

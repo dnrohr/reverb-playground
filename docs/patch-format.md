@@ -107,6 +107,9 @@ A loader may calculate a default position for a semantic node omitted from layou
 - A future incompatible shape increments `schemaVersion` and adds a tested migration into the current in-memory model.
 - Migrations preserve stable IDs unless the old format did not contain them; generated replacement IDs must then be deterministic or explicitly recorded.
 - Unknown fields are rejected by the JSON Schema. Forward compatibility is handled by versioned migrations, not silent field loss.
+
+The released-version compatibility matrix and shared migration fixtures are
+maintained in [Factory patch catalog and compatibility](factory-patch-compatibility.md).
 - The interactive loader enforces this recursively at every defined object boundary and reports the first unknown field without replacing the active document.
 - Factory fixtures from every released schema remain in tests.
 

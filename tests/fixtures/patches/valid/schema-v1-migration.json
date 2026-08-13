@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "engineVersion": "0.1",
+  "semantic": {
+    "nodes": [
+      {
+        "id": "input",
+        "type": "stereo-input",
+        "ports": [
+          { "id": "out-l", "signal": "audio", "direction": "output" },
+          { "id": "out-r", "signal": "audio", "direction": "output" }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "legacy-gain",
+        "type": "gain",
+        "ports": [
+          { "id": "in", "signal": "audio", "direction": "input" },
+          { "id": "out", "signal": "audio", "direction": "output" }
+        ],
+        "parameters": [
+          { "id": "gain", "value": 0.375, "unit": "linear" }
+        ]
+      },
+      {
+        "id": "output",
+        "type": "stereo-output",
+        "ports": [
+          { "id": "in-l", "signal": "audio", "direction": "input" },
+          { "id": "in-r", "signal": "audio", "direction": "input" }
+        ],
+        "parameters": []
+      }
+    ],
+    "connections": [
+      {
+        "id": "input-gain",
+        "from": { "nodeId": "input", "portId": "out-l" },
+        "to": { "nodeId": "legacy-gain", "portId": "in" }
+      },
+      {
+        "id": "gain-left",
+        "from": { "nodeId": "legacy-gain", "portId": "out" },
+        "to": { "nodeId": "output", "portId": "in-l" }
+      },
+      {
+        "id": "gain-right",
+        "from": { "nodeId": "legacy-gain", "portId": "out" },
+        "to": { "nodeId": "output", "portId": "in-r" }
+      }
+    ]
+  },
+  "layout": {
+    "nodes": [
+      { "nodeId": "input", "x": 0, "y": 0 },
+      { "nodeId": "legacy-gain", "x": 200, "y": 0 },
+      { "nodeId": "output", "x": 400, "y": 0 }
+    ],
+    "viewport": { "x": 12, "y": -8, "zoom": 0.875 }
+  }
+}

@@ -4,6 +4,7 @@ import { parsePatchJson, writePatchJson } from './patchPersistence';
 import { createModuleNode } from './modules';
 import { semanticGraphHash } from './graphHistory';
 import sharedEdgeLoopFixture from '../../artifacts/ui/m4-1-feedback-loop-highlighting/shared-edge-loop-fixture.rvp.json?raw';
+import schemaV1MigrationFixture from '../../tests/fixtures/patches/valid/schema-v1-migration.json?raw';
 
 const reference: RuntimeSnapshot = {
   contractVersion: 2, engineId: 'barr-reference', sampleRate: 48000, outsidePatch: [],
@@ -20,6 +21,23 @@ const reference: RuntimeSnapshot = {
 };
 
 describe('patch persistence', () => {
+  it('migrates every released schema version to deterministic schema v2', () => {
+    const migrated = parsePatchJson(schemaV1MigrationFixture, reference);
+    const gain = migrated.nodes.find((node) => node.id === 'legacy-gain')!;
+    expect(gain.data.parameters).toEqual([
+      expect.objectContaining({
+        id: 'gain', value: 0.375, unit: 'linear',
+        modulation: { portId: 'gain-mod', amount: 0.5, polarity: 'bipolar', clampMinimum: -1, clampMaximum: 1 },
+      }),
+    ]);
+    expect(gain.data.ports.map((port) => port.id)).toEqual(['in', 'gain-mod', 'out']);
+    expect(migrated.viewport).toEqual({ x: 12, y: -8, zoom: 0.875 });
+    const versionTwo = writePatchJson(migrated.nodes, migrated.edges, migrated.viewport);
+    expect(JSON.parse(versionTwo).schemaVersion).toBe(2);
+    const roundTrip = parsePatchJson(versionTwo, reference);
+    expect(writePatchJson(roundTrip.nodes, roundTrip.edges, roundTrip.viewport)).toBe(versionTwo);
+  });
+
   it('round trips semantics, exact parameter values, positions, and viewport deterministically', () => {
     const flow = createFlowModel(reference);
     flow.nodes.push(createModuleNode('stereo-input', 'stereo-input-1', { x: -200, y: 0 }), createModuleNode('stereo-output', 'stereo-output-1', { x: 200, y: 0 }));

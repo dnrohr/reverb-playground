@@ -96,6 +96,39 @@ TEST_CASE("Patch schema is valid JSON Schema metadata")
     }
 }
 
+TEST_CASE("Every released schema version migrates to deterministic schema v2")
+{
+    REQUIRE(reverb::graph::GraphDocument::oldestReadableSchemaVersion == 1);
+    REQUIRE(reverb::graph::GraphDocument::schemaVersion == 2);
+    const auto versionOne = reverb::graph::parsePatchJson(
+        readFixture("patches/valid/schema-v1-migration.json"));
+    REQUIRE(reverb::graph::validate(versionOne).valid());
+    const auto& gain = findNode(versionOne, "legacy-gain");
+    REQUIRE(gain.ports.size() == 3);
+    const reverb::graph::Port expectedPort {
+        .id = "gain-mod",
+        .signal = reverb::graph::SignalType::control,
+        .direction = reverb::graph::PortDirection::input,
+    };
+    REQUIRE(gain.ports[2] == expectedPort);
+    REQUIRE(gain.parameters.front().value == 0.375);
+    const reverb::graph::ParameterModulation expectedMapping {
+        .portId = "gain-mod",
+        .amount = 0.5,
+        .polarity = reverb::graph::ModulationPolarity::bipolar,
+        .clampMinimum = -1.0,
+        .clampMaximum = 1.0,
+    };
+    REQUIRE(gain.parameters.front().modulation == expectedMapping);
+
+    const auto migrated = reverb::graph::writePatchJson(versionOne);
+    const auto json = nlohmann::json::parse(migrated);
+    REQUIRE(json.at("schemaVersion") == 2);
+    const auto versionTwo = reverb::graph::parsePatchJson(migrated);
+    REQUIRE(versionTwo == versionOne);
+    REQUIRE(reverb::graph::writePatchJson(versionTwo) == migrated);
+}
+
 TEST_CASE("Validator rejects zero-delay cycles and accepts delayed feedback")
 {
     using namespace reverb::graph;

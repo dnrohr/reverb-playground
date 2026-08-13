@@ -5,6 +5,7 @@ This manifest covers every tracked binary or generated data family in the source
 | Tracked path family | Contents | Provenance / preferred source | Redistribution |
 |---|---|---|---|
 | `factory-patches/*.rvp.json` | Editable factory graphs | Original project-authored public-primitive graphs; JSON is the preferred source | AGPL-3.0-only |
+| `factory-patches/catalog.json` | Shipped factory identities, versions, family status, license, and provenance | Deterministically generated from `scripts/generate_factory_patches.mjs`; JSON is the preferred manifest | AGPL-3.0-only |
 | `schemas/*.json` | Patch JSON Schemas | Original project source | AGPL-3.0-only |
 | `src/ui/WebAssets/index.html` | Embedded editor entry point | Generated from `web/index.html` by the pinned web build | AGPL-3.0-only |
 | `src/ui/WebAssets/editor.css` | Embedded editor styles | Generated from `web/src/styles.css` plus React Flow's MIT CSS | Project portions AGPL-3.0-only; dependency portion retains MIT |
