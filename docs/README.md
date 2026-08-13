@@ -51,6 +51,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Large modulated, inverse, and shimmer topologies](large-modulated-and-shimmer-reverb-topologies.md) - public behavioral evidence, the original cosmic-reverse graph, and the pitch-shift contract required for honest shimmer.
 - [Gravity behavior and measurements](gravity-behavior-and-measurements.md) - bipolar control semantics, causal inverse boundary, deterministic shape metrics, and three reference targets.
 - [Curve Mapper](curve-mapper.md) - linear, power, and exponential control equations, validation, runtime interpolation, inspection, and schema-v2 compatibility.
+- [Macro control source](macro-control-source.md) - named normalized control, fixed 20 ms smoothing, visible branching, reachable-range inspection, and persistence.
 - [Visualization teaching overlays and A/B comparison](visualization-teaching-overlays.md) - measured rise/gate landmarks, honest explanatory boundaries, Learn disable behavior, and Barr/design audition switching.
 - [Control-rate graph semantics](control-rate-graph-semantics.md) - typed parameter sockets, fixed-rate interpolation, bounded evaluation, mapping formula, and schema-v2 persistence.
 - [LFO and control-mapping blocks](lfo-and-control-mapping.md) - sine/triangle generation, free-run/restart behavior, explicit scale/offset/polarity, range preview, and branching.

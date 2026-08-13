@@ -87,6 +87,19 @@ Transport (`1`). Defaults for modulation amount are respectively `1 Hz`,
 `0.25 cycles`, `1`, and `1`; discrete selectors change only at their defined
 integer choices.
 
+### Macro
+
+<!-- module: macro -->
+
+User-named normalized control source with exactly one branchable `out` control
+socket. **Value** is `-1.000..+1.000`, step `0.001`, default `0`; **Default
+value** uses the same range and step and defaults to `0`; **Center detent** is
+Off (`0`) or On (`1`, default). With detent enabled, editor gestures within
+`0.02` of zero snap to center. Runtime value changes use a fixed 20 ms control
+ramp and do not compile topology. Selecting the block highlights and lists
+reachable mapped parameters and predicted ranges; these are graph-derived
+predictions, not measured audio.
+
 ### Curve Mapper
 
 <!-- module: control-map -->

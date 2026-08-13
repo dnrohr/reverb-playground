@@ -6,6 +6,7 @@
 #include <reverb/graph/PatchJson.h>
 #include <reverb/graph/RuntimeSnapshot.h>
 
+#include <algorithm>
 #include <array>
 #include <nlohmann/json.hpp>
 #include <stdexcept>
@@ -244,6 +245,9 @@ double ReverbPlaygroundProcessor::setRuntimeParameter(
     const juce::String& parameterId,
     const double value) noexcept
 {
+    if (parameterId == "value" && graphAudioEnabled_.load(std::memory_order_acquire)
+        && graphHost_.setMacroValue(nodeId.toStdString(), value))
+        return std::clamp(value, -1.0, 1.0);
     const auto id = reverb::dsp::findBarrReferenceParameter(
         nodeId.toStdString(), parameterId.toStdString());
     if (!id.has_value()) {

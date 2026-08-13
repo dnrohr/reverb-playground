@@ -149,6 +149,64 @@ TEST_CASE("Compiled constant control matches the equivalent static delay")
     REQUIRE(movingLeft == fixedLeft);
 }
 
+TEST_CASE("Macro automation is smoothed without topology compilation and reset is deterministic")
+{
+    GraphDocument graph;
+    graph.nodes = {
+        stereoInput(),
+        { "macro-1", "macro", { controlOutputPort() }, {
+            { "value", -1.0, "normalized" }, { "default-value", -1.0, "normalized" },
+            { "center-detent", 1.0, "boolean" },
+        }, "Gravity" },
+        { "map", "control-map", { controlInputPort("in"), controlOutputPort() }, {
+            { "scale", 1.0, "linear" }, { "offset", 0.0, "unitless" },
+            { "polarity", 1.0, "polarity" },
+        } },
+        { "delay", "delay", { inputPort(), controlInputPort("delay-mod"), outputPort() }, {
+            { "delay", 10.0, "milliseconds", ParameterModulation {
+                "delay-mod", 4.0, ModulationPolarity::bipolar, 1.0, 30.0 } },
+        } },
+        stereoOutput(),
+    };
+    graph.connections = {
+        cable("audio-in", "input", "out-l", "delay", "in"),
+        cable("audio-out", "delay", "out", "output", "in-l"),
+        cable("right", "input", "out-r", "output", "in-r"),
+        cable("macro-map", "macro-1", "out", "map", "in"),
+        cable("map-delay", "map", "out", "delay", "delay-mod"),
+    };
+    auto compiled = compileAcyclicGraph(graph, 1'000.0, 64);
+    REQUIRE(compiled.valid());
+
+    const auto renderOnset = [&](PreparedAcyclicRuntime& runtime) {
+        std::array<float, 30> settle {}; std::array<float, 30> settleOut {}; std::array<float, 30> settleRight {};
+        runtime.process(settle, settle, settleOut, settleRight);
+        std::array<float, 40> impulse {}; impulse.front() = 1.0F;
+        std::array<float, 40> silence {}; std::array<float, 40> left {}; std::array<float, 40> right {};
+        runtime.process(impulse, silence, left, right);
+        return static_cast<std::size_t>(std::ranges::find_if(left, [](const float value) { return value != 0.0F; }) - left.begin());
+    };
+
+    REQUIRE(renderOnset(*compiled.runtime) == 6);
+    compiled.runtime->reset();
+    REQUIRE(compiled.runtime->setMacroValue("macro-1", 1.0));
+    REQUIRE(renderOnset(*compiled.runtime) == 14);
+    compiled.runtime->reset();
+    REQUIRE(renderOnset(*compiled.runtime) == 6);
+
+    AcyclicRuntimeHost host;
+    const auto revision = host.requestCompilation(graph, 1'000.0, 64, false);
+    REQUIRE(waitUntil([&] { return host.publicationSnapshot().pendingRevision == revision; }));
+    std::array<float, 64> silence {}; std::array<float, 64> left {}; std::array<float, 64> right {};
+    host.process(silence, silence, left, right);
+    const auto requestedBefore = host.publicationSnapshot().requestedRevision;
+    for (int index = 0; index < 1'000; ++index)
+        REQUIRE(host.setMacroValue("macro-1", index % 2 == 0 ? -1.0 : 1.0));
+    host.process(silence, silence, left, right);
+    REQUIRE(host.publicationSnapshot().requestedRevision == requestedBefore);
+    REQUIRE(std::ranges::all_of(left, [](const float value) { return std::isfinite(value); }));
+}
+
 TEST_CASE("Visible LFO mapping drives bounded Barr-style moving diffusion")
 {
     GraphDocument graph;

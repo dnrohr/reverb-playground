@@ -37,6 +37,12 @@ Writers always emit schema v2. Readers accept v1 and migrate supported modulatab
 
 M5.1 prepares and validates mapping semantics; M5.2 supplies the documented user-creatable LFO and Scale / Offset nodes. M5.3 binds mapped Delay and Allpass targets to fractional linear delay taps and a bounded per-sample Allpass coefficient. See [Modulated Delay and Allpass](modulated-delay-and-allpass.md).
 
+M8.3 adds a user-creatable [Macro control source](macro-control-source.md). Its
+runtime value is sampled by this same 1 kHz graph after a fixed 20 ms Macro
+ramp; it then reaches audio parameters through the interpolation described
+above. Macro value gestures are runtime-only and do not request graph
+compilation.
+
 ## Reviewed UI evidence
 
 - [`01-mapped-allpass-inspector.png`](../artifacts/ui/m5-1-control-rate-semantics/01-mapped-allpass-inspector.png) shows the real native editor at 125% Windows scaling with the library, graph, and complete inspector contained in the window. The selected Allpass exposes its typed parameter socket, formula, polarity, amount, clamps, and interpolation policy.

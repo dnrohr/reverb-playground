@@ -116,6 +116,31 @@ describe('patch persistence', () => {
     expect(writePatchJson(loaded.nodes, loaded.edges, loaded.viewport)).toBe(written);
   });
 
+  it('round trips a named Macro with stable IDs and all exposed settings', () => {
+    const input = createModuleNode('stereo-input', 'stereo-input-1', { x: 0, y: 0 });
+    const output = createModuleNode('stereo-output', 'stereo-output-1', { x: 700, y: 0 });
+    const macro = createModuleNode('macro', 'macro-gravity', { x: 100, y: 220 });
+    const mapper = createModuleNode('control-map', 'gravity-time-map', { x: 330, y: 220 });
+    const delay = createModuleNode('delay', 'gravity-delay', { x: 560, y: 180 });
+    macro.data.userName = 'Gravity';
+    macro.data.parameters.find((parameter) => parameter.id === 'value')!.value = 0.375;
+    macro.data.parameters.find((parameter) => parameter.id === 'default-value')!.value = -0.125;
+    macro.data.parameters.find((parameter) => parameter.id === 'center-detent')!.value = 1;
+    const edges = [
+      { id: 'gravity-map', source: macro.id, sourceHandle: 'out', target: mapper.id, targetHandle: 'in' },
+      { id: 'gravity-delay-time', source: mapper.id, sourceHandle: 'out', target: delay.id, targetHandle: 'delay-mod' },
+    ];
+    const written = writePatchJson([input, output, macro, mapper, delay], edges, { x: 9, y: -4, zoom: 0.9 });
+    const loaded = parsePatchJson(written, reference);
+    const restored = loaded.nodes.find((node) => node.id === 'macro-gravity')!;
+    expect(restored.data.userName).toBe('Gravity');
+    expect(restored.data.parameters.map(({ id, value }) => [id, value])).toEqual([
+      ['value', 0.375], ['default-value', -0.125], ['center-detent', 1],
+    ]);
+    expect(loaded.edges.map((edge) => edge.id)).toEqual(['gravity-map', 'gravity-delay-time']);
+    expect(writePatchJson(loaded.nodes, loaded.edges, loaded.viewport)).toBe(written);
+  });
+
   it('upgrades legacy schema-v2 Scale / Offset nodes to a linear Curve Mapper', () => {
     const input = createModuleNode('stereo-input', 'stereo-input-1', { x: 0, y: 0 });
     const output = createModuleNode('stereo-output', 'stereo-output-1', { x: 600, y: 0 });

@@ -20,6 +20,18 @@ describe('graph clipboard', () => {
     expect(pasted.edges[1]).toMatchObject({ id: 'delay-gain-copy', source: 'delay-1-copy', target: 'gain-1-copy', sourceHandle: 'out', targetHandle: 'in' });
   });
 
+  it('copies a Macro with its name and settings but assigns a fresh stable ID', () => {
+    const macro = createModuleNode('macro', 'macro-gravity', { x: 10, y: 20 });
+    macro.selected = true;
+    macro.data.userName = 'Gravity';
+    macro.data.parameters.find((parameter) => parameter.id === 'value')!.value = 0.42;
+    const graph = { nodes: [macro], edges: [] };
+    const pasted = pasteGraph(graph, copySelectedGraph(graph)!, 40);
+    expect(pasted.nodes[1].id).toBe('macro-gravity-copy');
+    expect(pasted.nodes[1].data.userName).toBe('Gravity');
+    expect(pasted.nodes[1].data.parameters.find((parameter) => parameter.id === 'value')!.value).toBe(0.42);
+  });
+
   it('copies only selected non-I/O nodes and their internal cables', () => {
     const input = { ...createModuleNode('stereo-input', 'input', { x: 0, y: 0 }), selected: true };
     const delay = { ...createModuleNode('delay', 'delay', { x: 100, y: 0 }), selected: true };

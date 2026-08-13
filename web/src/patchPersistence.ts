@@ -5,11 +5,11 @@ import { createModuleNode, moduleByType, type ModuleType } from './modules';
 export const patchSchemaVersion = 2 as const;
 export const patchEngineVersion = '0.1';
 interface SavedParameter { id: string; value: number; unit: string; modulation?: NonNullable<PatchNodeData['parameters'][number]['modulation']> }
-interface SavedPatch { schemaVersion: 2; engineVersion: string; semantic: { nodes: Array<{ id: string; type: string; ports: PatchNodeData['ports']; parameters: SavedParameter[] }>; connections: Array<{ id: string; from: { nodeId: string; portId: string }; to: { nodeId: string; portId: string } }> }; layout: { nodes: Array<{ nodeId: string; x: number; y: number }>; viewport: Viewport } }
+interface SavedPatch { schemaVersion: 2; engineVersion: string; semantic: { nodes: Array<{ id: string; type: string; name?: string; ports: PatchNodeData['ports']; parameters: SavedParameter[] }>; connections: Array<{ id: string; from: { nodeId: string; portId: string }; to: { nodeId: string; portId: string } }> }; layout: { nodes: Array<{ nodeId: string; x: number; y: number }>; viewport: Viewport } }
 export interface LoadedPatch { nodes: Node<PatchNodeData>[]; edges: Edge[]; viewport: Viewport; source: SavedPatch }
 function fail(message: string): never { throw new Error(`Patch load rejected: ${message}`); }
 function object(value: unknown, path: string): Record<string, unknown> { if (typeof value !== 'object' || value === null || Array.isArray(value)) fail(`${path} must be an object`); return value as Record<string, unknown>; }
-function exactKeys(value: Record<string, unknown>, keys: string[], path: string) { const expected = new Set(keys); const unknown = Object.keys(value).find((key) => !expected.has(key)); if (unknown) fail(`${path} contains unknown field '${unknown}' (closed schemas reject future fields)`); for (const key of keys) if (!(key in value)) fail(`${path} is missing '${key}'`); }
+function exactKeys(value: Record<string, unknown>, keys: string[], path: string, optional: string[] = []) { const expected = new Set([...keys, ...optional]); const unknown = Object.keys(value).find((key) => !expected.has(key)); if (unknown) fail(`${path} contains unknown field '${unknown}' (closed schemas reject future fields)`); for (const key of keys) if (!(key in value)) fail(`${path} is missing '${key}'`); }
 function finite(value: unknown, path: string): number { if (typeof value !== 'number' || !Number.isFinite(value)) fail(`${path} must be a finite number`); return value; }
 function parseModulation(value: unknown, expected: PatchNodeData['parameters'][number], path: string, sourceVersion: 1 | 2): PatchNodeData['parameters'][number]['modulation'] {
   if (sourceVersion === 1) {
@@ -30,7 +30,7 @@ function parseModulation(value: unknown, expected: PatchNodeData['parameters'][n
   return { portId: expected.modulation.portId, amount, polarity: mapping.polarity as 'unipolar' | 'bipolar', clampMinimum, clampMaximum };
 }
 
-export function createSavedPatch(nodes: Node<PatchNodeData>[], edges: Edge[], viewport: Viewport): SavedPatch { return { schemaVersion: 2, engineVersion: patchEngineVersion, semantic: { nodes: nodes.map((node) => ({ id: node.id, type: node.data.type, ports: node.data.ports.map((port) => ({ ...port })), parameters: node.data.parameters.map(({ id, value, unit, modulation }) => ({ id, value, unit, ...(modulation ? { modulation: { ...modulation } } : {}) })) })), connections: edges.map((edge) => ({ id: edge.id, from: { nodeId: edge.source, portId: String(edge.sourceHandle ?? '') }, to: { nodeId: edge.target, portId: String(edge.targetHandle ?? '') } })) }, layout: { nodes: nodes.map((node) => ({ nodeId: node.id, x: node.position.x, y: node.position.y })), viewport: { ...viewport } } }; }
+export function createSavedPatch(nodes: Node<PatchNodeData>[], edges: Edge[], viewport: Viewport): SavedPatch { return { schemaVersion: 2, engineVersion: patchEngineVersion, semantic: { nodes: nodes.map((node) => ({ id: node.id, type: node.data.type, ...(node.data.userName ? { name: node.data.userName } : {}), ports: node.data.ports.map((port) => ({ ...port })), parameters: node.data.parameters.map(({ id, value, unit, modulation }) => ({ id, value, unit, ...(modulation ? { modulation: { ...modulation } } : {}) })) })), connections: edges.map((edge) => ({ id: edge.id, from: { nodeId: edge.source, portId: String(edge.sourceHandle ?? '') }, to: { nodeId: edge.target, portId: String(edge.targetHandle ?? '') } })) }, layout: { nodes: nodes.map((node) => ({ nodeId: node.id, x: node.position.x, y: node.position.y })), viewport: { ...viewport } } }; }
 export function writePatchJson(nodes: Node<PatchNodeData>[], edges: Edge[], viewport: Viewport): string { return `${JSON.stringify(createSavedPatch(nodes, edges, viewport), null, 2)}\n`; }
 
 export function parsePatchJson(text: string, reference: RuntimeSnapshot): LoadedPatch {
@@ -41,10 +41,12 @@ export function parsePatchJson(text: string, reference: RuntimeSnapshot): Loaded
   const savedNodeList = semantic.nodes as unknown[]; const savedConnectionList = semantic.connections as unknown[];
   const referenceById = new Map(reference.nodes.map((node) => [node.id, node])); const ids = new Set<string>(); const nodes: Node<PatchNodeData>[] = [];
   for (const [index, unknownNode] of savedNodeList.entries()) {
-    const saved = object(unknownNode, `semantic.nodes[${index}]`); exactKeys(saved, ['id', 'type', 'ports', 'parameters'], `semantic.nodes[${index}]`);
+    const saved = object(unknownNode, `semantic.nodes[${index}]`); exactKeys(saved, ['id', 'type', 'ports', 'parameters'], `semantic.nodes[${index}]`, ['name']);
     if (typeof saved.id !== 'string' || !saved.id || ids.has(saved.id)) fail(`node identity at index ${index} is invalid or duplicated`); ids.add(saved.id);
     if (typeof saved.type !== 'string') fail(`node '${saved.id}' has an invalid type`);
     const savedId = saved.id as string; const savedType = saved.type as string; const referenceNode = referenceById.get(savedId); const definition = moduleByType.get(savedType as ModuleType);
+    if (savedType === 'macro' && (typeof saved.name !== 'string' || saved.name.length < 1 || saved.name.length > 64)) fail(`macro '${savedId}' requires a name of 1 through 64 characters`);
+    if (savedType !== 'macro' && saved.name !== undefined) fail(`node '${savedId}' cannot contain a user name`);
     if (referenceNode && referenceNode.type !== saved.type) fail(`node '${saved.id}' does not match the Barr reference`); if (!referenceNode && !definition) fail(`unsupported node type '${saved.type}'`);
     const expectedPorts = referenceNode?.ports ?? definition!.ports; const expectedParameters = referenceNode?.parameters ?? definition!.parameters; const savedPorts = saved.ports as unknown[]; const savedParameters = saved.parameters as unknown[];
     if (!Array.isArray(saved.ports) || (sourceVersion === 2 && saved.ports.length !== expectedPorts.length)) fail(`ports differ for node '${saved.id}'`);
@@ -62,7 +64,7 @@ export function parsePatchJson(text: string, reference: RuntimeSnapshot): Loaded
     });
     if (legacyCurveMapper) values.push(...structuredClone(expectedParameters.slice(3)));
     const base = referenceNode ? { id: savedId, type: 'patchNode', position: { x: 0, y: 0 }, data: { label: referenceNode.label, type: referenceNode.type, role: referenceNode.role, ports: structuredClone(referenceNode.ports), parameters: values, runtimeBound: true } } as Node<PatchNodeData> : createModuleNode(savedType as ModuleType, savedId, { x: 0, y: 0 });
-    base.data.parameters = values; nodes.push(base);
+    base.data.parameters = values; if (savedType === 'macro') base.data.userName = saved.name as string; nodes.push(base);
   }
   const ioError = requiredIoError(nodes); if (ioError) fail(ioError);
   const ports = new Map(nodes.map((node) => [node.id, new Map(node.data.ports.map((port) => [port.id, port]))])); const edgeIds = new Set<string>(); const occupiedInputs = new Set<string>(); const edges: Edge[] = savedConnectionList.map((unknownConnection, index) => {

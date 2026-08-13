@@ -54,6 +54,7 @@ struct Node final {
     std::string type;
     std::vector<Port> ports;
     std::vector<Parameter> parameters;
+    std::string name;
 
     friend bool operator==(const Node&, const Node&) = default;
 };

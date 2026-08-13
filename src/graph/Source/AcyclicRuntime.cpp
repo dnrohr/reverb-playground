@@ -52,7 +52,7 @@ struct Operation final {
     double controlClampMaximum { 1.0 };
 };
 
-enum class ControlOperationKind { lfo, mapper };
+enum class ControlOperationKind { macro, lfo, mapper };
 
 struct ControlOperation final {
     std::string id;
@@ -68,6 +68,12 @@ struct ControlOperation final {
     double clampMinimum { -1.0 };
     double clampMaximum { 1.0 };
     double value {};
+    std::uint64_t macroKey {};
+    std::size_t macroSlot {};
+    double macroTarget {};
+    double macroDefault {};
+    double observedMacroTarget {};
+    ControlRamp macroRamp;
 };
 
 struct RuntimeModulation final {
@@ -146,6 +152,13 @@ void addNodeContractErrors(const Node& node, std::vector<std::string>& errors)
     } else if (node.type == "lowpass") {
         if (!unary || !hasParameter(node, "cutoff", "hertz"))
             errors.push_back("lowpass node '" + node.id + "' requires in, out, and cutoff");
+    } else if (node.type == "macro") {
+        if (!hasPort(node, "out", SignalType::control, PortDirection::output)
+            || !parameterInRange(node, "value", "normalized", -1.0, 1.0)
+            || !parameterInRange(node, "default-value", "normalized", -1.0, 1.0)
+            || !parameterInRange(node, "center-detent", "boolean", 0.0, 1.0)
+            || node.name.empty() || node.name.size() > 64)
+            errors.push_back("macro node '" + node.id + "' requires name, normalized value/default, center detent, and control out");
     } else if (node.type == "lfo") {
         if (!hasPort(node, "out", SignalType::control, PortDirection::output)
             || !hasParameter(node, "frequency", "hertz") || !hasParameter(node, "phase", "cycles")
@@ -323,14 +336,45 @@ void PreparedAcyclicRuntime::reset() noexcept
         }
     }
     for (auto& control : implementation_->controlOperations) {
-        control.value = 0.0;
-        if (control.kind == ControlOperationKind::lfo) control.lfo.restart();
+        if (control.kind == ControlOperationKind::macro) {
+            control.macroTarget = control.macroDefault;
+            control.observedMacroTarget = control.macroDefault;
+            control.macroRamp.reset(control.macroDefault);
+            control.value = control.macroDefault;
+        } else {
+            control.value = 0.0;
+            if (control.kind == ControlOperationKind::lfo) control.lfo.restart();
+        }
     }
     for (auto& modulation : implementation_->modulations) {
         modulation.ramp.reset(modulation.mapping.baseValue);
         std::ranges::fill(modulation.values, modulation.mapping.baseValue);
     }
     implementation_->samplesUntilControlTick = 0;
+}
+
+bool PreparedAcyclicRuntime::setMacroValue(const std::string_view nodeId, const double value) noexcept
+{
+    const auto finite = std::isfinite(value) ? std::clamp(value, -1.0, 1.0) : 0.0;
+    for (auto& control : implementation_->controlOperations) {
+        if (control.kind == ControlOperationKind::macro && control.id == nodeId) {
+            control.macroTarget = finite;
+            return true;
+        }
+    }
+    return false;
+}
+
+void PreparedAcyclicRuntime::applyMacroValue(
+    const std::size_t slot, const std::uint64_t key, const double value) noexcept
+{
+    for (auto& control : implementation_->controlOperations) {
+        if (control.kind == ControlOperationKind::macro
+            && control.macroSlot == slot && control.macroKey == key) {
+            control.macroTarget = std::isfinite(value) ? std::clamp(value, -1.0, 1.0) : 0.0;
+            return;
+        }
+    }
 }
 
 void PreparedAcyclicRuntime::process(
@@ -348,7 +392,13 @@ void PreparedAcyclicRuntime::process(
     for (std::size_t sample = 0; sample < count; ++sample) {
         if (!implementation_->modulations.empty() && implementation_->samplesUntilControlTick == 0) {
             for (auto& control : implementation_->controlOperations) {
-                if (control.kind == ControlOperationKind::lfo) {
+                if (control.kind == ControlOperationKind::macro) {
+                    if (control.macroTarget != control.observedMacroTarget) {
+                        control.observedMacroTarget = control.macroTarget;
+                        control.macroRamp.setTarget(control.macroTarget, macroSmoothingTicks);
+                    }
+                    control.value = control.macroRamp.next();
+                } else if (control.kind == ControlOperationKind::lfo) {
                     control.value = control.lfo.next();
                 } else {
                     const auto input = control.source == noModulation
@@ -693,7 +743,22 @@ AcyclicCompileResult compileAcyclicGraph(
         implementation->outputRightInput = inputBuffer(outputId, "in-r");
 
         for (const auto& id : result.schedule) {
-            if (const auto lfo = std::ranges::find(controlPlan.lfos, id, &ControlRatePlan::LfoNode::nodeId);
+            if (const auto macro = std::ranges::find(controlPlan.macros, id, &ControlRatePlan::MacroNode::nodeId);
+                macro != controlPlan.macros.end()) {
+                ControlOperation control {
+                    .id = id,
+                    .kind = ControlOperationKind::macro,
+                    .value = macro->value,
+                    .macroKey = macro->key,
+                    .macroSlot = macro->slot,
+                    .macroTarget = macro->value,
+                    .macroDefault = macro->defaultValue,
+                    .observedMacroTarget = macro->value,
+                };
+                control.macroRamp.reset(macro->value);
+                implementation->controlOperationById[id] = implementation->controlOperations.size();
+                implementation->controlOperations.push_back(std::move(control));
+            } else if (const auto lfo = std::ranges::find(controlPlan.lfos, id, &ControlRatePlan::LfoNode::nodeId);
                 lfo != controlPlan.lfos.end()) {
                 ControlOperation control { .id = id, .kind = ControlOperationKind::lfo };
                 control.lfo.prepare(controlRateHz);
@@ -726,7 +791,7 @@ AcyclicCompileResult compileAcyclicGraph(
 
         for (const auto& id : result.schedule) {
             const auto& node = *nodes.at(id);
-            if (node.type == "lfo" || node.type == "control-map") continue;
+            if (node.type == "macro" || node.type == "lfo" || node.type == "control-map") continue;
             Operation operation { .id = id, .kind = kindFor(node.type) };
             for (const auto& port : node.ports) {
                 const auto followerPort = node.type == "envelope-follower"
@@ -1078,6 +1143,17 @@ void AcyclicRuntimeHost::process(
         std::ranges::fill(outputRight, 0.0F);
         return;
     }
+    const auto applyMacros = [this](PreparedAcyclicRuntime& runtime) noexcept {
+        for (std::size_t slot = 0; slot < maximumMacroControls; ++slot) {
+            const auto key = macroKeys_[slot].load(std::memory_order_acquire);
+            if (key != 0)
+                runtime.applyMacroValue(
+                    slot, key, macroValues_[slot].load(std::memory_order_acquire));
+        }
+    };
+    applyMacros(*active->runtime);
+    if (fadingRuntime_ != nullptr)
+        applyMacros(*fadingRuntime_->runtime);
     if (fadingRuntime_ == nullptr) {
         active->runtime->process(inputLeft, inputRight, outputLeft, outputRight);
         return;
@@ -1120,6 +1196,8 @@ void AcyclicRuntimeHost::process(
 
 void AcyclicRuntimeHost::resetActiveRuntimes() noexcept
 {
+    for (auto& key : macroKeys_)
+        key.store(0, std::memory_order_release);
     if (auto* active = activeRuntime_.load(std::memory_order_acquire)) active->runtime->reset();
     if (fadingRuntime_ != nullptr) fadingRuntime_->runtime->reset();
 }
@@ -1133,6 +1211,17 @@ bool AcyclicRuntimeHost::hasRuntime() const noexcept
 std::uint64_t AcyclicRuntimeHost::activeRevision() const noexcept
 {
     return activeRevision_.load(std::memory_order_acquire);
+}
+
+bool AcyclicRuntimeHost::setMacroValue(const std::string_view nodeId, const double value) noexcept
+{
+    if (nodeId.empty() || !std::isfinite(value))
+        return false;
+    const auto key = macroControlKey(nodeId);
+    const auto slot = macroControlSlot(key);
+    macroValues_[slot].store(std::clamp(value, -1.0, 1.0), std::memory_order_release);
+    macroKeys_[slot].store(key, std::memory_order_release);
+    return true;
 }
 
 } // namespace reverb::graph

@@ -325,6 +325,15 @@ button { font: inherit; }
 .control-range-preview div { position: relative; height: 7px; margin-top: 9px; border-top: 1px solid #57486f; }
 .control-range-preview i { position: absolute; top: -4px; width: 7px; height: 7px; border: 1px solid #22192a; background: var(--violet); transform: translateX(-50%) rotate(45deg); }
 .control-range-preview p { margin: 4px 0 0; color: #8f82a8; font-size: 8px; }
+.macro-name-field { display: grid; gap: 5px; margin: 14px 0; color: #9daab2; font-size: 8px; letter-spacing: .08em; }
+.macro-name-field input { width: 100%; border: 1px solid #596a75; border-radius: 3px; padding: 7px; background: #10161a; color: var(--text); font: 10px ui-monospace, Consolas, monospace; }
+.macro-destinations { margin: 14px 0; padding: 10px; border: 1px dashed var(--violet); border-left: 3px double var(--violet); background: rgba(189, 156, 255, .055); }
+.macro-destinations header { display: flex; justify-content: space-between; color: #aa98cd; font: 8px ui-monospace, Consolas, monospace; letter-spacing: .08em; }
+.macro-destinations ul { margin: 8px 0 0; padding: 0; list-style: none; }
+.macro-destinations li { display: grid; gap: 3px; padding: 7px 0; border-top: 1px solid #57486f; }
+.macro-destinations li span, .macro-destinations p { margin: 0; color: #a9b4bb; font-size: 8px; }
+.react-flow__node.macro-reachable .patch-node { outline: 2px dashed var(--violet); outline-offset: 4px; }
+.react-flow__edge.macro-reachable path { stroke: var(--violet); stroke-width: 4px; stroke-dasharray: 4 3; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .history-actions { display: flex; gap: 8px; margin-top: 12px; }
 .history-actions button { flex: 1; padding: 7px; border: 1px solid var(--line); border-radius: 4px; color: var(--text); background: #1a2228; font-size: 9px; }

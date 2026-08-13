@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reverb/graph/GraphDocument.h>
+#include <reverb/graph/ControlRate.h>
 
 #include <atomic>
 #include <array>
@@ -11,6 +12,7 @@
 #include <mutex>
 #include <span>
 #include <string>
+#include <string_view>
 #include <thread>
 #include <vector>
 
@@ -45,6 +47,8 @@ public:
         std::span<float> outputLeft,
         std::span<float> outputRight) noexcept;
     void reset() noexcept;
+    [[nodiscard]] bool setMacroValue(std::string_view nodeId, double value) noexcept;
+    void applyMacroValue(std::size_t slot, std::uint64_t key, double value) noexcept;
 
     [[nodiscard]] const std::vector<std::string>& schedule() const noexcept;
     [[nodiscard]] std::size_t maximumBlockSize() const noexcept;
@@ -142,6 +146,7 @@ public:
 
     [[nodiscard]] bool hasRuntime() const noexcept;
     [[nodiscard]] std::uint64_t activeRevision() const noexcept;
+    [[nodiscard]] bool setMacroValue(std::string_view nodeId, double value) noexcept;
 
 private:
     struct RuntimeEnvelope;
@@ -183,6 +188,8 @@ private:
     std::atomic<std::uint64_t> lastCrossfadeToRevision_ {};
     std::atomic<std::size_t> activeDelayLineCount_ {};
     std::atomic<std::size_t> activeDelayMemoryBytes_ {};
+    std::array<std::atomic<std::uint64_t>, maximumMacroControls> macroKeys_ {};
+    std::array<std::atomic<double>, maximumMacroControls> macroValues_ {};
     mutable std::mutex failureMutex_;
     std::mutex pendingPublicationMutex_;
     std::string failure_;

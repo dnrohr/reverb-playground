@@ -45,6 +45,19 @@ describe('unified graph history', () => {
     expect(result.edit?.before.edges).toHaveLength(1);
   });
 
+  it('records and restores Macro names as semantic edits', () => {
+    const before = baseGraph();
+    const macro = createModuleNode('macro', 'macro-gravity', { x: 80, y: 160 });
+    before.nodes.push(macro);
+    const after = structuredClone(before);
+    after.nodes.find((node) => node.id === macro.id)!.data.userName = 'Gravity';
+    expect(semanticGraphHash(after)).not.toBe(semanticGraphHash(before));
+    const undone = undoGraphEdit(commitGraphEdit(emptyGraphHistory(before), 'Rename Macro', before, after));
+    expect(undone.edit!.before.nodes.find((node) => node.id === macro.id)!.data.userName).toBe('Macro');
+    const redone = redoGraphEdit(undone.history);
+    expect(redone.edit!.after.nodes.find((node) => node.id === macro.id)!.data.userName).toBe('Gravity');
+  });
+
   it('bounds history and retains a clean-state marker without clearing undo on save', () => {
     let state = baseGraph(); let history = emptyGraphHistory(state);
     expect(isHistoryClean(history, state)).toBe(true);

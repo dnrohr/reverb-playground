@@ -67,7 +67,9 @@ export function decorateControlPreview(nodes: Node<PatchNodeData>[], edges: Edge
     visiting.add(nodeId);
     const node = byId.get(nodeId);
     let value = 0;
-    if (node?.data.type === 'lfo') {
+    if (node?.data.type === 'macro') {
+      value = clamp(parameter(node, 'value', 0), -1, 1);
+    } else if (node?.data.type === 'lfo') {
       value = lfoValue(timeSeconds, parameter(node, 'frequency', 1), parameter(node, 'phase', 0), parameter(node, 'waveform', 0) >= 0.5 ? 'triangle' : 'sine');
     } else if (node?.data.type === 'control-map') {
       const source = incoming.get(`${nodeId}.in`);
@@ -94,7 +96,8 @@ export function decorateControlPreview(nodes: Node<PatchNodeData>[], edges: Edge
         ...node.data,
         controlPreview: {
           value: memo.get(node.id) ?? 0,
-          label: node.data.type === 'lfo' ? (parameter(node, 'waveform', 0) >= 0.5 ? 'TRI' : 'SINE')
+          label: node.data.type === 'macro' ? 'MACRO'
+            : node.data.type === 'lfo' ? (parameter(node, 'waveform', 0) >= 0.5 ? 'TRI' : 'SINE')
             : parameter(node, 'curve-family', 0) >= 1.5 ? 'EXP' : parameter(node, 'curve-family', 0) >= 0.5 ? 'POWER' : 'LINEAR',
         },
       },

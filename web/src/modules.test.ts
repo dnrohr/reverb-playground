@@ -3,12 +3,21 @@ import { createModuleNode, moduleDefinitions, nextNodeId } from './modules';
 
 describe('editable module library', () => {
   it('defines every M3.1 primitive with safe deterministic defaults', () => {
-    expect(moduleDefinitions.map((item) => item.type)).toEqual(['stereo-input', 'stereo-output', 'gain', 'sum', 'delay', 'allpass', 'lowpass', 'lfo', 'control-map', 'envelope-follower', 'hold-gate']);
+    expect(moduleDefinitions.map((item) => item.type)).toEqual(['stereo-input', 'stereo-output', 'gain', 'sum', 'delay', 'allpass', 'lowpass', 'macro', 'lfo', 'control-map', 'envelope-follower', 'hold-gate']);
     for (const definition of moduleDefinitions) {
       const node = createModuleNode(definition.type, `${definition.type}-1`, { x: 10, y: 20 });
       expect(node.data.label).toBeTruthy(); expect(node.data.runtimeBound).toBe(false);
       expect(node.data.parameters.every((parameter) => parameter.value >= parameter.minimum && parameter.value <= parameter.maximum)).toBe(true);
     }
+  });
+
+  it('defines Macro as one named normalized control source', () => {
+    const macro = createModuleNode('macro', 'macro-1', { x: 0, y: 0 });
+    expect(macro.data.userName).toBe('Macro');
+    expect(macro.data.ports).toEqual([{ id: 'out', signal: 'control', direction: 'output' }]);
+    expect(macro.data.parameters.map(({ id, value, unit }) => [id, value, unit])).toEqual([
+      ['value', 0, 'normalized'], ['default-value', 0, 'normalized'], ['center-detent', 1, 'boolean'],
+    ]);
   });
 
   it('makes follower and gate signal direction visible without hidden detection', () => {

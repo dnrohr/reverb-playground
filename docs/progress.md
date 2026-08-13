@@ -573,6 +573,29 @@ Results:
   Six-second interaction evidence:
   [`curve-mapper-preview.mp4`](../artifacts/ui/m8-2-curve-mapper/curve-mapper-preview.mp4).
 
+## M8.3 verification
+
+- Macro is a public control-source block with a 1–64 character user name,
+  normalized current/default values, optional center detent, and exactly one
+  explicit dashed control output.
+- Its output branches through ordinary visible Curve Mapper nodes. Selecting a
+  Macro traverses those cables, highlights every reachable mapper/destination,
+  and lists each mapped parameter's predicted endpoint range and unit.
+- Current values enter a fixed 64-slot lock-free mailbox keyed by stable node
+  ID and ramp over 20 control ticks (20 ms). The current value is excluded from
+  the audible topology fingerprint, so 1,000 rapid automation writes request no
+  compilation; structural Macro settings still publish normally.
+- Reset clears pending automation and returns to the prepared default.
+  Compilation rejects invalid routes, malformed settings, slot collisions, and
+  graphs beyond the existing 64-control-node/128-mapping budgets.
+- Unified history includes Macro names; copy/paste retains name/settings while
+  assigning fresh IDs. Schema-v2 save/load and native host state preserve the
+  name, values, stable node/cable IDs, layout, and viewport exactly. Existing
+  schema documents remain readable because `name` is optional outside the
+  required Macro contract.
+- UI evidence: [`macro-destinations.png`](../artifacts/ui/m8-3-macro-control/macro-destinations.png)
+  and [`macro-automation.mp4`](../artifacts/ui/m8-3-macro-control/macro-automation.mp4).
+
 ## Standalone maximized-window correction
 
 - The first work-area correction was rejected by visual review because its

@@ -49,6 +49,21 @@ double optionalParameter(
 
 } // namespace
 
+std::uint64_t macroControlKey(const std::string_view nodeId) noexcept
+{
+    std::uint64_t hash = 14695981039346656037ULL;
+    for (const auto character : nodeId) {
+        hash ^= static_cast<unsigned char>(character);
+        hash *= 1099511628211ULL;
+    }
+    return hash == 0 ? 1 : hash;
+}
+
+std::size_t macroControlSlot(const std::uint64_t key) noexcept
+{
+    return static_cast<std::size_t>(key % maximumMacroControls);
+}
+
 ControlRatePlan compileControlRatePlan(
     const GraphDocument& document, const double sampleRate, const std::size_t maximumBlockSize)
 {
@@ -91,7 +106,20 @@ ControlRatePlan compileControlRatePlan(
     }
 
     for (const auto& node : document.nodes) {
-        if (node.type == "lfo") {
+        if (node.type == "macro") {
+            const auto value = requiredParameter(node, "value", -1.0, 1.0, plan);
+            const auto defaultValue = requiredParameter(node, "default-value", -1.0, 1.0, plan);
+            const auto centerDetent = requiredParameter(node, "center-detent", 0.0, 1.0, plan);
+            if (centerDetent != 0.0 && centerDetent != 1.0)
+                plan.errors.push_back("macro node '" + node.id + "' has invalid center-detent selector");
+            if (node.name.empty() || node.name.size() > 64)
+                plan.errors.push_back("macro node '" + node.id + "' requires a name of 1 through 64 characters");
+            const auto key = macroControlKey(node.id);
+            const auto slot = macroControlSlot(key);
+            if (std::ranges::any_of(plan.macros, [&](const auto& macro) { return macro.slot == slot; }))
+                plan.errors.push_back("macro node '" + node.id + "' collides with another fixed automation slot");
+            plan.macros.push_back({ node.id, key, slot, value, defaultValue, centerDetent >= 0.5 });
+        } else if (node.type == "lfo") {
             const auto frequency = requiredParameter(node, "frequency", 0.01, 100.0, plan);
             const auto phase = requiredParameter(node, "phase", 0.0, 0.999, plan);
             const auto waveform = requiredParameter(node, "waveform", 0.0, 1.0, plan);

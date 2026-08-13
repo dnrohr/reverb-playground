@@ -12,7 +12,9 @@ export function audibleGraphFingerprint(nodes: Node<PatchNodeData>[], edges: Edg
     id: node.id,
     type: node.data.type,
     ports: node.data.ports,
-    parameters: node.data.parameters.map(({ id, value, unit, modulation }) => ({ id, value, unit, modulation })),
+    parameters: node.data.parameters.map(({ id, value, unit, modulation }) => ({
+      id, value: node.data.type === 'macro' && id === 'value' ? 0 : value, unit, modulation,
+    })),
   })).sort((left, right) => left.id.localeCompare(right.id));
   const semanticEdges = edges.map((edge) => ({
     id: edge.id,

@@ -36,6 +36,7 @@ import { curveMappingRange, decorateControlPreview, type ControlCurveFamily } fr
 import { comparisonPatchAfterSelection, factoryPatchDescription, factoryPatches, loadFactoryPatch, type ComparisonPatchId, type FactoryPatchId } from './factoryPatches';
 import { architectureOverlay, type GateTeachingParameters, type TeachingPatchId } from './architectureOverlay';
 import { parseHostPatchStateResult } from './hostPatchState';
+import { decorateMacroReachability, inspectMacroReachability } from './macroInspection';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -44,6 +45,7 @@ const modules = [
 ];
 
 const parameterChoices = (unit: string): { value: number; label: string }[] | null => {
+  if (unit === 'boolean') return [{ value: 0, label: 'OFF' }, { value: 1, label: 'ON' }];
   if (unit === 'curve-family') return [{ value: 0, label: 'LINEAR' }, { value: 1, label: 'POWER' }, { value: 2, label: 'EXPONENTIAL' }];
   if (unit === 'waveform') return [{ value: 0, label: 'SINE' }, { value: 1, label: 'TRIANGLE' }];
   if (unit === 'run-mode') return [{ value: 0, label: 'FREE RUN' }, { value: 1, label: 'RESTART ON TRANSPORT' }];
@@ -320,7 +322,6 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const loopDecoratedGraph = useMemo(() => decorateFeedbackLoops(nodes, edges, loopInspection, normalizedLoopIndex), [edges, loopInspection, nodes, normalizedLoopIndex]);
   const safetyDecoratedGraph = useMemo(() => decorateRunawayFeedbackLoop(loopDecoratedGraph.nodes, loopDecoratedGraph.edges, runawayLoopInspection), [loopDecoratedGraph, runawayLoopInspection]);
   const energyDecoratedGraph = useMemo(() => decorateEnergy(safetyDecoratedGraph.nodes, safetyDecoratedGraph.edges, energyLevels), [energyLevels, safetyDecoratedGraph]);
-  const displayedGraph = useMemo(() => decorateControlPreview(energyDecoratedGraph.nodes, energyDecoratedGraph.edges, controlPreviewTime), [controlPreviewTime, energyDecoratedGraph]);
   const selectedMappingRange = useMemo(() => {
     if (selectedNode?.data.type !== 'control-map') return null;
     const value = (id: string, fallback: number) => selectedNode.data.parameters.find((parameter) => parameter.id === id)?.value ?? fallback;
@@ -331,6 +332,14 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       value('polarity', 1) >= 0.5 ? 'bipolar' : 'unipolar', value('clamp-min', -1), value('clamp-max', 1),
     );
   }, [selectedNode]);
+  const selectedMacroInspection = useMemo(() => selectedNode?.data.type === 'macro'
+    ? inspectMacroReachability(selectedNode.id, nodes, edges) : null, [edges, nodes, selectedNode]);
+  const macroDecoratedGraph = useMemo(() => decorateMacroReachability(
+    energyDecoratedGraph.nodes, energyDecoratedGraph.edges, selectedMacroInspection,
+  ), [energyDecoratedGraph, selectedMacroInspection]);
+  const displayedGraph = useMemo(() => decorateControlPreview(
+    macroDecoratedGraph.nodes, macroDecoratedGraph.edges, controlPreviewTime,
+  ), [controlPreviewTime, macroDecoratedGraph]);
 
   useEffect(() => {
     if (reducedMotion || !nodes.some((node) => node.data.role === 'control')) return;
@@ -446,7 +455,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
   const publishRuntimeParameters = useCallback((state: { nodes: Node<PatchNodeData>[] }) => {
     for (const node of state.nodes) for (const parameter of node.data.parameters)
-      if (node.data.runtimeBound) {
+      if (node.data.runtimeBound || (node.data.type === 'macro' && parameter.id === 'value')) {
         try { void callNative('setRuntimeParameter', node.id, parameter.id, parameter.value).catch(() => undefined); }
         catch { /* browser prototype has no native bridge */ }
       }
@@ -493,17 +502,22 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   }, [applyGraph, edges, nodes, pendingConnection]);
 
   const applyParameter = useCallback((nodeId: string, parameterId: string, value: number) => {
+    const sourceNode = nodes.find((node) => node.id === nodeId);
+    const detentEnabled = sourceNode?.data.type === 'macro'
+      && sourceNode.data.parameters.find((parameter) => parameter.id === 'center-detent')?.value === 1;
+    const appliedValue = sourceNode?.data.type === 'macro' && parameterId === 'value'
+      && detentEnabled && Math.abs(value) <= 0.02 ? 0 : value;
     const update = (node: Node<PatchNodeData>) => node.id !== nodeId ? node : {
       ...node,
       data: {
         ...node.data,
-        parameters: node.data.parameters.map((parameter) => parameter.id === parameterId ? { ...parameter, value } : parameter),
+        parameters: node.data.parameters.map((parameter) => parameter.id === parameterId ? { ...parameter, value: appliedValue } : parameter),
       },
     };
     setNodes((current) => current.map(update));
     setSelectedNode((current) => current ? update(current) : null);
-    if (nodes.find((node) => node.id === nodeId)?.data.runtimeBound) {
-      try { void callNative('setRuntimeParameter', nodeId, parameterId, value).catch(() => undefined); }
+    if (sourceNode?.data.runtimeBound || (sourceNode?.data.type === 'macro' && parameterId === 'value')) {
+      try { void callNative('setRuntimeParameter', nodeId, parameterId, appliedValue).catch(() => undefined); }
       catch { /* browser prototype has no native bridge */ }
     }
   }, [nodes, setNodes]);
@@ -517,6 +531,15 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           ? parameter
           : { ...parameter, modulation: { ...parameter.modulation, ...change } }),
       },
+    };
+    setNodes((current) => current.map(update));
+    setSelectedNode((current) => current ? update(current) : null);
+  }, [setNodes]);
+
+  const applyMacroName = useCallback((nodeId: string, name: string) => {
+    const bounded = name.slice(0, 64);
+    const update = (node: Node<PatchNodeData>) => node.id !== nodeId ? node : {
+      ...node, data: { ...node.data, userName: bounded },
     };
     setNodes((current) => current.map(update));
     setSelectedNode((current) => current ? update(current) : null);
@@ -641,7 +664,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       await setFlowViewport(loaded.viewport);
       for (const node of loaded.nodes) {
         for (const parameter of node.data.parameters)
-          if (node.data.runtimeBound) await callNative('setRuntimeParameter', node.id, parameter.id, parameter.value);
+          if (node.data.runtimeBound || (node.data.type === 'macro' && parameter.id === 'value'))
+            await callNative('setRuntimeParameter', node.id, parameter.id, parameter.value);
       }
       setSelectedNode(null);
       setSelectedEdge(null);
@@ -856,7 +880,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           {selectedNode ? (
             <div className="inspector-content" key={selectedNode.id}>
               <div className="selection-kicker">SELECTED BLOCK</div>
-              <h2>{selectedNode.data.label}</h2>
+              <h2>{selectedNode.data.type === 'macro' ? selectedNode.data.userName : selectedNode.data.label}</h2>
               <code>{selectedNode.id}</code>
               {loopInspection ? <LoopInspector inspection={loopInspection} activeIndex={normalizedLoopIndex} onActiveIndex={setActiveLoopIndex} /> : null}
               <dl className="property-list">
@@ -864,6 +888,27 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <div><dt>ROLE</dt><dd>{selectedNode.data.role}</dd></div>
                 <div><dt>PORTS</dt><dd>{selectedNode.data.ports.length} mono</dd></div>
               </dl>
+              {selectedNode.data.type === 'macro' ? <label className="macro-name-field">
+                <span>MACRO NAME</span>
+                <input
+                  aria-label="Macro name"
+                  maxLength={64}
+                  value={selectedNode.data.userName ?? ''}
+                  onFocus={() => beginParameterEdit(selectedNode.id, 'name', 0)}
+                  onChange={(event) => applyMacroName(selectedNode.id, event.target.value)}
+                  onBlur={() => {
+                    if (!(selectedNode.data.userName ?? '').trim()) applyMacroName(selectedNode.id, 'Macro');
+                    commitParameterEdit();
+                  }}
+                />
+              </label> : null}
+              {selectedMacroInspection ? <section className="macro-destinations" aria-label="Reachable mapped parameters">
+                <header><span>REACHABLE MAPPINGS</span><strong>{selectedMacroInspection.destinations.length}</strong></header>
+                {selectedMacroInspection.destinations.length ? <ul>{selectedMacroInspection.destinations.map((destination) => <li key={`${destination.nodeId}.${destination.parameterId}`}>
+                  <code>{destination.nodeId}.{destination.parameterId}</code>
+                  <span>{destination.minimum.toFixed(2)} … {destination.maximum.toFixed(2)} {destination.unit}</span>
+                </li>)}</ul> : <p>Connect the explicit output through Curve Mapper blocks to parameter sockets.</p>}
+              </section> : null}
               {selectedMappingRange ? (
                 <section className="control-range-preview" aria-label="Predicted control output range">
                   <header><span>PREDICTED OUTPUT</span><strong>{selectedMappingRange.minimum.toFixed(2)} … {selectedMappingRange.maximum.toFixed(2)}</strong></header>
@@ -950,7 +995,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <button type="button" disabled={!graphHistory.undo.length} onClick={undoGraph}>UNDO</button>
                 <button type="button" disabled={!graphHistory.redo.length} onClick={redoGraph}>REDO</button>
               </div>
-              <div className="selection-note">{selectedNode.data.runtimeBound ? `Live value from native DSP runtime contract v${snapshot.contractVersion}.` : 'Constructed graph block. Audible edits compile off-thread and crossfade into the live plugin at an audio-block boundary.'}</div>
+              <div className="selection-note">{selectedNode.data.type === 'macro'
+                ? 'Macro value changes use a fixed 20 ms runtime ramp and do not compile topology. Default and detent edits republish the visible graph.'
+                : selectedNode.data.runtimeBound ? `Live value from native DSP runtime contract v${snapshot.contractVersion}.`
+                  : 'Constructed graph block. Audible edits compile off-thread and crossfade into the live plugin at an audio-block boundary.'}</div>
               {showTeaching ? <TeachingCard topic={teachingTopicFor(selectedNode.id)} onDismiss={() => setDismissedTeaching(teachingKey)} onResearch={() => setResearchOpen(true)} /> : null}
             </div>
           ) : selectedEdge ? (

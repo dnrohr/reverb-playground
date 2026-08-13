@@ -33,6 +33,7 @@ export interface PatchNodeData extends Record<string, unknown> {
   parameters: PatchParameter[];
   role: NodeRole;
   runtimeBound: boolean;
+  userName?: string;
   controlPreview?: { value: number; label: string };
 }
 
@@ -44,6 +45,7 @@ export interface RuntimeNode {
   ports: PatchPort[];
   parameters: PatchParameter[];
   position: { x: number; y: number };
+  name?: string;
 }
 
 export interface RuntimeConnection {
@@ -143,6 +145,7 @@ export function createFlowModel(snapshot: RuntimeSnapshot): { nodes: Node<PatchN
         ports: node.ports.map((port) => ({ ...port })),
         parameters: node.parameters.map((parameter) => ({ ...parameter })),
         runtimeBound: true,
+        ...(node.name ? { userName: node.name } : {}),
       },
     })),
     edges: snapshot.connections.map((connection) => ({

@@ -20,4 +20,13 @@ describe('topology publication bridge', () => {
     expect(() => parseGraphPublicationResult({ accepted: true, revision: 0, error: '' })).toThrow(/inconsistent/);
     expect(() => parseGraphPublicationResult({ accepted: false, revision: 2, error: 'bad' })).toThrow(/inconsistent/);
   });
+
+  it('treats Macro value automation as runtime-only while retaining structural settings', () => {
+    const macro = createModuleNode('macro', 'macro-1', { x: 0, y: 0 });
+    const base = audibleGraphFingerprint([macro], []);
+    macro.data.parameters.find((parameter) => parameter.id === 'value')!.value = 0.875;
+    expect(audibleGraphFingerprint([macro], [])).toBe(base);
+    macro.data.parameters.find((parameter) => parameter.id === 'default-value')!.value = -0.25;
+    expect(audibleGraphFingerprint([macro], [])).not.toBe(base);
+  });
 });

@@ -4,7 +4,9 @@
 #include <reverb/graph/ControlModulation.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace reverb::graph {
@@ -12,6 +14,11 @@ namespace reverb::graph {
 inline constexpr double controlRateHz = 1'000.0;
 inline constexpr std::size_t maximumControlNodes = 64;
 inline constexpr std::size_t maximumControlMappings = 128;
+inline constexpr std::size_t maximumMacroControls = 64;
+inline constexpr std::size_t macroSmoothingTicks = 20;
+
+[[nodiscard]] std::uint64_t macroControlKey(std::string_view nodeId) noexcept;
+[[nodiscard]] std::size_t macroControlSlot(std::uint64_t key) noexcept;
 
 struct CompiledControlMapping final {
     std::string sourceNodeId;
@@ -53,8 +60,17 @@ struct ControlRatePlan final {
         double clampMaximum { 1.0 };
         ControlMappingRange predictedRange;
     };
+    struct MacroNode final {
+        std::string nodeId;
+        std::uint64_t key {};
+        std::size_t slot {};
+        double value {};
+        double defaultValue {};
+        bool centerDetent {};
+    };
     std::vector<LfoNode> lfos;
     std::vector<MapperNode> mappers;
+    std::vector<MacroNode> macros;
     std::vector<std::string> errors;
 
     [[nodiscard]] bool valid() const noexcept { return errors.empty(); }

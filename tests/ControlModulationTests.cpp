@@ -153,6 +153,68 @@ TEST_CASE("One control output branches to multiple parameter sockets")
     REQUIRE(validate(document).valid());
 }
 
+TEST_CASE("Macro exposes a bounded named source and branches to the fixed control limit")
+{
+    using namespace reverb::graph;
+    GraphDocument document;
+    document.nodes.push_back({ "macro-1", "macro", {
+        { "out", SignalType::control, PortDirection::output },
+    }, {
+        { "value", 0.25, "normalized" }, { "default-value", 0.0, "normalized" },
+        { "center-detent", 1.0, "boolean" },
+    }, "Gravity" });
+    for (std::size_t index = 0; index < 63; ++index) {
+        const auto id = "target-" + std::to_string(index);
+        document.nodes.push_back({ id, "delay", {
+            { "delay-mod", SignalType::control, PortDirection::input },
+        }, {
+            { "delay", 10.0, "milliseconds", ParameterModulation {
+                "delay-mod", 2.0, ModulationPolarity::bipolar, 0.1, 100.0 } },
+        } });
+        document.connections.push_back({ "branch-" + std::to_string(index),
+            { "macro-1", "out" }, { id, "delay-mod" } });
+    }
+    const auto plan = compileControlRatePlan(document, 48'000.0, 512);
+    REQUIRE(plan.valid());
+    REQUIRE(plan.macros.size() == 1);
+    REQUIRE(plan.macros.front().value == Catch::Approx(0.25));
+    REQUIRE(plan.macros.front().defaultValue == Catch::Approx(0.0));
+    REQUIRE(plan.macros.front().centerDetent);
+    REQUIRE(plan.mappings.size() == 63);
+
+    document.nodes.push_back({ "target-over-limit", "delay", {
+        { "delay-mod", SignalType::control, PortDirection::input },
+    }, {
+        { "delay", 10.0, "milliseconds", ParameterModulation {
+            "delay-mod", 2.0, ModulationPolarity::bipolar, 0.1, 100.0 } },
+    } });
+    document.connections.push_back({ "branch-over-limit", { "macro-1", "out" },
+        { "target-over-limit", "delay-mod" } });
+    REQUIRE_FALSE(compileControlRatePlan(document, 48'000.0, 512).valid());
+}
+
+TEST_CASE("Macro invalid routes and malformed controls fail before publication")
+{
+    using namespace reverb::graph;
+    GraphDocument invalidRoute;
+    invalidRoute.nodes = {
+        { "macro", "macro", { { "out", SignalType::control, PortDirection::output } }, {
+            { "value", 0.0, "normalized" }, { "default-value", 0.0, "normalized" },
+            { "center-detent", 1.0, "boolean" },
+        }, "Named" },
+        { "gain", "gain", { { "in", SignalType::audio, PortDirection::input } }, {} },
+    };
+    invalidRoute.connections = { { "wrong-type", { "macro", "out" }, { "gain", "in" } } };
+    REQUIRE_FALSE(validate(invalidRoute).valid());
+
+    auto malformed = invalidRoute;
+    malformed.connections.clear();
+    malformed.nodes.resize(1);
+    malformed.nodes.front().name.clear();
+    malformed.nodes.front().parameters.front().value = 2.0;
+    REQUIRE_FALSE(compileControlRatePlan(malformed, 48'000.0, 512).valid());
+}
+
 TEST_CASE("Control-rate compilation prepares LFO and mapping block semantics")
 {
     using namespace reverb::graph;

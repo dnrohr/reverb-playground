@@ -1,6 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 
 #include <reverb/graph/HostPatchState.h>
+#include <reverb/graph/PatchJson.h>
 
 #include <fstream>
 #include <iterator>
@@ -52,4 +54,30 @@ TEST_CASE("Invalid or oversized host state cannot replace the last valid patch")
     state.clear();
     REQUIRE_FALSE(state.snapshot().has_value());
     REQUIRE_FALSE(state.document().has_value());
+}
+
+TEST_CASE("Host patch state restores Macro identity and settings")
+{
+    using namespace reverb::graph;
+    GraphDocument document;
+    document.nodes = {
+        { "macro-gravity", "macro", { { "out", SignalType::control, PortDirection::output } }, {
+            { "value", 0.375, "normalized" }, { "default-value", -0.125, "normalized" },
+            { "center-detent", 1.0, "boolean" },
+        }, "Gravity" },
+    };
+    document.layout.nodes = { { "macro-gravity", 42.0, 84.0 } };
+
+    HostPatchState state;
+    std::string error;
+    const auto serialized = writePatchJson(document);
+    REQUIRE(state.store(serialized, error));
+    const auto restored = state.document();
+    REQUIRE(restored.has_value());
+    REQUIRE(restored->nodes.size() == 1);
+    CHECK(restored->nodes.front().id == "macro-gravity");
+    CHECK(restored->nodes.front().name == "Gravity");
+    CHECK(restored->nodes.front().parameters[0].value == Catch::Approx(0.375));
+    CHECK(restored->nodes.front().parameters[1].value == Catch::Approx(-0.125));
+    CHECK(writePatchJson(*restored) == serialized);
 }
