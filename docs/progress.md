@@ -1,6 +1,6 @@
 # Roadmap progress
 
-Last updated: 2026-08-11
+Last updated: 2026-08-13
 
 | Task | Status | Evidence |
 |---|---|---|
@@ -38,6 +38,13 @@ Last updated: 2026-08-11
 | M5.6 Finalize runaway-feedback UX | Complete | 50 ms sustained detector; immediate non-finite/hard-ceiling mute; heuristic loop marking; muted Undo; state-clearing recovery; scaled-work-area sizing; screenshot/video |
 | M6.1 Define reverse-reverb architecture requirements | Complete | Four distinct signal/IR contracts; causal Reverse Envelope selected; follower/gate primitive boundary; factory naming guard; documentation tests |
 | M6.2 Implement the minimum envelope/gate primitives | Complete | Sample-rate-aware follower/gate DSP; visible audio/control semantics; restricted detector route; exact persistence; delayed-feedback safety; screenshot/video evidence |
+| M6.3 Add reverse and gated factory patches | Complete | Two public-primitive factories; deterministic multirate envelope/audio fixtures; UI selection; screenshots/video |
+| M6.4 Add visualization teaching overlays | Complete | Measured reverse/gated landmarks; honest RT60 refusal; A/B switching; Learn control; screenshots/video |
+| M7.1 Finalize project licensing and provenance | Complete | AGPL-3.0-only; notices, provenance, DCO policy; archive enforcement |
+| M7.2 Package standalone and first plugin format | Complete | Reproducible Windows package; standalone/VST3; pluginval, VST3 validator, and two-host validation |
+| M7.3 Complete user and developer documentation | Complete | Clean-install tutorial; complete module/view reference; clean-checkout guide; enforced links/commands |
+| M7.4 Add factory patch and compatibility tests | Complete | Authoritative catalog; all-factory finite rendering/round trips; v1-v2 migrations; metadata; clean CI |
+| M7.5 Run alpha usability and safety validation | In progress | Protocol/ledger and automated accessibility/preflight gates prepared; external participant sessions still required |
 
 ## M0.2 verification
 
@@ -491,3 +498,14 @@ Results:
 - Short-room/baseline and Bloom-like families remain intentionally absent until their product topology, behavioral fixtures, metadata, and full compatibility evidence are complete. The admission rule is documented in [Factory patch catalog and compatibility](factory-patch-compatibility.md).
 - Full Debug verification passed 19 browser files / 66 tests, six Python policy/documentation tests, deterministic factory generation, the production web build, standalone/VST3 compilation, and all 101 native/audio tests.
 - UI unchanged; no screenshot or video was required.
+
+## M7.5 preparation (milestone remains open)
+
+- The participant protocol now covers clean installation/identity/safe mute, the complete Barr tutorial, a legal delayed feedback loop, an intentionally invalid algebraic cycle and repair, visible LFO mapping, save/close/reopen, response/energy/diagnostic inspection, and explicit stop rules.
+- Three anonymous non-implementer sessions are required, including plugin/node experience diversity and a keyboard-only segment. The ledger prohibits names, contact/account/location data, faces, voices, and unrelated screen content; outcomes and findings use `Pnn` and severity IDs only.
+- A preparation checker locks every required journey, keyboard/contrast/non-color/scaling/reduced-motion coverage, privacy template, and P0/P1 inventory. Its separate `--release` mode currently fails by design until three external sessions exist and both blocker counts are exactly zero.
+- Static accessibility verification checks reviewed foreground/background pairs against 4.5:1, required focusable graph/ARIA/non-color tokens, the reduced-motion rule, resizable bounds, and exact WebView fill behavior. Three formerly low-contrast 8-9 px labels now use `#788892`, yielding approximately 4.74-5.26:1 on their real surfaces.
+- The internal identity/visual preflight exposed a stale CMake cache commit (`908b1f9d9a7a` while HEAD was `a3e890646bf0`). Git checkouts now force-refresh identity on every configure; the verifier compares the configured cache with HEAD. Explicit overrides remain available only when Git identity is unavailable, such as a source archive.
+- Findings and resolution evidence are in [Alpha validation findings](alpha-validation-findings.md). Discovery screenshot: [`01-contrast-reviewed-full-window.png`](../artifacts/ui/m7-5-alpha-validation-preparation/01-contrast-reviewed-full-window.png). Corrected identity/contrast screenshot: [`02-current-identity-and-contrast.png`](../artifacts/ui/m7-5-alpha-validation-preparation/02-current-identity-and-contrast.png).
+- Full preparation verification passed 19 browser files / 66 tests, 13 Python policy/documentation/accessibility/study tests, factory generation and build-identity gates, the production web build, standalone/VST3 compilation, and all 101 native/audio tests.
+- This preparation and internal dry run do **not** satisfy the roadmap's non-implementer requirement. M7.5 remains open pending external sessions, prioritized findings, fixes, and rerun evidence.

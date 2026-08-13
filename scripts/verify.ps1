@@ -50,9 +50,15 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Repository checks failed.' }
     & $python.Source scripts/check_documentation.py
     if ($LASTEXITCODE -ne 0) { throw 'Documentation contract checks failed.' }
+    & $python.Source scripts/check_accessibility.py
+    if ($LASTEXITCODE -ne 0) { throw 'Accessibility contract checks failed.' }
+    & $python.Source scripts/check_alpha_validation.py
+    if ($LASTEXITCODE -ne 0) { throw 'Alpha validation preparation checks failed.' }
 
     & $cmakePath --preset windows-msvc
     if ($LASTEXITCODE -ne 0) { throw 'CMake configure failed.' }
+    & $python.Source scripts/check_build_identity.py
+    if ($LASTEXITCODE -ne 0) { throw 'Build identity check failed.' }
 
     $preset = if ($Configuration -eq 'Release') { 'windows-release' } else { 'windows-debug' }
     & $cmakePath --build --preset $preset --parallel 2

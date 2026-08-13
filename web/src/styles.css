@@ -50,7 +50,7 @@ button { font: inherit; }
 }
 
 .editor-header h1 { margin: 3px 0 0; font-size: 24px; line-height: 1; letter-spacing: -.02em; }
-.build-identity { display: block; margin-top: 5px; color: #687882; font: 8px ui-monospace, Consolas, monospace; letter-spacing: .08em; }
+.build-identity { display: block; margin-top: 5px; color: #788892; font: 8px ui-monospace, Consolas, monospace; letter-spacing: .08em; }
 .header-status { display: flex; align-items: center; gap: 9px; color: #b9c4cb; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 11px; }
 .header-runtime { display: flex; align-items: center; gap: 12px; }
 .factory-picker { display: grid; gap: 3px; color: #83919a; font: 800 7px ui-monospace, Consolas, monospace; letter-spacing: .1em; }
@@ -104,7 +104,7 @@ button { font: inherit; }
 .response-chart { display: block; width: 100%; height: 300px; border: 1px solid #29353c; background: #0a0f12; touch-action: none; }
 .response-chart path { vector-effect: non-scaling-stroke; fill: none; }
 .chart-grid path { stroke: #263138; stroke-width: 1; }
-.chart-grid text, .axis-label { fill: #687882; font: 9px ui-monospace, Consolas, monospace; }
+.chart-grid text, .axis-label { fill: #788892; font: 9px ui-monospace, Consolas, monospace; }
 .wave-left { stroke: var(--cyan); stroke-width: 1.2; }
 .wave-right { stroke: var(--amber); stroke-width: 1.3; stroke-dasharray: 4 3; }
 .decay-line { stroke: #e5eaed; stroke-width: 1.5; }
@@ -172,7 +172,7 @@ button { font: inherit; }
 .pane-count { display: grid; place-items: center; min-width: 24px; height: 20px; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); letter-spacing: 0; }
 .pane-help { color: var(--muted); font-size: 11px; line-height: 1.45; margin: 12px 0 18px; }
 .module-group { margin-top: 18px; }
-.module-group h2 { margin: 0 0 7px 4px; color: #697983; font-size: 9px; letter-spacing: .16em; }
+.module-group h2 { margin: 0 0 7px 4px; color: #788892; font-size: 9px; letter-spacing: .16em; }
 .module-item { width: 100%; height: 34px; display: flex; align-items: center; gap: 10px; margin: 5px 0; padding: 0 10px; border: 1px solid transparent; border-radius: 6px; color: #d5dde1; background: #1a2228; text-align: left; font-size: 11px; cursor: pointer; }
 .module-item:hover, .module-item:focus-visible { outline: none; border-color: #60707a; background: #202a31; }
 .module-glyph { width: 13px; height: 13px; border: 2px solid var(--cyan); border-radius: 50%; }

@@ -55,12 +55,21 @@ pnpm --dir web build
 python -m unittest discover -s scripts -p 'test_*.py'
 python scripts/check_repository.py
 python scripts/check_documentation.py
+python scripts/check_accessibility.py
+python scripts/check_alpha_validation.py
 cmake --preset windows-msvc
+python scripts/check_build_identity.py
 cmake --build --preset windows-debug --parallel 2
 ctest --preset windows-debug
 ```
 
 The first configure downloads the pinned JUCE and Catch2 source revisions into the ignored build directory. It does not require the local BarrVerb or MIDIVerb_RE research checkouts.
+
+When `.git` is available, each configure force-refreshes the embedded
+12-character commit from the checkout, replacing any older value left by a
+packaging configure. A source archive without Git may provide
+`-DREVERB_BUILD_COMMIT=<commit>`. `check_build_identity.py` rejects a configured
+checkout whose cache does not match `HEAD`.
 
 After a successful run, open
 `build/windows-msvc/src/app/ReverbPlayground_artefacts/Debug/Standalone/Reverb Playground.exe`

@@ -19,6 +19,8 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Barr reference tutorial](getting-started-barr-tutorial.md) - clean-install first run, safe audition, measurement, editing, diagnostics, and save/reload.
 - [Module and visualization reference](module-and-visualization-reference.md) - every shipped block, unit, range, socket, display, and constraint.
 - [Factory patch catalog and compatibility](factory-patch-compatibility.md) - shipped families, metadata, admission rules, schema migrations, and CI guarantees.
+- [Alpha usability and safety protocol](alpha-usability-safety-protocol.md) - anonymous participant method, complete task journey, accessibility matrix, and stop rules.
+- [Alpha validation findings](alpha-validation-findings.md) - privacy-preserving session outcomes, prioritized defects, and release-blocker inventory.
 - [Windows alpha package and host validation](windows-alpha-package-and-host-validation.md) - reproducible archive contract and named-host evidence.
 - [Progress log](progress.md) - completed roadmap tasks and verification evidence.
 - [Project license](../LICENSE), [third-party notices](../THIRD_PARTY_NOTICES.md), [asset provenance](../ASSET_PROVENANCE.md), and [contribution/DCO policy](../CONTRIBUTING.md) - open-source distribution boundaries.

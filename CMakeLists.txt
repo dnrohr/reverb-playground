@@ -7,13 +7,17 @@ project(
     LANGUAGES CXX)
 
 set(REVERB_BUILD_COMMIT "" CACHE STRING "Source commit embedded in packaged artifacts")
-if(REVERB_BUILD_COMMIT STREQUAL "")
-    execute_process(
-        COMMAND git rev-parse --short=12 HEAD
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        OUTPUT_VARIABLE REVERB_BUILD_COMMIT
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_QUIET)
+execute_process(
+    COMMAND git rev-parse --short=12 HEAD
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    OUTPUT_VARIABLE REVERB_DETECTED_BUILD_COMMIT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET)
+if(NOT REVERB_DETECTED_BUILD_COMMIT STREQUAL "")
+    # A Git checkout is authoritative. FORCE prevents a commit passed by a
+    # previous packaging configure from leaking into later development builds.
+    set(REVERB_BUILD_COMMIT "${REVERB_DETECTED_BUILD_COMMIT}" CACHE STRING
+        "Source commit embedded in packaged artifacts" FORCE)
 endif()
 if(REVERB_BUILD_COMMIT STREQUAL "")
     set(REVERB_BUILD_COMMIT "unknown")
