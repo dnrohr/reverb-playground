@@ -76,7 +76,7 @@ def check_contract(styles: str, app: str, editor_shell: str, plugin_editor: str)
     for token in (
         "preferredEditorSize(",
         "juce::StandalonePluginHolder::getInstance() != nullptr",
-        "workAreaWidth, workAreaHeight",
+        "window->setFullScreen(true)",
     ):
         if token not in plugin_editor:
             failures.append(f"PluginEditor.cpp: missing work-area sizing contract {token!r}")

@@ -530,19 +530,18 @@ Results:
 - `check_release.py` locks product/tag/package identity, tag-workflow gates,
   required note disclosures, landing-page links, and a nontrivial demo asset.
 
-## Standalone work-area sizing correction
+## Standalone maximized-window correction
 
-- The remaining sizing complaint was outside the schematic: the WebView already
-  filled its editor, but the standalone still capped that outer editor at
-  1280-by-800 on larger monitors. Standalone startup now derives its logical
-  size from the primary display work area with a small 32-by-64 frame margin.
+- The first work-area correction was rejected by visual review because its
+  guessed 32-by-64 frame margin remained plainly visible at the right and
+  bottom edges. Standalone startup now explicitly maximizes the outer JUCE
+  window, matching the already-correct result of using the maximize control.
 - Hosted VST3 editors deliberately retain a predictable 1280-by-800 preferred
   size because the DAW owns their outer window; both formats remain resizable
   from 640-by-400 through 8192-by-8192.
-- A native sizing-policy regression covers 1536-by-960 and 1920-by-1080 work
-  areas, minimum clamping, unavailable-display fallback, and hosted behavior.
-  The accessibility checker also locks work-area detection and exact WebView
-  fill.
-- Reviewed 125%-scale evidence: [`01-standalone-work-area.png`](../artifacts/ui/window-sizing-work-area/01-standalone-work-area.png)
-  shows the enlarged initial window; [`02-maximized-webview-fill.png`](../artifacts/ui/window-sizing-work-area/02-maximized-webview-fill.png)
-  shows the schematic flush to every maximized client edge.
+- A native sizing-policy regression preserves the stable editor content size
+  used before the standalone outer window exists. The repository checker locks
+  the explicit maximize request and exact WebView fill.
+- Reviewed 125%-scale cold-start evidence:
+  [`01-standalone-starts-maximized.png`](../artifacts/ui/window-sizing-work-area/01-standalone-starts-maximized.png)
+  shows the automatically maximized schematic flush to every display edge.

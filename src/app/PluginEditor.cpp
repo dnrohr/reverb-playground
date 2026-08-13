@@ -56,16 +56,20 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
     addAndMakeVisible(shell_);
     setResizable(true, true);
     setResizeLimits(640, 400, 8192, 8192);
-    auto workAreaWidth = 0;
-    auto workAreaHeight = 0;
-    if (const auto* display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()) {
-        workAreaWidth = juce::roundToInt(display->userBounds.getWidth());
-        workAreaHeight = juce::roundToInt(display->userBounds.getHeight());
-    }
+    const auto standalone = juce::StandalonePluginHolder::getInstance() != nullptr;
     const auto initial = reverb::ui::preferredEditorSize(
-        juce::StandalonePluginHolder::getInstance() != nullptr,
-        workAreaWidth, workAreaHeight);
+        standalone, 0, 0);
     setSize(initial.width, initial.height);
+
+    if (standalone) {
+        juce::MessageManager::callAsync(
+            [safeEditor = juce::Component::SafePointer<ReverbPlaygroundEditor>(this)] {
+                if (safeEditor == nullptr)
+                    return;
+                if (auto* window = safeEditor->findParentComponentOfClass<juce::ResizableWindow>())
+                    window->setFullScreen(true);
+            });
+    }
 }
 
 void ReverbPlaygroundEditor::resized()
