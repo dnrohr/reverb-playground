@@ -4,6 +4,7 @@ add_library(reverb_graph STATIC
     Source/ControlRate.cpp
     Source/ControlModulation.cpp
     Source/GraphDocument.cpp
+    Source/GravityDiffusionGraph.cpp
     Source/HostPatchState.cpp
     Source/PatchJson.cpp
     Source/RuntimeSnapshot.cpp)

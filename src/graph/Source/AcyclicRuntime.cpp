@@ -39,6 +39,7 @@ struct Operation final {
     float sumGain { 1.0F };
     double baseDelayMilliseconds {};
     double baseCoefficient {};
+    std::size_t gainModulation { std::numeric_limits<std::size_t>::max() };
     std::size_t delayModulation { std::numeric_limits<std::size_t>::max() };
     std::size_t coefficientModulation { std::numeric_limits<std::size_t>::max() };
     std::size_t controlInput { std::numeric_limits<std::size_t>::max() };
@@ -446,7 +447,14 @@ void PreparedAcyclicRuntime::process(
                 if (operation.kind == OperationKind::sum) {
                     reverb::dsp::Sum::process(destination, sampleBuffer(operation.inputs[1]), destination);
                     destination.front() *= operation.sumGain;
-                } else if (operation.kind == OperationKind::gain) std::get<reverb::dsp::Gain>(operation.processor).process(destination);
+                } else if (operation.kind == OperationKind::gain) {
+                    if (operation.gainModulation == noModulation) {
+                        std::get<reverb::dsp::Gain>(operation.processor).process(destination);
+                    } else {
+                        destination.front() *= static_cast<float>(
+                            implementation_->modulations[operation.gainModulation].values[sampleIndex]);
+                    }
+                }
                 else if (operation.kind == OperationKind::allpass) {
                     if (operation.delayModulation != noModulation || operation.coefficientModulation != noModulation) {
                         const auto delay = operation.delayModulation == noModulation
@@ -498,7 +506,13 @@ void PreparedAcyclicRuntime::process(
             if (operation.sumGain != 1.0F)
                 for (auto& sample : destination) sample *= operation.sumGain;
         } else if (operation.kind == OperationKind::gain) {
-            std::get<reverb::dsp::Gain>(operation.processor).process(destination);
+            if (operation.gainModulation == noModulation) {
+                std::get<reverb::dsp::Gain>(operation.processor).process(destination);
+            } else {
+                const auto& values = implementation_->modulations[operation.gainModulation].values;
+                for (std::size_t sample = 0; sample < count; ++sample)
+                    destination[sample] *= static_cast<float>(values[sample]);
+            }
         } else if (operation.kind == OperationKind::delay) {
             auto& processor = std::get<reverb::dsp::Delay>(operation.processor);
             if (operation.delayModulation == noModulation)
@@ -876,11 +890,13 @@ AcyclicCompileResult compileAcyclicGraph(
             implementation->operations.push_back(std::move(operation));
         }
         for (const auto& mapping : controlPlan.mappings) {
-            if (mapping.parameterId != "delay" && mapping.parameterId != "coefficient") continue;
+            if (mapping.parameterId != "gain" && mapping.parameterId != "delay" && mapping.parameterId != "coefficient") continue;
             const auto operation = std::ranges::find(
                 implementation->operations, mapping.targetNodeId, &Operation::id);
             if (operation == implementation->operations.end()
-                || (operation->kind != OperationKind::delay && operation->kind != OperationKind::allpass))
+                || (mapping.parameterId == "gain" && operation->kind != OperationKind::gain)
+                || (mapping.parameterId == "delay" && operation->kind != OperationKind::delay && operation->kind != OperationKind::allpass)
+                || (mapping.parameterId == "coefficient" && operation->kind != OperationKind::allpass))
                 continue;
             RuntimeModulation runtime { .mapping = mapping };
             runtime.ramp.reset(mapping.baseValue);
@@ -890,7 +906,8 @@ AcyclicCompileResult compileAcyclicGraph(
                 runtime.source = source->second;
             const auto index = implementation->modulations.size();
             implementation->modulations.push_back(std::move(runtime));
-            if (mapping.parameterId == "delay") operation->delayModulation = index;
+            if (mapping.parameterId == "gain") operation->gainModulation = index;
+            else if (mapping.parameterId == "delay") operation->delayModulation = index;
             else operation->coefficientModulation = index;
         }
         result.runtime = std::unique_ptr<PreparedAcyclicRuntime>(new PreparedAcyclicRuntime(std::move(implementation)));

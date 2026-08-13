@@ -1,12 +1,16 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <reverb/graph/AcyclicRuntime.h>
+#include <reverb/graph/GravityDiffusionGraph.h>
+#include <reverb/graph/PatchJson.h>
 #include <reverb/dsp/NumericalSafetyGuard.h>
+#include <catch2/catch_approx.hpp>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <iomanip>
+#include <numeric>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -113,6 +117,60 @@ GraphDocument gravityDiffusionDesignGraph()
     });
     return graph;
 }
+
+struct GravityMetrics {
+    double timeToPeakMs {};
+    double earlyLateRatioDb {};
+    double integratedEnergyDb {};
+    std::size_t onsetFrame {};
+};
+
+GravityMetrics renderGravity(const double gravity, const double sampleRate = 48'000.0, const double seconds = 3.0)
+{
+    constexpr std::size_t blockSize = 256;
+    auto compiled = compileFeedbackGraph(makeGravityDiffusionGraph(gravity), sampleRate, blockSize);
+    REQUIRE(compiled.valid());
+    REQUIRE(compiled.runtime->setMacroValue("gravity", gravity));
+    std::array<float, blockSize> settleInput {}, settleLeft {}, settleRight {};
+    for (int block = 0; block < 8; ++block)
+        compiled.runtime->process(settleInput, settleInput, settleLeft, settleRight);
+    const auto frameCount = static_cast<std::size_t>(seconds * sampleRate);
+    std::vector<float> left(frameCount), right(frameCount), inputLeft(blockSize), inputRight(blockSize);
+    for (std::size_t offset = 0; offset < frameCount; offset += blockSize) {
+        const auto count = std::min(blockSize, frameCount - offset);
+        std::ranges::fill(inputLeft, 0.0F);
+        if (offset == 0) inputLeft[0] = 1.0F;
+        compiled.runtime->process(std::span(inputLeft).first(count), std::span(inputRight).first(count),
+            std::span(left).subspan(offset, count), std::span(right).subspan(offset, count));
+    }
+    std::vector<double> energy(frameCount);
+    for (std::size_t frame = 0; frame < frameCount; ++frame)
+        energy[frame] = 0.5 * (static_cast<double>(left[frame]) * left[frame] + static_cast<double>(right[frame]) * right[frame]);
+    const auto onset = static_cast<std::size_t>(std::distance(energy.begin(), std::ranges::find_if(energy, [](double value) { return value > 1.0e-14; })));
+    const auto window = std::max<std::size_t>(1, static_cast<std::size_t>(0.020 * sampleRate));
+    const auto half = window / 2;
+    double best = -1.0;
+    std::size_t peak = 0;
+    double running = 0.0;
+    for (std::size_t frame = 0; frame < frameCount; ++frame) {
+        if (frame + half < frameCount) running += energy[frame + half];
+        if (frame > half) running -= energy[frame - half - 1];
+        const auto first = frame > half ? frame - half : 0;
+        const auto last = std::min(frameCount, frame + half + 1);
+        const auto smoothed = running / static_cast<double>(last - first);
+        if (smoothed > best) { best = smoothed; peak = frame; }
+    }
+    const auto horizon = std::min(frameCount - onset, static_cast<std::size_t>(0.7 * sampleRate));
+    const auto quarter = horizon / 4;
+    const auto early = std::accumulate(energy.begin() + static_cast<std::ptrdiff_t>(onset),
+        energy.begin() + static_cast<std::ptrdiff_t>(onset + quarter), 0.0);
+    const auto late = std::accumulate(energy.begin() + static_cast<std::ptrdiff_t>(onset + 3 * quarter),
+        energy.begin() + static_cast<std::ptrdiff_t>(onset + horizon), 0.0);
+    const auto total = std::accumulate(energy.begin(), energy.begin() + static_cast<std::ptrdiff_t>(onset + horizon), 0.0);
+    return { 1'000.0 * static_cast<double>(peak) / sampleRate,
+        10.0 * std::log10((early + 1.0e-20) / (late + 1.0e-20)),
+        10.0 * std::log10(total + 1.0e-20), onset };
+}
 }
 
 TEST_CASE("Delay-containing feedback renders a deterministic causal recurrence")
@@ -158,6 +216,123 @@ TEST_CASE("Gravity Diffusion design has eight depth taps, twelve allpasses, and 
             REQUIRE(compiled.delayMemory.allocatedBytes == 1'303'344);
         }
     }
+}
+
+TEST_CASE("Gravity tap weighting is exactly normalized and monotonic")
+{
+    using Catch::Approx;
+    std::array<double, 8> previous {};
+    for (const auto gravity : { -1.0, -0.5, 0.0, 0.5, 1.0 }) {
+        const auto weights = gravityTapWeights(gravity);
+        const auto total = std::accumulate(weights.begin(), weights.end(), 0.0);
+        const auto left = weights[0] + weights[2] + weights[4] + weights[6];
+        const auto right = weights[1] + weights[3] + weights[5] + weights[7];
+        REQUIRE(total == Approx(1.0).margin(1.0e-12));
+        REQUIRE(left == Approx(0.5).margin(1.0e-12));
+        REQUIRE(right == Approx(0.5).margin(1.0e-12));
+        REQUIRE(std::ranges::all_of(weights, [](double value) { return value >= 0.0 && value <= 0.25; }));
+        if (gravity > -1.0) {
+            REQUIRE(weights[0] >= previous[0]);
+            REQUIRE(weights[2] >= previous[2]);
+            REQUIRE(weights[4] <= previous[4]);
+            REQUIRE(weights[6] <= previous[6]);
+        }
+        previous = weights;
+    }
+    REQUIRE(gravityTapWeights(-2.0) == gravityTapWeights(-1.0));
+    REQUIRE(gravityTapWeights(2.0) == gravityTapWeights(1.0));
+}
+
+TEST_CASE("Normalized Gravity graph exposes eight inspectable weighting branches")
+{
+    const auto graph = makeGravityDiffusionGraph();
+    REQUIRE(validate(graph).valid());
+    REQUIRE(std::ranges::count_if(graph.nodes, [](const Node& node) { return node.type == "control-map"; }) == 8);
+    REQUIRE(std::ranges::count_if(graph.connections, [](const Connection& connection) {
+        return connection.from.nodeId == "gravity" && connection.to.nodeId.starts_with("gravity-map-");
+    }) == 8);
+    REQUIRE(parsePatchJson(writePatchJson(graph)) == graph);
+    REQUIRE(std::ranges::count_if(graph.connections, [](const Connection& connection) {
+        return connection.from.nodeId.starts_with("gravity-map-") && connection.to.portId == "gain-mod";
+    }) == 8);
+    for (const auto sampleRate : { 44'100.0, 48'000.0, 96'000.0, 192'000.0 }) {
+        auto compiled = compileFeedbackGraph(graph, sampleRate, 256);
+        REQUIRE(compiled.valid());
+        REQUIRE(compiled.feedbackComponents.size() == 1);
+        REQUIRE(compiled.delayMemory.withinBudget());
+    }
+}
+
+TEST_CASE("Gravity moves measured energy monotonically from deep to early taps")
+{
+    const std::array states { -1.0, -0.5, 0.0, 0.5, 1.0 };
+    std::array<GravityMetrics, states.size()> measurements {};
+    for (std::size_t index = 0; index < states.size(); ++index) {
+        measurements[index] = renderGravity(states[index]);
+        CAPTURE(states[index], measurements[index].timeToPeakMs,
+            measurements[index].earlyLateRatioDb, measurements[index].integratedEnergyDb);
+    }
+    for (std::size_t index = 1; index < measurements.size(); ++index) {
+        REQUIRE(measurements[index].earlyLateRatioDb > measurements[index - 1].earlyLateRatioDb);
+        REQUIRE(measurements[index].timeToPeakMs <= measurements[index - 1].timeToPeakMs);
+    }
+    REQUIRE(measurements.front().onsetFrame > 0);
+    REQUIRE(measurements.front().timeToPeakMs > measurements[2].timeToPeakMs);
+    REQUIRE(measurements[2].timeToPeakMs > measurements.back().timeToPeakMs);
+    REQUIRE(measurements.front().earlyLateRatioDb < 0.0);
+    REQUIRE(measurements.back().earlyLateRatioDb > 0.0);
+    const auto [minimum, maximum] = std::ranges::minmax_element(measurements, {}, &GravityMetrics::integratedEnergyDb);
+    REQUIRE(maximum->integratedEnergyDb - minimum->integratedEnergyDb < 2.1);
+}
+
+TEST_CASE("Gravity renders causally at supported sample rates and reset is deterministic")
+{
+    for (const auto sampleRate : { 44'100.0, 48'000.0, 96'000.0 }) {
+        const auto inverse = renderGravity(-1.0, sampleRate);
+        const auto forward = renderGravity(1.0, sampleRate);
+        REQUIRE(inverse.onsetFrame > 0);
+        REQUIRE(forward.onsetFrame > 0);
+        REQUIRE(inverse.timeToPeakMs > forward.timeToPeakMs);
+        REQUIRE(std::isfinite(inverse.integratedEnergyDb));
+        REQUIRE(std::isfinite(forward.integratedEnergyDb));
+    }
+
+    constexpr std::size_t frameCount = 65'536;
+    auto compiled = compileFeedbackGraph(makeGravityDiffusionGraph(), 48'000.0, frameCount);
+    REQUIRE(compiled.valid());
+    std::vector<float> input(frameCount), silence(frameCount), firstLeft(frameCount), firstRight(frameCount);
+    std::vector<float> secondLeft(frameCount), secondRight(frameCount);
+    input.front() = 1.0F;
+    compiled.runtime->process(input, silence, firstLeft, firstRight);
+    compiled.runtime->reset();
+    compiled.runtime->process(input, silence, secondLeft, secondRight);
+    REQUIRE(secondLeft == firstLeft);
+    REQUIRE(secondRight == firstRight);
+}
+
+TEST_CASE("Rapid Gravity automation remains finite and continuously ramped")
+{
+    constexpr std::size_t blockSize = 64;
+    auto compiled = compileFeedbackGraph(makeGravityDiffusionGraph(), 48'000.0, blockSize);
+    REQUIRE(compiled.valid());
+    std::array<float, blockSize> inputLeft {}, inputRight {}, outputLeft {}, outputRight {};
+    std::ranges::fill(inputLeft, 0.05F);
+    float previous = 0.0F;
+    double largestStep = 0.0;
+    bool finite = true;
+    for (int block = 0; block < 2'000; ++block) {
+        REQUIRE(compiled.runtime->setMacroValue("gravity", block % 2 == 0 ? -1.0 : 1.0));
+        compiled.runtime->process(inputLeft, inputRight, outputLeft, outputRight);
+        for (const auto sample : outputLeft) {
+            finite = finite && std::isfinite(sample);
+            largestStep = std::max(largestStep, std::abs(static_cast<double>(sample - previous)));
+            previous = sample;
+        }
+        finite = finite && std::ranges::all_of(outputRight, [](float sample) { return std::isfinite(sample); });
+    }
+    CAPTURE(largestStep);
+    REQUIRE(finite);
+    REQUIRE(largestStep < 0.10);
 }
 
 TEST_CASE("Modulated delay feedback is finite and deterministic across host block partitions")

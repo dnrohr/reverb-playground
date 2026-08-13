@@ -54,6 +54,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Macro control source](macro-control-source.md) - named normalized control, fixed 20 ms smoothing, visible branching, reachable-range inspection, and persistence.
 - [Gravity macro presentation](gravity-macro-presentation.md) - explicit factory designation, bipolar instrument control, non-measured envelope guide, and Expand/Focus inspection.
 - [Gravity Diffusion topology design](gravity-diffusion-topology-design.md) - eight progressive taps, 12-allpass density plan, delayed damped feedback, stereo extraction, and worst-case budgets.
+- [Normalized Gravity weighting](normalized-gravity-weighting.md) - eight visible Curve Mapper branches, constant-sum stereo weighting, measured envelope ordering, energy tolerance, and automation safety.
 - [Visualization teaching overlays and A/B comparison](visualization-teaching-overlays.md) - measured rise/gate landmarks, honest explanatory boundaries, Learn disable behavior, and Barr/design audition switching.
 - [Control-rate graph semantics](control-rate-graph-semantics.md) - typed parameter sockets, fixed-rate interpolation, bounded evaluation, mapping formula, and schema-v2 persistence.
 - [LFO and control-mapping blocks](lfo-and-control-mapping.md) - sine/triangle generation, free-run/restart behavior, explicit scale/offset/polarity, range preview, and branching.

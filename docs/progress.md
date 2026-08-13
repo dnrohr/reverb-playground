@@ -50,6 +50,7 @@ Last updated: 2026-08-13
 | M8.3 Add a visible Macro control-source block | Complete | Named normalized source; explicit branching; 20 ms runtime ramp; reachability/range inspection; exact persistence |
 | M8.4 Add the Gravity macro presentation | Complete | Explicit designation; inverse/bloom/forward surface; non-measured envelope guide; Expand/Focus; Learn-off independence |
 | M9.1 Design the eight-stage diffusion topology | Complete | 8 stage delays/taps; 12 allpasses; delayed damped return; odd/even stereo trees; exact 192 kHz memory/control/transition budgets; native compile regression |
+| M9.2 Implement normalized Gravity weighting | Complete | 8 visible Curve Mapper branches; exact constant-sum stereo weights; monotonic measured envelope sweep; 2.1 dB energy ceiling; finite continuous automation |
 
 ## M0.2 verification
 
@@ -645,6 +646,32 @@ Results:
   replace these planning ceilings with measured host evidence.
 - UI unchanged. The checked-in topology diagram is the visual deliverable for
   this design-only task; no product screenshot or interaction video was needed.
+
+## M9.2 verification
+
+- The production Gravity Diffusion builder expands the M9.1 audio skeleton with
+  one prominent Gravity Macro, eight named linear Curve Mappers, eight visible
+  control branches, and eight tap-gain modulation sockets. It introduces no
+  factory-only audio node or hidden destination table.
+- Paired affine weights keep the eight-tap sum exactly `1.0`, each stereo side
+  exactly `0.5`, and every tap inside `0...0.24` across the complete sweep. The
+  equation, constants, endpoint table, and measurement procedure are recorded
+  in [Normalized Gravity weighting](normalized-gravity-weighting.md).
+- Five-state 48 kHz renders order the early/late ratio from `-5.679 dB` at
+  Inverse to `+12.649 dB` at Forward. Time to peak falls from `493.312 ms` to
+  `62.417 ms`; the raw integrated-energy spread is `1.992 dB`, below the
+  declared `2.1 dB` ceiling.
+- The reusable runtime now applies ordinary control mappings to Gain parameters
+  as well as Delay and Allpass parameters. Existing 1 kHz evaluation and linear
+  interpolation keep 64-sample-boundary endpoint automation finite and below a
+  `0.10` adjacent-sample discontinuity ceiling for the declared test signal.
+- Native regressions cover the two endpoints, center, two intermediate states,
+  causal onset and finite renders at 44.1/48/96 kHz, exact reset, JSON
+  round-trip, feedback legality, and compilation at 192 kHz.
+- No editor component or styling changed in M9.2, so the UI-capture policy does
+  not require a new screenshot or video. The expanded graph remains composed of
+  the already-released Macro, Curve Mapper, Gain, and typed-cable presentation;
+  structural tests prove that all eight branches are present and persisted.
 
 ## Standalone maximized-window correction
 
