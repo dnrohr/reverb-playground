@@ -42,6 +42,7 @@ struct Operation final {
     std::size_t gainModulation { std::numeric_limits<std::size_t>::max() };
     std::size_t delayModulation { std::numeric_limits<std::size_t>::max() };
     std::size_t coefficientModulation { std::numeric_limits<std::size_t>::max() };
+    std::size_t cutoffModulation { std::numeric_limits<std::size_t>::max() };
     std::size_t controlInput { std::numeric_limits<std::size_t>::max() };
     double controlScale { 1.0 };
     double controlOffset {};
@@ -467,7 +468,12 @@ void PreparedAcyclicRuntime::process(
                             .processSampleModulated(destination.front(), delay, coefficient);
                     } else std::get<reverb::dsp::Allpass>(operation.processor).process(destination);
                 }
-                else if (operation.kind == OperationKind::lowpass) std::get<reverb::dsp::OnePoleLowPass>(operation.processor).process(destination);
+                else if (operation.kind == OperationKind::lowpass) {
+                    auto& processor = std::get<reverb::dsp::OnePoleLowPass>(operation.processor);
+                    if (operation.cutoffModulation != noModulation)
+                        processor.setCutoffHertz(implementation_->modulations[operation.cutoffModulation].values[sampleIndex]);
+                    processor.process(destination);
+                }
                 else if (operation.kind == OperationKind::envelopeFollower) {
                     destination.front() = std::get<reverb::dsp::EnvelopeFollower>(operation.processor)
                         .processSample(implementation_->buffers[operation.inputs.front()][0]);
@@ -536,7 +542,16 @@ void PreparedAcyclicRuntime::process(
                 }
             }
         } else if (operation.kind == OperationKind::lowpass) {
-            std::get<reverb::dsp::OnePoleLowPass>(operation.processor).process(destination);
+            auto& processor = std::get<reverb::dsp::OnePoleLowPass>(operation.processor);
+            if (operation.cutoffModulation == noModulation) {
+                processor.process(destination);
+            } else {
+                const auto& values = implementation_->modulations[operation.cutoffModulation].values;
+                for (std::size_t sample = 0; sample < count; ++sample) {
+                    processor.setCutoffHertz(values[sample]);
+                    processor.process(destination.subspan(sample, 1));
+                }
+            }
         }
     }
     std::ranges::copy(buffer(implementation_->outputLeftInput), outputLeft.begin());
@@ -890,13 +905,15 @@ AcyclicCompileResult compileAcyclicGraph(
             implementation->operations.push_back(std::move(operation));
         }
         for (const auto& mapping : controlPlan.mappings) {
-            if (mapping.parameterId != "gain" && mapping.parameterId != "delay" && mapping.parameterId != "coefficient") continue;
+            if (mapping.parameterId != "gain" && mapping.parameterId != "delay"
+                && mapping.parameterId != "coefficient" && mapping.parameterId != "cutoff") continue;
             const auto operation = std::ranges::find(
                 implementation->operations, mapping.targetNodeId, &Operation::id);
             if (operation == implementation->operations.end()
                 || (mapping.parameterId == "gain" && operation->kind != OperationKind::gain)
                 || (mapping.parameterId == "delay" && operation->kind != OperationKind::delay && operation->kind != OperationKind::allpass)
-                || (mapping.parameterId == "coefficient" && operation->kind != OperationKind::allpass))
+                || (mapping.parameterId == "coefficient" && operation->kind != OperationKind::allpass)
+                || (mapping.parameterId == "cutoff" && operation->kind != OperationKind::lowpass))
                 continue;
             RuntimeModulation runtime { .mapping = mapping };
             runtime.ramp.reset(mapping.baseValue);
@@ -908,7 +925,8 @@ AcyclicCompileResult compileAcyclicGraph(
             implementation->modulations.push_back(std::move(runtime));
             if (mapping.parameterId == "gain") operation->gainModulation = index;
             else if (mapping.parameterId == "delay") operation->delayModulation = index;
-            else operation->coefficientModulation = index;
+            else if (mapping.parameterId == "coefficient") operation->coefficientModulation = index;
+            else operation->cutoffModulation = index;
         }
         result.runtime = std::unique_ptr<PreparedAcyclicRuntime>(new PreparedAcyclicRuntime(std::move(implementation)));
     } catch (const std::exception& exception) {

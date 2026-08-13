@@ -51,6 +51,7 @@ Last updated: 2026-08-13
 | M8.4 Add the Gravity macro presentation | Complete | Explicit designation; inverse/bloom/forward surface; non-measured envelope guide; Expand/Focus; Learn-off independence |
 | M9.1 Design the eight-stage diffusion topology | Complete | 8 stage delays/taps; 12 allpasses; delayed damped return; odd/even stereo trees; exact 192 kHz memory/control/transition budgets; native compile regression |
 | M9.2 Implement normalized Gravity weighting | Complete | 8 visible Curve Mapper branches; exact constant-sum stereo weights; monotonic measured envelope sweep; 2.1 dB energy ceiling; finite continuous automation |
+| M9.3 Add Size, Feedback, Damping, and Modulation macros | Complete | 5 visible Macros; 35 explicit mappings; independent dual-LFO motion; 32 endpoint combinations; continuous-sweep and safety regressions |
 
 ## M0.2 verification
 
@@ -672,6 +673,32 @@ Results:
   not require a new screenshot or video. The expanded graph remains composed of
   the already-released Macro, Curve Mapper, Gain, and typed-cable presentation;
   structural tests prove that all eight branches are present and persisted.
+
+## M9.3 verification
+
+- The complete builder adds Size, Feedback, Damping, and Modulation beside
+  Gravity. Thirteen Size cables scale fixed Delay times, Feedback controls the
+  delayed return Gain, Damping controls its Low-pass, and Modulation controls
+  four input-diffusion coefficients. The exact equations and clamps are in
+  [Gravity Diffusion complementary controls](gravity-diffusion-controls.md).
+- Motion A (`0.11 Hz` sine, phase zero) moves odd stage Allpasses; Motion B
+  (`0.073 Hz` triangle, quarter-cycle phase) moves even stages. All eight
+  `+/-1.25 ms` mappings are visible and bounded, with no hidden control sum.
+- The expanded graph is 58 nodes / 94 cables with 15 control nodes and 35
+  mappings. It validates, compiles as one legal delayed-feedback component,
+  and round-trips through schema-v2 JSON exactly.
+- Native renders verify later Size onset while retaining the Gravity sign,
+  longer full-tail energy at high Feedback, reduced energy/high-frequency
+  difference content at high Damping, and different finite sample streams at
+  the Modulation endpoints.
+- All 32 five-Macro endpoint combinations remain finite for silence, impulse,
+  and full-scale bounded noise without latching the numerical guard. A
+  4,000-block continuous five-Macro sweep accepts runtime-only changes and
+  remains finite; the full suite retains emergency-mute, Undo, and recovery
+  regressions.
+- UI unchanged; the controls use the released Macro/LFO/typed-cable editor
+  presentation and are not catalog-shipped until M9.5, so no capture was
+  required for this graph/runtime task.
 
 ## Standalone maximized-window correction
 

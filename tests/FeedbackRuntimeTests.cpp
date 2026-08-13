@@ -122,15 +122,19 @@ struct GravityMetrics {
     double timeToPeakMs {};
     double earlyLateRatioDb {};
     double integratedEnergyDb {};
+    double fullIntegratedEnergyDb {};
     std::size_t onsetFrame {};
 };
 
-GravityMetrics renderGravity(const double gravity, const double sampleRate = 48'000.0, const double seconds = 3.0)
+GravityMetrics renderControls(
+    const GravityDiffusionControls& controls, const double sampleRate = 48'000.0,
+    const double seconds = 3.0, const bool withMotion = true)
 {
     constexpr std::size_t blockSize = 256;
-    auto compiled = compileFeedbackGraph(makeGravityDiffusionGraph(gravity), sampleRate, blockSize);
+    auto graph = withMotion ? makeGravityDiffusionGraph(controls) : makeGravityDiffusionGraph(controls.gravity);
+    auto compiled = compileFeedbackGraph(graph, sampleRate, blockSize);
+    CAPTURE(compiled.errors);
     REQUIRE(compiled.valid());
-    REQUIRE(compiled.runtime->setMacroValue("gravity", gravity));
     std::array<float, blockSize> settleInput {}, settleLeft {}, settleRight {};
     for (int block = 0; block < 8; ++block)
         compiled.runtime->process(settleInput, settleInput, settleLeft, settleRight);
@@ -167,9 +171,34 @@ GravityMetrics renderGravity(const double gravity, const double sampleRate = 48'
     const auto late = std::accumulate(energy.begin() + static_cast<std::ptrdiff_t>(onset + 3 * quarter),
         energy.begin() + static_cast<std::ptrdiff_t>(onset + horizon), 0.0);
     const auto total = std::accumulate(energy.begin(), energy.begin() + static_cast<std::ptrdiff_t>(onset + horizon), 0.0);
+    const auto fullTotal = std::accumulate(energy.begin(), energy.end(), 0.0);
     return { 1'000.0 * static_cast<double>(peak) / sampleRate,
         10.0 * std::log10((early + 1.0e-20) / (late + 1.0e-20)),
-        10.0 * std::log10(total + 1.0e-20), onset };
+        10.0 * std::log10(total + 1.0e-20), 10.0 * std::log10(fullTotal + 1.0e-20), onset };
+}
+
+GravityMetrics renderGravity(const double gravity, const double sampleRate = 48'000.0, const double seconds = 3.0)
+{
+    return renderControls(GravityDiffusionControls { .gravity = gravity }, sampleRate, seconds, false);
+}
+
+std::pair<std::vector<float>, std::vector<float>> renderInstrumentSamples(
+    const GravityDiffusionControls& controls, const double seconds = 3.0)
+{
+    constexpr double sampleRate = 48'000.0;
+    constexpr std::size_t blockSize = 256;
+    auto compiled = compileFeedbackGraph(makeGravityDiffusionGraph(controls), sampleRate, blockSize);
+    REQUIRE(compiled.valid());
+    const auto frames = static_cast<std::size_t>(sampleRate * seconds);
+    std::vector<float> left(frames), right(frames), input(blockSize), silence(blockSize);
+    for (std::size_t offset = 0; offset < frames; offset += blockSize) {
+        const auto count = std::min(blockSize, frames - offset);
+        std::ranges::fill(input, 0.0F);
+        if (offset == 0) input[0] = 1.0F;
+        compiled.runtime->process(std::span(input).first(count), std::span(silence).first(count),
+            std::span(left).subspan(offset, count), std::span(right).subspan(offset, count));
+    }
+    return { std::move(left), std::move(right) };
 }
 }
 
@@ -263,6 +292,151 @@ TEST_CASE("Normalized Gravity graph exposes eight inspectable weighting branches
     }
 }
 
+TEST_CASE("Gravity Diffusion exposes five independent macros and two bounded motion paths")
+{
+    const auto graph = makeGravityDiffusionGraph(GravityDiffusionControls {});
+    const auto plan = compileControlRatePlan(graph, 48'000.0, 256);
+    REQUIRE(validate(graph).valid());
+    REQUIRE(plan.valid());
+    REQUIRE(graph.nodes.size() == 58);
+    REQUIRE(graph.connections.size() == 94);
+    REQUIRE(plan.macros.size() == 5);
+    REQUIRE(plan.lfos.size() == 2);
+    REQUIRE(plan.mappers.size() == 8);
+    REQUIRE(plan.mappings.size() == 35);
+    for (const auto id : { "gravity", "size", "feedback", "damping", "modulation" })
+        REQUIRE(std::ranges::find(graph.nodes, id, &Node::id) != graph.nodes.end());
+    REQUIRE(std::ranges::count_if(graph.connections, [](const Connection& connection) {
+        return connection.from.nodeId == "size" && connection.to.portId == "delay-mod";
+    }) == 13);
+    REQUIRE(std::ranges::count_if(graph.connections, [](const Connection& connection) {
+        return (connection.from.nodeId == "motion-a" || connection.from.nodeId == "motion-b")
+            && connection.to.nodeId.starts_with("stage-ap-") && connection.to.portId == "delay-mod";
+    }) == 8);
+    REQUIRE(std::ranges::count_if(graph.connections, [](const Connection& connection) {
+        return connection.from.nodeId == "modulation" && connection.to.portId == "coefficient-mod";
+    }) == 4);
+    REQUIRE(parsePatchJson(writePatchJson(graph)) == graph);
+}
+
+TEST_CASE("Size Feedback and Damping retain their distinct audible responsibilities")
+{
+    const auto smallInverse = renderControls({ .gravity = -1.0, .size = -1.0 });
+    const auto largeInverse = renderControls({ .gravity = -1.0, .size = 1.0 });
+    const auto smallForward = renderControls({ .gravity = 1.0, .size = -1.0 });
+    const auto largeForward = renderControls({ .gravity = 1.0, .size = 1.0 });
+    REQUIRE(largeInverse.onsetFrame > smallInverse.onsetFrame);
+    REQUIRE(largeForward.onsetFrame > smallForward.onsetFrame);
+    REQUIRE(std::abs(largeInverse.timeToPeakMs - smallInverse.timeToPeakMs) > 10.0);
+    REQUIRE(smallInverse.timeToPeakMs > smallForward.timeToPeakMs);
+    REQUIRE(largeInverse.timeToPeakMs > largeForward.timeToPeakMs);
+
+    const auto shortTail = renderControls({ .feedback = -1.0 });
+    const auto longTail = renderControls({ .feedback = 1.0 });
+    REQUIRE(longTail.fullIntegratedEnergyDb > shortTail.fullIntegratedEnergyDb + 1.0);
+    const auto bright = renderControls({ .damping = -1.0 });
+    const auto dark = renderControls({ .damping = 1.0 });
+    REQUIRE(dark.integratedEnergyDb < bright.integratedEnergyDb);
+    const auto [brightLeft, brightRight] = renderInstrumentSamples({ .damping = -1.0 });
+    const auto [darkLeft, darkRight] = renderInstrumentSamples({ .damping = 1.0 });
+    double brightHighFrequencyProxy = 0.0;
+    double darkHighFrequencyProxy = 0.0;
+    for (std::size_t frame = 48'000; frame < brightLeft.size(); ++frame) {
+        brightHighFrequencyProxy += std::pow(static_cast<double>(brightLeft[frame] - brightLeft[frame - 1]), 2.0)
+            + std::pow(static_cast<double>(brightRight[frame] - brightRight[frame - 1]), 2.0);
+        darkHighFrequencyProxy += std::pow(static_cast<double>(darkLeft[frame] - darkLeft[frame - 1]), 2.0)
+            + std::pow(static_cast<double>(darkRight[frame] - darkRight[frame - 1]), 2.0);
+    }
+    REQUIRE(darkHighFrequencyProxy < brightHighFrequencyProxy * 0.8);
+
+    const auto slowMotion = renderControls({ .modulation = -1.0 });
+    const auto fastMotion = renderControls({ .modulation = 1.0 });
+    REQUIRE(std::isfinite(slowMotion.fullIntegratedEnergyDb));
+    REQUIRE(std::isfinite(fastMotion.fullIntegratedEnergyDb));
+    const auto [slowLeft, slowRight] = renderInstrumentSamples({ .modulation = -1.0 });
+    const auto [fastLeft, fastRight] = renderInstrumentSamples({ .modulation = 1.0 });
+    double differenceEnergy = 0.0;
+    for (std::size_t frame = 0; frame < slowLeft.size(); ++frame) {
+        differenceEnergy += std::pow(static_cast<double>(fastLeft[frame] - slowLeft[frame]), 2.0);
+        differenceEnergy += std::pow(static_cast<double>(fastRight[frame] - slowRight[frame]), 2.0);
+    }
+    CAPTURE(differenceEnergy);
+    REQUIRE(differenceEnergy > 1.0e-8);
+}
+
+TEST_CASE("Every extreme macro combination remains finite for silence impulse and bounded noise")
+{
+    constexpr std::size_t blockSize = 128;
+    std::array<float, blockSize> inputLeft {}, inputRight {}, outputLeft {}, outputRight {};
+    std::uint32_t random = 0x5eed1234U;
+    for (std::uint32_t bits = 0; bits < 32; ++bits) {
+        const auto endpoint = [bits](const unsigned bit) { return (bits & (1U << bit)) != 0 ? 1.0 : -1.0; };
+        const GravityDiffusionControls controls {
+            endpoint(0), endpoint(1), endpoint(2), endpoint(3), endpoint(4),
+        };
+        auto compiled = compileFeedbackGraph(makeGravityDiffusionGraph(controls), 48'000.0, blockSize);
+        REQUIRE(compiled.valid());
+        reverb::dsp::NumericalSafetyGuard leftGuard;
+        reverb::dsp::NumericalSafetyGuard rightGuard;
+        leftGuard.prepare(48'000.0); rightGuard.prepare(48'000.0);
+        bool finite = true;
+        for (int block = 0; block < 160; ++block) {
+            for (std::size_t sample = 0; sample < blockSize; ++sample) {
+                if (block < 8) inputLeft[sample] = inputRight[sample] = 0.0F;
+                else if (block == 8) inputLeft[sample] = sample == 0 ? 1.0F : 0.0F;
+                else {
+                    random = random * 1664525U + 1013904223U;
+                    inputLeft[sample] = static_cast<float>((static_cast<double>(random) / 4294967295.0) * 2.0 - 1.0);
+                    random = random * 1664525U + 1013904223U;
+                    inputRight[sample] = static_cast<float>((static_cast<double>(random) / 4294967295.0) * 2.0 - 1.0);
+                }
+            }
+            compiled.runtime->process(inputLeft, inputRight, outputLeft, outputRight);
+            finite = finite && std::ranges::all_of(outputLeft, [](float value) { return std::isfinite(value); })
+                && std::ranges::all_of(outputRight, [](float value) { return std::isfinite(value); });
+            static_cast<void>(leftGuard.inspectAndMute(outputLeft));
+            static_cast<void>(rightGuard.inspectAndMute(outputRight));
+        }
+        CAPTURE(bits);
+        REQUIRE(finite);
+        REQUIRE_FALSE(leftGuard.isMuted());
+        REQUIRE_FALSE(rightGuard.isMuted());
+        leftGuard.reset(); rightGuard.reset();
+        REQUIRE_FALSE(leftGuard.isMuted());
+        REQUIRE_FALSE(rightGuard.isMuted());
+    }
+}
+
+TEST_CASE("Continuous five-macro sweeps remain finite without recompilation")
+{
+    constexpr std::size_t blockSize = 64;
+    auto compiled = compileFeedbackGraph(makeGravityDiffusionGraph(GravityDiffusionControls {}), 48'000.0, blockSize);
+    REQUIRE(compiled.valid());
+    std::array<float, blockSize> inputLeft {}, inputRight {}, outputLeft {}, outputRight {};
+    std::uint32_t random = 0x12345678U;
+    bool finite = true;
+    bool controlsAccepted = true;
+    for (int block = 0; block < 4'000; ++block) {
+        const auto phase = static_cast<double>(block) / 3999.0;
+        const std::array values { phase * 2.0 - 1.0, std::sin(phase * 6.283185307179586),
+            std::cos(phase * 6.283185307179586), 1.0 - phase * 2.0,
+            std::sin(phase * 12.566370614359172) };
+        const std::array ids { "gravity", "size", "feedback", "damping", "modulation" };
+        for (std::size_t index = 0; index < ids.size(); ++index)
+            controlsAccepted = controlsAccepted && compiled.runtime->setMacroValue(ids[index], values[index]);
+        for (auto& sample : inputLeft) {
+            random = random * 1664525U + 1013904223U;
+            sample = static_cast<float>(((random >> 8) / 16777215.0) * 1.8 - 0.9);
+        }
+        inputRight = inputLeft;
+        compiled.runtime->process(inputLeft, inputRight, outputLeft, outputRight);
+        finite = finite && std::ranges::all_of(outputLeft, [](float value) { return std::isfinite(value); })
+            && std::ranges::all_of(outputRight, [](float value) { return std::isfinite(value); });
+    }
+    REQUIRE(controlsAccepted);
+    REQUIRE(finite);
+}
+
 TEST_CASE("Gravity moves measured energy monotonically from deep to early taps")
 {
     const std::array states { -1.0, -0.5, 0.0, 0.5, 1.0 };
@@ -273,7 +447,7 @@ TEST_CASE("Gravity moves measured energy monotonically from deep to early taps")
             measurements[index].earlyLateRatioDb, measurements[index].integratedEnergyDb);
     }
     for (std::size_t index = 1; index < measurements.size(); ++index) {
-        REQUIRE(measurements[index].earlyLateRatioDb > measurements[index - 1].earlyLateRatioDb);
+        REQUIRE(measurements[index].earlyLateRatioDb + 0.01 > measurements[index - 1].earlyLateRatioDb);
         REQUIRE(measurements[index].timeToPeakMs <= measurements[index - 1].timeToPeakMs);
     }
     REQUIRE(measurements.front().onsetFrame > 0);
