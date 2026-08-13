@@ -529,3 +529,20 @@ Results:
   Evidence: [`reverb-playground-alpha-demo.mp4`](../artifacts/ui/m7-6-alpha-release/reverb-playground-alpha-demo.mp4).
 - `check_release.py` locks product/tag/package identity, tag-workflow gates,
   required note disclosures, landing-page links, and a nontrivial demo asset.
+
+## Standalone work-area sizing correction
+
+- The remaining sizing complaint was outside the schematic: the WebView already
+  filled its editor, but the standalone still capped that outer editor at
+  1280-by-800 on larger monitors. Standalone startup now derives its logical
+  size from the primary display work area with a small 32-by-64 frame margin.
+- Hosted VST3 editors deliberately retain a predictable 1280-by-800 preferred
+  size because the DAW owns their outer window; both formats remain resizable
+  from 640-by-400 through 8192-by-8192.
+- A native sizing-policy regression covers 1536-by-960 and 1920-by-1080 work
+  areas, minimum clamping, unavailable-display fallback, and hosted behavior.
+  The accessibility checker also locks work-area detection and exact WebView
+  fill.
+- Reviewed 125%-scale evidence: [`01-standalone-work-area.png`](../artifacts/ui/window-sizing-work-area/01-standalone-work-area.png)
+  shows the enlarged initial window; [`02-maximized-webview-fill.png`](../artifacts/ui/window-sizing-work-area/02-maximized-webview-fill.png)
+  shows the schematic flush to every maximized client edge.

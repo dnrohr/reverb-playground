@@ -3,6 +3,8 @@
 
 #include "PluginProcessor.h"
 
+#include <reverb/ui/EditorSizing.h>
+
 #include <nlohmann/json.hpp>
 
 #include <fstream>
@@ -30,6 +32,17 @@ std::string factoryPatch(const std::string& name)
 }
 
 } // namespace
+
+TEST_CASE("Standalone editor uses the available work area while hosted editors keep a stable preferred size")
+{
+    using reverb::ui::EditorSize;
+    using reverb::ui::preferredEditorSize;
+    REQUIRE(preferredEditorSize(false, 3840, 2160) == EditorSize { 1280, 800 });
+    REQUIRE(preferredEditorSize(true, 1536, 960) == EditorSize { 1504, 896 });
+    REQUIRE(preferredEditorSize(true, 1920, 1080) == EditorSize { 1888, 1016 });
+    REQUIRE(preferredEditorSize(true, 600, 300) == EditorSize { 640, 400 });
+    REQUIRE(preferredEditorSize(true, 0, 0) == EditorSize { 1280, 800 });
+}
 
 TEST_CASE("Plugin host state round-trips the complete graph before audio preparation")
 {

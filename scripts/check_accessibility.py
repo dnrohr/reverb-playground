@@ -73,6 +73,13 @@ def check_contract(styles: str, app: str, editor_shell: str, plugin_editor: str)
     for token in ("setResizable(true, true);", "setResizeLimits(640, 400, 8192, 8192);"):
         if token not in plugin_editor:
             failures.append(f"PluginEditor.cpp: missing scaling contract {token!r}")
+    for token in (
+        "preferredEditorSize(",
+        "juce::StandalonePluginHolder::getInstance() != nullptr",
+        "workAreaWidth, workAreaHeight",
+    ):
+        if token not in plugin_editor:
+            failures.append(f"PluginEditor.cpp: missing work-area sizing contract {token!r}")
     return failures
 
 

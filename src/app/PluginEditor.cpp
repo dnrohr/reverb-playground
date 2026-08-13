@@ -2,6 +2,7 @@
 
 #include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
+#include <reverb/ui/EditorSizing.h>
 
 ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& processor)
     : AudioProcessorEditor(processor)
@@ -55,15 +56,16 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
     addAndMakeVisible(shell_);
     setResizable(true, true);
     setResizeLimits(640, 400, 8192, 8192);
-    auto initialWidth = 1280;
-    auto initialHeight = 800;
+    auto workAreaWidth = 0;
+    auto workAreaHeight = 0;
     if (const auto* display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()) {
-        initialWidth = std::min(initialWidth,
-            juce::roundToInt(display->userBounds.getWidth()) - 32);
-        initialHeight = std::min(initialHeight,
-            juce::roundToInt(display->userBounds.getHeight()) - 64);
+        workAreaWidth = juce::roundToInt(display->userBounds.getWidth());
+        workAreaHeight = juce::roundToInt(display->userBounds.getHeight());
     }
-    setSize(std::max(640, initialWidth), std::max(400, initialHeight));
+    const auto initial = reverb::ui::preferredEditorSize(
+        juce::StandalonePluginHolder::getInstance() != nullptr,
+        workAreaWidth, workAreaHeight);
+    setSize(initial.width, initial.height);
 }
 
 void ReverbPlaygroundEditor::resized()
