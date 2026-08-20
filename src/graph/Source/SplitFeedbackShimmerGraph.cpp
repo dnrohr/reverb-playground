@@ -60,13 +60,13 @@ Node lowpass(std::string id, const double cutoffHertz)
     } };
 }
 
-Node pitchShift()
+Node pitchShift(const double semitones)
 {
     return { "shifted-pitch", "pitch-shift", {
         audioIn(), controlIn("semitones-mod"), controlIn("grain-mod"),
         controlIn("overlap-mod"), audioOut(),
     }, {
-        { "semitones", splitShimmerSemitones, "semitones", ParameterModulation {
+        { "semitones", semitones, "semitones", ParameterModulation {
             "semitones-mod", 12.0, ModulationPolarity::bipolar, -24.0, 24.0 } },
         { "grain", 60.0, "milliseconds", ParameterModulation {
             "grain-mod", 20.0, ModulationPolarity::bipolar, 20.0, 120.0 } },
@@ -94,6 +94,10 @@ GraphDocument makeSplitFeedbackShimmerGraph(const SplitFeedbackShimmerControls& 
         .preShiftHighpassHertz = std::clamp(requested.preShiftHighpassHertz, 120.0, 1'200.0),
         .postShiftLowpassHertz = std::clamp(requested.postShiftLowpassHertz, 1'200.0, 9'000.0),
         .wetLevel = std::clamp(requested.wetLevel, 0.0, 0.75),
+        .pitchSemitones = std::clamp(requested.pitchSemitones,
+            splitShimmerMinimumPitchSemitones, splitShimmerMaximumPitchSemitones),
+        .sizeMilliseconds = std::clamp(requested.sizeMilliseconds,
+            splitShimmerMinimumSizeMilliseconds, splitShimmerMaximumSizeMilliseconds),
     };
 
     GraphDocument graph;
@@ -101,13 +105,14 @@ GraphDocument makeSplitFeedbackShimmerGraph(const SplitFeedbackShimmerControls& 
         { "input", "stereo-input", { audioOut("out-l"), audioOut("out-r") }, {} },
         gain("input-left-half", 0.5), gain("input-right-half", 0.5), sum("input-mono-sum"),
         allpass("input-diffusion-a", 4.7), allpass("input-diffusion-b", 8.9),
-        sum("tank-entry"), allpass("tank-diffusion-a", 13.7), delay("tank-delay", 149.0),
+        sum("tank-entry"), allpass("tank-diffusion-a", 13.7),
+        delay("tank-delay", controls.sizeMilliseconds),
         allpass("tank-diffusion-b", 23.9), lowpass("tank-damping", 6'500.0),
         boundedGain("normal-feedback", controls.normalFeedback, splitShimmerMaximumNormalFeedback),
         delay("normal-feedback-delay", 67.0),
         lowpass("shifted-highpass-lowpass", controls.preShiftHighpassHertz),
         gain("shifted-highpass-invert", -1.0), sum("shifted-highpass-sum"),
-        pitchShift(), lowpass("shifted-damping", controls.postShiftLowpassHertz),
+        pitchShift(controls.pitchSemitones), lowpass("shifted-damping", controls.postShiftLowpassHertz),
         boundedGain("shifted-feedback", controls.shiftedFeedback, splitShimmerMaximumShiftedFeedback),
         delay("shifted-feedback-delay", 83.0), sum("feedback-recombine"),
         boundedGain("wet-level", controls.wetLevel, 0.75),

@@ -64,3 +64,8 @@ add_test(
     NAME "Pitch Shift validation CLI writes measurements"
     COMMAND reverb_pitch_shift_validation_cli
         --output ${CMAKE_CURRENT_BINARY_DIR}/pitch-shift-validation-smoke.json)
+
+add_test(
+    NAME "Split Feedback Shimmer validation CLI writes measurements"
+    COMMAND reverb_split_feedback_shimmer_validation_cli
+        --output ${CMAKE_CURRENT_BINARY_DIR}/split-feedback-shimmer-validation-smoke.json)

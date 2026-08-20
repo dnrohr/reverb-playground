@@ -30,6 +30,12 @@ ordinary decay even when Shifted Feedback is zero. Shifted Feedback defaults to
 0.10 and is limited to 0...0.14; it controls how much +12-semitone material
 returns for another circulation. It does not own the ordinary decay path.
 
+Pitch defaults to +12 semitones and is construction-bounded to +7...+12
+semitones for this reference topology. Size is the visible shared tank Delay;
+it defaults to 149 ms and is construction-bounded to 90...240 ms. These two
+controls were added for the M12.2 continuous-edit qualification and remain
+ordinary saved graph parameters rather than hidden reverb state.
+
 At their simultaneous maxima the two visible return gains sum to 0.72. This is
 a conservative operating ceiling, not a mathematical peak guarantee for every
 correlated or modulated signal. The runtime numerical guard remains the final
@@ -66,9 +72,9 @@ audio-thread allocation, locking, or graph work.
 
 ## M12 boundary
 
-M12.1 establishes the editable native topology and its safety invariants. It
-does not add a factory-menu entry or change the editor, so no UI capture is
-required. M12.2 will add time-resolved spectral evidence for cumulative +12 and
-+24-semitone ascent, automation qualification, alias disclosure, and stereo
-measurements. M12.3 will tune and publish the factory patch, teaching overlay,
-screenshots, and interaction video.
+M12.1 establishes the editable native topology and its safety invariants. M12.2
+adds the checked time-resolved spectral, independence, quality, stereo, and
+continuous-edit evidence documented in
+`split-feedback-shimmer-validation.md`. Neither task adds a factory-menu entry
+or changes the editor, so UI capture is not required. M12.3 will tune and
+publish the factory patch, teaching overlay, screenshots, and interaction video.

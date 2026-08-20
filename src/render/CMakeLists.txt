@@ -4,6 +4,7 @@ add_library(reverb_render STATIC
     Source/OfflineRenderer.cpp
     Source/PitchShiftValidation.cpp
     Source/ResponseMeasurements.cpp
+    Source/SplitFeedbackShimmerValidation.cpp
     Source/WavWriter.cpp)
 
 target_include_directories(reverb_render
@@ -51,3 +52,11 @@ target_link_libraries(reverb_factory_patch_cli
     PRIVATE
         reverb_project_options
         reverb_graph)
+
+add_executable(reverb_split_feedback_shimmer_validation_cli
+    Source/SplitFeedbackShimmerValidationCli.cpp)
+
+target_link_libraries(reverb_split_feedback_shimmer_validation_cli
+    PRIVATE
+        reverb_project_options
+        reverb_render)

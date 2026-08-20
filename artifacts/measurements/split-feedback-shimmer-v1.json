@@ -1,0 +1,102 @@
+{
+  "formatVersion": 1,
+  "measurement": "split-feedback-shimmer-validation",
+  "spectralMethod": {
+    "sampleRate": 48000.0,
+    "sourceFrequencyHertz": 400.0,
+    "window": "Hann",
+    "windowSeconds": 0.5,
+    "sourceBandRelativeHalfWidth": 0.02,
+    "octaveBandRelativeHalfWidth": 0.008,
+    "expectedOctave12Hertz": 800.0,
+    "expectedOctave24Hertz": 1600.0
+  },
+  "circulation": {
+    "early": {
+      "startSeconds": 1.0,
+      "sourceDbfs": -38.66377107091627,
+      "octave12FrequencyHertz": 799.84,
+      "octave12CentsError": -0.34628143911161113,
+      "octave12Dbfs": -58.91603792285533,
+      "octave24FrequencyHertz": 1600.32,
+      "octave24CentsError": 0.34621218974826345,
+      "octave24Dbfs": -116.38105943942948
+    },
+    "late": {
+      "startSeconds": 2.5,
+      "sourceDbfs": -38.566644720507526,
+      "octave12FrequencyHertz": 800.0,
+      "octave12CentsError": 0.0,
+      "octave12Dbfs": -55.536116150271305,
+      "octave24FrequencyHertz": 1600.0,
+      "octave24CentsError": 0.0,
+      "octave24Dbfs": -76.0993804377384
+    },
+    "lateOctave24GrowthDb": 40.281679001691074,
+    "splitLateOctave24RelativeTo12Db": -20.5632642874671,
+    "parallelLateOctave24RelativeTo12Db": -68.88081664134381,
+    "feedbackVsParallelOctave24ContrastDb": 48.317552353876714
+  },
+  "independence": {
+    "lowShiftedFeedback": 0.04,
+    "highShiftedFeedback": 0.13,
+    "lowFeedbackLateOctave24Dbfs": -96.58200230448227,
+    "highFeedbackLateOctave24Dbfs": -76.0993804377384,
+    "shiftedFeedbackOctave24IncreaseDb": 20.48262186674387,
+    "lowNormalFeedback": 0.18,
+    "highNormalFeedback": 0.56,
+    "normalFeedbackTailEnergyIncreaseDb": 95.75948181462323
+  },
+  "qualityDisclosure": {
+    "strongestForwardGrainSidebandRelativeDb": -67.17887304923951,
+    "grainSidebandOffsetHertz": 16.666666666666668,
+    "foldedAliasProbeInputHertz": 7000.0,
+    "foldedAliasProbeHertz": 20000.0,
+    "foldedAliasRelativeToFirstOctaveDb": -32.48876535377181,
+    "lowDampingHertz": 2000.0,
+    "highDampingHertz": 9000.0,
+    "lowDampingOctave24LossDb": -2.629035285540766,
+    "stereoCorrelation": 0.7293578725712138,
+    "warning": "Dual-grain linear interpolation is not alias-free; visible filtering reduces but does not remove folded energy or grain sidebands."
+  },
+  "automation": {
+    "editCountPerRate": 18,
+    "parameters": [
+      "normal-feedback",
+      "shifted-feedback",
+      "pitch-semitones",
+      "post-shift-damping",
+      "tank-size"
+    ],
+    "transition": "fixed 10 ms two-runtime crossfade",
+    "rates": [
+      {
+        "sampleRate": 44100.0,
+        "finite": true,
+        "peak": 0.01766805164515972,
+        "maximumAdjacentStep": 0.0015027520712465048,
+        "processedFrames": 756352,
+        "successfulEdits": 18,
+        "completedCrossfades": 18
+      },
+      {
+        "sampleRate": 48000.0,
+        "finite": true,
+        "peak": 0.017738662660121918,
+        "maximumAdjacentStep": 0.0013734623789787292,
+        "processedFrames": 822016,
+        "successfulEdits": 18,
+        "completedCrossfades": 18
+      },
+      {
+        "sampleRate": 96000.0,
+        "finite": true,
+        "peak": 0.017660703510046005,
+        "maximumAdjacentStep": 0.00025530578568577766,
+        "processedFrames": 1641600,
+        "successfulEdits": 18,
+        "completedCrossfades": 18
+      }
+    ]
+  }
+}

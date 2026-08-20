@@ -62,6 +62,7 @@ Last updated: 2026-08-20
 | M11.1 Design the parallel topology | Complete | 28 visible blocks; non-recirculating +12-semitone branch; independent controls; latency, memory, and normalization budgets |
 | M11.2 Ship and teach Safe Parallel Shimmer | Complete | Editable factory; +12 halo/no-staircase measurement; teaching view; exact persistence; screenshots/video; clean local and main CI |
 | M12.1 Implement independently bounded feedback paths | Complete | Separate normal/shifted gains and delayed returns; visible pre/post filters; 0.72 combined ceiling; invalid-publication and multirate safety tests |
+| M12.2 Prove cumulative harmonic ascent | Complete | Time-resolved +12/+24 fixture; 48.32 dB parallel contrast; independent feedback metrics; artifact/alias/damping/stereo disclosure; 54 finite crossfaded edits |
 
 ## M0.2 verification
 
@@ -921,3 +922,23 @@ Results:
   budget. Existing safety mute and explicit state reset remain operational.
 - The task adds no factory entry or editor behavior. UI unchanged; screenshot
   and video evidence are deferred to the M12.3 publishing task.
+
+## M12.2 verification
+
+- The reproducible Release generator and checked
+  `split-feedback-shimmer-v1.json` artifact measure 400 -> 800 -> 1600 Hz in
+  early and late Hann windows. Late +12/+24 errors are exactly 0 cents within
+  the checked ±15-cent tolerance; +24 grows 40.28 dB between windows.
+- Late +24 is 48.32 dB stronger relative to +12 than in the one-pass Safe
+  Parallel Shimmer reference, directly distinguishing cumulative feedback from
+  a parallel octave layer without requiring a +36 stage.
+- Raising Shifted Feedback from 0.04 to 0.13 adds 20.48 dB of late +24 energy.
+  With Shifted Feedback at zero, raising Normal Feedback from 0.18 to 0.56 adds
+  95.76 dB of separately measured late impulse-tail energy.
+- The artifact discloses -67.18 dB forward-grain sidebands, -32.49 dB folded
+  alias energy, -2.63 dB low-damping +24 loss, and 0.729 stereo correlation.
+- Eighteen five-parameter edits at each of 44.1, 48, and 96 kHz complete all 54
+  fixed 10 ms crossfades with audible, finite output. Peak remains 0.01774 and
+  the worst adjacent-sample step is 0.00151 against a 0.01 checked limit.
+- Exact regenerated/artifact JSON equality is a native test. The CLI also has a
+  CTest smoke invocation. UI unchanged; no screenshot or video was required.

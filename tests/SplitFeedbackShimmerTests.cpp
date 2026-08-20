@@ -2,14 +2,20 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <reverb/dsp/NumericalSafetyGuard.h>
+#include <reverb/dsp/PitchShiftContract.h>
 #include <reverb/graph/AcyclicRuntime.h>
 #include <reverb/graph/PatchJson.h>
 #include <reverb/graph/SplitFeedbackShimmerGraph.h>
+#include <reverb/render/SplitFeedbackShimmerValidation.h>
+
+#include <nlohmann/json.hpp>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <filesystem>
+#include <fstream>
 #include <random>
 #include <ranges>
 #include <set>
@@ -109,13 +115,16 @@ TEST_CASE("Split Feedback Shimmer bounds independent loop controls and visible f
         .preShiftHighpassHertz = 410.0,
         .postShiftLowpassHertz = 4'600.0,
         .wetLevel = 0.70,
+        .pitchSemitones = 10.0,
+        .sizeMilliseconds = 180.0,
     });
     REQUIRE(parameter(graph, "normal-feedback", "gain") == Catch::Approx(0.52));
     REQUIRE(parameter(graph, "shifted-feedback", "gain") == Catch::Approx(0.12));
     REQUIRE(parameter(graph, "shifted-highpass-lowpass", "cutoff") == Catch::Approx(410.0));
     REQUIRE(parameter(graph, "shifted-highpass-invert", "gain") == Catch::Approx(-1.0));
     REQUIRE(parameter(graph, "shifted-damping", "cutoff") == Catch::Approx(4'600.0));
-    REQUIRE(parameter(graph, "shifted-pitch", "semitones") == Catch::Approx(12.0));
+    REQUIRE(parameter(graph, "shifted-pitch", "semitones") == Catch::Approx(10.0));
+    REQUIRE(parameter(graph, "tank-delay", "delay") == Catch::Approx(180.0));
     REQUIRE(parameter(graph, "wet-level", "gain") == Catch::Approx(0.70));
     REQUIRE(hasCable(graph, "tank-damping", "shifted-highpass-sum"));
     REQUIRE(hasCable(graph, "tank-damping", "shifted-highpass-lowpass"));
@@ -135,6 +144,15 @@ TEST_CASE("Split Feedback Shimmer bounds independent loop controls and visible f
     REQUIRE(parameter(bounded, "shifted-highpass-lowpass", "cutoff") == Catch::Approx(120.0));
     REQUIRE(parameter(bounded, "shifted-damping", "cutoff") == Catch::Approx(9'000.0));
     REQUIRE(parameter(bounded, "wet-level", "gain") == Catch::Approx(0.75));
+
+    auto boundedPitchAndSize = reverb::graph::SplitFeedbackShimmerControls {};
+    boundedPitchAndSize.pitchSemitones = -24.0;
+    boundedPitchAndSize.sizeMilliseconds = 10'000.0;
+    const auto pitchAndSizeGraph = reverb::graph::makeSplitFeedbackShimmerGraph(boundedPitchAndSize);
+    REQUIRE(parameter(pitchAndSizeGraph, "shifted-pitch", "semitones")
+        == Catch::Approx(reverb::graph::splitShimmerMinimumPitchSemitones));
+    REQUIRE(parameter(pitchAndSizeGraph, "tank-delay", "delay")
+        == Catch::Approx(reverb::graph::splitShimmerMaximumSizeMilliseconds));
 }
 
 TEST_CASE("Normal feedback sustains decay without shifted feedback")
@@ -224,4 +242,47 @@ TEST_CASE("Split Feedback Shimmer remains bounded and recoverable at extreme set
     guard.reset();
     host.resetActiveRuntimes();
     REQUIRE_FALSE(guard.isMuted());
+}
+
+TEST_CASE("Split Feedback Shimmer measurements prove cumulative ascent and disclose quality")
+{
+    const auto report = reverb::render::measureSplitFeedbackShimmerValidation();
+    REQUIRE(std::abs(report.early.octave12CentsError) <= 15.0);
+    REQUIRE(std::abs(report.late.octave12CentsError) <= 15.0);
+    REQUIRE(std::abs(report.late.octave24CentsError) <= 15.0);
+    REQUIRE(report.early.octave12Dbfs > -70.0);
+    REQUIRE(report.late.octave12Dbfs > -70.0);
+    REQUIRE(report.late.octave24Dbfs > -90.0);
+    REQUIRE(report.lateOctave24GrowthDb > 30.0);
+    REQUIRE(report.feedbackVsParallelOctave24ContrastDb > 20.0);
+    REQUIRE(report.shiftedFeedbackOctave24IncreaseDb > 15.0);
+    REQUIRE(report.normalFeedbackTailEnergyIncreaseDb > 20.0);
+
+    REQUIRE(report.strongestForwardGrainSidebandRelativeDb < -40.0);
+    REQUIRE(report.foldedAliasRelativeToFirstOctaveDb < -20.0);
+    REQUIRE(report.lowDampingOctave24LossDb < -1.0);
+    REQUIRE(report.stereoCorrelation > 0.2);
+    REQUIRE(report.stereoCorrelation < 0.95);
+
+    REQUIRE(report.automation.size() == reverb::dsp::pitch_shift::qualificationSampleRates.size());
+    for (std::size_t index = 0; index < report.automation.size(); ++index) {
+        const auto& automation = report.automation[index];
+        CAPTURE(automation.sampleRate, automation.peak, automation.maximumAdjacentStep);
+        REQUIRE(automation.sampleRate == reverb::dsp::pitch_shift::qualificationSampleRates[index]);
+        REQUIRE(automation.finite);
+        REQUIRE(automation.peak > 0.0);
+        REQUIRE(automation.peak < 1.0);
+        REQUIRE(automation.maximumAdjacentStep < 0.01);
+        REQUIRE(automation.successfulEdits == 18);
+        REQUIRE(automation.completedCrossfades == 18);
+    }
+
+    std::ifstream artifactStream(std::filesystem::path { REVERB_MEASUREMENTS_DIR }
+        / "split-feedback-shimmer-v1.json", std::ios::binary);
+    REQUIRE(artifactStream.good());
+    const auto artifact = nlohmann::json::parse(std::string {
+        std::istreambuf_iterator<char> { artifactStream }, std::istreambuf_iterator<char> {} });
+    const auto generated = nlohmann::json::parse(
+        reverb::render::writeSplitFeedbackShimmerValidationJson(report));
+    REQUIRE(generated == artifact);
 }
