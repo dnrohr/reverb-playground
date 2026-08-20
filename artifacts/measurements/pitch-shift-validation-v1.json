@@ -36,9 +36,9 @@
           "referenceTargetDbfs": -8.28708084883613,
           "foldedAliasDbfs": -14.352922138925841,
           "aliasRelativeToReferenceDb": -6.065841290089711,
-          "measuredCpuRealtimeLoadPercent": 0.1935,
+          "measuredCpuRealtimeLoadPercent": 0.22,
           "processedFrames": 44100,
-          "elapsedMicroseconds": 1935
+          "elapsedMicroseconds": 2200
         },
         {
           "direction": "reverse",
@@ -46,11 +46,27 @@
           "referenceTargetDbfs": -8.287080848790113,
           "foldedAliasDbfs": -14.320554116405926,
           "aliasRelativeToReferenceDb": -6.033473267615813,
-          "measuredCpuRealtimeLoadPercent": 0.1868,
+          "measuredCpuRealtimeLoadPercent": 0.2156,
           "processedFrames": 44100,
-          "elapsedMicroseconds": 1868
+          "elapsedMicroseconds": 2156
         }
-      ]
+      ],
+      "reverseGrain": {
+        "pairedPhaseCycles": [
+          0.0,
+          0.373
+        ],
+        "pairedOutputCorrelation": -0.004257887478506194,
+        "resetDeterministic": true,
+        "causalBeforeDeclaredLatency": true,
+        "transientEnvelope": {
+          "forwardPeakStep": 0.006377445608684857,
+          "reversePeakStep": 0.006377445608684857,
+          "normalizedDifferenceRms": 1.3580254615772964,
+          "smoothingMilliseconds": 2.0,
+          "fixtureSpacingMilliseconds": 137.0
+        }
+      }
     },
     {
       "sampleRate": 48000.0,
@@ -65,9 +81,9 @@
           "referenceTargetDbfs": -8.28707779387951,
           "foldedAliasDbfs": -8.287821027353798,
           "aliasRelativeToReferenceDb": -0.0007432334742887292,
-          "measuredCpuRealtimeLoadPercent": 0.22,
+          "measuredCpuRealtimeLoadPercent": 0.2213,
           "processedFrames": 48000,
-          "elapsedMicroseconds": 2200
+          "elapsedMicroseconds": 2213
         },
         {
           "direction": "reverse",
@@ -75,11 +91,27 @@
           "referenceTargetDbfs": -8.287077793832426,
           "foldedAliasDbfs": -8.287821027354678,
           "aliasRelativeToReferenceDb": -0.0007432335222521402,
-          "measuredCpuRealtimeLoadPercent": 0.2258,
+          "measuredCpuRealtimeLoadPercent": 0.2242,
           "processedFrames": 48000,
-          "elapsedMicroseconds": 2258
+          "elapsedMicroseconds": 2242
         }
-      ]
+      ],
+      "reverseGrain": {
+        "pairedPhaseCycles": [
+          0.0,
+          0.373
+        ],
+        "pairedOutputCorrelation": 0.001704780784537555,
+        "resetDeterministic": true,
+        "causalBeforeDeclaredLatency": true,
+        "transientEnvelope": {
+          "forwardPeakStep": 0.005861972668621704,
+          "reversePeakStep": 0.005861972668421793,
+          "normalizedDifferenceRms": 1.349976417980346,
+          "smoothingMilliseconds": 2.0,
+          "fixtureSpacingMilliseconds": 137.0
+        }
+      }
     },
     {
       "sampleRate": 96000.0,
@@ -94,9 +126,9 @@
           "referenceTargetDbfs": -8.287065534446874,
           "foldedAliasDbfs": -8.287813495332188,
           "aliasRelativeToReferenceDb": -0.0007479608853131481,
-          "measuredCpuRealtimeLoadPercent": 0.4379,
+          "measuredCpuRealtimeLoadPercent": 0.4582,
           "processedFrames": 96000,
-          "elapsedMicroseconds": 4379
+          "elapsedMicroseconds": 4582
         },
         {
           "direction": "reverse",
@@ -104,11 +136,27 @@
           "referenceTargetDbfs": -8.28706553453463,
           "foldedAliasDbfs": -8.28781428895043,
           "aliasRelativeToReferenceDb": -0.0007487544158006898,
-          "measuredCpuRealtimeLoadPercent": 0.4655,
+          "measuredCpuRealtimeLoadPercent": 0.4549,
           "processedFrames": 96000,
-          "elapsedMicroseconds": 4655
+          "elapsedMicroseconds": 4549
         }
-      ]
+      ],
+      "reverseGrain": {
+        "pairedPhaseCycles": [
+          0.0,
+          0.373
+        ],
+        "pairedOutputCorrelation": -8.262194641276094e-05,
+        "resetDeterministic": true,
+        "causalBeforeDeclaredLatency": true,
+        "transientEnvelope": {
+          "forwardPeakStep": 0.0029386190939688205,
+          "reversePeakStep": 0.0029386190938148894,
+          "normalizedDifferenceRms": 1.3496931945876798,
+          "smoothingMilliseconds": 2.0,
+          "fixtureSpacingMilliseconds": 137.0
+        }
+      }
     }
   ]
 }

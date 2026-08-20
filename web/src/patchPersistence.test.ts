@@ -211,7 +211,7 @@ describe('patch persistence', () => {
     const input = createModuleNode('stereo-input', 'stereo-input-1', { x: 0, y: 0 });
     const pitch = createModuleNode('pitch-shift', 'pitch-shift-1', { x: 240, y: 40 });
     const output = createModuleNode('stereo-output', 'stereo-output-1', { x: 520, y: 0 });
-    const values = new Map([['semitones', -7.25], ['grain', 93.4], ['overlap', 0.72], ['direction', 1]]);
+    const values = new Map([['semitones', -7.25], ['grain', 93.4], ['overlap', 0.72], ['direction', 1], ['phase', 0.373]]);
     pitch.data.parameters.forEach((parameter) => { parameter.value = values.get(parameter.id) ?? parameter.value; });
     pitch.data.parameters.find((parameter) => parameter.id === 'semitones')!.modulation!.amount = 5.5;
     const edges = [
@@ -225,9 +225,16 @@ describe('patch persistence', () => {
     expect(restored.data.parameters.map(({ id, value, unit }) => [id, value, unit])).toEqual([
       ['semitones', -7.25, 'semitones'], ['grain', 93.4, 'milliseconds'],
       ['overlap', 0.72, 'normalized'], ['direction', 1, 'direction'],
+      ['phase', 0.373, 'cycles'],
     ]);
     expect(restored.data.parameters[0].modulation?.amount).toBe(5.5);
     expect(writePatchJson(loaded.nodes, loaded.edges, loaded.viewport)).toBe(written);
+
+    const legacy = JSON.parse(written) as { semantic: { nodes: Array<{ type: string; parameters: Array<{ id: string }> }> } };
+    const legacyPitch = legacy.semantic.nodes.find((node) => node.type === 'pitch-shift')!;
+    legacyPitch.parameters = legacyPitch.parameters.filter((parameter) => parameter.id !== 'phase');
+    const migrated = parsePatchJson(JSON.stringify(legacy), reference);
+    expect(migrated.nodes.find((node) => node.id === pitch.id)?.data.parameters.at(-1)).toMatchObject({ id: 'phase', value: 0, unit: 'cycles' });
   });
 
   it('rejects persisted graphs with multiple cables on one input', () => {

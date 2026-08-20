@@ -150,6 +150,7 @@ TEST_CASE("Plugin host state restores every visible Pitch Shift field after prep
             { "overlap", 0.64, "normalized", ParameterModulation {
                 "overlap-mod", 0.2, ModulationPolarity::bipolar, 0.1, 1.0 } },
             { "direction", 1.0, "direction" },
+            { "phase", 0.373, "cycles" },
         } },
         { "output", "stereo-output", {
             { "in-l", SignalType::audio, PortDirection::input },

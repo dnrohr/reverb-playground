@@ -43,6 +43,7 @@ struct Operation final {
     double baseSemitones {};
     double baseGrainMilliseconds {};
     double baseOverlap {};
+    double basePhaseCycles {};
     reverb::dsp::pitch_shift::GrainDirection grainDirection { reverb::dsp::pitch_shift::GrainDirection::forward };
     std::size_t gainModulation { std::numeric_limits<std::size_t>::max() };
     std::size_t delayModulation { std::numeric_limits<std::size_t>::max() };
@@ -167,9 +168,11 @@ void addNodeContractErrors(const Node& node, std::vector<std::string>& errors)
             || !parameterInRange(node, "semitones", "semitones", -24.0, 24.0)
             || !parameterInRange(node, "grain", "milliseconds", 20.0, 120.0)
             || !parameterInRange(node, "overlap", "normalized", 0.1, 1.0)
-            || !parameterInRange(node, "direction", "direction", 0.0, 1.0))
+            || !parameterInRange(node, "direction", "direction", 0.0, 1.0)
+            || (parameter(node, "phase") != nullptr
+                && !parameterInRange(node, "phase", "cycles", 0.0, 0.999)))
             errors.push_back("pitch-shift node '" + node.id
-                + "' requires mono in/out, semitones, grain milliseconds, normalized overlap, and direction");
+                + "' requires mono in/out, semitones, grain milliseconds, normalized overlap, direction, and optional phase cycles");
     } else if (node.type == "macro") {
         if (!hasPort(node, "out", SignalType::control, PortDirection::output)
             || !parameterInRange(node, "value", "normalized", -1.0, 1.0)
@@ -505,6 +508,7 @@ void PreparedAcyclicRuntime::process(
                         operation.overlapModulation == noModulation ? operation.baseOverlap
                             : implementation_->modulations[operation.overlapModulation].values[sampleIndex],
                         operation.grainDirection,
+                        operation.basePhaseCycles,
                     });
                     processor.process(destination);
                 }
@@ -602,6 +606,7 @@ void PreparedAcyclicRuntime::process(
                         operation.overlapModulation == noModulation ? operation.baseOverlap
                             : implementation_->modulations[operation.overlapModulation].values[sample],
                         operation.grainDirection,
+                        operation.basePhaseCycles,
                     });
                     processor.process(destination.subspan(sample, 1));
                 }
@@ -929,6 +934,8 @@ AcyclicCompileResult compileAcyclicGraph(
                 operation.baseSemitones = parameter(node, "semitones")->value;
                 operation.baseGrainMilliseconds = parameter(node, "grain")->value;
                 operation.baseOverlap = parameter(node, "overlap")->value;
+                operation.basePhaseCycles = parameter(node, "phase") != nullptr
+                    ? parameter(node, "phase")->value : reverb::dsp::pitch_shift::defaultPhaseCycles;
                 operation.grainDirection = parameter(node, "direction")->value >= 0.5
                     ? reverb::dsp::pitch_shift::GrainDirection::reverse
                     : reverb::dsp::pitch_shift::GrainDirection::forward;
@@ -936,6 +943,7 @@ AcyclicCompileResult compileAcyclicGraph(
                 processor.prepare(sampleRate, {
                     operation.baseSemitones, operation.baseGrainMilliseconds,
                     operation.baseOverlap, operation.grainDirection,
+                    operation.basePhaseCycles,
                 }, std::span(implementation->delayArena).subspan(delayArenaOffset, samples));
                 delayArenaOffset += samples;
                 operation.processor = std::move(processor);

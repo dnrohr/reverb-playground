@@ -7,6 +7,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <numbers>
 #include <span>
 #include <vector>
@@ -138,6 +139,60 @@ TEST_CASE("Pitch shift is causal at its reported latency")
     REQUIRE(std::ranges::all_of(
         std::span<const float>(impulse).first(shifter.latencySamples()),
         [](const float sample) { return sample == 0.0F; }));
+}
+
+TEST_CASE("Reverse grain phase is causal deterministic and decorrelates paired instances")
+{
+    using namespace reverb::dsp;
+    constexpr auto sampleRate = 48'000.0;
+    constexpr PitchShiftParameters leftParameters {
+        12.0, 60.0, 0.5, pitch_shift::GrainDirection::reverse, 0.0 };
+    constexpr PitchShiftParameters rightParameters {
+        12.0, 60.0, 0.5, pitch_shift::GrainDirection::reverse, 0.373 };
+    PitchShift left;
+    PitchShift right;
+    left.prepare(sampleRate, leftParameters);
+    right.prepare(sampleRate, rightParameters);
+    const auto frames = left.latencySamples() + static_cast<std::size_t>(sampleRate);
+    std::vector<float> input(frames);
+    std::uint32_t state = 0x4d13'7a2bu;
+    for (auto& sample : input) {
+        state = state * 1'664'525u + 1'013'904'223u;
+        sample = static_cast<float>((static_cast<double>(state) / 4'294'967'295.0 - 0.5) * 0.4);
+    }
+    auto leftFirst = input;
+    auto rightFirst = input;
+    left.process(leftFirst);
+    right.process(rightFirst);
+    REQUIRE(std::ranges::all_of(
+        std::span<const float>(leftFirst).first(left.latencySamples()),
+        [](const float sample) { return sample == 0.0F; }));
+    REQUIRE(std::ranges::all_of(
+        std::span<const float>(rightFirst).first(right.latencySamples()),
+        [](const float sample) { return sample == 0.0F; }));
+    REQUIRE(leftFirst != rightFirst);
+
+    left.reset();
+    right.reset();
+    auto leftSecond = input;
+    auto rightSecond = input;
+    left.process(leftSecond);
+    right.process(rightSecond);
+    REQUIRE(leftSecond == leftFirst);
+    REQUIRE(rightSecond == rightFirst);
+    REQUIRE(left.parameters().phaseCycles == Catch::Approx(0.0));
+    REQUIRE(right.parameters().phaseCycles == Catch::Approx(0.373));
+
+    auto cross = 0.0;
+    auto leftEnergy = 0.0;
+    auto rightEnergy = 0.0;
+    for (std::size_t frame = left.latencySamples(); frame < frames; ++frame) {
+        cross += static_cast<double>(leftFirst[frame]) * rightFirst[frame];
+        leftEnergy += static_cast<double>(leftFirst[frame]) * leftFirst[frame];
+        rightEnergy += static_cast<double>(rightFirst[frame]) * rightFirst[frame];
+    }
+    const auto correlation = cross / std::sqrt(leftEnergy * rightEnergy);
+    REQUIRE(std::abs(correlation) < 0.95);
 }
 
 TEST_CASE("Pitch shift reset and parameter transitions are deterministic and continuous")

@@ -52,7 +52,8 @@ void PitchShift::prepare(
     const auto safe = sanitize(parameters);
     currentSemitones_ = safe.semitones;
     targetSemitones_ = safe.semitones;
-    currentState_ = { 0.0, safe.grainMilliseconds, safe.overlap, safe.direction };
+    currentState_ = { safe.phaseCycles, safe.grainMilliseconds, safe.overlap,
+        safe.direction, safe.phaseCycles };
     targetState_ = currentState_;
     reset();
 }
@@ -66,8 +67,8 @@ void PitchShift::reset() noexcept
     semitoneStep_ = 0.0;
     currentSemitones_ = targetSemitones_;
     currentState_ = targetState_;
-    currentState_.phase = 0.0;
-    targetState_.phase = 0.0;
+    currentState_.phase = currentState_.resetPhaseCycles;
+    targetState_.phase = targetState_.resetPhaseCycles;
 }
 
 void PitchShift::process(const std::span<float> samples) noexcept
@@ -117,7 +118,8 @@ void PitchShift::setParameters(const PitchShiftParameters& parameters) noexcept
 
     if (safe.grainMilliseconds == targetState_.grainMilliseconds
         && safe.overlap == targetState_.overlap
-        && safe.direction == targetState_.direction) {
+        && safe.direction == targetState_.direction
+        && safe.phaseCycles == targetState_.resetPhaseCycles) {
         return;
     }
     if (transitionRemaining_ > 0) currentState_ = targetState_;
@@ -125,6 +127,8 @@ void PitchShift::setParameters(const PitchShiftParameters& parameters) noexcept
     targetState_.grainMilliseconds = safe.grainMilliseconds;
     targetState_.overlap = safe.overlap;
     targetState_.direction = safe.direction;
+    targetState_.phase = safe.phaseCycles;
+    targetState_.resetPhaseCycles = safe.phaseCycles;
     transitionRemaining_ = transitionSamples_;
 }
 
@@ -140,7 +144,7 @@ void PitchShift::settleParameters() noexcept
 PitchShiftParameters PitchShift::parameters() const noexcept
 {
     return { targetSemitones_, targetState_.grainMilliseconds,
-        targetState_.overlap, targetState_.direction };
+        targetState_.overlap, targetState_.direction, targetState_.resetPhaseCycles };
 }
 
 std::size_t PitchShift::latencySamples() const noexcept { return latencySamples_; }
@@ -160,7 +164,11 @@ PitchShiftParameters PitchShift::sanitize(const PitchShiftParameters& parameters
     const auto overlap = std::isfinite(parameters.overlap)
         ? std::clamp(parameters.overlap, pitch_shift::minimumOverlap, pitch_shift::maximumOverlap)
         : pitch_shift::defaultOverlap;
-    return { semitones, grain, overlap, parameters.direction };
+    const auto phase = std::isfinite(parameters.phaseCycles)
+        ? std::clamp(parameters.phaseCycles,
+            pitch_shift::minimumPhaseCycles, pitch_shift::maximumPhaseCycles)
+        : pitch_shift::defaultPhaseCycles;
+    return { semitones, grain, overlap, parameters.direction, phase };
 }
 
 float PitchShift::renderState(const GrainState& state, const double ratio) const noexcept

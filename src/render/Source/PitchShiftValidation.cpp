@@ -22,6 +22,15 @@ struct ToneRender final {
     std::size_t latency {};
 };
 
+struct ReverseGrainMetrics final {
+    double correlation {};
+    bool deterministic {};
+    bool causal {};
+    double forwardPeakEnvelopeStep {};
+    double reversePeakEnvelopeStep {};
+    double envelopeDifferenceRms {};
+};
+
 ToneRender renderTone(
     const double sampleRate,
     const double frequency,
@@ -137,6 +146,95 @@ PitchShiftDirectionMetrics measureDirection(
     };
 }
 
+std::vector<float> deterministicNoise(const std::size_t frames)
+{
+    std::vector<float> samples(frames);
+    std::uint32_t state = 0x4d13'7a2bu;
+    for (auto& sample : samples) {
+        state = state * 1'664'525u + 1'013'904'223u;
+        sample = static_cast<float>((static_cast<double>(state) / 4'294'967'295.0 - 0.5) * 0.4);
+    }
+    return samples;
+}
+
+std::vector<float> renderFixture(
+    const std::span<const float> input,
+    const double sampleRate,
+    const reverb::dsp::pitch_shift::GrainDirection direction,
+    const double phase)
+{
+    reverb::dsp::PitchShift processor;
+    processor.prepare(sampleRate, { 12.0, 60.0, 0.5, direction, phase });
+    auto output = std::vector<float>(input.begin(), input.end());
+    processor.process(output);
+    return output;
+}
+
+std::vector<double> envelope(const std::span<const float> samples, const double sampleRate)
+{
+    std::vector<double> values(samples.size());
+    const auto coefficient = std::exp(-1.0 / (0.002 * sampleRate));
+    auto value = 0.0;
+    for (std::size_t frame = 0; frame < samples.size(); ++frame) {
+        value = coefficient * value + (1.0 - coefficient) * std::abs(samples[frame]);
+        values[frame] = value;
+    }
+    return values;
+}
+
+double peakStep(const std::span<const double> values)
+{
+    auto peak = 0.0;
+    for (std::size_t frame = 1; frame < values.size(); ++frame)
+        peak = std::max(peak, std::abs(values[frame] - values[frame - 1]));
+    return peak;
+}
+
+ReverseGrainMetrics measureReverseGrain(const double sampleRate)
+{
+    using reverb::dsp::pitch_shift::GrainDirection;
+    const auto latency = reverb::dsp::pitch_shift::reportedLatencySamples(sampleRate);
+    const auto frames = latency + static_cast<std::size_t>(sampleRate);
+    const auto noise = deterministicNoise(frames);
+    const auto left = renderFixture(noise, sampleRate, GrainDirection::reverse, 0.0);
+    const auto right = renderFixture(noise, sampleRate, GrainDirection::reverse, 0.373);
+    const auto repeated = renderFixture(noise, sampleRate, GrainDirection::reverse, 0.373);
+    auto cross = 0.0;
+    auto leftEnergy = 0.0;
+    auto rightEnergy = 0.0;
+    for (std::size_t frame = latency; frame < frames; ++frame) {
+        cross += static_cast<double>(left[frame]) * right[frame];
+        leftEnergy += static_cast<double>(left[frame]) * left[frame];
+        rightEnergy += static_cast<double>(right[frame]) * right[frame];
+    }
+    const auto correlation = cross / std::sqrt(leftEnergy * rightEnergy);
+    const auto causal = std::ranges::all_of(std::span(left).first(latency),
+        [](const float sample) { return sample == 0.0F; })
+        && std::ranges::all_of(std::span(right).first(latency),
+            [](const float sample) { return sample == 0.0F; });
+
+    std::vector<float> transients(frames);
+    const auto spacing = static_cast<std::size_t>(std::llround(0.137 * sampleRate));
+    for (std::size_t frame = 0; frame < frames; frame += spacing) {
+        transients[frame] = 0.8F;
+        if (frame + 1 < frames) transients[frame + 1] = -0.35F;
+    }
+    const auto forward = renderFixture(transients, sampleRate, GrainDirection::forward, 0.0);
+    const auto reverse = renderFixture(transients, sampleRate, GrainDirection::reverse, 0.0);
+    const auto forwardEnvelope = envelope(std::span(forward).subspan(latency), sampleRate);
+    const auto reverseEnvelope = envelope(std::span(reverse).subspan(latency), sampleRate);
+    auto differenceEnergy = 0.0;
+    auto referenceEnergy = 0.0;
+    for (std::size_t frame = 0; frame < forwardEnvelope.size(); ++frame) {
+        const auto difference = forwardEnvelope[frame] - reverseEnvelope[frame];
+        differenceEnergy += difference * difference;
+        referenceEnergy += forwardEnvelope[frame] * forwardEnvelope[frame];
+    }
+    return { correlation, right == repeated, causal,
+        peakStep(forwardEnvelope), peakStep(reverseEnvelope),
+        std::sqrt(differenceEnergy / std::max(referenceEnergy, 1.0e-24)) };
+}
+
 nlohmann::ordered_json directionJson(const PitchShiftDirectionMetrics& metrics)
 {
     return {
@@ -160,12 +258,16 @@ PitchShiftValidationReport measurePitchShiftValidation()
     };
     for (const auto sampleRate : reverb::dsp::pitch_shift::qualificationSampleRates) {
         const auto latency = reverb::dsp::pitch_shift::reportedLatencySamples(sampleRate);
+        const auto reverseGrain = measureReverseGrain(sampleRate);
         report.rates.push_back({
             sampleRate, latency, 1'000.0 * static_cast<double>(latency) / sampleRate,
             reverb::dsp::pitch_shift::preparedStorageSamples(sampleRate),
             reverb::dsp::pitch_shift::preparedStorageBytes(sampleRate),
             measureDirection(sampleRate, reverb::dsp::pitch_shift::GrainDirection::forward),
             measureDirection(sampleRate, reverb::dsp::pitch_shift::GrainDirection::reverse),
+            0.0, 0.373, reverseGrain.correlation, reverseGrain.deterministic,
+            reverseGrain.causal, reverseGrain.forwardPeakEnvelopeStep,
+            reverseGrain.reversePeakEnvelopeStep, reverseGrain.envelopeDifferenceRms,
         });
     }
     return report;
@@ -184,6 +286,19 @@ std::string writePitchShiftValidationJson(const PitchShiftValidationReport& repo
             { "directions", nlohmann::ordered_json::array({
                 directionJson(rate.forward), directionJson(rate.reverse),
             }) },
+            { "reverseGrain", {
+                { "pairedPhaseCycles", { rate.pairedPhaseA, rate.pairedPhaseB } },
+                { "pairedOutputCorrelation", rate.pairedOutputCorrelation },
+                { "resetDeterministic", rate.pairedResetDeterministic },
+                { "causalBeforeDeclaredLatency", rate.causalBeforeDeclaredLatency },
+                { "transientEnvelope", {
+                    { "forwardPeakStep", rate.forwardTransientPeakEnvelopeStep },
+                    { "reversePeakStep", rate.reverseTransientPeakEnvelopeStep },
+                    { "normalizedDifferenceRms", rate.transientEnvelopeDifferenceRms },
+                    { "smoothingMilliseconds", 2.0 },
+                    { "fixtureSpacingMilliseconds", 137.0 },
+                } },
+            } },
         });
     }
     return nlohmann::ordered_json {

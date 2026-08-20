@@ -155,6 +155,25 @@ TEST_CASE("Visible pitch shift graph binds exactly to the prepared mono processo
         [](const float sample) { return sample != 0.0F; }));
 }
 
+TEST_CASE("Pitch shift phase is optional for released graphs and rejects invalid new values")
+{
+    auto graph = GraphDocument {};
+    graph.nodes = { stereoInput(), pitchShiftNode(), stereoOutput() };
+    graph.connections = {
+        cable("into-pitch", "input", "out-l", "pitch", "in"),
+        cable("pitch-left", "pitch", "out", "output", "in-l"),
+        cable("right", "input", "out-r", "output", "in-r"),
+    };
+    REQUIRE(compileAcyclicGraph(graph, 48'000.0, 64).valid());
+
+    graph.nodes[1].parameters.push_back({ "phase", 0.373, "cycles" });
+    REQUIRE(compileAcyclicGraph(graph, 48'000.0, 64).valid());
+    graph.nodes[1].parameters.back().value = 1.0;
+    const auto invalid = compileAcyclicGraph(graph, 48'000.0, 64);
+    REQUIRE_FALSE(invalid.valid());
+    REQUIRE(invalid.errors.front().find("optional phase cycles") != std::string::npos);
+}
+
 TEST_CASE("Compiled constant control matches the equivalent static delay")
 {
     GraphDocument modulated;

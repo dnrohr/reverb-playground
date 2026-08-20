@@ -20,9 +20,11 @@ describe('editable module library', () => {
       ['overlap-mod', 'control', 'input'], ['out', 'audio', 'output'],
     ]);
     expect(pitch.data.parameters.map(({ id, value, unit }) => [id, value, unit])).toEqual([
-      ['semitones', 12, 'semitones'], ['grain', 60, 'milliseconds'], ['overlap', 0.5, 'normalized'], ['direction', 0, 'direction'],
+      ['semitones', 12, 'semitones'], ['grain', 60, 'milliseconds'], ['overlap', 0.5, 'normalized'],
+      ['direction', 0, 'direction'], ['phase', 0, 'cycles'],
     ]);
     expect(pitch.data.parameters.find((parameter) => parameter.id === 'direction')?.modulation).toBeUndefined();
+    expect(pitch.data.parameters.find((parameter) => parameter.id === 'phase')?.modulation).toBeUndefined();
   });
 
   it('defines Macro as one named normalized control source', () => {

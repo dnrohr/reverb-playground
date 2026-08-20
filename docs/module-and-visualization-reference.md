@@ -84,7 +84,10 @@ Mono dual-grain pitch processor with audio input/output plus `semitones-mod`,
 `-24.00..+24.00 st`, step `0.01 st`, default `+12 st`; **Grain** is
 `20.0..120.0 ms`, step `0.1 ms`, default `60 ms`; **Overlap** is normalized
 `0.10..1.00`, step `0.01`, default `0.50`. **Direction** selects forward grains
-or reverse playback inside each causal grain and has no modulation socket.
+or reverse playback inside each causal grain. **Phase** is
+`0.000..0.999 cycles`, step `0.001`, default `0`; it deterministically offsets
+the two read heads so paired mono blocks can avoid coincident grain boundaries.
+Direction and Phase have no modulation socket.
 This is ratio-based musical pitch shift, not fixed-Hz frequency shift, Delay
 modulation, whole-response reversal, or pre-input audio. The initial quality is
 dual grain with linear interpolation and fixed sample-rate-derived latency.

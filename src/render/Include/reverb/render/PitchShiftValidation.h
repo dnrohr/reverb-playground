@@ -26,6 +26,14 @@ struct PitchShiftRateMetrics final {
     std::size_t storageBytes {};
     PitchShiftDirectionMetrics forward;
     PitchShiftDirectionMetrics reverse;
+    double pairedPhaseA {};
+    double pairedPhaseB {};
+    double pairedOutputCorrelation {};
+    bool pairedResetDeterministic {};
+    bool causalBeforeDeclaredLatency {};
+    double forwardTransientPeakEnvelopeStep {};
+    double reverseTransientPeakEnvelopeStep {};
+    double transientEnvelopeDifferenceRms {};
 };
 
 struct PitchShiftValidationReport final {

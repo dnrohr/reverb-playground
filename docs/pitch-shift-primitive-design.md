@@ -18,6 +18,7 @@ the public graph, editor, persistence, and host-state paths.
 | Grain length | `20...120 ms` | `60 ms` | Duration of one read-head cycle and its splice opportunity |
 | Overlap | normalized `0.10...1.00` | `0.50` | Width of the equal-power handoff region as a fraction of a half-cycle |
 | Direction | `forward` / `reverse` | `forward` | Playback direction inside each grain |
+| Phase | `0.000...0.999 cycles` | `0` | Deterministic starting phase for paired mono instances |
 
 The exact musical ratio is
 
@@ -125,10 +126,12 @@ logging, filesystem access, resizing, or topology discovery.
 - The M10.3 public block may expose parameter sockets for semitones, grain
   length, and overlap. Existing 1 kHz control ticks feed the audio-rate
   smoothing above.
-- Reset zeroes the prepared ring, write index, interpolation history, window
-  phases, transition state, and smoothing history. Head phases restart at `0`
-  and `0.5`; current values snap to serialized targets. There is no random seed
-  in the first mono primitive.
+- Phase is a saved, non-modulated start offset. The two heads remain one
+  half-cycle apart. Pairing `0.000` and `0.373` produces different grain
+  boundaries without a random generator or hidden stereo state.
+- Reset zeroes the prepared ring, write index, interpolation history,
+  transition state, and smoothing history. Head phases restart at the saved
+  phase and `phase + 0.5`; current values snap to serialized targets.
 - Silence after reset must remain bit-exact silence. Identical configuration,
   input, block partition, and reset must produce identical samples on the
   primary MSVC toolchain.
@@ -208,10 +211,12 @@ CPU measurements, and delayed-feedback safety evidence.
 The public `pitch-shift` node has one mono audio input and output. Three typed
 control inputs map semitones, grain length, and overlap through the existing
 saved scale/polarity/clamp contract; direction is a saved discrete choice and
-is intentionally not continuously modulatable. All four values and every
+is intentionally not continuously modulatable. All five values and every
 mapping field live in schema-v2 graph data. There is no factory-only pitch
-state, and schema-v1 documents continue to migrate without inventing the new
-node.
+state. M13.1 adds the saved Phase control; released schema-v2 Pitch Shift nodes
+with four parameters migrate deterministically to phase `0`, while newly saved
+nodes contain all five parameters. Schema-v1 documents continue to migrate
+without inventing the node.
 
 The acyclic runtime allocates the processor's exact prepared ring from the
 existing delay arena and reports its fixed latency and allocation through the
@@ -220,7 +225,7 @@ feedback still requires a visible Delay. Constant and mapped controls use the
 same `PitchShift` parameter entry points as direct DSP use.
 
 The block says **Musical ratio · not frequency shift**. Its inspector exposes
-the four saved controls plus read-only `Dual grain · linear interpolation`
+the five saved controls plus read-only `Dual grain · linear interpolation`
 quality and the rate-derived latency. Two moving head markers are explicitly
 labeled **Illustrative grain phase** and **Design-state animation**. Their phase
 comes from saved controls, not measured audio or sample-accurate telemetry.
@@ -289,3 +294,29 @@ the active loop.
 M10.4 changes tests, measurement tooling, and documentation only, so the UI
 evidence policy requires no new screenshot or video. M10.3 remains the current
 visual evidence for the block.
+
+## M13.1 reverse grains and deterministic stereo pairing
+
+M13.1 makes the head start phase explicit from DSP through graph compilation,
+schema persistence, host restoration, and the inspector. It is not a random
+seed: equal phase, input, settings, and reset produce bit-identical output.
+Two visible mono blocks may instead use `0.000` and `0.373 cycles`, the reference
+pair for the later cosmic topology. That changes splice timing while retaining
+ordinary mono cables and reproducible recalls.
+
+The same checked measurement report now records, at 44.1, 48, and 96 kHz:
+
+- zero wet samples before the fixed declared latency in both paired instances;
+- bit-identical repeated reverse renders after reset;
+- paired deterministic-noise correlations of `-0.00426`, `0.00170`, and
+  `-0.00008`, all below the `|0.95|` decorrelation ceiling;
+- normalized forward/reverse 2 ms-smoothed transient-envelope differences of
+  `1.358`, `1.350`, and `1.350`, proving that reverse grains substantially
+  reshape local attacks even where the maximum envelope step is essentially
+  unchanged;
+- separate forward/reverse octave error, CPU, storage, latency, aliasing, and
+  the existing delayed-feedback safety fixtures.
+
+Reverse grains still cannot reverse the complete wet response or emit pre-echo.
+The phase markers remain an illustrative design-state view rather than audio
+telemetry. M13.2 owns the first factory topology that uses the paired setting.

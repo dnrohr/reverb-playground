@@ -64,6 +64,7 @@ Last updated: 2026-08-20
 | M12.1 Implement independently bounded feedback paths | Complete | Separate normal/shifted gains and delayed returns; visible pre/post filters; 0.72 combined ceiling; invalid-publication and multirate safety tests |
 | M12.2 Prove cumulative harmonic ascent | Complete | Time-resolved +12/+24 fixture; 48.32 dB parallel contrast; independent feedback metrics; artifact/alias/damping/stereo disclosure; 54 finite crossfaded edits |
 | M12.3 Ship the Split-Feedback Shimmer factory patch | Complete | Editable 25-block factory; normal/shifted/shared focus; measured circulation teaching; exact persistence/host restore; screenshots/video |
+| M13.1 Add reverse-grain mode and stereo decorrelation | Complete | Explicit deterministic phase; causal reverse grains; near-zero paired correlation; transient-envelope report; compatibility; screenshots/video |
 
 ## M0.2 verification
 
@@ -971,3 +972,25 @@ Results:
 - [Factory and teaching documentation](split-feedback-shimmer-factory-and-teaching.md)
   records generation, graph interpretation, persistence, measured claims,
   quality limits, and evidence paths.
+
+## M13.1 verification
+
+- Pitch Shift exposes a saved non-modulated `0.000...0.999 cycle` phase from
+  mono DSP through graph compilation, editor inspection, schema persistence,
+  and standalone/plugin host restoration. Reset returns to that exact phase.
+- The `0.000/0.373` reference pair is deterministic after reset while measured
+  reverse-grain correlations remain `-0.00426`, `0.00170`, and `-0.00008` at
+  44.1, 48, and 96 kHz. Both voices remain silent before declared latency.
+- Checked 2 ms-smoothed transient envelopes differ by normalized RMS `1.358`,
+  `1.350`, and `1.350`. Peak envelope steps are essentially equal, so the
+  implementation claims attack **reshaping**, not unproven softening.
+- The existing Release report retains separate forward/reverse ±15-cent pitch,
+  CPU, storage, fixed latency, alias disclosure, and delayed-feedback safety
+  coverage for every qualified rate. Invalid phase values are rejected.
+- Released four-parameter schema-v2 Pitch Shift nodes load as phase `0` and are
+  rewritten with five parameters. Native graph compilation keeps the same
+  compatibility boundary; non-default host state restores exactly.
+- Reviewed inspector screenshots and the forward/reverse plus phase interaction
+  recording are under `artifacts/ui/m13-1-reverse-grain-decorrelation/`.
+  [Design and measurement documentation](reverse-grain-and-stereo-decorrelation.md)
+  records the meaning, evidence, limitations, compatibility, and M13.2 boundary.

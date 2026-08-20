@@ -13,6 +13,7 @@ struct PitchShiftParameters final {
     double grainMilliseconds { pitch_shift::defaultGrainMilliseconds };
     double overlap { pitch_shift::defaultOverlap };
     pitch_shift::GrainDirection direction { pitch_shift::GrainDirection::forward };
+    double phaseCycles { pitch_shift::defaultPhaseCycles };
 };
 
 class PitchShift final {
@@ -36,6 +37,7 @@ private:
         double grainMilliseconds { pitch_shift::defaultGrainMilliseconds };
         double overlap { pitch_shift::defaultOverlap };
         pitch_shift::GrainDirection direction { pitch_shift::GrainDirection::forward };
+        double resetPhaseCycles { pitch_shift::defaultPhaseCycles };
     };
 
     std::vector<float> ownedStorage_;

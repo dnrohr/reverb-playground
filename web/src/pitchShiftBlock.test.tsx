@@ -23,10 +23,12 @@ describe('visible Pitch Shift block', () => {
     const pitch = createModuleNode('pitch-shift', 'pitch-shift-1', { x: 100, y: 80 });
     pitch.selected = true;
     pitch.data.parameters.find((parameter) => parameter.id === 'direction')!.value = 1;
+    pitch.data.parameters.find((parameter) => parameter.id === 'phase')!.value = 0.373;
     const before: GraphState = { nodes: [pitch], edges: [] };
     const pasted = pasteGraph(before, copySelectedGraph(before)!);
     expect(pasted.nodes[1].id).toBe('pitch-shift-1-copy');
     expect(pasted.nodes[1].data.parameters.find((parameter) => parameter.id === 'direction')?.value).toBe(1);
+    expect(pasted.nodes[1].data.parameters.find((parameter) => parameter.id === 'phase')?.value).toBe(0.373);
 
     pasted.nodes[1].selected = true;
     const deleted = deleteSelected(pasted.nodes, pasted.edges);
@@ -40,6 +42,7 @@ describe('visible Pitch Shift block', () => {
   it('labels animation as illustrative and supplies a static reduced-motion state', () => {
     const parameters = createModuleNode('pitch-shift', 'pitch-shift-1', { x: 0, y: 0 }).data.parameters;
     parameters.find((parameter) => parameter.id === 'direction')!.value = 1;
+    parameters.find((parameter) => parameter.id === 'phase')!.value = 0.373;
     const markup = renderToStaticMarkup(<PitchShiftVisualization parameters={parameters} reducedMotion sampleRate={48_000} />);
     expect(markup).toContain('Illustrative dual grain phase, reverse');
     expect(markup).toContain('is-reduced');
@@ -47,5 +50,6 @@ describe('visible Pitch Shift block', () => {
     expect(markup).toContain('not measured audio or sample-accurate');
     expect(markup).toContain('not a fixed-Hz frequency shift or moving-Delay Doppler effect');
     expect(markup).toContain('not the whole reverb');
+    expect(markup).toContain('0.373 cycle phase');
   });
 });

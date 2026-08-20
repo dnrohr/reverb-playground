@@ -271,5 +271,13 @@ TEST_CASE("Checked Pitch Shift validation records rate quality latency storage C
             REQUIRE(direction.at("measuredCpuRealtimeLoadPercent").get<double>() < 10.0);
             REQUIRE(direction.at("processedFrames") == static_cast<std::uint64_t>(sampleRate));
         }
+        const auto& reverseGrain = rate.at("reverseGrain");
+        REQUIRE(reverseGrain.at("pairedPhaseCycles") == nlohmann::json::array({ 0.0, 0.373 }));
+        REQUIRE(std::abs(reverseGrain.at("pairedOutputCorrelation").get<double>()) < 0.95);
+        REQUIRE(reverseGrain.at("resetDeterministic") == true);
+        REQUIRE(reverseGrain.at("causalBeforeDeclaredLatency") == true);
+        REQUIRE(reverseGrain.at("transientEnvelope").at("forwardPeakStep").get<double>() > 0.0);
+        REQUIRE(reverseGrain.at("transientEnvelope").at("reversePeakStep").get<double>() > 0.0);
+        REQUIRE(reverseGrain.at("transientEnvelope").at("normalizedDifferenceRms").get<double>() > 0.1);
     }
 }

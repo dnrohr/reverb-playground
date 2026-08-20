@@ -241,8 +241,8 @@ button { font: inherit; }
 .grain-window:first-child { top: 10px; }
 .grain-window:last-child { top: 29px; }
 .grain-window::after { content: ''; position: absolute; left: 0; right: 0; top: -3px; height: 5px; background: linear-gradient(90deg, transparent, rgba(189, 156, 255, .42) var(--grain-overlap), transparent); opacity: .7; }
-.grain-window b { position: absolute; top: -5px; left: 0; width: 9px; height: 9px; border: 1px solid #21172e; border-radius: 50%; background: var(--violet); box-shadow: 0 0 8px rgba(189, 156, 255, .7); animation: grain-read-head var(--grain-cycle) linear infinite; }
-.grain-window-b b { animation-delay: calc(var(--grain-cycle) / -2); background: var(--cyan); box-shadow: 0 0 8px rgba(69, 208, 204, .65); }
+.grain-window b { position: absolute; top: -5px; left: 0; width: 9px; height: 9px; border: 1px solid #21172e; border-radius: 50%; background: var(--violet); box-shadow: 0 0 8px rgba(189, 156, 255, .7); animation: grain-read-head var(--grain-cycle) linear infinite; animation-delay: var(--grain-phase-a); }
+.grain-window-b b { animation-delay: var(--grain-phase-b); background: var(--cyan); box-shadow: 0 0 8px rgba(69, 208, 204, .65); }
 .pitch-visualization.is-reverse .grain-window b { animation-direction: reverse; }
 @keyframes grain-read-head { from { left: 0; } to { left: calc(100% - 9px); } }
 .pitch-visual-facts { display: flex; justify-content: space-between; gap: 5px; margin-top: 7px; color: #cabbe2; font: 8px var(--mono, ui-monospace, Consolas, monospace); }
@@ -257,8 +257,8 @@ button { font: inherit; }
 .pitch-visualization.is-compact .grain-window:first-child { top: 6px; }
 .pitch-visualization.is-compact .grain-window:last-child { top: 15px; }
 .pitch-visualization.is-compact .grain-window b { top: -4px; width: 7px; height: 7px; }
-.pitch-visualization.is-reduced .grain-window b { animation: none; left: 32%; }
-.pitch-visualization.is-reduced .grain-window-b b { left: 68%; }
+.pitch-visualization.is-reduced .grain-window b { animation: none; left: var(--grain-position-a); }
+.pitch-visualization.is-reduced .grain-window-b b { left: var(--grain-position-b); }
 .signal-control.control-live path { animation: control-dash .7s linear infinite; }
 @keyframes control-dash { to { stroke-dashoffset: -12; } }
 .patch-node.is-selected { border-color: var(--amber); outline: 2px solid rgba(242, 180, 78, .38); outline-offset: 2px; box-shadow: 0 0 0 1px #0b1013, 0 0 24px rgba(242, 180, 78, .2); }

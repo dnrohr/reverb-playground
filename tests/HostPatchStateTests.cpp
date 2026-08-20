@@ -102,6 +102,7 @@ TEST_CASE("Host patch state round trips every visible Pitch Shift field")
             { "overlap", 0.72, "normalized", ParameterModulation {
                 "overlap-mod", 0.25, ModulationPolarity::bipolar, 0.1, 1.0 } },
             { "direction", 1.0, "direction" },
+            { "phase", 0.373, "cycles" },
         } },
     };
     document.layout.nodes = { { "pitch-shift-1", 240.0, 80.0 } };
