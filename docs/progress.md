@@ -59,6 +59,9 @@ Last updated: 2026-08-20
 | M10.2 Implement the prepared dual-grain DSP | Complete | Prepared mono processor; causal dual read heads; equal-power overlap; 20 ms parameter transitions; octave, boundary, extreme, reset, canary, and latency tests |
 | M10.3 Add the visible Pitch Shift block | Complete | Public mono graph block; exact runtime/host persistence; semitone/grain/overlap mapping; honest latency/quality/grain inspector; reduced motion; screenshot/video |
 | M10.4 Validate octave identity and feedback safety | Complete | Multi-rate chord bands; fixed-Hz/Doppler contrast; forward/reverse delayed feedback; latch/mute/crossfade/recovery; Release CPU/storage/latency/alias report |
+| M11.1 Design the parallel topology | Complete | 28 visible blocks; non-recirculating +12-semitone branch; independent controls; latency, memory, and normalization budgets |
+| M11.2 Ship and teach Safe Parallel Shimmer | Complete | Editable factory; +12 halo/no-staircase measurement; teaching view; exact persistence; screenshots/video; clean local and main CI |
+| M12.1 Implement independently bounded feedback paths | Complete | Separate normal/shifted gains and delayed returns; visible pre/post filters; 0.72 combined ceiling; invalid-publication and multirate safety tests |
 
 ## M0.2 verification
 
@@ -896,3 +899,25 @@ Results:
   are stored under `artifacts/ui/m11-2-safe-parallel-shimmer/`. The recording's
   deterministic browser-only capture fixture was removed before verification;
   native render and capture tests remain authoritative.
+
+## M12.1 verification
+
+- `makeSplitFeedbackShimmerGraph` authors a 25-block, 29-cable public graph with
+  a shared damped tank and separately named normal and shifted return branches.
+- Normal Feedback is independently bounded to 0...0.58 and Shifted Feedback to
+  0...0.14. Their simultaneous maximum is the documented 0.72 operating
+  ceiling; a deterministic render confirms the normal branch sustains late
+  decay while shifted feedback is zero.
+- The shifted return visibly implements a one-pole subtractive high-pass before
+  the +12-semitone Pitch Shift and a one-pole low-pass afterward. Their locations,
+  approximately 6 dB/octave slopes, ranges, and aliasing limitations are
+  documented in `split-feedback-shimmer-design.md`.
+- Feedback compilation proves the complete graph has no algebraic sub-loop and
+  preserves both explicit return Delays. A deliberately illegal edit that
+  bypasses the tank and shifted-return Delays is rejected while the last valid
+  runtime remains audible.
+- Three-second maximum-setting noise renders at 44.1, 48, and 96 kHz remain
+  finite, non-silent, below full scale, and within the prepared delay-memory
+  budget. Existing safety mute and explicit state reset remain operational.
+- The task adds no factory entry or editor behavior. UI unchanged; screenshot
+  and video evidence are deferred to the M12.3 publishing task.

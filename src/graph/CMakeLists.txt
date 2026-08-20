@@ -8,7 +8,8 @@ add_library(reverb_graph STATIC
     Source/HostPatchState.cpp
     Source/PatchJson.cpp
     Source/RuntimeSnapshot.cpp
-    Source/SafeParallelShimmerGraph.cpp)
+    Source/SafeParallelShimmerGraph.cpp
+    Source/SplitFeedbackShimmerGraph.cpp)
 
 target_include_directories(reverb_graph
     PUBLIC
