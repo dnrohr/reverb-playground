@@ -8,6 +8,7 @@ add_library(reverb_graph STATIC
     Source/HostPatchState.cpp
     Source/PatchJson.cpp
     Source/RuntimeSnapshot.cpp
+    Source/ReverseCosmicShimmerGraph.cpp
     Source/SafeParallelShimmerGraph.cpp
     Source/SplitFeedbackShimmerGraph.cpp)
 

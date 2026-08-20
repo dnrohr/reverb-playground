@@ -61,6 +61,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Gravity Diffusion validation and Windows package](gravity-validation-and-package.md) - multi-rate safety, macro sweeps, named-host restore, physical scaling evidence, and exact package identity.
 - [Visible Pitch Shift primitive design](pitch-shift-primitive-design.md) - mono dual-read-head semantics, fixed causal latency, grain controls, automation, quality limits, and prepared resource budgets.
 - [Reverse grains and stereo decorrelation](reverse-grain-and-stereo-decorrelation.md) - deterministic phase pairing, causal boundaries, transient evidence, compatibility, and multirate budgets.
+- [Reverse Cosmic Shimmer topology design](reverse-cosmic-shimmer-topology-design.md) - causal-rise front end, paired reverse-octave returns, dark circulation, slow motion, and unequal stereo extraction.
 - [Safe Parallel Shimmer topology design](safe-parallel-shimmer-design.md) - visible post-tank octave branch, structural non-recirculation, stereo extraction, alignment, memory, and loudness budgets.
 - [Safe Parallel Shimmer factory patch and teaching view](safe-parallel-shimmer-factory-and-teaching.md) - factory generation, one-pass teaching contract, spectral no-staircase evidence, persistence, and UI evidence.
 - [Split-Feedback Shimmer topology design](split-feedback-shimmer-design.md) - independently bounded normal and octave returns, visible filtering, cycle legality, and recovery behavior.

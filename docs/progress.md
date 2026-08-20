@@ -65,6 +65,7 @@ Last updated: 2026-08-20
 | M12.2 Prove cumulative harmonic ascent | Complete | Time-resolved +12/+24 fixture; 48.32 dB parallel contrast; independent feedback metrics; artifact/alias/damping/stereo disclosure; 54 finite crossfaded edits |
 | M12.3 Ship the Split-Feedback Shimmer factory patch | Complete | Editable 25-block factory; normal/shifted/shared focus; measured circulation teaching; exact persistence/host restore; screenshots/video |
 | M13.1 Add reverse-grain mode and stereo decorrelation | Complete | Explicit deterministic phase; causal reverse grains; near-zero paired correlation; transient-envelope report; compatibility; screenshots/video |
+| M13.2 Construct the cosmic shimmer topology | Complete | 45 public blocks; three-tap causal rise; dual dark reverse-octave returns; independent motion; bounded compatible stereo; multirate tests |
 
 ## M0.2 verification
 
@@ -994,3 +995,29 @@ Results:
   recording are under `artifacts/ui/m13-1-reverse-grain-decorrelation/`.
   [Design and measurement documentation](reverse-grain-and-stereo-decorrelation.md)
   records the meaning, evidence, limitations, compatibility, and M13.2 boundary.
+
+## M13.2 verification
+
+- `makeReverseCosmicShimmerGraph` creates a 45-block, 57-cable graph from only
+  public Stereo I/O, Gain, Sum, Delay, Allpass, Low-pass, Pitch Shift, and LFO
+  primitives. Exact schema-v2 round-trip preserves the complete document.
+- Increasing 80/240/520 ms taps feed diffused energy into a 181 ms tank. At
+  every qualified rate, measured 0.65...1.10 second energy exceeds the
+  0.20...0.45 second window by at least 1.5:1.
+- A 400 Hz burst has at least four times more 800 Hz energy at 1.00 seconds than
+  at 0.30 seconds and retains at least 1.5 times that early octave level at
+  1.65 seconds, separating sustained harmonic evolution from immediate echo.
+- Normal, phase-0 reverse, and phase-0.373 reverse feedback paths cross visible
+  71/89/103 ms return Delays. Tank damping precedes every split; shifted paths
+  additionally cross a visible subtractive high-pass and separate low-passes.
+- Normal feedback clamps at 0.50 and the two shimmer voices together at 0.12,
+  for a 0.62 absolute return-gain ceiling. Default and maximum-control renders
+  at 44.1, 48, and 96 kHz remain finite, non-silent, below unity, and within
+  the delay-memory budget.
+- Two independent slow LFOs, unequal reverse phases/delays/damping, and one-vs-
+  two-stage output diffusion keep absolute late correlation below 0.98 while
+  normalized mono energy remains in the checked 0.20...1.80 compatibility band.
+- [Topology design documentation](reverse-cosmic-shimmer-topology-design.md)
+  records the complete flow, causal boundary, feedback/filter rationale,
+  stereo/mono contract, editable responsibilities, and M13.3 boundary.
+  No editor surface or factory entry changes in M13.2, so no UI capture is due.

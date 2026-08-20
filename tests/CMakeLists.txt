@@ -18,6 +18,7 @@ add_executable(reverb_tests
     ResponseMeasurementsTests.cpp
     RuntimeDiagnosticsTests.cpp
     RuntimeSnapshotTests.cpp
+    ReverseCosmicShimmerTests.cpp
     SafeParallelShimmerTests.cpp
     SplitFeedbackShimmerTests.cpp
     NumericalSafetyGuardTests.cpp
