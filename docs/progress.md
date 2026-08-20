@@ -55,6 +55,7 @@ Last updated: 2026-08-13
 | M9.4 Tune inverse, bloom, and forward reference states | Complete | Fixed five-Macro states; 5 s loudness-matched stereo WAVs; format-v1 measurements/hashes; causal envelope ordering; reload determinism; audition checklist |
 | M9.5 Ship the factory patch and teaching view | Complete | Editable 58-node/94-cable factory; honest predicted/measured overlays; Barr/Gravity A/B; reconstruction guide; screenshots/video |
 | M9.6 Validate and package the first Gravity implementation | Complete | Multi-rate factory renders; five-Macro sweeps; exact host-state restore; 100/125/150% physical captures; strict pluginval; binary identity/checksum gate |
+| M10.1 Specify pitch-shift semantics and budgets | Complete | Mono dual-read-head contract; exact semitone ratios; forward/reverse grain boundary; fixed 600 ms causal history; automation, quality, storage, and operation ceilings |
 
 ## M0.2 verification
 
