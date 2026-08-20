@@ -1,0 +1,114 @@
+{
+  "formatVersion": 1,
+  "measurement": "pitch-shift-validation",
+  "quality": {
+    "id": "dual-grain-linear-v1",
+    "interpolation": "linear",
+    "grainMilliseconds": 60.0,
+    "overlap": 0.5
+  },
+  "spectralMethod": {
+    "referenceInputHz": 400.0,
+    "expectedOctaveHz": 800.0,
+    "analysisBandRelativeHalfWidth": 0.04,
+    "aliasInputFractionOfSampleRate": 0.35,
+    "expectedFoldedAliasFractionOfSampleRate": 0.3,
+    "window": "Hann",
+    "analysisSeconds": 0.6
+  },
+  "cpuMethod": {
+    "basis": "measured-steady-clock",
+    "audioSecondsPerDirection": 1.0,
+    "blockSize": 256,
+    "warning": "Workstation measurement; compare trends, not an absolute cross-machine guarantee."
+  },
+  "rates": [
+    {
+      "sampleRate": 44100.0,
+      "latencySamples": 26462,
+      "latencyMilliseconds": 600.0453514739229,
+      "storageSamples": 52924,
+      "storageBytes": 211696,
+      "directions": [
+        {
+          "direction": "forward",
+          "measuredOctaveCents": 0.0,
+          "referenceTargetDbfs": -8.28708084883613,
+          "foldedAliasDbfs": -14.352922138925841,
+          "aliasRelativeToReferenceDb": -6.065841290089711,
+          "measuredCpuRealtimeLoadPercent": 0.1935,
+          "processedFrames": 44100,
+          "elapsedMicroseconds": 1935
+        },
+        {
+          "direction": "reverse",
+          "measuredOctaveCents": 0.0,
+          "referenceTargetDbfs": -8.287080848790113,
+          "foldedAliasDbfs": -14.320554116405926,
+          "aliasRelativeToReferenceDb": -6.033473267615813,
+          "measuredCpuRealtimeLoadPercent": 0.1868,
+          "processedFrames": 44100,
+          "elapsedMicroseconds": 1868
+        }
+      ]
+    },
+    {
+      "sampleRate": 48000.0,
+      "latencySamples": 28802,
+      "latencyMilliseconds": 600.0416666666666,
+      "storageSamples": 57604,
+      "storageBytes": 230416,
+      "directions": [
+        {
+          "direction": "forward",
+          "measuredOctaveCents": 0.0,
+          "referenceTargetDbfs": -8.28707779387951,
+          "foldedAliasDbfs": -8.287821027353798,
+          "aliasRelativeToReferenceDb": -0.0007432334742887292,
+          "measuredCpuRealtimeLoadPercent": 0.22,
+          "processedFrames": 48000,
+          "elapsedMicroseconds": 2200
+        },
+        {
+          "direction": "reverse",
+          "measuredOctaveCents": 0.0,
+          "referenceTargetDbfs": -8.287077793832426,
+          "foldedAliasDbfs": -8.287821027354678,
+          "aliasRelativeToReferenceDb": -0.0007432335222521402,
+          "measuredCpuRealtimeLoadPercent": 0.2258,
+          "processedFrames": 48000,
+          "elapsedMicroseconds": 2258
+        }
+      ]
+    },
+    {
+      "sampleRate": 96000.0,
+      "latencySamples": 57602,
+      "latencyMilliseconds": 600.0208333333334,
+      "storageSamples": 115204,
+      "storageBytes": 460816,
+      "directions": [
+        {
+          "direction": "forward",
+          "measuredOctaveCents": 0.0,
+          "referenceTargetDbfs": -8.287065534446874,
+          "foldedAliasDbfs": -8.287813495332188,
+          "aliasRelativeToReferenceDb": -0.0007479608853131481,
+          "measuredCpuRealtimeLoadPercent": 0.4379,
+          "processedFrames": 96000,
+          "elapsedMicroseconds": 4379
+        },
+        {
+          "direction": "reverse",
+          "measuredOctaveCents": 0.0,
+          "referenceTargetDbfs": -8.28706553453463,
+          "foldedAliasDbfs": -8.28781428895043,
+          "aliasRelativeToReferenceDb": -0.0007487544158006898,
+          "measuredCpuRealtimeLoadPercent": 0.4655,
+          "processedFrames": 96000,
+          "elapsedMicroseconds": 4655
+        }
+      ]
+    }
+  ]
+}

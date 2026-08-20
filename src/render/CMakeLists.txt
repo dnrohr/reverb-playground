@@ -2,6 +2,7 @@ add_library(reverb_render STATIC
     Source/EnvelopeMeasurements.cpp
     Source/GravityReference.cpp
     Source/OfflineRenderer.cpp
+    Source/PitchShiftValidation.cpp
     Source/ResponseMeasurements.cpp
     Source/WavWriter.cpp)
 
@@ -31,6 +32,14 @@ add_executable(reverb_gravity_reference_cli
     Source/GravityReferenceCli.cpp)
 
 target_link_libraries(reverb_gravity_reference_cli
+    PRIVATE
+        reverb_project_options
+        reverb_render)
+
+add_executable(reverb_pitch_shift_validation_cli
+    Source/PitchShiftValidationCli.cpp)
+
+target_link_libraries(reverb_pitch_shift_validation_cli
     PRIVATE
         reverb_project_options
         reverb_render)

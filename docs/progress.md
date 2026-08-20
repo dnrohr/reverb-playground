@@ -58,6 +58,7 @@ Last updated: 2026-08-20
 | M10.1 Specify pitch-shift semantics and budgets | Complete | Mono dual-read-head contract; exact semitone ratios; forward/reverse grain boundary; fixed 600 ms causal latency; automation, quality, storage, and operation ceilings |
 | M10.2 Implement the prepared dual-grain DSP | Complete | Prepared mono processor; causal dual read heads; equal-power overlap; 20 ms parameter transitions; octave, boundary, extreme, reset, canary, and latency tests |
 | M10.3 Add the visible Pitch Shift block | Complete | Public mono graph block; exact runtime/host persistence; semitone/grain/overlap mapping; honest latency/quality/grain inspector; reduced motion; screenshot/video |
+| M10.4 Validate octave identity and feedback safety | Complete | Multi-rate chord bands; fixed-Hz/Doppler contrast; forward/reverse delayed feedback; latch/mute/crossfade/recovery; Release CPU/storage/latency/alias report |
 
 ## M0.2 verification
 
@@ -827,3 +828,25 @@ Results:
   The [six-second interaction recording](../artifacts/ui/m10-3-visible-pitch-shift/pitch-shift-continuous-edit.mp4)
   shows a continuous `-12...+12 st` edit, moving grain markers, and the bound
   48 kHz editor status. Native tests remain authoritative for active audio.
+
+## M10.4 verification
+
+- A three-tone chord fixture proves energy moves into each expected +12 st band
+  at 44.1, 48, and 96 kHz. Two unequal input tones prove ratio-dependent hertz
+  offsets, while an explicitly modulated Delay retains its carrier/sidebands
+  and does not create the octave target.
+- A visible-primitives feedback graph crosses an 11 ms Delay and uses a 0.35
+  shifted return. Forward and reverse grains remain finite under impulse plus
+  deterministic bounded noise for two seconds at all three rates.
+- The same loop completes a 480-sample/10 ms direction-change topology
+  crossfade. Native guard and full processor tests cover numerical latch,
+  manual emergency mute, muted output, explicit state-clearing recovery, and
+  recovered silence.
+- The reproducible Release CLI records both directions for the one shipped
+  quality in
+  [`pitch-shift-validation-v1.json`](../artifacts/measurements/pitch-shift-validation-v1.json).
+  Exact latency/storage and measured CPU are included for every qualified rate.
+  The folded-alias fixture discloses near-reference-level aliasing at 48/96 kHz
+  and therefore gates later shimmer work on explicit band-limiting.
+- UI unchanged; no new screenshot or video was required. M10.3 retains the
+  current block, inspector, continuous-edit, and grain-motion evidence.

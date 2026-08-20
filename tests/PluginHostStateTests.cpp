@@ -13,6 +13,7 @@
 #include <iterator>
 #include <ranges>
 #include <string>
+#include <thread>
 
 namespace {
 
@@ -182,6 +183,76 @@ TEST_CASE("Plugin host state restores every visible Pitch Shift field after prep
     CHECK(pitch.at("type") == "pitch-shift");
     CHECK(pitch.at("parameters").at(0).at("modulation").at("amount") == 3.0);
     CHECK(pitch.at("parameters").at(3).at("value") == 1.0);
+}
+
+TEST_CASE("Plugin emergency mute and explicit recovery remain operational with Pitch Shift feedback")
+{
+    using namespace reverb::graph;
+    const auto audioInput = [](std::string id) { return Port { std::move(id), SignalType::audio, PortDirection::input }; };
+    const auto audioOutput = [](std::string id) { return Port { std::move(id), SignalType::audio, PortDirection::output }; };
+    GraphDocument graph;
+    graph.nodes = {
+        { "input", "stereo-input", { audioOutput("out-l"), audioOutput("out-r") }, {} },
+        { "sum", "sum", { audioInput("in-a"), audioInput("in-b"), audioOutput("out") }, {} },
+        { "pitch", "pitch-shift", {
+            audioInput("in"), { "semitones-mod", SignalType::control, PortDirection::input },
+            { "grain-mod", SignalType::control, PortDirection::input },
+            { "overlap-mod", SignalType::control, PortDirection::input }, audioOutput("out"),
+        }, {
+            { "semitones", 12.0, "semitones" }, { "grain", 60.0, "milliseconds" },
+            { "overlap", 0.5, "normalized" }, { "direction", 0.0, "direction" },
+        } },
+        { "feedback", "gain", { audioInput("in"), audioOutput("out") }, { { "gain", 0.35, "linear" } } },
+        { "delay", "delay", { audioInput("in"), audioOutput("out") }, { { "delay", 11.0, "milliseconds" } } },
+        { "output", "stereo-output", { audioInput("in-l"), audioInput("in-r") }, {} },
+    };
+    graph.connections = {
+        { "input-sum", { "input", "out-l" }, { "sum", "in-a" } },
+        { "delay-sum", { "delay", "out" }, { "sum", "in-b" } },
+        { "sum-pitch", { "sum", "out" }, { "pitch", "in" } },
+        { "pitch-feedback", { "pitch", "out" }, { "feedback", "in" } },
+        { "feedback-delay", { "feedback", "out" }, { "delay", "in" } },
+        { "sum-left", { "sum", "out" }, { "output", "in-l" } },
+        { "sum-right", { "sum", "out" }, { "output", "in-r" } },
+    };
+
+    ReverbPlaygroundProcessor processor;
+    REQUIRE(nlohmann::json::parse(processor.storePatchStateJson(writePatchJson(graph)).toStdString()).at("accepted") == true);
+    processor.prepareToPlay(48'000.0, 64);
+    juce::AudioBuffer<float> buffer(2, 64);
+    juce::MidiBuffer midi;
+    for (auto attempt = 0; attempt < 1'000; ++attempt) {
+        buffer.clear();
+        processor.processBlock(buffer, midi);
+        const auto diagnostics = nlohmann::json::parse(processor.runtimeDiagnosticsJson().toStdString());
+        if (diagnostics.at("topologyPublication").at("activeRevision") == 1) break;
+        std::this_thread::yield();
+    }
+    REQUIRE(nlohmann::json::parse(processor.runtimeDiagnosticsJson().toStdString())
+        .at("topologyPublication").at("activeRevision") == 1);
+
+    processor.setEmergencyMuted(true);
+    buffer.clear();
+    for (auto channel = 0; channel < buffer.getNumChannels(); ++channel)
+        std::fill_n(buffer.getWritePointer(channel), buffer.getNumSamples(), 100.0F);
+    processor.processBlock(buffer, midi);
+    REQUIRE(buffer.getMagnitude(0, buffer.getNumSamples()) == 0.0F);
+    REQUIRE_FALSE(processor.isSafetyLatched());
+
+    processor.setEmergencyMuted(false);
+    for (auto block = 0; block < 1'000 && !processor.isSafetyLatched(); ++block) {
+        for (auto channel = 0; channel < buffer.getNumChannels(); ++channel)
+            std::fill_n(buffer.getWritePointer(channel), buffer.getNumSamples(), 100.0F);
+        processor.processBlock(buffer, midi);
+    }
+    REQUIRE(processor.isSafetyLatched());
+    REQUIRE(buffer.getMagnitude(0, buffer.getNumSamples()) == 0.0F);
+
+    processor.requestSafetyReset();
+    buffer.clear();
+    processor.processBlock(buffer, midi);
+    REQUIRE_FALSE(processor.isSafetyLatched());
+    REQUIRE(buffer.getMagnitude(0, buffer.getNumSamples()) == 0.0F);
 }
 
 TEST_CASE("Legacy host state without a graph restores safe audition controls")
