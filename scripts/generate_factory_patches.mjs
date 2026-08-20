@@ -278,6 +278,23 @@ const catalog = {
         description: 'Generated from the project-authored public-primitives parallel octave topology; not a reconstruction of a proprietary shimmer algorithm.',
       },
     },
+    {
+      id: 'split-feedback-shimmer',
+      family: 'feedback-shimmer',
+      status: 'complete',
+      document: {
+        kind: 'checked-in-json',
+        path: 'factory-patches/split-feedback-shimmer.rvp.json',
+        schemaVersion: 2,
+        engineVersion: '0.1',
+      },
+      license: { expression: 'AGPL-3.0-only', file: 'LICENSE' },
+      provenance: {
+        kind: 'project-authored-generated',
+        source: 'src/graph/Source/SplitFeedbackShimmerGraph.cpp',
+        description: 'Generated from the project-authored public-primitives split-feedback octave topology; not a reconstruction of a proprietary shimmer algorithm.',
+      },
+    },
   ],
 };
 
@@ -310,3 +327,9 @@ const shimmerFactoryBytes = await readFile(shimmerFactoryPath);
 const shimmerFactoryHash = createHash('sha256').update(shimmerFactoryBytes).digest('hex');
 if (shimmerFactoryHash !== '2dacd5e59d3b72f1ac4203f42f85e3a2e3ed1e1cacd3253998b1cf8fd7cccb91')
   throw new Error('safe-parallel-shimmer.rvp.json is stale; run .\\scripts\\generate_safe_parallel_shimmer_factory.ps1 -Configuration Release');
+
+const splitShimmerFactoryPath = resolve(outputDirectory, 'split-feedback-shimmer.rvp.json');
+const splitShimmerFactoryBytes = await readFile(splitShimmerFactoryPath);
+const splitShimmerFactoryHash = createHash('sha256').update(splitShimmerFactoryBytes).digest('hex');
+if (splitShimmerFactoryHash !== '4aea9287200d5c585d0e0a982e3bc7114b2bbc8b43e1fabd7bfafd66dbddd9ff')
+  throw new Error('split-feedback-shimmer.rvp.json is stale; run .\\scripts\\generate_split_feedback_shimmer_factory.ps1 -Configuration Release');

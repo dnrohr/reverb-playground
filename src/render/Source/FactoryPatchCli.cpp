@@ -1,5 +1,6 @@
 #include <reverb/graph/PatchJson.h>
 #include <reverb/graph/SafeParallelShimmerGraph.h>
+#include <reverb/graph/SplitFeedbackShimmerGraph.h>
 
 #include <filesystem>
 #include <fstream>
@@ -25,10 +26,15 @@ int main(const int argc, char** argv)
         if (argc != 4 || std::string_view(argv[1]) != "--export")
             throw std::invalid_argument("usage: reverb_factory_patch_cli --export <patch-id> <path>");
         const auto patchId = std::string_view(argv[2]);
-        if (patchId != "safe-parallel-shimmer")
+        if (patchId == "safe-parallel-shimmer") {
+            writeText(argv[3], reverb::graph::writePatchJson(
+                reverb::graph::makeSafeParallelShimmerGraph()));
+        } else if (patchId == "split-feedback-shimmer") {
+            writeText(argv[3], reverb::graph::writePatchJson(
+                reverb::graph::makeSplitFeedbackShimmerGraph()));
+        } else {
             throw std::invalid_argument("unknown factory patch id '" + std::string(patchId) + "'");
-        writeText(argv[3], reverb::graph::writePatchJson(
-            reverb::graph::makeSafeParallelShimmerGraph()));
+        }
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "Factory patch generation failed: " << error.what() << '\n';

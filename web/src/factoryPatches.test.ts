@@ -3,6 +3,8 @@ import type { RuntimeSnapshot } from './graph';
 import { comparisonPatchAfterSelection, comparisonPatchLabel, factoryPatches, loadFactoryPatch } from './factoryPatches';
 import { parsePatchJson, writePatchJson } from './patchPersistence';
 import { commitGraphEdit, emptyGraphHistory, redoGraphEdit, undoGraphEdit } from './graphHistory';
+import { inspectFeedbackLoops } from './loopInspection';
+import { decorateSplitShimmerFocus, splitShimmerLoopKind } from './splitFeedbackShimmerTeaching';
 import factoryCatalogJson from '../../factory-patches/catalog.json?raw';
 
 const reference: RuntimeSnapshot = {
@@ -35,7 +37,7 @@ describe('factory patches', () => {
     };
     expect(catalog.catalogVersion).toBe(1);
     expect(catalog.patches.map((patch) => patch.id)).toEqual(factoryPatches.map((patch) => patch.id));
-    expect(catalog.patches.map((patch) => patch.family)).toEqual(['barr-reference', 'reverse-style', 'gated', 'modulated-reverse-style', 'gravity-diffusion', 'parallel-shimmer']);
+    expect(catalog.patches.map((patch) => patch.family)).toEqual(['barr-reference', 'reverse-style', 'gated', 'modulated-reverse-style', 'gravity-diffusion', 'parallel-shimmer', 'feedback-shimmer']);
     for (const patch of catalog.patches) {
       expect(patch.status).toBe('complete');
       expect(['native-runtime', 'checked-in-json']).toContain(patch.document.kind);
@@ -51,11 +53,11 @@ describe('factory patches', () => {
 
   it('offers all complete reference, reverse, gated, and modulated-space designs', () => {
     expect(factoryPatches.map((patch) => patch.id)).toEqual([
-      'barr-reference', 'causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse', 'gravity-diffusion', 'safe-parallel-shimmer',
+      'barr-reference', 'causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse', 'gravity-diffusion', 'safe-parallel-shimmer', 'split-feedback-shimmer',
     ]);
   });
 
-  it.each(['causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse', 'gravity-diffusion', 'safe-parallel-shimmer'] as const)(
+  it.each(['causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse', 'gravity-diffusion', 'safe-parallel-shimmer', 'split-feedback-shimmer'] as const)(
     'loads %s using only visible editable primitives and round trips schema v2',
     (id) => {
       const loaded = loadFactoryPatch(id, reference);
@@ -127,6 +129,50 @@ describe('factory patches', () => {
     expect(writePatchJson(restored.nodes, restored.edges, restored.viewport)).toBe(saved);
   });
 
+  it('ships Split-Feedback Shimmer with separately named complete return loops', () => {
+    const shimmer = loadFactoryPatch('split-feedback-shimmer', reference);
+    expect(shimmer.nodes).toHaveLength(25);
+    expect(shimmer.edges).toHaveLength(29);
+    expect(shimmer.nodes.find((node) => node.id === 'normal-feedback')?.data.userName).toBe('Normal feedback');
+    expect(shimmer.nodes.find((node) => node.id === 'shifted-feedback')?.data.userName).toBe('Shifted feedback');
+    expect(shimmer.nodes.find((node) => node.id === 'shifted-pitch')?.data.userName).toBe('Octave / +12 st');
+    expect(shimmer.edges.some((edge) => edge.source === 'normal-feedback-delay' && edge.target === 'feedback-recombine')).toBe(true);
+    expect(shimmer.edges.some((edge) => edge.source === 'shifted-feedback-delay' && edge.target === 'feedback-recombine')).toBe(true);
+  });
+
+  it('isolates the actual normal shifted and shared factory regions', () => {
+    const shimmer = loadFactoryPatch('split-feedback-shimmer', reference);
+    const normal = inspectFeedbackLoops(shimmer.nodes, shimmer.edges, { edgeId: 'normal-recombine' });
+    const shifted = inspectFeedbackLoops(shimmer.nodes, shimmer.edges, { edgeId: 'shifted-recombine' });
+    const shared = inspectFeedbackLoops(shimmer.nodes, shimmer.edges, { nodeId: 'tank-delay' });
+    expect(normal.loops).toHaveLength(1);
+    expect(shifted.loops).toHaveLength(2);
+    expect(shared.loops).toHaveLength(3);
+    expect(splitShimmerLoopKind(normal.loops[0]!.nodeIds)).toBe('NORMAL RETURN');
+    expect(shifted.loops.every((loop) => splitShimmerLoopKind(loop.nodeIds) === 'SHIFTED RETURN')).toBe(true);
+    expect(new Set(shared.loops.map((loop) => splitShimmerLoopKind(loop.nodeIds)))).toEqual(new Set(['NORMAL RETURN', 'SHIFTED RETURN']));
+    const focused = decorateSplitShimmerFocus(shimmer.nodes, shimmer.edges, 'shared');
+    expect(focused.nodes.find((node) => node.id === 'tank-delay')?.className).toContain('split-focus-active');
+    expect(focused.nodes.find((node) => node.id === 'normal-feedback')?.className).toContain('split-focus-related');
+    expect(focused.nodes.find((node) => node.id === 'shifted-feedback')?.className).toContain('split-focus-related');
+  });
+
+  it('preserves a Split-Feedback Shimmer edit through Undo Redo and schema save reload', () => {
+    const original = loadFactoryPatch('split-feedback-shimmer', reference);
+    const edited = structuredClone(original);
+    edited.nodes.find((node) => node.id === 'shifted-feedback')!
+      .data.parameters.find((parameter) => parameter.id === 'gain')!.value = 0.08;
+    const history = commitGraphEdit(emptyGraphHistory(original), 'Edit shifted feedback', original, edited);
+    const undone = undoGraphEdit(history);
+    expect(undone.edit?.before.nodes.find((node) => node.id === 'shifted-feedback')?.data.parameters[0].value).toBe(0.10);
+    const redone = redoGraphEdit(undone.history);
+    expect(redone.edit?.after.nodes.find((node) => node.id === 'shifted-feedback')?.data.parameters[0].value).toBe(0.08);
+    const saved = writePatchJson(redone.edit!.after.nodes, redone.edit!.after.edges, original.viewport);
+    const restored = parsePatchJson(saved, reference);
+    expect(restored.nodes.find((node) => node.id === 'shifted-feedback')?.data.parameters[0].value).toBe(0.08);
+    expect(writePatchJson(restored.nodes, restored.edges, restored.viewport)).toBe(saved);
+  });
+
   it('remembers the selected design while A is the Barr reference', () => {
     expect(comparisonPatchAfterSelection('level-gated-room', 'causal-reverse-envelope')).toBe('level-gated-room');
     expect(comparisonPatchAfterSelection('barr-reference', 'level-gated-room')).toBe('level-gated-room');
@@ -138,5 +184,8 @@ describe('factory patches', () => {
     expect(comparisonPatchAfterSelection('safe-parallel-shimmer', 'gravity-diffusion')).toBe('safe-parallel-shimmer');
     expect(comparisonPatchAfterSelection('barr-reference', 'safe-parallel-shimmer')).toBe('safe-parallel-shimmer');
     expect(comparisonPatchLabel('safe-parallel-shimmer')).toBe('PAR SHIMMER');
+    expect(comparisonPatchAfterSelection('split-feedback-shimmer', 'safe-parallel-shimmer')).toBe('split-feedback-shimmer');
+    expect(comparisonPatchAfterSelection('barr-reference', 'split-feedback-shimmer')).toBe('split-feedback-shimmer');
+    expect(comparisonPatchLabel('split-feedback-shimmer')).toBe('FB SHIMMER');
   });
 });

@@ -41,6 +41,7 @@ import { gravityFocusNodeIds, predictGravityEnvelope } from './gravityPresentati
 import { gravityMeasuredReference } from './gravityReference';
 import { PitchShiftVisualization } from './PitchShiftVisualization';
 import { parallelShimmerBranch, parallelShimmerTeaching } from './parallelShimmerTeaching';
+import { decorateSplitShimmerFocus, splitFeedbackShimmerTeaching, splitShimmerLoopKind, type SplitShimmerLoopFocus } from './splitFeedbackShimmerTeaching';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -96,8 +97,31 @@ function ParallelShimmerTeaching({ selectedNodeId }: { selectedNodeId?: string }
   );
 }
 
-function LoopInspector({ inspection, activeIndex, onActiveIndex }: {
+function SplitFeedbackShimmerTeaching({ focus, onFocus }: {
+  focus: SplitShimmerLoopFocus; onFocus: (focus: SplitShimmerLoopFocus) => void;
+}) {
+  return (
+    <section className="split-shimmer-teaching" aria-label="Split-Feedback Shimmer circulation teaching">
+      <header><span>{splitFeedbackShimmerTeaching.title}</span><strong>{splitFeedbackShimmerTeaching.method}</strong></header>
+      <div className="split-loop-focus" role="group" aria-label="Highlight shimmer path">
+        {(['normal', 'shifted', 'shared'] as const).map((id) => <button type="button" key={id}
+          className={focus === id ? 'is-active' : ''} aria-pressed={focus === id} onClick={() => onFocus(id)}>
+          {id === 'normal' ? 'NORMAL LOOP' : id === 'shifted' ? 'SHIFTED LOOP' : 'SHARED TANK'}
+        </button>)}
+      </div>
+      <p className="split-path-copy">{splitFeedbackShimmerTeaching[focus]}</p>
+      <ol className="circulation-steps">{splitFeedbackShimmerTeaching.circulation.map((step) => <li key={step.pass}>
+        <b>{step.pass}</b><strong>{step.frequency}</strong><span>{step.note}</span>
+      </li>)}</ol>
+      <p>{splitFeedbackShimmerTeaching.evidence}</p>
+      <small>{splitFeedbackShimmerTeaching.boundary}</small>
+    </section>
+  );
+}
+
+function LoopInspector({ inspection, activeIndex, onActiveIndex, splitFeedback = false }: {
   inspection: FeedbackLoopInspection; activeIndex: number; onActiveIndex: (index: number) => void;
+  splitFeedback?: boolean;
 }) {
   const loop = inspection.loops[activeIndex];
   if (!loop) return (
@@ -108,7 +132,7 @@ function LoopInspector({ inspection, activeIndex, onActiveIndex }: {
   );
   return (
     <section className="loop-inspector" aria-label="Feedback loop inspection">
-      <div className="loop-heading"><span>FEEDBACK LOOP</span><strong>{activeIndex + 1} / {inspection.loops.length}</strong></div>
+      <div className="loop-heading"><span>FEEDBACK LOOP{splitFeedback ? ` / ${splitShimmerLoopKind(loop.nodeIds)}` : ''}</span><strong>{activeIndex + 1} / {inspection.loops.length}</strong></div>
       {inspection.loops.length > 1 ? <div className="loop-navigation">
         <button type="button" aria-label="Previous feedback loop" onClick={() => onActiveIndex((activeIndex + inspection.loops.length - 1) % inspection.loops.length)}>PREV</button>
         <button type="button" aria-label="Next feedback loop" onClick={() => onActiveIndex((activeIndex + 1) % inspection.loops.length)}>NEXT</button>
@@ -338,6 +362,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [graphStatus, setGraphStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
   const [pendingConnection, setPendingConnection] = useState<Connection | null>(null);
   const [activeLoopIndex, setActiveLoopIndex] = useState(0);
+  const [splitLoopFocus, setSplitLoopFocus] = useState<SplitShimmerLoopFocus>('shifted');
   const [responseCapture, setResponseCapture] = useState<{
     capture: ImpulseCaptureResult;
     patchId: TeachingPatchId;
@@ -375,7 +400,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     ? inspectMostRelevantFeedbackLoop(nodes, edges) : null, [diagnostics?.mute.safetyLatched, edges, nodes]);
   const normalizedLoopIndex = loopInspection?.loops.length ? activeLoopIndex % loopInspection.loops.length : 0;
   const loopDecoratedGraph = useMemo(() => decorateFeedbackLoops(nodes, edges, loopInspection, normalizedLoopIndex), [edges, loopInspection, nodes, normalizedLoopIndex]);
-  const safetyDecoratedGraph = useMemo(() => decorateRunawayFeedbackLoop(loopDecoratedGraph.nodes, loopDecoratedGraph.edges, runawayLoopInspection), [loopDecoratedGraph, runawayLoopInspection]);
+  const splitFocusedGraph = useMemo(() => activePatchId === 'split-feedback-shimmer' && teachingEnabled
+    ? decorateSplitShimmerFocus(loopDecoratedGraph.nodes, loopDecoratedGraph.edges, splitLoopFocus)
+    : loopDecoratedGraph,
+  [activePatchId, loopDecoratedGraph, splitLoopFocus, teachingEnabled]);
+  const safetyDecoratedGraph = useMemo(() => decorateRunawayFeedbackLoop(splitFocusedGraph.nodes, splitFocusedGraph.edges, runawayLoopInspection), [runawayLoopInspection, splitFocusedGraph]);
   const energyDecoratedGraph = useMemo(() => decorateEnergy(safetyDecoratedGraph.nodes, safetyDecoratedGraph.edges, energyLevels), [energyLevels, safetyDecoratedGraph]);
   const selectedMappingRange = useMemo(() => {
     if (selectedNode?.data.type !== 'control-map') return null;
@@ -627,6 +656,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       setGraphHistory(emptyGraphHistory(fresh));
       setPendingConnection(null);
       setActivePatchId(id);
+      if (id === 'split-feedback-shimmer') setSplitLoopFocus('shifted');
       setComparisonPatchId((current) => comparisonPatchAfterSelection(id, current));
       const description = factoryPatchDescription(id);
       setFileStatus({ kind: 'ok', message: `LOADED FACTORY / ${description.label.toUpperCase()}` });
@@ -938,6 +968,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         <aside className="inspector" aria-label="Inspector">
           <div className="pane-heading"><span>INSPECTOR</span><button className="teaching-toggle" type="button" aria-pressed={teachingEnabled} title="Toggle contextual cards and response architecture overlays" onClick={toggleTeaching}>LEARN {teachingEnabled ? 'ON' : 'OFF'}</button></div>
           {activePatchId === 'safe-parallel-shimmer' && teachingEnabled ? <ParallelShimmerTeaching selectedNodeId={selectedNode?.id} /> : null}
+          {activePatchId === 'split-feedback-shimmer' && teachingEnabled ? <SplitFeedbackShimmerTeaching focus={splitLoopFocus} onFocus={setSplitLoopFocus} /> : null}
           {selectedNode ? (
             <div className="inspector-content" key={selectedNode.id}>
               <div className="selection-kicker">SELECTED BLOCK</div>
@@ -952,7 +983,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 onCommit={commitParameterEdit}
                 onFocus={focusSelectedMacro}
               /> : null}
-              {loopInspection ? <LoopInspector inspection={loopInspection} activeIndex={normalizedLoopIndex} onActiveIndex={setActiveLoopIndex} /> : null}
+              {loopInspection ? <LoopInspector inspection={loopInspection} activeIndex={normalizedLoopIndex} onActiveIndex={setActiveLoopIndex} splitFeedback={activePatchId === 'split-feedback-shimmer'} /> : null}
               <dl className="property-list">
                 <div><dt>TYPE</dt><dd>{selectedNode.data.type}</dd></div>
                 <div><dt>ROLE</dt><dd>{selectedNode.data.role}</dd></div>
@@ -1083,7 +1114,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <div className="selection-kicker">SELECTED CABLE</div>
               <h2>{selectedEdge.data?.signal === 'control' ? 'Control connection' : 'Audio connection'}</h2>
               <code>{selectedEdge.id}</code>
-              {loopInspection ? <LoopInspector inspection={loopInspection} activeIndex={normalizedLoopIndex} onActiveIndex={setActiveLoopIndex} /> : null}
+              {loopInspection ? <LoopInspector inspection={loopInspection} activeIndex={normalizedLoopIndex} onActiveIndex={setActiveLoopIndex} splitFeedback={activePatchId === 'split-feedback-shimmer'} /> : null}
               <dl className="property-list">
                 <div><dt>FROM</dt><dd>{selectedEdge.source}</dd></div>
                 <div><dt>TO</dt><dd>{selectedEdge.target}</dd></div>

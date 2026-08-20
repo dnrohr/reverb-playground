@@ -63,6 +63,7 @@ Last updated: 2026-08-20
 | M11.2 Ship and teach Safe Parallel Shimmer | Complete | Editable factory; +12 halo/no-staircase measurement; teaching view; exact persistence; screenshots/video; clean local and main CI |
 | M12.1 Implement independently bounded feedback paths | Complete | Separate normal/shifted gains and delayed returns; visible pre/post filters; 0.72 combined ceiling; invalid-publication and multirate safety tests |
 | M12.2 Prove cumulative harmonic ascent | Complete | Time-resolved +12/+24 fixture; 48.32 dB parallel contrast; independent feedback metrics; artifact/alias/damping/stereo disclosure; 54 finite crossfaded edits |
+| M12.3 Ship the Split-Feedback Shimmer factory patch | Complete | Editable 25-block factory; normal/shifted/shared focus; measured circulation teaching; exact persistence/host restore; screenshots/video |
 
 ## M0.2 verification
 
@@ -942,3 +943,31 @@ Results:
   the worst adjacent-sample step is 0.00151 against a 0.01 checked limit.
 - Exact regenerated/artifact JSON equality is a native test. The CLI also has a
   CTest smoke invocation. UI unchanged; no screenshot or video was required.
+
+## M12.3 verification
+
+- Split-Feedback Shimmer is the seventh complete catalog family. Its 25-node,
+  29-cable schema-v2 document is exported from the M12.1 native builder and
+  admitted by exact SHA-256. Catalog metadata identifies project-authored
+  provenance and explicitly rejects proprietary reconstruction claims.
+- Dedicated teaching focus isolates the complete normal return, complete
+  shifted return, or shared delayed tank. The generic cycle inspector finds one
+  normal and two shifted graph cycles—the latter are the two visible paths of
+  the subtractive high-pass—and finds all three from the shared tank Delay.
+- The circulation ladder relates visible 400 -> 800 -> 1600 Hz passes to the
+  checked M12.2 growth and parallel-contrast values. It labels that evidence as
+  measured behavior of this graph and does not imply inaudible higher passes.
+- Browser and native persistence tests cover Undo/Redo, byte-stable schema-v2
+  save/reload, exact native-builder equality, compatibility admission, finite
+  factory rendering, and restoration of all nodes, cables, positions, names,
+  mappings, and an edited Shifted Feedback value before and after 96 kHz host
+  preparation.
+- Reviewed 1920x1080 screenshots show the complete fitted loops and shared
+  delayed region. The 16-second video exercises factory selection, all focus
+  modes, a continuous Normal Feedback edit, impulse/decay inspection, Save, and
+  Load. Evidence is under `artifacts/ui/m12-3-split-feedback-shimmer/`; its
+  deterministic browser-only response transport was removed before the final
+  production build and verification.
+- [Factory and teaching documentation](split-feedback-shimmer-factory-and-teaching.md)
+  records generation, graph interpretation, persistence, measured claims,
+  quality limits, and evidence paths.

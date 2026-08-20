@@ -213,6 +213,34 @@ TEST_CASE("Plugin host state restores the complete Safe Parallel Shimmer factory
         .at("restoredPatch") == beforePreparation);
 }
 
+TEST_CASE("Plugin host state restores the complete Split Feedback Shimmer factory and edited return")
+{
+    auto shimmer = nlohmann::json::parse(factoryPatch("split-feedback-shimmer.rvp.json"));
+    for (auto& node : shimmer.at("semantic").at("nodes")) {
+        if (node.at("id") != "shifted-feedback") continue;
+        for (auto& parameter : node.at("parameters")) {
+            if (parameter.at("id") == "gain") parameter["value"] = 0.08;
+        }
+    }
+
+    ReverbPlaygroundProcessor source;
+    REQUIRE(nlohmann::json::parse(source.storePatchStateJson(shimmer.dump()).toStdString()).at("accepted") == true);
+    juce::MemoryBlock state;
+    source.getStateInformation(state);
+
+    ReverbPlaygroundProcessor restored;
+    restored.setStateInformation(state.getData(), static_cast<int>(state.getSize()));
+    const auto beforePreparation = nlohmann::json::parse(restored.runtimeSnapshotJson().toStdString()).at("restoredPatch");
+    REQUIRE(beforePreparation.at("semantic").at("nodes").size() == 25);
+    REQUIRE(beforePreparation.at("semantic").at("connections").size() == 29);
+    REQUIRE(beforePreparation.at("layout").at("nodes").size() == 25);
+    REQUIRE(beforePreparation == shimmer);
+
+    restored.prepareToPlay(96'000.0, 1'024);
+    REQUIRE(nlohmann::json::parse(restored.runtimeSnapshotJson().toStdString())
+        .at("restoredPatch") == beforePreparation);
+}
+
 TEST_CASE("Plugin emergency mute and explicit recovery remain operational with Pitch Shift feedback")
 {
     using namespace reverb::graph;

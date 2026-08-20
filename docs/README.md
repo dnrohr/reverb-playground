@@ -64,6 +64,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Safe Parallel Shimmer factory patch and teaching view](safe-parallel-shimmer-factory-and-teaching.md) - factory generation, one-pass teaching contract, spectral no-staircase evidence, persistence, and UI evidence.
 - [Split-Feedback Shimmer topology design](split-feedback-shimmer-design.md) - independently bounded normal and octave returns, visible filtering, cycle legality, and recovery behavior.
 - [Split-Feedback Shimmer validation](split-feedback-shimmer-validation.md) - time-resolved octave buildup, parallel contrast, control independence, quality disclosure, and multirate edit safety.
+- [Split-Feedback Shimmer factory patch and teaching view](split-feedback-shimmer-factory-and-teaching.md) - factory generation, independent loop focus, circulation evidence, persistence, safety boundaries, and UI evidence.
 - [Visualization teaching overlays and A/B comparison](visualization-teaching-overlays.md) - measured rise/gate landmarks, honest explanatory boundaries, Learn disable behavior, and Barr/design audition switching.
 - [Control-rate graph semantics](control-rate-graph-semantics.md) - typed parameter sockets, fixed-rate interpolation, bounded evaluation, mapping formula, and schema-v2 persistence.
 - [LFO and control-mapping blocks](lfo-and-control-mapping.md) - sine/triangle generation, free-run/restart behavior, explicit scale/offset/polarity, range preview, and branching.

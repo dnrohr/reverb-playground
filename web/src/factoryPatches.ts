@@ -7,8 +7,9 @@ import levelGatedPatch from '../../factory-patches/level-gated-room.rvp.json?raw
 import cosmicReversePatch from '../../factory-patches/modulated-cosmic-reverse.rvp.json?raw';
 import gravityDiffusionPatch from '../../factory-patches/gravity-diffusion.rvp.json?raw';
 import safeParallelShimmerPatch from '../../factory-patches/safe-parallel-shimmer.rvp.json?raw';
+import splitFeedbackShimmerPatch from '../../factory-patches/split-feedback-shimmer.rvp.json?raw';
 
-export type FactoryPatchId = 'barr-reference' | 'causal-reverse-envelope' | 'level-gated-room' | 'modulated-cosmic-reverse' | 'gravity-diffusion' | 'safe-parallel-shimmer';
+export type FactoryPatchId = 'barr-reference' | 'causal-reverse-envelope' | 'level-gated-room' | 'modulated-cosmic-reverse' | 'gravity-diffusion' | 'safe-parallel-shimmer' | 'split-feedback-shimmer';
 export type ComparisonPatchId = Exclude<FactoryPatchId, 'barr-reference'>;
 
 export interface FactoryPatchDescription {
@@ -68,6 +69,13 @@ export const factoryPatches: readonly FactoryPatchDescription[] = [
     filename: 'safe-parallel-shimmer.rvp.json',
     summary: 'One non-recirculating +12-semitone halo beside an aligned normal tail',
   },
+  {
+    id: 'split-feedback-shimmer',
+    label: 'Split-Feedback Shimmer',
+    graphName: 'SPLIT-FEEDBACK-SHIMMER.graph',
+    filename: 'split-feedback-shimmer.rvp.json',
+    summary: 'Independent normal and +12-semitone returns build a bounded octave staircase',
+  },
 ] as const;
 
 const rawPatches: Partial<Record<FactoryPatchId, string>> = {
@@ -76,6 +84,7 @@ const rawPatches: Partial<Record<FactoryPatchId, string>> = {
   'modulated-cosmic-reverse': cosmicReversePatch,
   'gravity-diffusion': gravityDiffusionPatch,
   'safe-parallel-shimmer': safeParallelShimmerPatch,
+  'split-feedback-shimmer': splitFeedbackShimmerPatch,
 };
 
 export function factoryPatchDescription(id: FactoryPatchId): FactoryPatchDescription {
@@ -93,6 +102,7 @@ export function comparisonPatchLabel(id: ComparisonPatchId): string {
     case 'modulated-cosmic-reverse': return 'COSMIC REV';
     case 'gravity-diffusion': return 'GRAVITY';
     case 'safe-parallel-shimmer': return 'PAR SHIMMER';
+    case 'split-feedback-shimmer': return 'FB SHIMMER';
   }
 }
 
