@@ -1,7 +1,8 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import type { PatchNodeData } from './graph';
+import { PitchShiftVisualization } from './PitchShiftVisualization';
 
-const prettyUnit = (unit: string) => unit === 'milliseconds' ? 'ms' : unit === 'hertz' ? 'Hz' : '';
+const prettyUnit = (unit: string) => unit === 'milliseconds' ? 'ms' : unit === 'hertz' ? 'Hz' : unit === 'semitones' ? 'st' : '';
 
 export function PatchNode({ data, selected }: NodeProps & { data: PatchNodeData }) {
   const inputs = data.ports.filter((port) => port.direction === 'input');
@@ -25,7 +26,9 @@ export function PatchNode({ data, selected }: NodeProps & { data: PatchNodeData 
       <div className="node-type">{data.type}</div>
       {data.type === 'envelope-follower' ? <div className="signal-operation">AUDIO → ENVELOPE 0…1</div> : null}
       {data.type === 'hold-gate' ? <div className="signal-operation">AUDIO × CONTROL GATE</div> : null}
+      {data.type === 'pitch-shift' ? <div className="signal-operation">MUSICAL RATIO · NOT FIXED HZ / DOPPLER</div> : null}
       <div className="energy-meter" aria-hidden="true"><i /><i /><i /><i /><i /></div>
+      {data.type === 'pitch-shift' ? <PitchShiftVisualization parameters={data.parameters} reducedMotion={false} compact /> : null}
       {data.controlPreview ? (
         <div className="control-preview" aria-label={`${data.controlPreview.label} control preview ${data.controlPreview.value.toFixed(2)}`}>
           <span>{data.controlPreview.label}</span>

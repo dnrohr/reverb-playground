@@ -39,6 +39,7 @@ import { parseHostPatchStateResult } from './hostPatchState';
 import { decorateMacroReachability, inspectMacroReachability } from './macroInspection';
 import { gravityFocusNodeIds, predictGravityEnvelope } from './gravityPresentation';
 import { gravityMeasuredReference } from './gravityReference';
+import { PitchShiftVisualization } from './PitchShiftVisualization';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -52,12 +53,14 @@ const parameterChoices = (unit: string): { value: number; label: string }[] | nu
   if (unit === 'waveform') return [{ value: 0, label: 'SINE' }, { value: 1, label: 'TRIANGLE' }];
   if (unit === 'run-mode') return [{ value: 0, label: 'FREE RUN' }, { value: 1, label: 'RESTART ON TRANSPORT' }];
   if (unit === 'polarity') return [{ value: 0, label: 'UNIPOLAR 0…1' }, { value: 1, label: 'BIPOLAR −1…+1' }];
+  if (unit === 'direction') return [{ value: 0, label: 'FORWARD GRAINS' }, { value: 1, label: 'REVERSE INSIDE EACH GRAIN' }];
   return null;
 };
 
 function formatValue(value: number, unit: string) {
   if (unit === 'milliseconds') return `${value.toFixed(2)} ms`;
   if (unit === 'hertz') return `${value.toLocaleString()} Hz`;
+  if (unit === 'semitones') return `${value >= 0 ? '+' : ''}${value.toFixed(2)} st`;
   return value.toFixed(2);
 }
 
@@ -937,6 +940,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <div><dt>ROLE</dt><dd>{selectedNode.data.role}</dd></div>
                 <div><dt>PORTS</dt><dd>{selectedNode.data.ports.length} mono</dd></div>
               </dl>
+              {selectedNode.data.type === 'pitch-shift' ? <PitchShiftVisualization
+                parameters={selectedNode.data.parameters}
+                reducedMotion={reducedMotion}
+                sampleRate={snapshot.sampleRate > 0 ? snapshot.sampleRate : 48_000}
+              /> : null}
               {selectedNode.data.type === 'macro' ? <label className="macro-name-field">
                 <span>MACRO NAME</span>
                 <input
@@ -993,7 +1001,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                       onKeyDown={(event) => { if (event.key === 'Enter') commitParameterEdit(); }}
                       onBlur={commitParameterEdit}
                     />}
-                    <strong>{parameter.unit === 'milliseconds' ? 'ms' : parameter.unit === 'hertz' ? 'Hz' : ''}</strong>
+                    <strong>{parameter.unit === 'milliseconds' ? 'ms' : parameter.unit === 'hertz' ? 'Hz' : parameter.unit === 'semitones' ? 'st' : ''}</strong>
                   </label>
                   <small>{parameter.unit}</small>
                   {!choices ? <input

@@ -82,3 +82,37 @@ TEST_CASE("Host patch state restores Macro identity and settings")
     CHECK(restored->nodes.front().parameters[1].value == Catch::Approx(-0.125));
     CHECK(writePatchJson(*restored) == serialized);
 }
+
+TEST_CASE("Host patch state round trips every visible Pitch Shift field")
+{
+    using namespace reverb::graph;
+    GraphDocument document;
+    document.nodes = {
+        { "pitch-shift-1", "pitch-shift", {
+            { "in", SignalType::audio, PortDirection::input },
+            { "semitones-mod", SignalType::control, PortDirection::input },
+            { "grain-mod", SignalType::control, PortDirection::input },
+            { "overlap-mod", SignalType::control, PortDirection::input },
+            { "out", SignalType::audio, PortDirection::output },
+        }, {
+            { "semitones", -7.25, "semitones", ParameterModulation {
+                "semitones-mod", 5.5, ModulationPolarity::bipolar, -24.0, 24.0 } },
+            { "grain", 93.4, "milliseconds", ParameterModulation {
+                "grain-mod", 20.0, ModulationPolarity::bipolar, 20.0, 120.0 } },
+            { "overlap", 0.72, "normalized", ParameterModulation {
+                "overlap-mod", 0.25, ModulationPolarity::bipolar, 0.1, 1.0 } },
+            { "direction", 1.0, "direction" },
+        } },
+    };
+    document.layout.nodes = { { "pitch-shift-1", 240.0, 80.0 } };
+
+    HostPatchState state;
+    std::string error;
+    const auto serialized = writePatchJson(document);
+    REQUIRE(state.store(serialized, error));
+    REQUIRE(error.empty());
+    const auto restored = state.document();
+    REQUIRE(restored.has_value());
+    REQUIRE(restored->nodes.front() == document.nodes.front());
+    REQUIRE(writePatchJson(*restored) == serialized);
+}

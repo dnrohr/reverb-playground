@@ -3,12 +3,26 @@ import { createModuleNode, moduleDefinitions, nextNodeId } from './modules';
 
 describe('editable module library', () => {
   it('defines every M3.1 primitive with safe deterministic defaults', () => {
-    expect(moduleDefinitions.map((item) => item.type)).toEqual(['stereo-input', 'stereo-output', 'gain', 'sum', 'delay', 'allpass', 'lowpass', 'macro', 'lfo', 'control-map', 'envelope-follower', 'hold-gate']);
+    expect(moduleDefinitions.map((item) => item.type)).toEqual(['stereo-input', 'stereo-output', 'gain', 'sum', 'delay', 'allpass', 'lowpass', 'pitch-shift', 'macro', 'lfo', 'control-map', 'envelope-follower', 'hold-gate']);
     for (const definition of moduleDefinitions) {
       const node = createModuleNode(definition.type, `${definition.type}-1`, { x: 10, y: 20 });
       expect(node.data.label).toBeTruthy(); expect(node.data.runtimeBound).toBe(false);
       expect(node.data.parameters.every((parameter) => parameter.value >= parameter.minimum && parameter.value <= parameter.maximum)).toBe(true);
     }
+  });
+
+  it('defines Pitch Shift as one mono musical-ratio processor with explicit grain controls', () => {
+    const pitch = createModuleNode('pitch-shift', 'pitch-shift-1', { x: 0, y: 0 });
+    expect(pitch.data.label).toBe('Pitch Shift');
+    expect(pitch.data.role).toBe('pitch');
+    expect(pitch.data.ports.map(({ id, signal, direction }) => [id, signal, direction])).toEqual([
+      ['in', 'audio', 'input'], ['semitones-mod', 'control', 'input'], ['grain-mod', 'control', 'input'],
+      ['overlap-mod', 'control', 'input'], ['out', 'audio', 'output'],
+    ]);
+    expect(pitch.data.parameters.map(({ id, value, unit }) => [id, value, unit])).toEqual([
+      ['semitones', 12, 'semitones'], ['grain', 60, 'milliseconds'], ['overlap', 0.5, 'normalized'], ['direction', 0, 'direction'],
+    ]);
+    expect(pitch.data.parameters.find((parameter) => parameter.id === 'direction')?.modulation).toBeUndefined();
   });
 
   it('defines Macro as one named normalized control source', () => {

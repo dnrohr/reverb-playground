@@ -3,6 +3,7 @@
 
 #include "PluginProcessor.h"
 
+#include <reverb/graph/PatchJson.h>
 #include <reverb/ui/EditorSizing.h>
 
 #include <nlohmann/json.hpp>
@@ -123,6 +124,64 @@ TEST_CASE("Plugin host state restores the complete Gravity factory and macro val
     restored.prepareToPlay(96'000.0, 1'024);
     REQUIRE(nlohmann::json::parse(restored.runtimeSnapshotJson().toStdString())
         .at("restoredPatch") == restoredGraph);
+}
+
+TEST_CASE("Plugin host state restores every visible Pitch Shift field after preparation")
+{
+    using namespace reverb::graph;
+    GraphDocument document;
+    document.nodes = {
+        { "input", "stereo-input", {
+            { "out-l", SignalType::audio, PortDirection::output },
+            { "out-r", SignalType::audio, PortDirection::output },
+        }, {} },
+        { "pitch-shift-1", "pitch-shift", {
+            { "in", SignalType::audio, PortDirection::input },
+            { "semitones-mod", SignalType::control, PortDirection::input },
+            { "grain-mod", SignalType::control, PortDirection::input },
+            { "overlap-mod", SignalType::control, PortDirection::input },
+            { "out", SignalType::audio, PortDirection::output },
+        }, {
+            { "semitones", 12.0, "semitones", ParameterModulation {
+                "semitones-mod", 3.0, ModulationPolarity::bipolar, -24.0, 24.0 } },
+            { "grain", 84.5, "milliseconds", ParameterModulation {
+                "grain-mod", 14.0, ModulationPolarity::bipolar, 20.0, 120.0 } },
+            { "overlap", 0.64, "normalized", ParameterModulation {
+                "overlap-mod", 0.2, ModulationPolarity::bipolar, 0.1, 1.0 } },
+            { "direction", 1.0, "direction" },
+        } },
+        { "output", "stereo-output", {
+            { "in-l", SignalType::audio, PortDirection::input },
+            { "in-r", SignalType::audio, PortDirection::input },
+        }, {} },
+    };
+    document.connections = {
+        { "input-l-to-pitch", { "input", "out-l" }, { "pitch-shift-1", "in" } },
+        { "pitch-to-output-l", { "pitch-shift-1", "out" }, { "output", "in-l" } },
+        { "input-r-to-output-r", { "input", "out-r" }, { "output", "in-r" } },
+    };
+    document.layout.nodes = {
+        { "input", 20.0, 120.0 }, { "pitch-shift-1", 320.0, 120.0 }, { "output", 680.0, 120.0 },
+    };
+    document.layout.viewport = { 17.0, -23.0, 0.83 };
+    const auto serialized = writePatchJson(document);
+
+    ReverbPlaygroundProcessor source;
+    REQUIRE(nlohmann::json::parse(source.storePatchStateJson(serialized).toStdString()).at("accepted") == true);
+    juce::MemoryBlock state;
+    source.getStateInformation(state);
+
+    ReverbPlaygroundProcessor restored;
+    restored.setStateInformation(state.getData(), static_cast<int>(state.getSize()));
+    const auto beforePrepare = nlohmann::json::parse(restored.runtimeSnapshotJson().toStdString()).at("restoredPatch");
+    REQUIRE(beforePrepare == nlohmann::json::parse(serialized));
+    restored.prepareToPlay(48'000.0, 64);
+    const auto afterPrepare = nlohmann::json::parse(restored.runtimeSnapshotJson().toStdString()).at("restoredPatch");
+    REQUIRE(afterPrepare == beforePrepare);
+    const auto& pitch = afterPrepare.at("semantic").at("nodes").at(1);
+    CHECK(pitch.at("type") == "pitch-shift");
+    CHECK(pitch.at("parameters").at(0).at("modulation").at("amount") == 3.0);
+    CHECK(pitch.at("parameters").at(3).at("value") == 1.0);
 }
 
 TEST_CASE("Legacy host state without a graph restores safe audition controls")

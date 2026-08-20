@@ -207,6 +207,29 @@ describe('patch persistence', () => {
     expect(writePatchJson(loaded.nodes, loaded.edges, loaded.viewport)).toBe(written);
   });
 
+  it('round trips every Pitch Shift field and its explicit mono connections', () => {
+    const input = createModuleNode('stereo-input', 'stereo-input-1', { x: 0, y: 0 });
+    const pitch = createModuleNode('pitch-shift', 'pitch-shift-1', { x: 240, y: 40 });
+    const output = createModuleNode('stereo-output', 'stereo-output-1', { x: 520, y: 0 });
+    const values = new Map([['semitones', -7.25], ['grain', 93.4], ['overlap', 0.72], ['direction', 1]]);
+    pitch.data.parameters.forEach((parameter) => { parameter.value = values.get(parameter.id) ?? parameter.value; });
+    pitch.data.parameters.find((parameter) => parameter.id === 'semitones')!.modulation!.amount = 5.5;
+    const edges = [
+      { id: 'into-pitch', source: input.id, sourceHandle: 'out-l', target: pitch.id, targetHandle: 'in' },
+      { id: 'pitch-left', source: pitch.id, sourceHandle: 'out', target: output.id, targetHandle: 'in-l' },
+      { id: 'right', source: input.id, sourceHandle: 'out-r', target: output.id, targetHandle: 'in-r' },
+    ];
+    const written = writePatchJson([input, pitch, output], edges, { x: -12, y: 9, zoom: 0.85 });
+    const loaded = parsePatchJson(written, reference);
+    const restored = loaded.nodes.find((node) => node.id === pitch.id)!;
+    expect(restored.data.parameters.map(({ id, value, unit }) => [id, value, unit])).toEqual([
+      ['semitones', -7.25, 'semitones'], ['grain', 93.4, 'milliseconds'],
+      ['overlap', 0.72, 'normalized'], ['direction', 1, 'direction'],
+    ]);
+    expect(restored.data.parameters[0].modulation?.amount).toBe(5.5);
+    expect(writePatchJson(loaded.nodes, loaded.edges, loaded.viewport)).toBe(written);
+  });
+
   it('rejects persisted graphs with multiple cables on one input', () => {
     const input = createModuleNode('stereo-input', 'stereo-input-1', { x: 0, y: 0 });
     const delay = createModuleNode('delay', 'delay-1', { x: 200, y: 0 });

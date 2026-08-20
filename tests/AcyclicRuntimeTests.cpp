@@ -3,11 +3,15 @@
 #include <reverb/graph/AcyclicRuntime.h>
 #include <reverb/graph/BarrReferenceGraph.h>
 #include <reverb/dsp/BarrReference.h>
+#include <reverb/dsp/PitchShift.h>
 
 #include <algorithm>
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <cmath>
+#include <numbers>
+#include <span>
 #include <string>
 #include <thread>
 #include <vector>
@@ -21,6 +25,16 @@ Port controlInputPort(std::string id) { return { std::move(id), SignalType::cont
 Port controlOutputPort(std::string id = "out") { return { std::move(id), SignalType::control, PortDirection::output }; }
 Node stereoInput() { return { "input", "stereo-input", { outputPort("out-l"), outputPort("out-r") }, {} }; }
 Node stereoOutput() { return { "output", "stereo-output", { inputPort("in-l"), inputPort("in-r") }, {} }; }
+Node pitchShiftNode()
+{
+    return { "pitch", "pitch-shift", {
+        inputPort(), controlInputPort("semitones-mod"), controlInputPort("grain-mod"),
+        controlInputPort("overlap-mod"), outputPort(),
+    }, {
+        { "semitones", 12.0, "semitones" }, { "grain", 60.0, "milliseconds" },
+        { "overlap", 0.5, "normalized" }, { "direction", 0.0, "direction" },
+    } };
+}
 Connection cable(std::string id, std::string fromNode, std::string fromPort, std::string toNode, std::string toPort)
 {
     return { std::move(id), { std::move(fromNode), std::move(fromPort) }, { std::move(toNode), std::move(toPort) } };
@@ -101,6 +115,44 @@ TEST_CASE("Constructed delay graph matches a direct one-sample shift")
     compiled.runtime->process(left, right, outputLeft, outputRight);
     REQUIRE(outputLeft == std::array { 0.0F, 1.0F, 2.0F, 3.0F });
     REQUIRE(outputRight == right);
+}
+
+TEST_CASE("Visible pitch shift graph binds exactly to the prepared mono processor")
+{
+    constexpr auto sampleRate = 48'000.0;
+    GraphDocument graph;
+    graph.nodes = { stereoInput(), pitchShiftNode(), stereoOutput() };
+    graph.connections = {
+        cable("into-pitch", "input", "out-l", "pitch", "in"),
+        cable("pitch-left", "pitch", "out", "output", "in-l"),
+        cable("right", "input", "out-r", "output", "in-r"),
+    };
+    const auto frames = reverb::dsp::pitch_shift::reportedLatencySamples(sampleRate) + 24'000;
+    auto compiled = compileAcyclicGraph(graph, sampleRate, frames);
+    REQUIRE(compiled.valid());
+    REQUIRE(compiled.delayMemory.lineCount == 1);
+    REQUIRE(compiled.delayMemory.requestedSamples
+        == reverb::dsp::pitch_shift::reportedLatencySamples(sampleRate));
+    REQUIRE(compiled.delayMemory.allocatedSamples
+        == reverb::dsp::pitch_shift::preparedStorageSamples(sampleRate));
+
+    std::vector<float> input(frames);
+    for (std::size_t frame = 0; frame < frames; ++frame)
+        input[frame] = static_cast<float>(std::sin(2.0 * std::numbers::pi * 400.0
+            * static_cast<double>(frame) / sampleRate));
+    std::vector<float> silence(frames);
+    std::vector<float> graphLeft(frames); std::vector<float> graphRight(frames);
+    compiled.runtime->process(input, silence, graphLeft, graphRight);
+
+    reverb::dsp::PitchShift direct;
+    direct.prepare(sampleRate);
+    auto expected = input;
+    direct.process(expected);
+    REQUIRE(graphLeft == expected);
+    REQUIRE(graphRight == silence);
+    REQUIRE(std::ranges::any_of(
+        std::span<const float>(graphLeft).subspan(compiled.runtime->delayMemoryPlan().requestedSamples),
+        [](const float sample) { return sample != 0.0F; }));
 }
 
 TEST_CASE("Compiled constant control matches the equivalent static delay")

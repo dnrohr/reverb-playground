@@ -226,12 +226,39 @@ button { font: inherit; }
 .node-parameter { margin-top: 7px; padding-top: 6px; border-top: 1px solid #3b4851; color: var(--cyan); font: 10px ui-monospace, Consolas, monospace; }
 .role-io { border-left-color: var(--amber); }
 .role-diffusion, .role-tank, .role-tap { border-left-color: var(--cyan); }
+.role-pitch { border-left-color: var(--violet); background: linear-gradient(145deg, #242432, #1d292f); }
 .role-control { border: 1px dashed var(--violet); border-left: 4px double var(--violet); background: #211d2a; }
 .control-preview { position: relative; height: 24px; margin-top: 7px; border-top: 1px dashed #715d91; color: #c8b5ef; font: 8px ui-monospace, Consolas, monospace; }
 .control-preview span, .control-preview output { position: absolute; top: 5px; }
 .control-preview span { left: 0; letter-spacing: .08em; }
 .control-preview output { right: 0; }
 .control-preview i { position: absolute; bottom: 0; width: 4px; height: 4px; border: 1px solid #201628; background: var(--violet); transform: translateX(-50%) rotate(45deg); transition: left 30ms linear; }
+.pitch-visualization { margin: 14px 0; padding: 11px; border: 1px solid #685587; border-left: 3px double var(--violet); border-radius: 5px; background: rgba(88, 63, 126, .12); }
+.pitch-visualization figcaption { display: flex; justify-content: space-between; gap: 8px; color: #a995cb; font: 800 8px var(--mono, ui-monospace, Consolas, monospace); letter-spacing: .09em; }
+.pitch-visualization figcaption strong { color: #e1d3fb; }
+.grain-rails { position: relative; height: 42px; margin-top: 10px; overflow: hidden; border: 1px solid #463b58; border-radius: 3px; background: repeating-linear-gradient(90deg, #11171d 0 24%, #28313a 24% 25%); }
+.grain-window { position: absolute; left: 8px; right: 8px; height: 14px; border-top: 1px solid #79659e; }
+.grain-window:first-child { top: 10px; }
+.grain-window:last-child { top: 29px; }
+.grain-window::after { content: ''; position: absolute; left: 0; right: 0; top: -3px; height: 5px; background: linear-gradient(90deg, transparent, rgba(189, 156, 255, .42) var(--grain-overlap), transparent); opacity: .7; }
+.grain-window b { position: absolute; top: -5px; left: 0; width: 9px; height: 9px; border: 1px solid #21172e; border-radius: 50%; background: var(--violet); box-shadow: 0 0 8px rgba(189, 156, 255, .7); animation: grain-read-head var(--grain-cycle) linear infinite; }
+.grain-window-b b { animation-delay: calc(var(--grain-cycle) / -2); background: var(--cyan); box-shadow: 0 0 8px rgba(69, 208, 204, .65); }
+.pitch-visualization.is-reverse .grain-window b { animation-direction: reverse; }
+@keyframes grain-read-head { from { left: 0; } to { left: calc(100% - 9px); } }
+.pitch-visual-facts { display: flex; justify-content: space-between; gap: 5px; margin-top: 7px; color: #cabbe2; font: 8px var(--mono, ui-monospace, Consolas, monospace); }
+.pitch-readonly { margin: 9px 0 0; border-top: 1px solid #473c58; }
+.pitch-readonly div { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-bottom: 1px solid #392f48; }
+.pitch-readonly dt { color: #9a89b4; font-size: 8px; }
+.pitch-readonly dd { margin: 0; color: #d9ccef; font: 8px var(--mono, ui-monospace, Consolas, monospace); text-align: right; }
+.pitch-visualization p { margin: 8px 0 0; color: #afa4bd; font-size: 8px; line-height: 1.45; }
+.pitch-visualization.is-compact { margin: 6px 0 0; padding: 0; border: 0; background: transparent; }
+.pitch-visualization.is-compact .grain-rails { height: 22px; margin: 0; }
+.pitch-visualization.is-compact .grain-window { left: 5px; right: 5px; height: 7px; }
+.pitch-visualization.is-compact .grain-window:first-child { top: 6px; }
+.pitch-visualization.is-compact .grain-window:last-child { top: 15px; }
+.pitch-visualization.is-compact .grain-window b { top: -4px; width: 7px; height: 7px; }
+.pitch-visualization.is-reduced .grain-window b { animation: none; left: 32%; }
+.pitch-visualization.is-reduced .grain-window-b b { left: 68%; }
 .signal-control.control-live path { animation: control-dash .7s linear infinite; }
 @keyframes control-dash { to { stroke-dashoffset: -12; } }
 .patch-node.is-selected { border-color: var(--amber); outline: 2px solid rgba(242, 180, 78, .38); outline-offset: 2px; box-shadow: 0 0 0 1px #0b1013, 0 0 24px rgba(242, 180, 78, .2); }
@@ -393,4 +420,6 @@ button { font: inherit; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+  .grain-window b { animation: none !important; left: 32%; }
+  .grain-window-b b { left: 68%; }
 }

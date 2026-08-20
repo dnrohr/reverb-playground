@@ -57,6 +57,7 @@ Last updated: 2026-08-20
 | M9.6 Validate and package the first Gravity implementation | Complete | Multi-rate factory renders; five-Macro sweeps; exact host-state restore; 100/125/150% physical captures; strict pluginval; binary identity/checksum gate |
 | M10.1 Specify pitch-shift semantics and budgets | Complete | Mono dual-read-head contract; exact semitone ratios; forward/reverse grain boundary; fixed 600 ms causal latency; automation, quality, storage, and operation ceilings |
 | M10.2 Implement the prepared dual-grain DSP | Complete | Prepared mono processor; causal dual read heads; equal-power overlap; 20 ms parameter transitions; octave, boundary, extreme, reset, canary, and latency tests |
+| M10.3 Add the visible Pitch Shift block | Complete | Public mono graph block; exact runtime/host persistence; semitone/grain/overlap mapping; honest latency/quality/grain inspector; reduced motion; screenshot/video |
 
 ## M0.2 verification
 
@@ -805,3 +806,24 @@ Results:
   [`01-webview-fills-physical-125-percent.png`](../artifacts/ui/window-sizing-work-area/01-webview-fills-physical-125-percent.png)
   shows the packaged-layout candidate filling the complete 1920-by-1200 panel
   above the Windows taskbar at 125% scaling.
+
+## M10.3 verification
+
+- `pitch-shift` is a public mono block with explicit semitone, grain,
+  overlap, and direction fields; its three continuous controls retain the
+  existing typed modulation mapping. Runtime compilation binds the node to
+  the prepared `PitchShift` processor and plans its exact latency/storage in
+  the shared arena.
+- Browser tests cover creation, typed audio connection, copy/paste, delete,
+  Undo/Redo, exact schema-v2 save/load, and the reduced-motion/telemetry copy.
+  Native tests compare graph output sample-for-sample with direct DSP use and
+  prove complete host-state restoration before and after audio preparation.
+- Block and inspector labels distinguish musical ratio pitch shift from
+  frequency shift, moving Delay/Doppler behavior, whole-response reversal, and
+  pre-input audio. Read-only quality and rate-derived latency remain visible.
+- Current reviewed screenshots:
+  [block and grain view](../artifacts/ui/m10-3-visible-pitch-shift/01-pitch-shift-block-and-grains.jpg)
+  and [lower inspector controls](../artifacts/ui/m10-3-visible-pitch-shift/02-pitch-shift-complete-inspector.jpg).
+  The [six-second interaction recording](../artifacts/ui/m10-3-visible-pitch-shift/pitch-shift-continuous-edit.mp4)
+  shows a continuous `-12...+12 st` edit, moving grain markers, and the bound
+  48 kHz editor status. Native tests remain authoritative for active audio.

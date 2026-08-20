@@ -75,6 +75,20 @@ Mono one-pole low-pass with audio input/output and `cutoff-mod` control socket.
 depth is `5000 Hz`. At runtime the effective cutoff is additionally kept below
 Nyquist, so unusual low sample rates remain finite.
 
+### Pitch Shift
+
+<!-- module: pitch-shift -->
+
+Mono dual-grain pitch processor with audio input/output plus `semitones-mod`,
+`grain-mod`, and `overlap-mod` control sockets. **Semitones** is
+`-24.00..+24.00 st`, step `0.01 st`, default `+12 st`; **Grain** is
+`20.0..120.0 ms`, step `0.1 ms`, default `60 ms`; **Overlap** is normalized
+`0.10..1.00`, step `0.01`, default `0.50`. **Direction** selects forward grains
+or reverse playback inside each causal grain and has no modulation socket.
+This is ratio-based musical pitch shift, not fixed-Hz frequency shift, Delay
+modulation, whole-response reversal, or pre-input audio. The initial quality is
+dual grain with linear interpolation and fixed sample-rate-derived latency.
+
 ### LFO
 
 <!-- module: lfo -->
@@ -207,6 +221,16 @@ LFO and Scale / Offset blocks show signed control motion and control cables use
 dashed animation. The inspector's range preview predicts the normalized mapped
 minimum/maximum from polarity, scale, and offset. These are control-rate facts,
 not audio waveforms; reduced motion removes animation without changing values.
+
+### Pitch-grain inspector
+
+<!-- visualization: pitch-grains -->
+
+Two markers explain the saved dual-read-head phase relationship, direction,
+grain length, and overlap. The panel reports the exact configured latency and
+quality but labels marker motion as illustrative design state: it is neither a
+waveform nor measured, sample-accurate read-head telemetry. Reduced-motion mode
+holds both markers in a static separated state without removing any labels.
 
 ### Diagnostics
 

@@ -8,6 +8,7 @@
 #include <reverb/dsp/Gain.h>
 #include <reverb/dsp/HoldGate.h>
 #include <reverb/dsp/OnePoleLowPass.h>
+#include <reverb/dsp/PitchShift.h>
 #include <reverb/dsp/Sum.h>
 
 #include <algorithm>
@@ -25,10 +26,10 @@
 namespace reverb::graph {
 namespace {
 
-enum class OperationKind { input, output, gain, sum, delay, allpass, lowpass, envelopeFollower, holdGate };
+enum class OperationKind { input, output, gain, sum, delay, allpass, lowpass, pitchShift, envelopeFollower, holdGate };
 using Processor = std::variant<std::monostate, reverb::dsp::Gain, reverb::dsp::Delay,
     reverb::dsp::Allpass, reverb::dsp::OnePoleLowPass,
-    reverb::dsp::EnvelopeFollower, reverb::dsp::HoldGate>;
+    reverb::dsp::PitchShift, reverb::dsp::EnvelopeFollower, reverb::dsp::HoldGate>;
 
 struct Operation final {
     std::string id;
@@ -39,10 +40,17 @@ struct Operation final {
     float sumGain { 1.0F };
     double baseDelayMilliseconds {};
     double baseCoefficient {};
+    double baseSemitones {};
+    double baseGrainMilliseconds {};
+    double baseOverlap {};
+    reverb::dsp::pitch_shift::GrainDirection grainDirection { reverb::dsp::pitch_shift::GrainDirection::forward };
     std::size_t gainModulation { std::numeric_limits<std::size_t>::max() };
     std::size_t delayModulation { std::numeric_limits<std::size_t>::max() };
     std::size_t coefficientModulation { std::numeric_limits<std::size_t>::max() };
     std::size_t cutoffModulation { std::numeric_limits<std::size_t>::max() };
+    std::size_t semitoneModulation { std::numeric_limits<std::size_t>::max() };
+    std::size_t grainModulation { std::numeric_limits<std::size_t>::max() };
+    std::size_t overlapModulation { std::numeric_limits<std::size_t>::max() };
     std::size_t controlInput { std::numeric_limits<std::size_t>::max() };
     double controlScale { 1.0 };
     double controlOffset {};
@@ -154,6 +162,14 @@ void addNodeContractErrors(const Node& node, std::vector<std::string>& errors)
     } else if (node.type == "lowpass") {
         if (!unary || !hasParameter(node, "cutoff", "hertz"))
             errors.push_back("lowpass node '" + node.id + "' requires in, out, and cutoff");
+    } else if (node.type == "pitch-shift") {
+        if (!unary
+            || !parameterInRange(node, "semitones", "semitones", -24.0, 24.0)
+            || !parameterInRange(node, "grain", "milliseconds", 20.0, 120.0)
+            || !parameterInRange(node, "overlap", "normalized", 0.1, 1.0)
+            || !parameterInRange(node, "direction", "direction", 0.0, 1.0))
+            errors.push_back("pitch-shift node '" + node.id
+                + "' requires mono in/out, semitones, grain milliseconds, normalized overlap, and direction");
     } else if (node.type == "macro") {
         if (!hasPort(node, "out", SignalType::control, PortDirection::output)
             || !parameterInRange(node, "value", "normalized", -1.0, 1.0)
@@ -211,6 +227,7 @@ OperationKind kindFor(const std::string& type)
     if (type == "sum") return OperationKind::sum;
     if (type == "delay") return OperationKind::delay;
     if (type == "allpass") return OperationKind::allpass;
+    if (type == "pitch-shift") return OperationKind::pitchShift;
     if (type == "envelope-follower") return OperationKind::envelopeFollower;
     if (type == "hold-gate") return OperationKind::holdGate;
     return OperationKind::lowpass;
@@ -334,6 +351,10 @@ void PreparedAcyclicRuntime::reset() noexcept
             auto& lowpass = std::get<reverb::dsp::OnePoleLowPass>(operation.processor);
             lowpass.reset();
             lowpass.settleParameters();
+        } else if (operation.kind == OperationKind::pitchShift) {
+            auto& pitch = std::get<reverb::dsp::PitchShift>(operation.processor);
+            pitch.reset();
+            pitch.settleParameters();
         } else if (operation.kind == OperationKind::envelopeFollower) {
             std::get<reverb::dsp::EnvelopeFollower>(operation.processor).reset();
         } else if (operation.kind == OperationKind::holdGate) {
@@ -474,6 +495,19 @@ void PreparedAcyclicRuntime::process(
                         processor.setCutoffHertz(implementation_->modulations[operation.cutoffModulation].values[sampleIndex]);
                     processor.process(destination);
                 }
+                else if (operation.kind == OperationKind::pitchShift) {
+                    auto& processor = std::get<reverb::dsp::PitchShift>(operation.processor);
+                    processor.setParameters({
+                        operation.semitoneModulation == noModulation ? operation.baseSemitones
+                            : implementation_->modulations[operation.semitoneModulation].values[sampleIndex],
+                        operation.grainModulation == noModulation ? operation.baseGrainMilliseconds
+                            : implementation_->modulations[operation.grainModulation].values[sampleIndex],
+                        operation.overlapModulation == noModulation ? operation.baseOverlap
+                            : implementation_->modulations[operation.overlapModulation].values[sampleIndex],
+                        operation.grainDirection,
+                    });
+                    processor.process(destination);
+                }
                 else if (operation.kind == OperationKind::envelopeFollower) {
                     destination.front() = std::get<reverb::dsp::EnvelopeFollower>(operation.processor)
                         .processSample(implementation_->buffers[operation.inputs.front()][0]);
@@ -552,6 +586,26 @@ void PreparedAcyclicRuntime::process(
                     processor.process(destination.subspan(sample, 1));
                 }
             }
+        } else if (operation.kind == OperationKind::pitchShift) {
+            auto& processor = std::get<reverb::dsp::PitchShift>(operation.processor);
+            if (operation.semitoneModulation == noModulation
+                && operation.grainModulation == noModulation
+                && operation.overlapModulation == noModulation) {
+                processor.process(destination);
+            } else {
+                for (std::size_t sample = 0; sample < count; ++sample) {
+                    processor.setParameters({
+                        operation.semitoneModulation == noModulation ? operation.baseSemitones
+                            : implementation_->modulations[operation.semitoneModulation].values[sample],
+                        operation.grainModulation == noModulation ? operation.baseGrainMilliseconds
+                            : implementation_->modulations[operation.grainModulation].values[sample],
+                        operation.overlapModulation == noModulation ? operation.baseOverlap
+                            : implementation_->modulations[operation.overlapModulation].values[sample],
+                        operation.grainDirection,
+                    });
+                    processor.process(destination.subspan(sample, 1));
+                }
+            }
         }
     }
     std::ranges::copy(buffer(implementation_->outputLeftInput), outputLeft.begin());
@@ -607,7 +661,16 @@ AcyclicCompileResult compileAcyclicGraph(
         for (const auto& value : node.parameters) if (!std::isfinite(value.value))
             result.errors.push_back("parameter '" + node.id + "." + value.id + "' must be finite");
         inputs += node.type == "stereo-input"; outputs += node.type == "stereo-output";
-        if (node.type == "delay" || node.type == "allpass") {
+        if (node.type == "pitch-shift") {
+            ++delayLines;
+            if (sampleRate > 0.0 && sampleRate <= 192'000.0) {
+                const auto requested = reverb::dsp::pitch_shift::reportedLatencySamples(sampleRate);
+                const auto allocated = reverb::dsp::pitch_shift::preparedStorageSamples(sampleRate);
+                delaySamplePlans[node.id] = { requested, allocated };
+                result.delayMemory.requestedSamples += requested;
+                result.delayMemory.allocatedSamples += allocated;
+            }
+        } else if (node.type == "delay" || node.type == "allpass") {
             ++delayLines;
             if (const auto* delay = parameter(node, "delay"); delay != nullptr) {
                 if (delay->value <= 0.0)
@@ -861,6 +924,21 @@ AcyclicCompileResult compileAcyclicGraph(
                 delayArenaOffset += samples; operation.processor = std::move(processor);
             } else if (operation.kind == OperationKind::lowpass) {
                 reverb::dsp::OnePoleLowPass processor; processor.prepare(sampleRate, parameter(node, "cutoff")->value); operation.processor = std::move(processor);
+            } else if (operation.kind == OperationKind::pitchShift) {
+                const auto samples = delaySamplePlans.at(id).second;
+                operation.baseSemitones = parameter(node, "semitones")->value;
+                operation.baseGrainMilliseconds = parameter(node, "grain")->value;
+                operation.baseOverlap = parameter(node, "overlap")->value;
+                operation.grainDirection = parameter(node, "direction")->value >= 0.5
+                    ? reverb::dsp::pitch_shift::GrainDirection::reverse
+                    : reverb::dsp::pitch_shift::GrainDirection::forward;
+                reverb::dsp::PitchShift processor;
+                processor.prepare(sampleRate, {
+                    operation.baseSemitones, operation.baseGrainMilliseconds,
+                    operation.baseOverlap, operation.grainDirection,
+                }, std::span(implementation->delayArena).subspan(delayArenaOffset, samples));
+                delayArenaOffset += samples;
+                operation.processor = std::move(processor);
             } else if (operation.kind == OperationKind::envelopeFollower) {
                 reverb::dsp::EnvelopeFollower processor;
                 processor.prepare(sampleRate, parameter(node, "attack")->value, parameter(node, "release")->value);
@@ -906,14 +984,18 @@ AcyclicCompileResult compileAcyclicGraph(
         }
         for (const auto& mapping : controlPlan.mappings) {
             if (mapping.parameterId != "gain" && mapping.parameterId != "delay"
-                && mapping.parameterId != "coefficient" && mapping.parameterId != "cutoff") continue;
+                && mapping.parameterId != "coefficient" && mapping.parameterId != "cutoff"
+                && mapping.parameterId != "semitones" && mapping.parameterId != "grain"
+                && mapping.parameterId != "overlap") continue;
             const auto operation = std::ranges::find(
                 implementation->operations, mapping.targetNodeId, &Operation::id);
             if (operation == implementation->operations.end()
                 || (mapping.parameterId == "gain" && operation->kind != OperationKind::gain)
                 || (mapping.parameterId == "delay" && operation->kind != OperationKind::delay && operation->kind != OperationKind::allpass)
                 || (mapping.parameterId == "coefficient" && operation->kind != OperationKind::allpass)
-                || (mapping.parameterId == "cutoff" && operation->kind != OperationKind::lowpass))
+                || (mapping.parameterId == "cutoff" && operation->kind != OperationKind::lowpass)
+                || ((mapping.parameterId == "semitones" || mapping.parameterId == "grain" || mapping.parameterId == "overlap")
+                    && operation->kind != OperationKind::pitchShift))
                 continue;
             RuntimeModulation runtime { .mapping = mapping };
             runtime.ramp.reset(mapping.baseValue);
@@ -926,7 +1008,10 @@ AcyclicCompileResult compileAcyclicGraph(
             if (mapping.parameterId == "gain") operation->gainModulation = index;
             else if (mapping.parameterId == "delay") operation->delayModulation = index;
             else if (mapping.parameterId == "coefficient") operation->coefficientModulation = index;
-            else operation->cutoffModulation = index;
+            else if (mapping.parameterId == "cutoff") operation->cutoffModulation = index;
+            else if (mapping.parameterId == "semitones") operation->semitoneModulation = index;
+            else if (mapping.parameterId == "grain") operation->grainModulation = index;
+            else operation->overlapModulation = index;
         }
         result.runtime = std::unique_ptr<PreparedAcyclicRuntime>(new PreparedAcyclicRuntime(std::move(implementation)));
     } catch (const std::exception& exception) {

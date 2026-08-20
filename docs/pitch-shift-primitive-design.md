@@ -7,8 +7,8 @@ does not conceal a reverb, stereoizer, feedback path, dry mix, or factory-only
 behavior. A stereo construction uses two visible blocks and two mono cables.
 
 This document is the contract for M10.2-M10.4. M10.2 implements the prepared
-mono DSP as `reverb::dsp::PitchShift`; graph/runtime/editor exposure remains
-deferred to M10.3.
+mono DSP as `reverb::dsp::PitchShift`; M10.3 exposes that same processor through
+the public graph, editor, persistence, and host-state paths.
 
 ## Parameters and units
 
@@ -203,9 +203,44 @@ The phase-coherent tone is intentionally a narrow M10.2 identity fixture.
 M10.4 still owns broad tone/chord spectra, sideband and alias-energy reporting,
 CPU measurements, and delayed-feedback safety evidence.
 
-## Deferred implementation details
+## M10.3 visible graph and inspector
 
-M10.1-M10.2 do not choose a visual animation style, tune a shimmer sound, or
-claim measured CPU/aliasing performance. M10.3 adds schema/runtime/editor
-integration and honest visualization; M10.4 records broad spectral, latency,
-CPU, storage, aliasing, and feedback-safety evidence.
+The public `pitch-shift` node has one mono audio input and output. Three typed
+control inputs map semitones, grain length, and overlap through the existing
+saved scale/polarity/clamp contract; direction is a saved discrete choice and
+is intentionally not continuously modulatable. All four values and every
+mapping field live in schema-v2 graph data. There is no factory-only pitch
+state, and schema-v1 documents continue to migrate without inventing the new
+node.
+
+The acyclic runtime allocates the processor's exact prepared ring from the
+existing delay arena and reports its fixed latency and allocation through the
+same resource plan as Delay and Allpass. Pitch Shift does not legalize a cycle:
+feedback still requires a visible Delay. Constant and mapped controls use the
+same `PitchShift` parameter entry points as direct DSP use.
+
+The block says **Musical ratio · not frequency shift**. Its inspector exposes
+the four saved controls plus read-only `Dual grain · linear interpolation`
+quality and the rate-derived latency. Two moving head markers are explicitly
+labeled **Illustrative grain phase** and **Design-state animation**. Their phase
+comes from saved controls, not measured audio or sample-accurate telemetry.
+Reduced-motion mode fixes both markers in an inspectable static state; the OS
+reduced-motion media query provides the same fallback before application state
+is available.
+
+Reviewed evidence:
+
+- [Pitch Shift block and grain explanation](../artifacts/ui/m10-3-visible-pitch-shift/01-pitch-shift-block-and-grains.jpg)
+- [Lower inspector controls and direction](../artifacts/ui/m10-3-visible-pitch-shift/02-pitch-shift-complete-inspector.jpg)
+- [Continuous semitone edit and moving-grain recording](../artifacts/ui/m10-3-visible-pitch-shift/pitch-shift-continuous-edit.mp4)
+
+The recording shows the editor's bound 48 kHz status while semitones move from
+`-12` through `+12` and both illustrative heads continue moving. Native graph
+and processor tests, rather than the visual recording, are authoritative for
+finite audio, exact DSP binding, and host restoration.
+
+## Deferred validation
+
+M10.3 does not tune a shimmer sound or claim measured CPU/aliasing performance.
+M10.4 records broad spectral, latency, CPU, storage, aliasing, and
+feedback-safety evidence.

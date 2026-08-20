@@ -2,7 +2,7 @@ import type { Edge, Node } from '@xyflow/react';
 
 export type SignalType = 'audio' | 'control';
 export type PortDirection = 'input' | 'output';
-export type NodeRole = 'io' | 'routing' | 'filter' | 'delay' | 'diffusion' | 'tank' | 'tap' | 'control';
+export type NodeRole = 'io' | 'routing' | 'filter' | 'delay' | 'diffusion' | 'pitch' | 'tank' | 'tap' | 'control';
 
 export interface PatchPort {
   id: string;
@@ -71,7 +71,7 @@ export interface RuntimeSnapshot {
   restoredPatch?: unknown;
 }
 
-const nodeRoles = new Set<NodeRole>(['io', 'routing', 'filter', 'delay', 'diffusion', 'tank', 'tap']);
+const nodeRoles = new Set<NodeRole>(['io', 'routing', 'filter', 'delay', 'diffusion', 'pitch', 'tank', 'tap']);
 const nodeTypes = new Set(['stereo-input', 'stereo-output', 'sum', 'lowpass', 'allpass']);
 
 function requireCondition(condition: unknown, message: string): asserts condition {
