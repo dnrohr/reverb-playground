@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { RuntimeSnapshot } from './graph';
 import { comparisonPatchAfterSelection, comparisonPatchLabel, factoryPatches, loadFactoryPatch } from './factoryPatches';
 import { parsePatchJson, writePatchJson } from './patchPersistence';
+import { commitGraphEdit, emptyGraphHistory, redoGraphEdit, undoGraphEdit } from './graphHistory';
 import factoryCatalogJson from '../../factory-patches/catalog.json?raw';
 
 const reference: RuntimeSnapshot = {
@@ -16,6 +17,7 @@ const reference: RuntimeSnapshot = {
 const visibleTypes = new Set([
   'stereo-input', 'stereo-output', 'sum', 'gain', 'delay', 'allpass', 'lowpass',
   'macro', 'lfo', 'control-map', 'envelope-follower', 'hold-gate',
+  'pitch-shift',
 ]);
 
 describe('factory patches', () => {
@@ -33,7 +35,7 @@ describe('factory patches', () => {
     };
     expect(catalog.catalogVersion).toBe(1);
     expect(catalog.patches.map((patch) => patch.id)).toEqual(factoryPatches.map((patch) => patch.id));
-    expect(catalog.patches.map((patch) => patch.family)).toEqual(['barr-reference', 'reverse-style', 'gated', 'modulated-reverse-style', 'gravity-diffusion']);
+    expect(catalog.patches.map((patch) => patch.family)).toEqual(['barr-reference', 'reverse-style', 'gated', 'modulated-reverse-style', 'gravity-diffusion', 'parallel-shimmer']);
     for (const patch of catalog.patches) {
       expect(patch.status).toBe('complete');
       expect(['native-runtime', 'checked-in-json']).toContain(patch.document.kind);
@@ -49,11 +51,11 @@ describe('factory patches', () => {
 
   it('offers all complete reference, reverse, gated, and modulated-space designs', () => {
     expect(factoryPatches.map((patch) => patch.id)).toEqual([
-      'barr-reference', 'causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse', 'gravity-diffusion',
+      'barr-reference', 'causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse', 'gravity-diffusion', 'safe-parallel-shimmer',
     ]);
   });
 
-  it.each(['causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse', 'gravity-diffusion'] as const)(
+  it.each(['causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse', 'gravity-diffusion', 'safe-parallel-shimmer'] as const)(
     'loads %s using only visible editable primitives and round trips schema v2',
     (id) => {
       const loaded = loadFactoryPatch(id, reference);
@@ -97,6 +99,34 @@ describe('factory patches', () => {
     expect(cosmic.edges.some((edge) => edge.source === 'feedback-0-58' && edge.target === 'tank-input')).toBe(true);
   });
 
+  it('ships Safe Parallel Shimmer with named aligned normal and non-recirculating octave branches', () => {
+    const shimmer = loadFactoryPatch('safe-parallel-shimmer', reference);
+    expect(shimmer.nodes).toHaveLength(28);
+    expect(shimmer.edges).toHaveLength(32);
+    expect(shimmer.nodes.filter((node) => node.data.type === 'pitch-shift')).toHaveLength(1);
+    expect(shimmer.nodes.find((node) => node.id === 'normal-latency-alignment')?.data.userName).toBe('Normal / aligned');
+    expect(shimmer.nodes.find((node) => node.id === 'shimmer-pitch')?.data.userName).toBe('Octave / +12 st');
+    expect(shimmer.nodes.find((node) => node.id === 'shimmer-level')?.data.userName).toBe('Shimmer level');
+    expect(shimmer.edges.some((edge) => edge.source === 'shimmer-pitch' && edge.target === 'tank-entry')).toBe(false);
+    expect(shimmer.edges.some((edge) => edge.source === 'shimmer-level' && edge.target === 'tank-entry')).toBe(false);
+  });
+
+  it('preserves a Safe Parallel Shimmer level edit through Undo Redo and schema save reload', () => {
+    const original = loadFactoryPatch('safe-parallel-shimmer', reference);
+    const edited = structuredClone(original);
+    const shimmerLevel = edited.nodes.find((node) => node.id === 'shimmer-level')!;
+    shimmerLevel.data.parameters.find((parameter) => parameter.id === 'gain')!.value = 0.17;
+    const history = commitGraphEdit(emptyGraphHistory(original), 'Edit shimmer level', original, edited);
+    const undone = undoGraphEdit(history);
+    expect(undone.edit?.before.nodes.find((node) => node.id === 'shimmer-level')?.data.parameters[0].value).toBe(0.22);
+    const redone = redoGraphEdit(undone.history);
+    expect(redone.edit?.after.nodes.find((node) => node.id === 'shimmer-level')?.data.parameters[0].value).toBe(0.17);
+    const saved = writePatchJson(redone.edit!.after.nodes, redone.edit!.after.edges, original.viewport);
+    const restored = parsePatchJson(saved, reference);
+    expect(restored.nodes.find((node) => node.id === 'shimmer-level')?.data.parameters[0].value).toBe(0.17);
+    expect(writePatchJson(restored.nodes, restored.edges, restored.viewport)).toBe(saved);
+  });
+
   it('remembers the selected design while A is the Barr reference', () => {
     expect(comparisonPatchAfterSelection('level-gated-room', 'causal-reverse-envelope')).toBe('level-gated-room');
     expect(comparisonPatchAfterSelection('barr-reference', 'level-gated-room')).toBe('level-gated-room');
@@ -105,5 +135,8 @@ describe('factory patches', () => {
     expect(comparisonPatchAfterSelection('gravity-diffusion', 'modulated-cosmic-reverse')).toBe('gravity-diffusion');
     expect(comparisonPatchAfterSelection('barr-reference', 'gravity-diffusion')).toBe('gravity-diffusion');
     expect(comparisonPatchLabel('gravity-diffusion')).toBe('GRAVITY');
+    expect(comparisonPatchAfterSelection('safe-parallel-shimmer', 'gravity-diffusion')).toBe('safe-parallel-shimmer');
+    expect(comparisonPatchAfterSelection('barr-reference', 'safe-parallel-shimmer')).toBe('safe-parallel-shimmer');
+    expect(comparisonPatchLabel('safe-parallel-shimmer')).toBe('PAR SHIMMER');
   });
 });

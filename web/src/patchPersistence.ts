@@ -46,7 +46,7 @@ export function parsePatchJson(text: string, reference: RuntimeSnapshot): Loaded
     if (typeof saved.type !== 'string') fail(`node '${saved.id}' has an invalid type`);
     const savedId = saved.id as string; const savedType = saved.type as string; const referenceNode = referenceById.get(savedId); const definition = moduleByType.get(savedType as ModuleType);
     if (savedType === 'macro' && (typeof saved.name !== 'string' || saved.name.length < 1 || saved.name.length > 64)) fail(`macro '${savedId}' requires a name of 1 through 64 characters`);
-    if (savedType !== 'macro' && saved.name !== undefined) fail(`node '${savedId}' cannot contain a user name`);
+    if (saved.name !== undefined && (typeof saved.name !== 'string' || saved.name.length < 1 || saved.name.length > 64)) fail(`node '${savedId}' name must contain 1 through 64 characters`);
     if (saved.presentation !== undefined && (savedType !== 'macro' || saved.presentation !== 'gravity')) fail(`node '${savedId}' has an unsupported presentation designation`);
     if (referenceNode && referenceNode.type !== saved.type) fail(`node '${saved.id}' does not match the Barr reference`); if (!referenceNode && !definition) fail(`unsupported node type '${saved.type}'`);
     const expectedPorts = referenceNode?.ports ?? definition!.ports; const expectedParameters = referenceNode?.parameters ?? definition!.parameters; const savedPorts = saved.ports as unknown[]; const savedParameters = saved.parameters as unknown[];
@@ -65,7 +65,7 @@ export function parsePatchJson(text: string, reference: RuntimeSnapshot): Loaded
     });
     if (legacyCurveMapper) values.push(...structuredClone(expectedParameters.slice(3)));
     const base = referenceNode ? { id: savedId, type: 'patchNode', position: { x: 0, y: 0 }, data: { label: referenceNode.label, type: referenceNode.type, role: referenceNode.role, ports: structuredClone(referenceNode.ports), parameters: values, runtimeBound: true } } as Node<PatchNodeData> : createModuleNode(savedType as ModuleType, savedId, { x: 0, y: 0 });
-    base.data.parameters = values; if (savedType === 'macro') base.data.userName = saved.name as string;
+    base.data.parameters = values; if (typeof saved.name === 'string') base.data.userName = saved.name;
     if (saved.presentation === 'gravity') base.data.presentation = 'gravity'; nodes.push(base);
   }
   const ioError = requiredIoError(nodes); if (ioError) fail(ioError);

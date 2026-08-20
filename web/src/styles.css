@@ -397,6 +397,13 @@ button { font: inherit; }
 .inspector-empty kbd { justify-self: start; min-width: 38px; padding: 3px 5px; border: 1px solid #52616b; border-bottom-width: 2px; border-radius: 3px; color: #cbd5da; background: #20282e; font: 8px ui-monospace, Consolas, monospace; text-align: center; }
 .inspector-empty span { font-size: 9px; }
 .teaching-card { grid-column: 1 / -1; margin-top: 18px; padding: 12px; border: 1px solid #43525c; border-left: 3px solid var(--violet); border-radius: 5px; background: #182027; color: #c8d2d7; }
+.parallel-shimmer-teaching { margin: 12px; padding: 11px; border: 1px solid #3d6f73; border-left: 4px double var(--cyan); background: linear-gradient(145deg, rgba(36, 91, 96, .16), rgba(18, 24, 29, .96)); }
+.parallel-shimmer-teaching header { display: flex; justify-content: space-between; gap: 8px; color: var(--cyan); font-size: 8px; letter-spacing: .11em; }
+.parallel-shimmer-teaching header strong { color: #f0c875; }
+.parallel-shimmer-teaching > div { display: grid; grid-template-columns: 72px 1fr; gap: 8px; margin-top: 8px; padding: 7px; border: 1px solid #344b50; color: #aab8bd; background: rgba(12, 20, 23, .65); font-size: 8px; line-height: 1.35; }
+.parallel-shimmer-teaching > div b { color: #d8e4e7; letter-spacing: .08em; }
+.parallel-shimmer-teaching > div.is-active { border-color: var(--amber); box-shadow: inset 3px 0 var(--amber); }
+.parallel-shimmer-teaching p { margin: 9px 0 0; color: #aab8bd; font-size: 9px; line-height: 1.45; }
 .teaching-title { display: flex; align-items: center; justify-content: space-between; color: var(--violet); font-size: 8px; font-weight: 800; letter-spacing: .12em; }
 .teaching-title button { border: 0; color: var(--muted); background: transparent; font-size: 16px; line-height: 1; }
 .teaching-card h3 { margin: 8px 0 12px; color: var(--text); font-size: 14px; letter-spacing: 0; }

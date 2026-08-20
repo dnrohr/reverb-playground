@@ -261,6 +261,23 @@ const catalog = {
         description: 'Generated from the project-authored eight-stage public-primitives Gravity Diffusion graph; no proprietary preset or algorithm reconstruction.',
       },
     },
+    {
+      id: 'safe-parallel-shimmer',
+      family: 'parallel-shimmer',
+      status: 'complete',
+      document: {
+        kind: 'checked-in-json',
+        path: 'factory-patches/safe-parallel-shimmer.rvp.json',
+        schemaVersion: 2,
+        engineVersion: '0.1',
+      },
+      license: { expression: 'AGPL-3.0-only', file: 'LICENSE' },
+      provenance: {
+        kind: 'project-authored-generated',
+        source: 'src/graph/Source/SafeParallelShimmerGraph.cpp',
+        description: 'Generated from the project-authored public-primitives parallel octave topology; not a reconstruction of a proprietary shimmer algorithm.',
+      },
+    },
   ],
 };
 
@@ -287,3 +304,9 @@ const gravityFactoryBytes = await readFile(gravityFactoryPath);
 const gravityFactoryHash = createHash('sha256').update(gravityFactoryBytes).digest('hex');
 if (gravityFactoryHash !== '8e683dfb595c6f24ac5882e46e6d3fbffcb92790a5616f1bd2b31be1c8973124')
   throw new Error('gravity-diffusion.rvp.json is stale; run .\\scripts\\generate_gravity_factory_patch.ps1 -Configuration Release');
+
+const shimmerFactoryPath = resolve(outputDirectory, 'safe-parallel-shimmer.rvp.json');
+const shimmerFactoryBytes = await readFile(shimmerFactoryPath);
+const shimmerFactoryHash = createHash('sha256').update(shimmerFactoryBytes).digest('hex');
+if (shimmerFactoryHash !== '2dacd5e59d3b72f1ac4203f42f85e3a2e3ed1e1cacd3253998b1cf8fd7cccb91')
+  throw new Error('safe-parallel-shimmer.rvp.json is stale; run .\\scripts\\generate_safe_parallel_shimmer_factory.ps1 -Configuration Release');

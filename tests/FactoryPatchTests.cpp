@@ -4,6 +4,7 @@
 #include <reverb/graph/AcyclicRuntime.h>
 #include <reverb/graph/BarrReferenceGraph.h>
 #include <reverb/graph/PatchJson.h>
+#include <reverb/graph/SafeParallelShimmerGraph.h>
 #include <reverb/render/EnvelopeMeasurements.h>
 #include <reverb/render/OfflineRenderer.h>
 
@@ -98,12 +99,12 @@ TEST_CASE("Factory catalog declares the complete licensed and traceable shipped 
 {
     const auto catalog = loadFactoryCatalog();
     REQUIRE(catalog.at("catalogVersion") == 1);
-    REQUIRE(catalog.at("patches").size() == 5);
+    REQUIRE(catalog.at("patches").size() == 6);
     const std::set<std::string> expectedIds {
-        "barr-reference", "causal-reverse-envelope", "level-gated-room", "modulated-cosmic-reverse", "gravity-diffusion",
+        "barr-reference", "causal-reverse-envelope", "level-gated-room", "modulated-cosmic-reverse", "gravity-diffusion", "safe-parallel-shimmer",
     };
     const std::set<std::string> expectedFamilies {
-        "barr-reference", "reverse-style", "gated", "modulated-reverse-style", "gravity-diffusion",
+        "barr-reference", "reverse-style", "gated", "modulated-reverse-style", "gravity-diffusion", "parallel-shimmer",
     };
     std::set<std::string> ids;
     std::set<std::string> families;
@@ -129,7 +130,7 @@ TEST_CASE("Every catalog factory loads validates renders finite and round trips"
 {
     const std::set<std::string> publicTypes {
         "stereo-input", "stereo-output", "gain", "sum", "delay", "allpass",
-        "lowpass", "macro", "lfo", "control-map", "envelope-follower", "hold-gate",
+        "lowpass", "pitch-shift", "macro", "lfo", "control-map", "envelope-follower", "hold-gate",
     };
     const auto catalog = loadFactoryCatalog();
     for (const auto& entry : catalog.at("patches")) {
@@ -150,6 +151,17 @@ TEST_CASE("Every catalog factory loads validates renders finite and round trips"
         });
         requireFiniteBounded(rendered, 1.0);
     }
+}
+
+TEST_CASE("Safe Parallel Shimmer factory exactly matches its public native builder")
+{
+    const auto checked = loadFactory("safe-parallel-shimmer.rvp.json");
+    const auto authored = reverb::graph::makeSafeParallelShimmerGraph();
+    REQUIRE(checked == authored);
+    REQUIRE(reverb::graph::writePatchJson(checked) == readFile(
+        std::filesystem::path { REVERB_FACTORY_PATCH_DIR } / "safe-parallel-shimmer.rvp.json"));
+    REQUIRE(checked.nodes.size() == 28);
+    REQUIRE(checked.connections.size() == 32);
 }
 
 TEST_CASE("Gravity Diffusion factory is the complete editable measured graph")

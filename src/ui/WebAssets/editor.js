@@ -12,7 +12,7 @@ Error generating stack: `+e.message+`
 `,`
 +`).split(`
 `));return[t,t.reduce((e,t)=>e.concat(...t),[])]}return[[],[]]},[e]);return(0,_.useEffect)(()=>{let n=t?.target??Wc,c=t?.actInsideInputWithModifier??!0;if(e!==null){let e=e=>{if(i.current=e.ctrlKey||e.metaKey||e.shiftKey||e.altKey,(!i.current||i.current&&!c)&&bo(e))return!1;let n=qc(e.code,s);if(a.current.add(e[n]),Kc(o,a.current,!1)){let n=e.composedPath?.()?.[0]||e.target,a=n?.nodeName===`BUTTON`||n?.nodeName===`A`;t.preventDefault!==!1&&(i.current||!a)&&e.preventDefault(),r(!0)}},l=e=>{let t=qc(e.code,s);Kc(o,a.current,!0)?(r(!1),a.current.clear()):a.current.delete(e[t]),e.key===`Meta`&&a.current.clear(),i.current=!1},u=()=>{a.current.clear(),r(!1)};return n?.addEventListener(`keydown`,e),n?.addEventListener(`keyup`,l),window.addEventListener(`blur`,u),window.addEventListener(`contextmenu`,u),()=>{n?.removeEventListener(`keydown`,e),n?.removeEventListener(`keyup`,l),window.removeEventListener(`blur`,u),window.removeEventListener(`contextmenu`,u)}}},[e,r]),n}function Kc(e,t,n){return e.filter(e=>n||e.length===t.size).some(e=>e.every(e=>t.has(e)))}function qc(e,t){return t.includes(e)?`code`:`key`}var Jc=()=>{let e=_c();return(0,_.useMemo)(()=>({zoomIn:async t=>{let{panZoom:n}=e.getState();return n?n.scaleBy(1.2,t):!1},zoomOut:async t=>{let{panZoom:n}=e.getState();return n?n.scaleBy(1/1.2,t):!1},zoomTo:async(t,n)=>{let{panZoom:r}=e.getState();return r?r.scaleTo(t,n):!1},getZoom:()=>e.getState().transform[2],setViewport:async(t,n)=>{let{transform:[r,i,a],panZoom:o}=e.getState();return o?(await o.setViewport({x:t.x??r,y:t.y??i,zoom:t.zoom??a},n),!0):!1},getViewport:()=>{let[t,n,r]=e.getState().transform;return{x:t,y:n,zoom:r}},setCenter:async(t,n,r)=>e.getState().setCenter(t,n,r),fitBounds:async(t,n)=>{let{width:r,height:i,minZoom:a,maxZoom:o,panZoom:s}=e.getState(),c=co(t,r,i,a,o,n?.padding??.1);return s?(await s.setViewport(c,{duration:n?.duration,ease:n?.ease,interpolate:n?.interpolate}),!0):!1},screenToFlowPosition:(t,n={})=>{let{transform:r,snapGrid:i,snapToGrid:a,domNode:o}=e.getState();if(!o)return t;let{x:s,y:c}=o.getBoundingClientRect(),l={x:t.x-s,y:t.y-c},u=n.snapGrid??i;return ro(l,r,n.snapToGrid??a,u)},flowToScreenPosition:t=>{let{transform:n,domNode:r}=e.getState();if(!r)return t;let{x:i,y:a}=r.getBoundingClientRect(),o=io(t,n);return{x:o.x+i,y:o.y+a}}}),[])};function Yc(e,t){let n=[],r=new Map,i=[];for(let t of e)if(t.type===`add`){i.push(t);continue}else if(t.type===`remove`||t.type===`replace`)r.set(t.id,[t]);else{let e=r.get(t.id);e?e.push(t):r.set(t.id,[t])}for(let e of t){let t=r.get(e.id);if(!t){n.push(e);continue}if(t[0].type===`remove`)continue;if(t[0].type===`replace`){n.push({...t[0].item});continue}let i={...e};for(let e of t)Xc(e,i);n.push(i)}return i.length&&i.forEach(e=>{e.index===void 0?n.push({...e.item}):n.splice(e.index,0,{...e.item})}),n}function Xc(e,t){switch(e.type){case`select`:t.selected=e.selected;break;case`position`:e.position!==void 0&&(t.position=e.position),e.dragging!==void 0&&(t.dragging=e.dragging);break;case`dimensions`:e.dimensions!==void 0&&(t.measured={...e.dimensions},e.setAttributes&&((e.setAttributes===!0||e.setAttributes===`width`)&&(t.width=e.dimensions.width),(e.setAttributes===!0||e.setAttributes===`height`)&&(t.height=e.dimensions.height))),typeof e.resizing==`boolean`&&(t.resizing=e.resizing)}}function Zc(e,t){return Yc(e,t)}function Qc(e,t){return Yc(e,t)}function $c(e,t){return{id:e,type:`select`,selected:t}}function el(e,t=new Set,n=!1){let r=[];for(let[i,a]of e){let e=t.has(i);!(a.selected===void 0&&!e)&&a.selected!==e&&(n&&(a.selected=e),r.push($c(a.id,e)))}return r}function tl({items:e=[],lookup:t}){let n=[],r=new Map(e.map(e=>[e.id,e]));for(let[r,i]of e.entries()){let e=t.get(i.id),a=e?.internals?.userNode??e;a!==void 0&&a!==i&&n.push({id:i.id,item:i,type:`replace`}),a===void 0&&n.push({item:i,type:`add`,index:r})}for(let[e]of t)r.get(e)===void 0&&n.push({id:e,type:`remove`});return n}function nl(e){return{id:e.id,type:`remove`}}var rl=to(`React Flow`,`https://reactflow.dev/`);function il(e,t,n={}){return No(e,t,{...n,onError:n.onError??rl})}var al=e=>ka(e),ol=e=>Oa(e);function sl(e){return(0,_.forwardRef)(e)}var cl=typeof window<`u`?_.useLayoutEffect:_.useEffect;function ll(e){let[t,n]=(0,_.useState)(BigInt(0)),[r]=(0,_.useState)(()=>ul(()=>n(e=>e+BigInt(1))));return cl(()=>{let t=r.get();t.length&&(e(t),r.reset())},[t]),r}function ul(e){let t=[];return{get:()=>t,reset:()=>{t=[]},push:n=>{t.push(n),e()}}}var dl=(0,_.createContext)(null);function fl({children:e}){let t=_c(),n=ll((0,_.useCallback)(e=>{let{nodes:n=[],setNodes:r,hasDefaultNodes:i,onNodesChange:a,nodeLookup:o,fitViewQueued:s,onNodesChangeMiddlewareMap:c}=t.getState(),l=n;for(let t of e)l=typeof t==`function`?t(l):t;let u=tl({items:l,lookup:o});for(let e of c.values())u=e(u);i&&r(l),u.length>0?a?.(u):s&&window.requestAnimationFrame(()=>{let{fitViewQueued:e,nodes:n,setNodes:r}=t.getState();e&&r(n)})},[])),r=ll((0,_.useCallback)(e=>{let{edges:n=[],setEdges:r,hasDefaultEdges:i,onEdgesChange:a,edgeLookup:o}=t.getState(),s=n;for(let t of e)s=typeof t==`function`?t(s):t;i?r(s):a&&a(tl({items:s,lookup:o}))},[])),i=(0,_.useMemo)(()=>({nodeQueue:n,edgeQueue:r}),[]);return(0,b.jsx)(dl.Provider,{value:i,children:e})}function pl(){let e=(0,_.useContext)(dl);if(!e)throw Error(`useBatchContext must be used within a BatchProvider`);return e}var ml=e=>!!e.panZoom;function hl(){let e=Jc(),t=_c(),n=pl(),r=K(ml),i=(0,_.useMemo)(()=>{let e=e=>t.getState().nodeLookup.get(e),r=e=>{n.nodeQueue.push(e)},i=e=>{n.edgeQueue.push(e)},a=e=>{let{nodeLookup:n,nodeOrigin:r}=t.getState(),i=al(e)?e:n.get(e.id),a=i.parentId?fo(i.position,i.measured,i.parentId,n,r):i.position;return Ja({...i,position:a,width:i.measured?.width??i.width,height:i.measured?.height??i.height})},o=(e,t,n={replace:!1})=>{r(r=>r.map(r=>{if(r.id===e){let e=typeof t==`function`?t(r):t;return n.replace&&al(e)?e:{...r,...e}}return r}))},s=(e,t,n={replace:!1})=>{i(r=>r.map(r=>{if(r.id===e){let e=typeof t==`function`?t(r):t;return n.replace&&ol(e)?e:{...r,...e}}return r}))};return{getNodes:()=>t.getState().nodes.map(e=>({...e})),getNode:t=>e(t)?.internals.userNode,getInternalNode:e,getEdges:()=>{let{edges:e=[]}=t.getState();return e.map(e=>({...e}))},getEdge:e=>t.getState().edgeLookup.get(e),setNodes:r,setEdges:i,addNodes:e=>{let t=Array.isArray(e)?e:[e];n.nodeQueue.push(e=>[...e,...t])},addEdges:e=>{let t=Array.isArray(e)?e:[e];n.edgeQueue.push(e=>[...e,...t])},toObject:()=>{let{nodes:e=[],edges:n=[],transform:r}=t.getState(),[i,a,o]=r;return{nodes:e.map(e=>({...e})),edges:n.map(e=>({...e})),viewport:{x:i,y:a,zoom:o}}},deleteElements:async({nodes:e=[],edges:n=[]})=>{let{nodes:r,edges:i,onNodesDelete:a,onEdgesDelete:o,triggerNodeChanges:s,triggerEdgeChanges:c,onDelete:l,onBeforeDelete:u}=t.getState(),{nodes:d,edges:f}=await za({nodesToRemove:e,edgesToRemove:n,nodes:r,edges:i,onBeforeDelete:u}),p=f.length>0,m=d.length>0;if(p){let e=f.map(nl);o?.(f),c(e)}if(m){let e=d.map(nl);a?.(d),s(e)}return(m||p)&&l?.({nodes:d,edges:f}),{deletedNodes:d,deletedEdges:f}},getIntersectingNodes:(e,n=!0,r)=>{let i=$a(e),o=i?e:a(e),s=r!==void 0;return o?(r||t.getState().nodes).filter(r=>{let a=t.getState().nodeLookup.get(r.id);if(a&&!i&&(r.id===e.id||!a.internals.positionAbsolute))return!1;let c=Ja(s?r:a),l=Qa(c,o);return n&&l>0||l>=c.width*c.height||l>=o.width*o.height}):[]},isNodeIntersecting:(e,t,n=!0)=>{let r=$a(e)?e:a(e);if(!r)return!1;let i=Qa(r,t);return n&&i>0||i>=t.width*t.height||i>=r.width*r.height},updateNode:o,updateNodeData:(e,t,n={replace:!1})=>{o(e,e=>{let r=typeof t==`function`?t(e):t;return n.replace?{...e,data:r}:{...e,data:{...e.data,...r}}},n)},updateEdge:s,updateEdgeData:(e,t,n={replace:!1})=>{s(e,e=>{let r=typeof t==`function`?t(e):t;return n.replace?{...e,data:r}:{...e,data:{...e.data,...r}}},n)},getNodesBounds:e=>{let{nodeLookup:n,nodeOrigin:r}=t.getState();return Ma(e,{nodeLookup:n,nodeOrigin:r})},getHandleConnections:({type:e,id:n,nodeId:r})=>Array.from(t.getState().connectionLookup.get(`${r}-${e}${n?`-${n}`:``}`)?.values()??[]),getNodeConnections:({type:e,handleId:n,nodeId:r})=>Array.from(t.getState().connectionLookup.get(`${r}${e?n?`-${e}-${n}`:`-${e}`:``}`)?.values()??[]),fitView:async e=>{let r=t.getState().fitViewResolver??mo();return t.setState({fitViewQueued:!0,fitViewOptions:e,fitViewResolver:r}),n.nodeQueue.push(e=>[...e]),r.promise}}},[]);return(0,_.useMemo)(()=>({...i,...e,viewportInitialized:r}),[r])}var gl=e=>e.selected,_l=typeof window<`u`?window:void 0;function vl({deleteKeyCode:e,multiSelectionKeyCode:t}){let n=_c(),{deleteElements:r}=hl(),i=Gc(e,{actInsideInputWithModifier:!1}),a=Gc(t,{target:_l});(0,_.useEffect)(()=>{if(i){let{edges:e,nodes:t}=n.getState();r({nodes:t.filter(gl),edges:e.filter(gl)}),n.setState({nodesSelectionActive:!1})}},[i]),(0,_.useEffect)(()=>{n.setState({multiSelectionActive:a})},[a])}function yl(e){let t=_c();(0,_.useEffect)(()=>{let n=()=>{if(!e.current||!(e.current.checkVisibility?.()??!0))return!1;let n=_o(e.current);(n.height===0||n.width===0)&&t.getState().onError?.(`004`,ga.error004()),t.setState({width:n.width||500,height:n.height||500})};if(e.current){n(),window.addEventListener(`resize`,n);let t=new ResizeObserver(()=>n());return t.observe(e.current),()=>{window.removeEventListener(`resize`,n),t&&e.current&&t.unobserve(e.current)}}},[])}var bl={position:`absolute`,width:`100%`,height:`100%`,top:0,left:0},xl=e=>({userSelectionActive:e.userSelectionActive,lib:e.lib,connectionInProgress:e.connection.inProgress});function Sl({onPaneContextMenu:e,zoomOnScroll:t=!0,zoomOnPinch:n=!0,panOnScroll:r=!1,panOnScrollSpeed:i=.5,panOnScrollMode:a=xa.Free,zoomOnDoubleClick:o=!0,panOnDrag:s=!0,defaultViewport:c,translateExtent:l,minZoom:u,maxZoom:d,zoomActivationKeyCode:f,preventScrolling:p=!0,children:m,noWheelClassName:h,noPanClassName:g,onViewportChange:v,isControlledViewport:y,paneClickDistance:x,selectionOnDrag:S}){let C=_c(),w=(0,_.useRef)(null),{userSelectionActive:T,lib:E,connectionInProgress:D}=K(xl,pc),O=Gc(f),k=(0,_.useRef)();yl(w);let A=(0,_.useCallback)(e=>{v?.({x:e[0],y:e[1],zoom:e[2]}),y||C.setState({transform:e})},[v,y]);return(0,_.useEffect)(()=>{if(w.current){k.current=Hs({domNode:w.current,minZoom:u,maxZoom:d,translateExtent:l,viewport:c,onDraggingChange:e=>C.setState(t=>t.paneDragging===e?t:{paneDragging:e}),onPanZoomStart:(e,t)=>{let{onViewportChangeStart:n,onMoveStart:r}=C.getState();r?.(e,t),n?.(t)},onPanZoom:(e,t)=>{let{onViewportChange:n,onMove:r}=C.getState();r?.(e,t),n?.(t)},onPanZoomEnd:(e,t)=>{let{onViewportChangeEnd:n,onMoveEnd:r}=C.getState();r?.(e,t),n?.(t)}});let{x:e,y:t,zoom:n}=k.current.getViewport();return C.setState({panZoom:k.current,transform:[e,t,n],domNode:w.current.closest(`.react-flow`)}),()=>{k.current?.destroy()}}},[]),(0,_.useEffect)(()=>{k.current?.update({onPaneContextMenu:e,zoomOnScroll:t,zoomOnPinch:n,panOnScroll:r,panOnScrollSpeed:i,panOnScrollMode:a,zoomOnDoubleClick:o,panOnDrag:s,zoomActivationKeyPressed:O,preventScrolling:p,noPanClassName:g,userSelectionActive:T,noWheelClassName:h,lib:E,onTransformChange:A,connectionInProgress:D,selectionOnDrag:S,paneClickDistance:x})},[e,t,n,r,i,a,o,s,O,p,g,T,h,E,A,D,S,x]),(0,b.jsx)(`div`,{className:`react-flow__renderer`,ref:w,style:bl,children:m})}var Cl=e=>({userSelectionActive:e.userSelectionActive,userSelectionRect:e.userSelectionRect});function wl(){let{userSelectionActive:e,userSelectionRect:t}=K(Cl,pc);return e&&t?(0,b.jsx)(`div`,{className:`react-flow__selection react-flow__container`,style:{width:t.width,height:t.height,transform:`translate(${t.x}px, ${t.y}px)`}}):null}var Tl=(e,t)=>n=>{n.target===t.current&&e?.(n)},El=e=>({userSelectionActive:e.userSelectionActive,elementsSelectable:e.elementsSelectable,dragging:e.paneDragging,panBy:e.panBy,autoPanSpeed:e.autoPanSpeed});function Dl({isSelecting:e,selectionKeyPressed:t,selectionMode:n=Sa.Full,panOnDrag:r,autoPanOnSelection:i,paneClickDistance:a,selectionOnDrag:o,onSelectionStart:s,onSelectionEnd:c,onPaneClick:l,onPaneContextMenu:u,onPaneScroll:d,onPaneMouseEnter:f,onPaneMouseMove:p,onPaneMouseLeave:m,children:h}){let g=(0,_.useRef)(0),v=_c(),{userSelectionActive:y,elementsSelectable:S,dragging:C,panBy:w,autoPanSpeed:T}=K(El,pc),E=S&&(e||y),D=(0,_.useRef)(null),O=(0,_.useRef)(),k=(0,_.useRef)(new Set),A=(0,_.useRef)(new Set),j=(0,_.useRef)(!1),M=(0,_.useRef)(!1),ee=(0,_.useRef)({x:0,y:0}),N=(0,_.useRef)(!1),te=e=>{if(M.current||j.current||v.getState().connection.inProgress){M.current=!1,j.current=!1;return}l?.(e),v.getState().resetSelectedElements(),v.setState({nodesSelectionActive:!1})},P=e=>{if(Array.isArray(r)&&r?.includes(2)){e.preventDefault();return}u?.(e)},F=d?e=>d(e):void 0,I=e=>{M.current&&=(e.stopPropagation(),!1)},ne=n=>{let{domNode:r,transform:i}=v.getState();if(O.current=r?.getBoundingClientRect(),!O.current)return;let a=n.target===D.current;if(!a&&n.target.closest(`.nokey`)||!e||!(o&&a||t)||n.button!==0||!n.isPrimary)return;n.target?.setPointerCapture?.(n.pointerId),M.current=!1;let{x:s,y:c}=So(n.nativeEvent,O.current),l=ro({x:s,y:c},i);v.setState({userSelectionRect:{width:0,height:0,startX:l.x,startY:l.y,x:s,y:c}}),a||(n.stopPropagation(),n.preventDefault())};function L(e,t){let{userSelectionRect:r}=v.getState();if(!r)return;let{transform:i,nodeLookup:a,edgeLookup:o,connectionLookup:s,triggerNodeChanges:c,triggerEdgeChanges:l,defaultEdgeOptions:u}=v.getState(),d={x:r.startX,y:r.startY},{x:f,y:p}=io(d,i),m={startX:d.x,startY:d.y,x:e<f?e:f,y:t<p?t:p,width:Math.abs(e-f),height:Math.abs(t-p)},h=k.current,g=A.current;k.current=new Set(Pa(a,m,i,n===Sa.Partial,!0).map(e=>e.id)),A.current=new Set;let _=u?.selectable??!0;for(let e of k.current){let t=s.get(e);if(t)for(let{edgeId:e}of t.values()){let t=o.get(e);t&&(t.selectable??_)&&A.current.add(e)}}po(h,k.current)||c(el(a,k.current,!0)),po(g,A.current)||l(el(o,A.current)),v.setState({userSelectionRect:m,userSelectionActive:!0,nodesSelectionActive:!1})}function R(){if(!i||!O.current)return;let[e,t]=Wa(ee.current,O.current,T);w({x:e,y:t}).then(e=>{if(!M.current||!e){g.current=requestAnimationFrame(R);return}let{x:t,y:n}=ee.current;L(t,n),g.current=requestAnimationFrame(R)})}let z=()=>{cancelAnimationFrame(g.current),g.current=0,N.current=!1};(0,_.useEffect)(()=>()=>z(),[]);let B=e=>{let{userSelectionRect:n,transform:r,resetSelectedElements:i}=v.getState();if(!O.current||!n)return;let{x:o,y:c}=So(e.nativeEvent,O.current);ee.current={x:o,y:c};let l=io({x:n.startX,y:n.startY},r);if(!M.current){let n=t?0:a;if(Math.hypot(o-l.x,c-l.y)<=n)return;i(),s?.(e)}M.current=!0,N.current||=(R(),!0),L(o,c)},re=e=>{if(!E){e.target===D.current&&v.getState().connection.inProgress&&(j.current=!0);return}e.button===0&&(e.target?.releasePointerCapture?.(e.pointerId),!y&&e.target===D.current&&v.getState().userSelectionRect&&te?.(e),v.setState({userSelectionActive:!1,userSelectionRect:null}),M.current&&(c?.(e),v.setState({nodesSelectionActive:k.current.size>0})),z())},ie=e=>{e.target?.releasePointerCapture?.(e.pointerId),z()},ae=r===!0||Array.isArray(r)&&r.includes(0);return(0,b.jsxs)(`div`,{className:x([`react-flow__pane`,{draggable:ae,dragging:C,selection:e}]),onClick:E?void 0:Tl(te,D),onContextMenu:Tl(P,D),onWheel:Tl(F,D),onPointerEnter:E?void 0:f,onPointerMove:E?B:p,onPointerUp:re,onPointerCancel:E?ie:void 0,onPointerDownCapture:E?ne:void 0,onClickCapture:E?I:void 0,onPointerLeave:m,ref:D,style:bl,children:[h,(0,b.jsx)(wl,{})]})}function Ol({id:e,store:t,unselect:n=!1,nodeRef:r}){let{addSelectedNodes:i,unselectNodesAndEdges:a,multiSelectionActive:o,nodeLookup:s,onError:c}=t.getState(),l=s.get(e);if(!l){c?.(`012`,ga.error012(e));return}t.setState({nodesSelectionActive:!1}),l.selected?(n||l.selected&&o)&&(a({nodes:[l],edges:[]}),requestAnimationFrame(()=>r?.current?.blur())):i([e])}function kl({nodeRef:e,disabled:t=!1,noDragClassName:n,handleSelector:r,nodeId:i,isSelectable:a,nodeClickDistance:o}){let s=_c(),[c,l]=(0,_.useState)(!1),u=(0,_.useRef)();return(0,_.useEffect)(()=>{if(!t)return u.current=_s({getStoreItems:()=>s.getState(),onNodeMouseDown:t=>{Ol({id:t,store:s,nodeRef:e})},onDragStart:()=>{l(!0)},onDragStop:()=>{l(!1)}}),()=>{u.current?.destroy(),u.current=void 0}},[t,s,e]),(0,_.useEffect)(()=>{t||!e.current||!u.current||u.current.update({noDragClassName:n,handleSelector:r,domNode:e.current,isSelectable:a,nodeId:i,nodeClickDistance:o})},[n,r,t,a,e,i,o]),c}var Al=e=>t=>t.selected&&(t.draggable||e&&t.draggable===void 0);function jl(){let e=_c();return(0,_.useCallback)(t=>{let{nodeExtent:n,snapToGrid:r,snapGrid:i,nodesDraggable:a,onError:o,updateNodePositions:s,nodeLookup:c,nodeOrigin:l}=e.getState(),u=new Map,d=Al(a),f=r?i[0]:5,p=r?i[1]:5,m=t.direction.x*f*t.factor,h=t.direction.y*p*t.factor;for(let[,e]of c){if(!d(e))continue;let t={x:e.internals.positionAbsolute.x+m,y:e.internals.positionAbsolute.y+h};r&&(t=no(t,i));let{position:a,positionAbsolute:s}=Ra({nodeId:e.id,nextPosition:t,nodeLookup:c,nodeExtent:n,nodeOrigin:l,onError:o});e.position=a,e.internals.positionAbsolute=s,u.set(e.id,e)}s(u)},[])}var Ml=(0,_.createContext)(null),Nl=Ml.Provider;Ml.Consumer;var Pl=()=>(0,_.useContext)(Ml),Fl=e=>({connectOnClick:e.connectOnClick,noPanClassName:e.noPanClassName,rfId:e.rfId}),Il=(0,_.createContext)(null);function Ll({children:e}){let t=K(Fl,pc);return(0,b.jsx)(Il.Provider,{value:t,children:e})}function q(){let e=(0,_.useContext)(Il);if(!e)throw Error(`useHandleConfig must be used within a HandleConfigProvider`);return e}var Rl={connectingFrom:!1,connectingTo:!1,clickConnecting:!1,isPossibleEndHandle:!0,connectionInProcess:!1,clickConnectionInProcess:!1,valid:!1},J=(e,t,n)=>r=>{let{connectionClickStartHandle:i,connectionMode:a,connection:o}=r,{fromHandle:s,toHandle:c,isValid:l}=o;if(!s&&!i)return Rl;let u=c?.nodeId===e&&c?.id===t&&c?.type===n;return{connectingFrom:s?.nodeId===e&&s?.id===t&&s?.type===n,connectingTo:u,clickConnecting:i?.nodeId===e&&i?.id===t&&i?.type===n,isPossibleEndHandle:a===ba.Strict?s?.type!==n:e!==s?.nodeId||t!==s?.id,connectionInProcess:!!s,clickConnectionInProcess:!!i,valid:u&&l}};function Y({type:e=`source`,position:t=U.Top,isValidConnection:n,isConnectable:r=!0,isConnectableStart:i=!0,isConnectableEnd:a=!0,id:o,onConnect:s,children:c,className:l,onMouseDown:u,onTouchStart:d,...f},p){let m=o||null,h=e===`target`,g=_c(),_=Pl(),{connectOnClick:v,noPanClassName:y,rfId:S}=q(),{connectingFrom:C,connectingTo:w,clickConnecting:T,isPossibleEndHandle:E,connectionInProcess:D,clickConnectionInProcess:O,valid:k}=K(J(_,m,e),pc);_||g.getState().onError?.(`010`,ga.error010());let A=e=>{let{defaultEdgeOptions:t,onConnect:n,hasDefaultEdges:r}=g.getState(),i={...t,...e};if(r){let{edges:e,setEdges:t,onError:n}=g.getState();t(il(i,e,{onError:n}))}n?.(i),s?.(i)},j=e=>{if(!_)return;let t=xo(e.nativeEvent);if(i&&(t&&e.button===0||!t)){let t=g.getState();Ds.onPointerDown(e.nativeEvent,{handleDomNode:e.currentTarget,autoPanOnConnect:t.autoPanOnConnect,connectionMode:t.connectionMode,connectionRadius:t.connectionRadius,domNode:t.domNode,nodeLookup:t.nodeLookup,lib:t.lib,isTarget:h,handleId:m,nodeId:_,flowId:t.rfId,panBy:t.panBy,cancelConnection:t.cancelConnection,onConnectStart:t.onConnectStart,onConnectEnd:(...e)=>g.getState().onConnectEnd?.(...e),updateConnection:t.updateConnection,onConnect:A,isValidConnection:n||((...e)=>g.getState().isValidConnection?.(...e)??!0),getTransform:()=>g.getState().transform,getFromHandle:()=>g.getState().connection.fromHandle,autoPanSpeed:t.autoPanSpeed,dragThreshold:t.connectionDragThreshold})}t?u?.(e):d?.(e)};return(0,b.jsx)(`div`,{"data-handleid":m,"data-nodeid":_,"data-handlepos":t,"data-id":`${S}-${_}-${m}-${e}`,className:x([`react-flow__handle`,`react-flow__handle-${t}`,`nodrag`,y,l,{source:!h,target:h,connectable:r,connectablestart:i,connectableend:a,clickconnecting:T,connectingfrom:C,connectingto:w,valid:k,connectionindicator:r&&(!D||E)&&(D||O?a:i)}]),onMouseDown:j,onTouchStart:j,onClick:v?t=>{let{onClickConnectStart:r,onClickConnectEnd:a,connectionClickStartHandle:o,connectionMode:s,isValidConnection:c,lib:l,rfId:u,nodeLookup:d,connection:f}=g.getState();if(!_||!o&&!i)return;if(!o){r?.(t.nativeEvent,{nodeId:_,handleId:m,handleType:e}),g.setState({connectionClickStartHandle:{nodeId:_,type:e,id:m}});return}let p=vo(t.target),h=n||c,{connection:v,isValid:y}=Ds.isValid(t.nativeEvent,{handle:{nodeId:_,id:m,type:e},connectionMode:s,fromNodeId:o.nodeId,fromHandleId:o.id||null,fromType:o.type,isValidConnection:h,flowId:u,doc:p,lib:l,nodeLookup:d});y&&v&&A(v);let b=structuredClone(f);delete b.inProgress,b.toPosition=b.toHandle?b.toHandle.position:null,a?.(t,b),g.setState({connectionClickStartHandle:null})}:void 0,ref:p,...f,children:c})}var X=(0,_.memo)(sl(Y));function zl({data:e,isConnectable:t,sourcePosition:n=U.Bottom}){return(0,b.jsxs)(b.Fragment,{children:[e?.label,(0,b.jsx)(X,{type:`source`,position:n,isConnectable:t})]})}function Bl({data:e,isConnectable:t,targetPosition:n=U.Top,sourcePosition:r=U.Bottom}){return(0,b.jsxs)(b.Fragment,{children:[(0,b.jsx)(X,{type:`target`,position:n,isConnectable:t}),e?.label,(0,b.jsx)(X,{type:`source`,position:r,isConnectable:t})]})}function Vl(){return null}function Hl({data:e,isConnectable:t,targetPosition:n=U.Top}){return(0,b.jsxs)(b.Fragment,{children:[(0,b.jsx)(X,{type:`target`,position:n,isConnectable:t}),e?.label]})}var Ul={ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0}},Wl={input:zl,default:Bl,output:Hl,group:Vl};function Gl(e){return e.internals.handleBounds===void 0?{width:e.width??e.initialWidth??e.style?.width,height:e.height??e.initialHeight??e.style?.height}:{width:e.width??e.style?.width,height:e.height??e.style?.height}}var Kl=e=>{let{width:t,height:n,x:r,y:i}=Na(e.nodeLookup,{filter:e=>!!e.selected});return{width:eo(t)?t:null,height:eo(n)?n:null,userSelectionActive:e.userSelectionActive,transformString:`translate(${e.transform[0]}px,${e.transform[1]}px) scale(${e.transform[2]}) translate(${r}px,${i}px)`}};function ql({onSelectionContextMenu:e,noPanClassName:t,disableKeyboardA11y:n}){let r=_c(),{width:i,height:a,transformString:o,userSelectionActive:s}=K(Kl,pc),c=jl(),l=(0,_.useRef)(null);(0,_.useEffect)(()=>{n||l.current?.focus({preventScroll:!0})},[n]);let u=!s&&i!==null&&a!==null;if(kl({nodeRef:l,disabled:!u}),!u)return null;let d=e?t=>{e(t,r.getState().nodes.filter(e=>e.selected))}:void 0;return(0,b.jsx)(`div`,{className:x([`react-flow__nodesselection`,`react-flow__container`,t]),style:{transform:o},children:(0,b.jsx)(`div`,{ref:l,className:`react-flow__nodesselection-rect`,onContextMenu:d,tabIndex:n?void 0:-1,onKeyDown:n?void 0:e=>{Object.prototype.hasOwnProperty.call(Ul,e.key)&&(e.preventDefault(),c({direction:Ul[e.key],factor:e.shiftKey?4:1}))},style:{width:i,height:a}})})}var Jl=typeof window<`u`?window:void 0,Yl=e=>({nodesSelectionActive:e.nodesSelectionActive,userSelectionActive:e.userSelectionActive});function Xl({children:e,onPaneClick:t,onPaneMouseEnter:n,onPaneMouseMove:r,onPaneMouseLeave:i,onPaneContextMenu:a,onPaneScroll:o,paneClickDistance:s,deleteKeyCode:c,selectionKeyCode:l,selectionOnDrag:u,selectionMode:d,onSelectionStart:f,onSelectionEnd:p,multiSelectionKeyCode:m,panActivationKeyCode:h,zoomActivationKeyCode:g,elementsSelectable:_,zoomOnScroll:v,zoomOnPinch:y,panOnScroll:x,panOnScrollSpeed:S,panOnScrollMode:C,zoomOnDoubleClick:w,panOnDrag:T,autoPanOnSelection:E,defaultViewport:D,translateExtent:O,minZoom:k,maxZoom:A,preventScrolling:j,onSelectionContextMenu:M,noWheelClassName:ee,noPanClassName:N,disableKeyboardA11y:te,onViewportChange:P,isControlledViewport:F}){let{nodesSelectionActive:I,userSelectionActive:ne}=K(Yl,pc),L=Gc(l,{target:Jl}),R=Gc(h,{target:Jl}),z=R||T,B=R||x,re=u&&z!==!0,ie=L||ne||re;return vl({deleteKeyCode:c,multiSelectionKeyCode:m}),(0,b.jsx)(Sl,{onPaneContextMenu:a,elementsSelectable:_,zoomOnScroll:v,zoomOnPinch:y,panOnScroll:B,panOnScrollSpeed:S,panOnScrollMode:C,zoomOnDoubleClick:w,panOnDrag:!L&&z,defaultViewport:D,translateExtent:O,minZoom:k,maxZoom:A,zoomActivationKeyCode:g,preventScrolling:j,noWheelClassName:ee,noPanClassName:N,onViewportChange:P,isControlledViewport:F,paneClickDistance:s,selectionOnDrag:re,children:(0,b.jsxs)(Dl,{onSelectionStart:f,onSelectionEnd:p,onPaneClick:t,onPaneMouseEnter:n,onPaneMouseMove:r,onPaneMouseLeave:i,onPaneContextMenu:a,onPaneScroll:o,panOnDrag:z,autoPanOnSelection:E,isSelecting:!!ie,selectionMode:d,selectionKeyPressed:L,paneClickDistance:s,selectionOnDrag:re,children:[e,I&&(0,b.jsx)(ql,{onSelectionContextMenu:M,noPanClassName:N,disableKeyboardA11y:te})]})})}Xl.displayName=`FlowRenderer`;var Zl=(0,_.memo)(Xl),Ql=e=>t=>e?Pa(t.nodeLookup,{x:0,y:0,width:t.width,height:t.height},t.transform,!0).map(e=>e.id):Array.from(t.nodeLookup.keys());function $l(e){return K((0,_.useCallback)(Ql(e),[e]),pc)}var eu=e=>e.updateNodeInternals;function tu(){let e=K(eu),[t]=(0,_.useState)(()=>typeof ResizeObserver>`u`?null:new ResizeObserver(t=>{let n=new Map;t.forEach(e=>{let t=e.target.getAttribute(`data-id`);n.set(t,{id:t,nodeElement:e.target,force:!0})}),e(n)}));return(0,_.useEffect)(()=>()=>{t?.disconnect()},[t]),t}function nu({node:e,nodeType:t,hasDimensions:n,resizeObserver:r}){let i=_c(),a=(0,_.useRef)(null),o=(0,_.useRef)(null),s=(0,_.useRef)(e.sourcePosition),c=(0,_.useRef)(e.targetPosition),l=(0,_.useRef)(t),u=n&&!!e.internals.handleBounds;return(0,_.useEffect)(()=>{a.current&&!e.hidden&&(!u||o.current!==a.current)&&(o.current&&r?.unobserve(o.current),r?.observe(a.current),o.current=a.current)},[u,e.hidden]),(0,_.useEffect)(()=>()=>{o.current&&=(r?.unobserve(o.current),null)},[]),(0,_.useEffect)(()=>{if(a.current){let n=l.current!==t,r=s.current!==e.sourcePosition,o=c.current!==e.targetPosition;(n||r||o)&&(l.current=t,s.current=e.sourcePosition,c.current=e.targetPosition,i.getState().updateNodeInternals(new Map([[e.id,{id:e.id,nodeElement:a.current,force:!0}]])))}},[e.id,t,e.sourcePosition,e.targetPosition]),a}function ru({id:e,onClick:t,onMouseEnter:n,onMouseMove:r,onMouseLeave:i,onContextMenu:a,onDoubleClick:o,nodesDraggable:s,elementsSelectable:c,nodesConnectable:l,nodesFocusable:u,resizeObserver:d,noDragClassName:f,noPanClassName:p,disableKeyboardA11y:m,rfId:h,nodeTypes:g,nodeClickDistance:_,onError:v}){let{node:y,internals:S,isParent:C}=K(t=>{let n=t.nodeLookup.get(e),r=t.parentLookup.has(e);return{node:n,internals:n.internals,isParent:r}},pc),w=y.type||`default`,T=g?.[w]||Wl[w];T===void 0&&(v?.(`003`,ga.error003(w)),w=`default`,T=g?.default||Wl.default);let E=!!(y.draggable||s&&y.draggable===void 0),D=!!(y.selectable||c&&y.selectable===void 0),O=!!(y.connectable||l&&y.connectable===void 0),k=!!(y.focusable||u&&y.focusable===void 0),A=_c(),j=uo(y),M=nu({node:y,nodeType:w,hasDimensions:j,resizeObserver:d}),ee=kl({nodeRef:M,disabled:y.hidden||!E,noDragClassName:f,handleSelector:y.dragHandle,nodeId:e,isSelectable:D,nodeClickDistance:_}),N=jl();if(y.hidden)return null;let te=lo(y),P=Gl(y),F=D||E||t||n||r||i,I=n?e=>n(e,{...S.userNode}):void 0,ne=r?e=>r(e,{...S.userNode}):void 0,L=i?e=>i(e,{...S.userNode}):void 0,R=a?e=>a(e,{...S.userNode}):void 0,z=o?e=>o(e,{...S.userNode}):void 0,B=n=>{let{selectNodesOnDrag:r,nodeDragThreshold:i}=A.getState();D&&(!r||!E||i>0)&&Ol({id:e,store:A,nodeRef:M}),t&&t(n,{...S.userNode})},re=t=>{if(!(bo(t.nativeEvent)||m)){if(va.includes(t.key)&&D){let n=t.key===`Escape`;Ol({id:e,store:A,unselect:n,nodeRef:M})}else if(E&&y.selected&&Object.prototype.hasOwnProperty.call(Ul,t.key)){t.preventDefault();let{ariaLabelConfig:e}=A.getState();A.setState({ariaLiveMessage:e[`node.a11yDescription.ariaLiveMessage`]({direction:t.key.replace(`Arrow`,``).toLowerCase(),x:~~S.positionAbsolute.x,y:~~S.positionAbsolute.y})}),N({direction:Ul[t.key],factor:t.shiftKey?4:1})}}},ie=()=>{if(m||!M.current?.matches(`:focus-visible`))return;let{transform:t,width:n,height:r,autoPanOnNodeFocus:i,setCenter:a}=A.getState();i&&(Pa(new Map([[e,y]]),{x:0,y:0,width:n,height:r},t,!0).length>0||a(y.position.x+te.width/2,y.position.y+te.height/2,{zoom:t[2]}))};return(0,b.jsx)(`div`,{className:x([`react-flow__node`,`react-flow__node-${w}`,{[p]:E},y.className,{selected:y.selected,selectable:D,parent:C,draggable:E,dragging:ee}]),ref:M,style:{zIndex:S.z,transform:`translate(${S.positionAbsolute.x}px,${S.positionAbsolute.y}px)`,pointerEvents:F?`all`:`none`,visibility:j?`visible`:`hidden`,...y.style,...P},"data-id":e,"data-testid":`rf__node-${e}`,onMouseEnter:I,onMouseMove:ne,onMouseLeave:L,onContextMenu:R,onClick:B,onDoubleClick:z,onKeyDown:k?re:void 0,tabIndex:k?0:void 0,onFocus:k?ie:void 0,role:y.ariaRole??(k?`group`:void 0),"aria-roledescription":`node`,"aria-describedby":m?void 0:`${bc}-${h}`,"aria-label":y.ariaLabel,...y.domAttributes,children:(0,b.jsx)(Nl,{value:e,children:(0,b.jsx)(T,{id:e,data:y.data,type:w,positionAbsoluteX:S.positionAbsolute.x,positionAbsoluteY:S.positionAbsolute.y,selected:y.selected??!1,selectable:D,draggable:E,deletable:y.deletable??!0,isConnectable:O,sourcePosition:y.sourcePosition,targetPosition:y.targetPosition,dragging:ee,dragHandle:y.dragHandle,zIndex:S.z,parentId:y.parentId,...te})})})}var iu=(0,_.memo)(ru),au=e=>({nodesConnectable:e.nodesConnectable,nodesFocusable:e.nodesFocusable,elementsSelectable:e.elementsSelectable,onError:e.onError});function ou(e){let{nodesConnectable:t,nodesFocusable:n,elementsSelectable:r,onError:i}=K(au,pc),a=$l(e.onlyRenderVisibleElements),o=tu();return(0,b.jsx)(`div`,{className:`react-flow__nodes`,style:bl,children:a.map(a=>(0,b.jsx)(iu,{id:a,nodeTypes:e.nodeTypes,nodeExtent:e.nodeExtent,onClick:e.onNodeClick,onMouseEnter:e.onNodeMouseEnter,onMouseMove:e.onNodeMouseMove,onMouseLeave:e.onNodeMouseLeave,onContextMenu:e.onNodeContextMenu,onDoubleClick:e.onNodeDoubleClick,noDragClassName:e.noDragClassName,noPanClassName:e.noPanClassName,rfId:e.rfId,disableKeyboardA11y:e.disableKeyboardA11y,resizeObserver:o,nodesDraggable:e.nodesDraggable??!0,nodesConnectable:t,nodesFocusable:n,elementsSelectable:r,nodeClickDistance:e.nodeClickDistance,onError:i},a))})}ou.displayName=`NodeRenderer`;var su=(0,_.memo)(ou);function cu(e){return K((0,_.useCallback)(t=>{if(!e)return t.edges.map(e=>e.id);let n=[];if(t.width&&t.height)for(let e of t.edges){let r=t.nodeLookup.get(e.source),i=t.nodeLookup.get(e.target);r&&i&&Ao({sourceNode:r,targetNode:i,width:t.width,height:t.height,transform:t.transform})&&n.push(e.id)}return n},[e]),pc)}var lu=({color:e=`none`,strokeWidth:t=1})=>{let n={strokeWidth:t,...e&&{stroke:e}};return(0,b.jsx)(`polyline`,{className:`arrow`,style:n,strokeLinecap:`round`,fill:`none`,strokeLinejoin:`round`,points:`-5,-4 0,0 -5,4`})},uu=({color:e=`none`,strokeWidth:t=1})=>{let n={strokeWidth:t,...e&&{stroke:e,fill:e}};return(0,b.jsx)(`polyline`,{className:`arrowclosed`,style:n,strokeLinecap:`round`,strokeLinejoin:`round`,points:`-5,-4 0,0 -5,4 -5,-4`})},du={[Ta.Arrow]:lu,[Ta.ArrowClosed]:uu};function fu(e){let t=_c();return(0,_.useMemo)(()=>Object.prototype.hasOwnProperty.call(du,e)?du[e]:(t.getState().onError?.(`009`,ga.error009(e)),null),[e])}var pu=({id:e,type:t,color:n,width:r=12.5,height:i=12.5,markerUnits:a=`strokeWidth`,strokeWidth:o,orient:s=`auto-start-reverse`})=>{let c=fu(t);return c?(0,b.jsx)(`marker`,{className:`react-flow__arrowhead`,id:e,markerWidth:`${r}`,markerHeight:`${i}`,viewBox:`-10 -10 20 20`,markerUnits:a,orient:s,refX:`0`,refY:`0`,children:(0,b.jsx)(c,{color:n,strokeWidth:o})}):null},mu=({defaultColor:e,rfId:t})=>{let n=K(e=>e.edges),r=K(e=>e.defaultEdgeOptions),i=(0,_.useMemo)(()=>qo(n,{id:t,defaultColor:e,defaultMarkerStart:r?.markerStart,defaultMarkerEnd:r?.markerEnd}),[n,r,t,e]);return i.length?(0,b.jsx)(`svg`,{className:`react-flow__marker`,"aria-hidden":`true`,children:(0,b.jsx)(`defs`,{children:i.map(e=>(0,b.jsx)(pu,{id:e.id,type:e.type,color:e.color,width:e.width,height:e.height,markerUnits:e.markerUnits,strokeWidth:e.strokeWidth,orient:e.orient},e.id))})}):null};mu.displayName=`MarkerDefinitions`;var hu=(0,_.memo)(mu);function gu({x:e,y:t,label:n,labelStyle:r,labelShowBg:i=!0,labelBgStyle:a,labelBgPadding:o=[2,4],labelBgBorderRadius:s=2,children:c,className:l,...u}){let[d,f]=(0,_.useState)({x:1,y:0,width:0,height:0}),p=x([`react-flow__edge-textwrapper`,l]),m=(0,_.useRef)(null);return(0,_.useEffect)(()=>{if(m.current){let e=m.current.getBBox();f({x:e.x,y:e.y,width:e.width,height:e.height})}},[n]),n?(0,b.jsxs)(`g`,{transform:`translate(${e-d.width/2} ${t-d.height/2})`,className:p,visibility:d.width?`visible`:`hidden`,...u,children:[i&&(0,b.jsx)(`rect`,{width:d.width+2*o[0],x:-o[0],y:-o[1],height:d.height+2*o[1],className:`react-flow__edge-textbg`,style:a,rx:s,ry:s}),(0,b.jsx)(`text`,{className:`react-flow__edge-text`,y:d.height/2,dy:`0.3em`,ref:m,style:r,children:n}),c]}):null}gu.displayName=`EdgeText`;var _u=(0,_.memo)(gu);function vu({path:e,labelX:t,labelY:n,label:r,labelStyle:i,labelShowBg:a,labelBgStyle:o,labelBgPadding:s,labelBgBorderRadius:c,interactionWidth:l=20,...u}){return(0,b.jsxs)(b.Fragment,{children:[(0,b.jsx)(`path`,{...u,d:e,fill:`none`,className:x([`react-flow__edge-path`,u.className])}),l?(0,b.jsx)(`path`,{d:e,fill:`none`,strokeOpacity:0,strokeWidth:l,className:`react-flow__edge-interaction`}):null,r&&eo(t)&&eo(n)?(0,b.jsx)(_u,{x:t,y:n,label:r,labelStyle:i,labelShowBg:a,labelBgStyle:o,labelBgPadding:s,labelBgBorderRadius:c}):null]})}function yu({pos:e,x1:t,y1:n,x2:r,y2:i}){return e===U.Left||e===U.Right?[.5*(t+r),n]:[t,.5*(n+i)]}function bu({sourceX:e,sourceY:t,sourcePosition:n=U.Bottom,targetX:r,targetY:i,targetPosition:a=U.Top}){let[o,s]=yu({pos:n,x1:e,y1:t,x2:r,y2:i}),[c,l]=yu({pos:a,x1:r,y1:i,x2:e,y2:t}),[u,d,f,p]=wo({sourceX:e,sourceY:t,targetX:r,targetY:i,sourceControlX:o,sourceControlY:s,targetControlX:c,targetControlY:l});return[`M${e},${t} C${o},${s} ${c},${l} ${r},${i}`,u,d,f,p]}function xu(e){return(0,_.memo)(({id:t,sourceX:n,sourceY:r,targetX:i,targetY:a,sourcePosition:o,targetPosition:s,label:c,labelStyle:l,labelShowBg:u,labelBgStyle:d,labelBgPadding:f,labelBgBorderRadius:p,style:m,markerEnd:h,markerStart:g,interactionWidth:_})=>{let[v,y,x]=bu({sourceX:n,sourceY:r,sourcePosition:o,targetX:i,targetY:a,targetPosition:s}),S=e.isInternal?void 0:t;return(0,b.jsx)(vu,{id:S,path:v,labelX:y,labelY:x,label:c,labelStyle:l,labelShowBg:u,labelBgStyle:d,labelBgPadding:f,labelBgBorderRadius:p,style:m,markerEnd:h,markerStart:g,interactionWidth:_})})}var Su=xu({isInternal:!1}),Cu=xu({isInternal:!0});Su.displayName=`SimpleBezierEdge`,Cu.displayName=`SimpleBezierEdgeInternal`;function wu(e){return(0,_.memo)(({id:t,sourceX:n,sourceY:r,targetX:i,targetY:a,label:o,labelStyle:s,labelShowBg:c,labelBgStyle:l,labelBgPadding:u,labelBgBorderRadius:d,style:f,sourcePosition:p=U.Bottom,targetPosition:m=U.Top,markerEnd:h,markerStart:g,pathOptions:_,interactionWidth:v})=>{let[y,x,S]=Bo({sourceX:n,sourceY:r,sourcePosition:p,targetX:i,targetY:a,targetPosition:m,borderRadius:_?.borderRadius,offset:_?.offset,stepPosition:_?.stepPosition}),C=e.isInternal?void 0:t;return(0,b.jsx)(vu,{id:C,path:y,labelX:x,labelY:S,label:o,labelStyle:s,labelShowBg:c,labelBgStyle:l,labelBgPadding:u,labelBgBorderRadius:d,style:f,markerEnd:h,markerStart:g,interactionWidth:v})})}var Tu=wu({isInternal:!1}),Eu=wu({isInternal:!0});Tu.displayName=`SmoothStepEdge`,Eu.displayName=`SmoothStepEdgeInternal`;function Du(e){return(0,_.memo)(({id:t,...n})=>{let r=e.isInternal?void 0:t;return(0,b.jsx)(Tu,{...n,id:r,pathOptions:(0,_.useMemo)(()=>({borderRadius:0,offset:n.pathOptions?.offset}),[n.pathOptions?.offset])})})}var Ou=Du({isInternal:!1}),ku=Du({isInternal:!0});Ou.displayName=`StepEdge`,ku.displayName=`StepEdgeInternal`;function Au(e){return(0,_.memo)(({id:t,sourceX:n,sourceY:r,targetX:i,targetY:a,label:o,labelStyle:s,labelShowBg:c,labelBgStyle:l,labelBgPadding:u,labelBgBorderRadius:d,style:f,markerEnd:p,markerStart:m,interactionWidth:h})=>{let[g,_,v]=Po({sourceX:n,sourceY:r,targetX:i,targetY:a}),y=e.isInternal?void 0:t;return(0,b.jsx)(vu,{id:y,path:g,labelX:_,labelY:v,label:o,labelStyle:s,labelShowBg:c,labelBgStyle:l,labelBgPadding:u,labelBgBorderRadius:d,style:f,markerEnd:p,markerStart:m,interactionWidth:h})})}var ju=Au({isInternal:!1}),Mu=Au({isInternal:!0});ju.displayName=`StraightEdge`,Mu.displayName=`StraightEdgeInternal`;function Nu(e){return(0,_.memo)(({id:t,sourceX:n,sourceY:r,targetX:i,targetY:a,sourcePosition:o=U.Bottom,targetPosition:s=U.Top,label:c,labelStyle:l,labelShowBg:u,labelBgStyle:d,labelBgPadding:f,labelBgBorderRadius:p,style:m,markerEnd:h,markerStart:g,pathOptions:_,interactionWidth:v})=>{let[y,x,S]=Do({sourceX:n,sourceY:r,sourcePosition:o,targetX:i,targetY:a,targetPosition:s,curvature:_?.curvature}),C=e.isInternal?void 0:t;return(0,b.jsx)(vu,{id:C,path:y,labelX:x,labelY:S,label:c,labelStyle:l,labelShowBg:u,labelBgStyle:d,labelBgPadding:f,labelBgBorderRadius:p,style:m,markerEnd:h,markerStart:g,interactionWidth:v})})}var Pu=Nu({isInternal:!1}),Fu=Nu({isInternal:!0});Pu.displayName=`BezierEdge`,Fu.displayName=`BezierEdgeInternal`;var Iu={default:Fu,straight:Mu,step:ku,smoothstep:Eu,simplebezier:Cu},Lu={sourceX:null,sourceY:null,targetX:null,targetY:null,sourcePosition:null,targetPosition:null,zIndex:void 0},Ru=(e,t,n)=>n===U.Left?e-t:n===U.Right?e+t:e,zu=(e,t,n)=>n===U.Top?e-t:n===U.Bottom?e+t:e,Bu=`react-flow__edgeupdater`;function Vu({position:e,centerX:t,centerY:n,radius:r=10,onMouseDown:i,onMouseEnter:a,onMouseOut:o,type:s}){return(0,b.jsx)(`circle`,{onMouseDown:i,onMouseEnter:a,onMouseOut:o,className:x([Bu,`${Bu}-${s}`]),cx:Ru(t,r,e),cy:zu(n,r,e),r,stroke:`transparent`,fill:`transparent`})}function Hu({isReconnectable:e,reconnectRadius:t,edge:n,sourceX:r,sourceY:i,targetX:a,targetY:o,sourcePosition:s,targetPosition:c,onReconnect:l,onReconnectStart:u,onReconnectEnd:d,setReconnecting:f,setUpdateHover:p}){let m=_c(),h=(e,t)=>{if(e.button!==0)return;let{autoPanOnConnect:r,domNode:i,connectionMode:a,connectionRadius:o,lib:s,onConnectStart:c,cancelConnection:p,nodeLookup:h,rfId:g,panBy:_,updateConnection:v}=m.getState(),y=t.type===`target`;Ds.onPointerDown(e.nativeEvent,{autoPanOnConnect:r,connectionMode:a,connectionRadius:o,domNode:i,handleId:t.id,nodeId:t.nodeId,nodeLookup:h,isTarget:y,edgeUpdaterType:t.type,lib:s,flowId:g,cancelConnection:p,panBy:_,isValidConnection:(...e)=>m.getState().isValidConnection?.(...e)??!0,onConnect:e=>l?.(n,e),onConnectStart:(r,i)=>{f(!0),u?.(e,n,t.type),c?.(r,i)},onConnectEnd:(...e)=>m.getState().onConnectEnd?.(...e),onReconnectEnd:(e,r)=>{f(!1),d?.(e,n,t.type,r)},updateConnection:v,getTransform:()=>m.getState().transform,getFromHandle:()=>m.getState().connection.fromHandle,dragThreshold:m.getState().connectionDragThreshold,handleDomNode:e.currentTarget})},g=e=>h(e,{nodeId:n.target,id:n.targetHandle??null,type:`target`}),_=e=>h(e,{nodeId:n.source,id:n.sourceHandle??null,type:`source`}),v=()=>p(!0),y=()=>p(!1);return(0,b.jsxs)(b.Fragment,{children:[(e===!0||e===`source`)&&(0,b.jsx)(Vu,{position:s,centerX:r,centerY:i,radius:t,onMouseDown:g,onMouseEnter:v,onMouseOut:y,type:`source`}),(e===!0||e===`target`)&&(0,b.jsx)(Vu,{position:c,centerX:a,centerY:o,radius:t,onMouseDown:_,onMouseEnter:v,onMouseOut:y,type:`target`})]})}function Uu({id:e,edgesFocusable:t,edgesReconnectable:n,elementsSelectable:r,onClick:i,onDoubleClick:a,onContextMenu:o,onMouseEnter:s,onMouseMove:c,onMouseLeave:l,reconnectRadius:u,onReconnect:d,onReconnectStart:f,onReconnectEnd:p,rfId:m,edgeTypes:h,noPanClassName:g,onError:v,disableKeyboardA11y:y}){let S=K(t=>t.edgeLookup.get(e)),C=K(e=>e.defaultEdgeOptions);S=C?{...C,...S}:S;let w=S.type||`default`,T=h?.[w]||Iu[w];T===void 0&&(v?.(`011`,ga.error011(w)),w=`default`,T=h?.default||Iu.default);let E=!!(S.focusable||t&&S.focusable===void 0),D=d!==void 0&&(S.reconnectable||n&&S.reconnectable===void 0),O=!!(S.selectable||r&&S.selectable===void 0),k=(0,_.useRef)(null),[A,j]=(0,_.useState)(!1),[M,ee]=(0,_.useState)(!1),N=_c(),{zIndex:te=S.zIndex,sourceX:P,sourceY:F,targetX:I,targetY:ne,sourcePosition:L,targetPosition:R}=K((0,_.useCallback)(t=>{let n=t.nodeLookup.get(S.source),r=t.nodeLookup.get(S.target);if(!n||!r)return Lu;let i=Ho({id:e,sourceNode:n,targetNode:r,sourceHandle:S.sourceHandle||null,targetHandle:S.targetHandle||null,connectionMode:t.connectionMode,onError:v}),a=ko({selected:S.selected,zIndex:S.zIndex,sourceNode:n,targetNode:r,elevateOnSelect:t.elevateEdgesOnSelect,zIndexMode:t.zIndexMode});return{...i||Lu,zIndex:a}},[S.source,S.target,S.sourceHandle,S.targetHandle,S.selected,S.zIndex]),pc),z=(0,_.useMemo)(()=>S.markerStart?`url('#${Ko(S.markerStart,m)}')`:void 0,[S.markerStart,m]),B=(0,_.useMemo)(()=>S.markerEnd?`url('#${Ko(S.markerEnd,m)}')`:void 0,[S.markerEnd,m]);if(S.hidden||P===null||F===null||I===null||ne===null)return null;let re=t=>{let{addSelectedEdges:n,unselectNodesAndEdges:r,multiSelectionActive:a}=N.getState();O&&(N.setState({nodesSelectionActive:!1}),S.selected&&a?(r({nodes:[],edges:[S]}),k.current?.blur()):n([e])),i&&i(t,S)},ie=a?e=>{a(e,{...S})}:void 0,ae=o?e=>{o(e,{...S})}:void 0,oe=s?e=>{s(e,{...S})}:void 0,se=c?e=>{c(e,{...S})}:void 0,ce=l?e=>{l(e,{...S})}:void 0;return(0,b.jsx)(`svg`,{style:{zIndex:te},children:(0,b.jsxs)(`g`,{className:x([`react-flow__edge`,`react-flow__edge-${w}`,S.className,g,{selected:S.selected,animated:S.animated,inactive:!O&&!i,updating:A,selectable:O}]),onClick:re,onDoubleClick:ie,onContextMenu:ae,onMouseEnter:oe,onMouseMove:se,onMouseLeave:ce,onKeyDown:E?t=>{if(!y&&va.includes(t.key)&&O){let{unselectNodesAndEdges:n,addSelectedEdges:r}=N.getState();t.key===`Escape`?(k.current?.blur(),n({edges:[S]})):r([e])}}:void 0,tabIndex:E?0:void 0,role:S.ariaRole??(E?`group`:`img`),"aria-roledescription":`edge`,"data-id":e,"data-testid":`rf__edge-${e}`,"aria-label":S.ariaLabel===null?void 0:S.ariaLabel||`Edge from ${S.source} to ${S.target}`,"aria-describedby":E?`${xc}-${m}`:void 0,ref:k,...S.domAttributes,children:[!M&&(0,b.jsx)(T,{id:e,source:S.source,target:S.target,type:S.type,selected:S.selected,animated:S.animated,selectable:O,deletable:S.deletable??!0,label:S.label,labelStyle:S.labelStyle,labelShowBg:S.labelShowBg,labelBgStyle:S.labelBgStyle,labelBgPadding:S.labelBgPadding,labelBgBorderRadius:S.labelBgBorderRadius,sourceX:P,sourceY:F,targetX:I,targetY:ne,sourcePosition:L,targetPosition:R,data:S.data,style:S.style,sourceHandleId:S.sourceHandle,targetHandleId:S.targetHandle,markerStart:z,markerEnd:B,pathOptions:`pathOptions`in S?S.pathOptions:void 0,interactionWidth:S.interactionWidth}),D&&(0,b.jsx)(Hu,{edge:S,isReconnectable:D,reconnectRadius:u,onReconnect:d,onReconnectStart:f,onReconnectEnd:p,sourceX:P,sourceY:F,targetX:I,targetY:ne,sourcePosition:L,targetPosition:R,setUpdateHover:j,setReconnecting:ee})]})})}var Wu=(0,_.memo)(Uu),Gu=e=>({edgesFocusable:e.edgesFocusable,edgesReconnectable:e.edgesReconnectable,elementsSelectable:e.elementsSelectable,connectionMode:e.connectionMode,onError:e.onError});function Ku({defaultMarkerColor:e,onlyRenderVisibleElements:t,rfId:n,edgeTypes:r,noPanClassName:i,onReconnect:a,onEdgeContextMenu:o,onEdgeMouseEnter:s,onEdgeMouseMove:c,onEdgeMouseLeave:l,onEdgeClick:u,reconnectRadius:d,onEdgeDoubleClick:f,onReconnectStart:p,onReconnectEnd:m,disableKeyboardA11y:h}){let{edgesFocusable:g,edgesReconnectable:_,elementsSelectable:v,onError:y}=K(Gu,pc),x=cu(t);return(0,b.jsxs)(`div`,{className:`react-flow__edges`,children:[(0,b.jsx)(hu,{defaultColor:e,rfId:n}),x.map(e=>(0,b.jsx)(Wu,{id:e,edgesFocusable:g,edgesReconnectable:_,elementsSelectable:v,noPanClassName:i,onReconnect:a,onContextMenu:o,onMouseEnter:s,onMouseMove:c,onMouseLeave:l,onClick:u,reconnectRadius:d,onDoubleClick:f,onReconnectStart:p,onReconnectEnd:m,rfId:n,onError:y,edgeTypes:r,disableKeyboardA11y:h},e))]})}Ku.displayName=`EdgeRenderer`;var qu=(0,_.memo)(Ku),Ju=e=>`translate(${e[0]}px,${e[1]}px) scale(${e[2]})`;function Yu({children:e}){let t=_c(),n=(0,_.useRef)(null),[r]=(0,_.useState)(()=>t.getState().transform);return cl(()=>{let e=null,r=()=>{let r=t.getState().transform;e&&r[0]===e[0]&&r[1]===e[1]&&r[2]===e[2]||(e=r,n.current&&(n.current.style.transform=Ju(r)))};return r(),t.subscribe(r)},[t]),(0,b.jsx)(`div`,{ref:n,className:`react-flow__viewport xyflow__viewport react-flow__container`,style:{transform:Ju(r)},children:e})}function Xu(e){let t=hl(),n=(0,_.useRef)(!1);(0,_.useEffect)(()=>{!n.current&&t.viewportInitialized&&e&&(setTimeout(()=>e(t),1),n.current=!0)},[e,t.viewportInitialized])}var Zu=e=>e.panZoom?.syncViewport;function Qu(e){let t=K(Zu),n=_c();return(0,_.useEffect)(()=>{e&&(t?.(e),n.setState({transform:[e.x,e.y,e.zoom]}))},[e,t]),null}function $u(e){return e.connection.inProgress?{...e.connection,to:ro(e.connection.to,e.transform)}:{...e.connection}}function ed(e){return e?t=>e($u(t)):$u}function td(e){return K(ed(e),pc)}var nd=e=>({nodesConnectable:e.nodesConnectable,isValid:e.connection.isValid,inProgress:e.connection.inProgress,width:e.width,height:e.height});function rd({containerStyle:e,style:t,type:n,component:r}){let{nodesConnectable:i,width:a,height:o,isValid:s,inProgress:c}=K(nd,pc);return a&&i&&c?(0,b.jsx)(`svg`,{style:e,width:a,height:o,className:`react-flow__connectionline react-flow__container`,children:(0,b.jsx)(`g`,{className:x([`react-flow__connection`,Da(s)]),children:(0,b.jsx)(id,{style:t,type:n,CustomComponent:r,isValid:s})})}):null}var id=({style:e,type:t=wa.Bezier,CustomComponent:n,isValid:r})=>{let{inProgress:i,from:a,fromNode:o,fromHandle:s,fromPosition:c,to:l,toNode:u,toHandle:d,toPosition:f,pointer:p}=td();if(!i)return;if(n)return(0,b.jsx)(n,{connectionLineType:t,connectionLineStyle:e,fromNode:o,fromHandle:s,fromX:a.x,fromY:a.y,toX:l.x,toY:l.y,fromPosition:c,toPosition:f,connectionStatus:Da(r),toNode:u,toHandle:d,pointer:p});let m=``,h={sourceX:a.x,sourceY:a.y,sourcePosition:c,targetX:l.x,targetY:l.y,targetPosition:f};switch(t){case wa.Bezier:[m]=Do(h);break;case wa.SimpleBezier:[m]=bu(h);break;case wa.Step:[m]=Bo({...h,borderRadius:0});break;case wa.SmoothStep:[m]=Bo(h);break;default:[m]=Po(h)}return(0,b.jsx)(`path`,{d:m,fill:`none`,className:`react-flow__connection-path`,style:e})};id.displayName=`ConnectionLine`;var ad={};function od(e=ad){(0,_.useRef)(e),_c(),(0,_.useEffect)(()=>{},[e])}function sd(){_c(),(0,_.useRef)(!1),(0,_.useEffect)(()=>{},[])}function cd({nodeTypes:e,edgeTypes:t,onInit:n,onNodeClick:r,onEdgeClick:i,onNodeDoubleClick:a,onEdgeDoubleClick:o,onNodeMouseEnter:s,onNodeMouseMove:c,onNodeMouseLeave:l,onNodeContextMenu:u,onSelectionContextMenu:d,onSelectionStart:f,onSelectionEnd:p,connectionLineType:m,connectionLineStyle:h,connectionLineComponent:g,connectionLineContainerStyle:_,selectionKeyCode:v,selectionOnDrag:y,selectionMode:x,multiSelectionKeyCode:S,panActivationKeyCode:C,zoomActivationKeyCode:w,deleteKeyCode:T,onlyRenderVisibleElements:E,elementsSelectable:D,defaultViewport:O,translateExtent:k,minZoom:A,maxZoom:j,preventScrolling:M,defaultMarkerColor:ee,zoomOnScroll:N,zoomOnPinch:te,panOnScroll:P,panOnScrollSpeed:F,panOnScrollMode:I,zoomOnDoubleClick:ne,panOnDrag:L,autoPanOnSelection:R,onPaneClick:z,onPaneMouseEnter:B,onPaneMouseMove:re,onPaneMouseLeave:ie,onPaneScroll:ae,onPaneContextMenu:oe,paneClickDistance:se,nodeClickDistance:ce,onEdgeContextMenu:le,onEdgeMouseEnter:ue,onEdgeMouseMove:de,onEdgeMouseLeave:fe,reconnectRadius:pe,onReconnect:me,onReconnectStart:he,onReconnectEnd:ge,noDragClassName:_e,noWheelClassName:ve,noPanClassName:ye,disableKeyboardA11y:be,nodeExtent:xe,rfId:Se,viewport:Ce,onViewportChange:we,nodesDraggable:Te}){return od(e),od(t),sd(),Xu(n),Qu(Ce),(0,b.jsx)(Zl,{onPaneClick:z,onPaneMouseEnter:B,onPaneMouseMove:re,onPaneMouseLeave:ie,onPaneContextMenu:oe,onPaneScroll:ae,paneClickDistance:se,deleteKeyCode:T,selectionKeyCode:v,selectionOnDrag:y,selectionMode:x,onSelectionStart:f,onSelectionEnd:p,multiSelectionKeyCode:S,panActivationKeyCode:C,zoomActivationKeyCode:w,elementsSelectable:D,zoomOnScroll:N,zoomOnPinch:te,zoomOnDoubleClick:ne,panOnScroll:P,panOnScrollSpeed:F,panOnScrollMode:I,panOnDrag:L,autoPanOnSelection:R,defaultViewport:O,translateExtent:k,minZoom:A,maxZoom:j,onSelectionContextMenu:d,preventScrolling:M,noDragClassName:_e,noWheelClassName:ve,noPanClassName:ye,disableKeyboardA11y:be,onViewportChange:we,isControlledViewport:!!Ce,children:(0,b.jsxs)(Yu,{children:[(0,b.jsx)(qu,{edgeTypes:t,onEdgeClick:i,onEdgeDoubleClick:o,onReconnect:me,onReconnectStart:he,onReconnectEnd:ge,onlyRenderVisibleElements:E,onEdgeContextMenu:le,onEdgeMouseEnter:ue,onEdgeMouseMove:de,onEdgeMouseLeave:fe,reconnectRadius:pe,defaultMarkerColor:ee,noPanClassName:ye,disableKeyboardA11y:be,rfId:Se}),(0,b.jsx)(rd,{style:h,type:m,component:g,containerStyle:_}),(0,b.jsx)(`div`,{className:`react-flow__edgelabel-renderer`}),(0,b.jsx)(su,{nodeTypes:e,onNodeClick:r,onNodeDoubleClick:a,onNodeMouseEnter:s,onNodeMouseMove:c,onNodeMouseLeave:l,onNodeContextMenu:u,nodeClickDistance:ce,onlyRenderVisibleElements:E,noPanClassName:ye,noDragClassName:_e,disableKeyboardA11y:be,nodeExtent:xe,rfId:Se,nodesDraggable:Te}),(0,b.jsx)(`div`,{className:`react-flow__viewport-portal`})]})})}cd.displayName=`GraphView`;var ld=(0,_.memo)(cd),ud=to(`React Flow`,`https://reactflow.dev/`),dd=({nodes:e,edges:t,defaultNodes:n,defaultEdges:r,width:i,height:a,fitView:o,fitViewOptions:s,minZoom:c=.5,maxZoom:l=2,nodeOrigin:u,nodeExtent:d,zIndexMode:f=`basic`}={})=>{let p=new Map,m=new Map,h=new Map,g=new Map,_=r??t??[],v=n??e??[],y=u??[0,0],b=d??_a;ds(h,g,_);let{nodesInitialized:x}=ns(v,p,m,{nodeOrigin:y,nodeExtent:b,zIndexMode:f}),S=[0,0,1];if(o&&i&&a){let{x:e,y:t,zoom:n}=co(Na(p,{filter:e=>!!((e.width||e.initialWidth)&&(e.height||e.initialHeight))}),i,a,c,l,s?.padding??.1);S=[e,t,n]}return{rfId:`1`,width:i??0,height:a??0,transform:S,nodes:v,nodesInitialized:x,nodeLookup:p,parentLookup:m,edges:_,edgeLookup:g,connectionLookup:h,onNodesChange:null,onEdgesChange:null,hasDefaultNodes:n!==void 0,hasDefaultEdges:r!==void 0,panZoom:null,minZoom:c,maxZoom:l,translateExtent:_a,nodeExtent:b,nodesSelectionActive:!1,userSelectionActive:!1,userSelectionRect:null,connectionMode:ba.Strict,domNode:null,paneDragging:!1,noPanClassName:`nopan`,nodeOrigin:y,nodeDragThreshold:1,connectionDragThreshold:1,snapGrid:[15,15],snapToGrid:!1,nodesDraggable:!0,nodesConnectable:!0,nodesFocusable:!0,edgesFocusable:!0,edgesReconnectable:!0,elementsSelectable:!0,elevateNodesOnSelect:!0,elevateEdgesOnSelect:!0,selectNodesOnDrag:!0,multiSelectionActive:!1,fitViewQueued:o??!1,fitViewOptions:s,fitViewResolver:null,connection:{...Ca},connectionClickStartHandle:null,connectOnClick:!0,ariaLiveMessage:``,autoPanOnConnect:!0,autoPanOnNodeDrag:!0,autoPanOnNodeFocus:!0,autoPanSpeed:15,connectionRadius:20,onError:ud,isValidConnection:void 0,onSelectionChangeHandlers:[],lib:`react`,debug:!1,ariaLabelConfig:ya,zIndexMode:f,onNodesChangeMiddlewareMap:new Map,onEdgesChangeMiddlewareMap:new Map}},fd=({nodes:e,edges:t,defaultNodes:n,defaultEdges:r,width:i,height:a,fitView:o,fitViewOptions:s,minZoom:c,maxZoom:l,nodeOrigin:u,nodeExtent:d,zIndexMode:f})=>fc((p,m)=>{async function h(){let{nodeLookup:e,panZoom:t,fitViewOptions:n,fitViewResolver:r,width:i,height:a,minZoom:o,maxZoom:s}=m();t&&(await La({nodes:e,width:i,height:a,panZoom:t,minZoom:o,maxZoom:s},n),r?.resolve(!0),p({fitViewResolver:null}))}return{...dd({nodes:e,edges:t,width:i,height:a,fitView:o,fitViewOptions:s,minZoom:c,maxZoom:l,nodeOrigin:u,nodeExtent:d,defaultNodes:n,defaultEdges:r,zIndexMode:f}),setNodes:e=>{let{nodeLookup:t,parentLookup:n,nodeOrigin:r,elevateNodesOnSelect:i,fitViewQueued:a,zIndexMode:o,nodesSelectionActive:s}=m(),{nodesInitialized:c,hasSelectedNodes:l}=ns(e,t,n,{nodeOrigin:r,nodeExtent:d,elevateNodesOnSelect:i,checkEquality:!0,zIndexMode:o}),u=s&&l;a&&c?(h(),p({nodes:e,nodesInitialized:c,fitViewQueued:!1,fitViewOptions:void 0,nodesSelectionActive:u})):p({nodes:e,nodesInitialized:c,nodesSelectionActive:u})},setEdges:e=>{let{connectionLookup:t,edgeLookup:n}=m();ds(t,n,e),p({edges:e})},setDefaultNodesAndEdges:(e,t)=>{if(e){let{setNodes:t}=m();t(e),p({hasDefaultNodes:!0})}if(t){let{setEdges:e}=m();e(t),p({hasDefaultEdges:!0})}},updateNodeInternals:e=>{let{triggerNodeChanges:t,nodeLookup:n,parentLookup:r,domNode:i,nodeOrigin:a,nodeExtent:o,debug:s,fitViewQueued:c,zIndexMode:l}=m(),{changes:u,updatedInternals:d}=cs(e,n,r,i,a,o,l);d&&($o(n,r,{nodeOrigin:a,nodeExtent:o,zIndexMode:l}),c?(h(),p({fitViewQueued:!1,fitViewOptions:void 0})):p({}),u?.length>0&&(s&&console.log(`React Flow: trigger node changes`,u),t?.(u)))},updateNodePositions:(e,t=!1)=>{let n=[],r=[],{nodeLookup:i,triggerNodeChanges:a,connection:o,updateConnection:s,onNodesChangeMiddlewareMap:c}=m();for(let[a,c]of e){let e=i.get(a),l=!!(e?.expandParent&&e?.parentId&&c?.position),u={id:a,type:`position`,position:l?{x:Math.max(0,c.position.x),y:Math.max(0,c.position.y)}:c.position,dragging:t};if(e&&o.inProgress&&o.fromNode.id===e.id){let t=Wo(e,o.fromHandle,U.Left,!0);s({...o,from:t})}l&&e.parentId&&n.push({id:a,parentId:e.parentId,rect:{...c.internals.positionAbsolute,width:c.measured.width??0,height:c.measured.height??0}}),r.push(u)}if(n.length>0){let{parentLookup:e,nodeOrigin:t}=m(),a=ss(n,i,e,t);r.push(...a)}for(let e of c.values())r=e(r);a(r)},triggerNodeChanges:e=>{let{onNodesChange:t,setNodes:n,nodes:r,hasDefaultNodes:i,debug:a}=m();e?.length&&(i&&n(Zc(e,r)),a&&console.log(`React Flow: trigger node changes`,e),t?.(e))},triggerEdgeChanges:e=>{let{onEdgesChange:t,setEdges:n,edges:r,hasDefaultEdges:i,debug:a}=m();e?.length&&(i&&n(Qc(e,r)),a&&console.log(`React Flow: trigger edge changes`,e),t?.(e))},addSelectedNodes:e=>{let{multiSelectionActive:t,edgeLookup:n,nodeLookup:r,triggerNodeChanges:i,triggerEdgeChanges:a}=m();if(t){i(e.map(e=>$c(e,!0)));return}i(el(r,new Set([...e]),!0)),a(el(n))},addSelectedEdges:e=>{let{multiSelectionActive:t,edgeLookup:n,nodeLookup:r,triggerNodeChanges:i,triggerEdgeChanges:a}=m();if(t){a(e.map(e=>$c(e,!0)));return}a(el(n,new Set([...e]))),i(el(r,new Set,!0))},unselectNodesAndEdges:({nodes:e,edges:t}={})=>{let{edges:n,nodes:r,nodeLookup:i,triggerNodeChanges:a,triggerEdgeChanges:o}=m(),s=e||r,c=t||n,l=[];for(let e of s){if(!e.selected)continue;let t=i.get(e.id);t&&(t.selected=!1),l.push($c(e.id,!1))}let u=[];for(let e of c)e.selected&&u.push($c(e.id,!1));a(l),o(u)},setMinZoom:e=>{let{panZoom:t,maxZoom:n}=m();t?.setScaleExtent([e,n]),p({minZoom:e})},setMaxZoom:e=>{let{panZoom:t,minZoom:n}=m();t?.setScaleExtent([n,e]),p({maxZoom:e})},setTranslateExtent:e=>{m().panZoom?.setTranslateExtent(e),p({translateExtent:e})},resetSelectedElements:()=>{let{edges:e,nodes:t,triggerNodeChanges:n,triggerEdgeChanges:r,elementsSelectable:i}=m();if(!i)return;let a=t.reduce((e,t)=>t.selected?[...e,$c(t.id,!1)]:e,[]),o=e.reduce((e,t)=>t.selected?[...e,$c(t.id,!1)]:e,[]);n(a),r(o)},setNodeExtent:e=>{let{nodes:t,nodeLookup:n,parentLookup:r,nodeOrigin:i,elevateNodesOnSelect:a,nodeExtent:o,zIndexMode:s}=m();(e[0][0]!==o[0][0]||e[0][1]!==o[0][1]||e[1][0]!==o[1][0]||e[1][1]!==o[1][1])&&(ns(t,n,r,{nodeOrigin:i,nodeExtent:e,elevateNodesOnSelect:a,checkEquality:!1,zIndexMode:s}),p({nodeExtent:e}))},panBy:e=>{let{transform:t,width:n,height:r,panZoom:i,translateExtent:a}=m();return ls({delta:e,panZoom:i,transform:t,translateExtent:a,width:n,height:r})},setCenter:async(e,t,n)=>{let{width:r,height:i,maxZoom:a,panZoom:o}=m();if(!o)return!1;let s=n?.zoom===void 0?a:n.zoom;return await o.setViewport({x:r/2-e*s,y:i/2-t*s,zoom:s},{duration:n?.duration,ease:n?.ease,interpolate:n?.interpolate}),!0},cancelConnection:()=>{p({connection:{...Ca}})},updateConnection:e=>{p({connection:e})},reset:()=>p({...dd()})}},Object.is);function pd({initialNodes:e,initialEdges:t,defaultNodes:n,defaultEdges:r,initialWidth:i,initialHeight:a,initialMinZoom:o,initialMaxZoom:s,initialFitViewOptions:c,fitView:l,nodeOrigin:u,nodeExtent:d,zIndexMode:f,children:p}){let[m]=(0,_.useState)(()=>fd({nodes:e,edges:t,defaultNodes:n,defaultEdges:r,width:i,height:a,fitView:l,minZoom:o,maxZoom:s,fitViewOptions:c,nodeOrigin:u,nodeExtent:d,zIndexMode:f}));return(0,b.jsx)(hc,{value:m,children:(0,b.jsx)(fl,{children:(0,b.jsx)(Ll,{children:p})})})}function md({children:e,nodes:t,edges:n,defaultNodes:r,defaultEdges:i,width:a,height:o,fitView:s,fitViewOptions:c,minZoom:l,maxZoom:u,nodeOrigin:d,nodeExtent:f,zIndexMode:p}){return(0,_.useContext)(mc)?(0,b.jsx)(b.Fragment,{children:e}):(0,b.jsx)(pd,{initialNodes:t,initialEdges:n,defaultNodes:r,defaultEdges:i,initialWidth:a,initialHeight:o,fitView:s,initialFitViewOptions:c,initialMinZoom:l,initialMaxZoom:u,nodeOrigin:d,nodeExtent:f,zIndexMode:p,children:e})}var hd={width:`100%`,height:`100%`,overflow:`hidden`,position:`relative`,zIndex:0};function gd({nodes:e,edges:t,defaultNodes:n,defaultEdges:r,className:i,nodeTypes:a,edgeTypes:o,onNodeClick:s,onEdgeClick:c,onInit:l,onMove:u,onMoveStart:d,onMoveEnd:f,onConnect:p,onConnectStart:m,onConnectEnd:h,onClickConnectStart:g,onClickConnectEnd:v,onNodeMouseEnter:y,onNodeMouseMove:S,onNodeMouseLeave:C,onNodeContextMenu:w,onNodeDoubleClick:T,onNodeDragStart:E,onNodeDrag:D,onNodeDragStop:O,onNodesDelete:k,onEdgesDelete:A,onDelete:j,onSelectionChange:M,onSelectionDragStart:ee,onSelectionDrag:N,onSelectionDragStop:te,onSelectionContextMenu:P,onSelectionStart:F,onSelectionEnd:I,onBeforeDelete:ne,connectionMode:L,connectionLineType:R=wa.Bezier,connectionLineStyle:z,connectionLineComponent:B,connectionLineContainerStyle:re,deleteKeyCode:ie=`Backspace`,selectionKeyCode:ae=`Shift`,selectionOnDrag:oe=!1,selectionMode:se=Sa.Full,panActivationKeyCode:ce=`Space`,multiSelectionKeyCode:le=W()?`Meta`:`Control`,zoomActivationKeyCode:ue=W()?`Meta`:`Control`,snapToGrid:de,snapGrid:fe,onlyRenderVisibleElements:pe=!1,selectNodesOnDrag:me,nodesDraggable:he,autoPanOnNodeFocus:ge,nodesConnectable:_e,nodesFocusable:ve,nodeOrigin:ye=Ic,edgesFocusable:be,edgesReconnectable:xe,elementsSelectable:Se=!0,defaultViewport:Ce=Lc,minZoom:we=.5,maxZoom:Te=2,translateExtent:Ee=_a,preventScrolling:De=!0,nodeExtent:Oe,defaultMarkerColor:ke=`#b1b1b7`,zoomOnScroll:Ae=!0,zoomOnPinch:je=!0,panOnScroll:Me=!1,panOnScrollSpeed:V=.5,panOnScrollMode:Ne=xa.Free,zoomOnDoubleClick:Pe=!0,panOnDrag:Fe=!0,onPaneClick:Ie,onPaneMouseEnter:Le,onPaneMouseMove:Re,onPaneMouseLeave:ze,onPaneScroll:Be,onPaneContextMenu:Ve,paneClickDistance:He=1,nodeClickDistance:Ue=0,children:We,onReconnect:Ge,onReconnectStart:Ke,onReconnectEnd:qe,onEdgeContextMenu:Je,onEdgeDoubleClick:Ye,onEdgeMouseEnter:Xe,onEdgeMouseMove:Ze,onEdgeMouseLeave:Qe,reconnectRadius:$e=10,onNodesChange:et,onEdgesChange:tt,noDragClassName:nt=`nodrag`,noWheelClassName:rt=`nowheel`,noPanClassName:it=`nopan`,fitView:at,fitViewOptions:ot,connectOnClick:st,attributionPosition:ct,proOptions:lt,defaultEdgeOptions:ut,elevateNodesOnSelect:dt=!0,elevateEdgesOnSelect:ft=!1,disableKeyboardA11y:pt=!1,autoPanOnConnect:mt,autoPanOnNodeDrag:ht,autoPanOnSelection:gt=!0,autoPanSpeed:_t,connectionRadius:vt,isValidConnection:yt,onError:bt,style:xt,id:St,nodeDragThreshold:Ct,connectionDragThreshold:wt,viewport:Tt,onViewportChange:Et,width:Dt,height:Ot,colorMode:kt=`light`,debug:At,onScroll:jt,ariaLabelConfig:Mt,zIndexMode:Nt=`basic`,...Pt},Ft){let It=St||`1`,Lt=Uc(kt),Rt=(0,_.useCallback)(e=>{e.currentTarget.scrollTo({top:0,left:0,behavior:`instant`}),jt?.(e)},[jt]);return(0,b.jsx)(`div`,{"data-testid":`rf__wrapper`,...Pt,onScroll:Rt,style:{...xt,...hd},ref:Ft,className:x([`react-flow`,i,Lt]),id:St,role:`application`,children:(0,b.jsxs)(md,{nodes:e,edges:t,width:Dt,height:Ot,fitView:at,fitViewOptions:ot,minZoom:we,maxZoom:Te,nodeOrigin:ye,nodeExtent:Oe,zIndexMode:Nt,children:[(0,b.jsx)(Vc,{nodes:e,edges:t,defaultNodes:n,defaultEdges:r,onConnect:p,onConnectStart:m,onConnectEnd:h,onClickConnectStart:g,onClickConnectEnd:v,nodesDraggable:he,autoPanOnNodeFocus:ge,nodesConnectable:_e,nodesFocusable:ve,edgesFocusable:be,edgesReconnectable:xe,elementsSelectable:Se,elevateNodesOnSelect:dt,elevateEdgesOnSelect:ft,minZoom:we,maxZoom:Te,nodeExtent:Oe,onNodesChange:et,onEdgesChange:tt,snapToGrid:de,snapGrid:fe,connectionMode:L,translateExtent:Ee,connectOnClick:st,defaultEdgeOptions:ut,fitView:at,fitViewOptions:ot,onNodesDelete:k,onEdgesDelete:A,onDelete:j,onNodeDragStart:E,onNodeDrag:D,onNodeDragStop:O,onSelectionDrag:N,onSelectionDragStart:ee,onSelectionDragStop:te,onMove:u,onMoveStart:d,onMoveEnd:f,noPanClassName:it,nodeOrigin:ye,rfId:It,autoPanOnConnect:mt,autoPanOnNodeDrag:ht,autoPanSpeed:_t,onError:bt,connectionRadius:vt,isValidConnection:yt,selectNodesOnDrag:me,nodeDragThreshold:Ct,connectionDragThreshold:wt,onBeforeDelete:ne,debug:At,ariaLabelConfig:Mt,zIndexMode:Nt}),(0,b.jsx)(ld,{onInit:l,onNodeClick:s,onEdgeClick:c,onNodeMouseEnter:y,onNodeMouseMove:S,onNodeMouseLeave:C,onNodeContextMenu:w,onNodeDoubleClick:T,nodeTypes:a,edgeTypes:o,connectionLineType:R,connectionLineStyle:z,connectionLineComponent:B,connectionLineContainerStyle:re,selectionKeyCode:ae,selectionOnDrag:oe,selectionMode:se,deleteKeyCode:ie,multiSelectionKeyCode:le,panActivationKeyCode:ce,zoomActivationKeyCode:ue,onlyRenderVisibleElements:pe,defaultViewport:Ce,translateExtent:Ee,minZoom:we,maxZoom:Te,preventScrolling:De,zoomOnScroll:Ae,zoomOnPinch:je,zoomOnDoubleClick:Pe,panOnScroll:Me,panOnScrollSpeed:V,panOnScrollMode:Ne,panOnDrag:Fe,autoPanOnSelection:gt,onPaneClick:Ie,onPaneMouseEnter:Le,onPaneMouseMove:Re,onPaneMouseLeave:ze,onPaneScroll:Be,onPaneContextMenu:Ve,paneClickDistance:He,nodeClickDistance:Ue,onSelectionContextMenu:P,onSelectionStart:F,onSelectionEnd:I,onReconnect:Ge,onReconnectStart:Ke,onReconnectEnd:qe,onEdgeContextMenu:Je,onEdgeDoubleClick:Ye,onEdgeMouseEnter:Xe,onEdgeMouseMove:Ze,onEdgeMouseLeave:Qe,reconnectRadius:$e,defaultMarkerColor:ke,noDragClassName:nt,noWheelClassName:rt,noPanClassName:it,rfId:It,disableKeyboardA11y:pt,nodeExtent:Oe,viewport:Tt,onViewportChange:Et,nodesDraggable:he}),(0,b.jsx)(Fc,{onSelectionChange:M}),We,(0,b.jsx)(kc,{proOptions:lt,position:ct}),(0,b.jsx)(Ec,{rfId:It,disableKeyboardA11y:pt})]})})}var _d=sl(gd);function vd(e){let[t,n]=(0,_.useState)(e);return[t,n,(0,_.useCallback)(e=>n(t=>Zc(e,t)),[])]}function yd(e){let[t,n]=(0,_.useState)(e);return[t,n,(0,_.useCallback)(e=>n(t=>Qc(e,t)),[])]}ga.error014();function bd({dimensions:e,lineWidth:t,variant:n,className:r}){return(0,b.jsx)(`path`,{strokeWidth:t,d:`M${e[0]/2} 0 V${e[1]} M0 ${e[1]/2} H${e[0]}`,className:x([`react-flow__background-pattern`,n,r])})}function Z({radius:e,className:t}){return(0,b.jsx)(`circle`,{cx:e,cy:e,r:e,className:x([`react-flow__background-pattern`,`dots`,t])})}var xd;(function(e){e.Lines=`lines`,e.Dots=`dots`,e.Cross=`cross`})(xd||={});var Sd={[xd.Dots]:1,[xd.Lines]:1,[xd.Cross]:6},Cd=e=>({transform:e.transform,patternId:`pattern-${e.rfId}`});function wd({id:e,variant:t=xd.Dots,gap:n=20,size:r,lineWidth:i=1,offset:a=0,color:o,bgColor:s,style:c,className:l,patternClassName:u}){let d=(0,_.useRef)(null),{transform:f,patternId:p}=K(Cd,pc),m=r||Sd[t],h=t===xd.Dots,g=t===xd.Cross,v=Array.isArray(n)?n:[n,n],y=[v[0]*f[2]||1,v[1]*f[2]||1],S=m*f[2],C=Array.isArray(a)?a:[a,a],w=g?[S,S]:y,T=[C[0]*f[2]||1+w[0]/2,C[1]*f[2]||1+w[1]/2],E=`${p}${e||``}`;return(0,b.jsxs)(`svg`,{className:x([`react-flow__background`,l]),style:{...c,...bl,"--xy-background-color-props":s,"--xy-background-pattern-color-props":o},ref:d,"data-testid":`rf__background`,children:[(0,b.jsx)(`pattern`,{id:E,x:f[0]%y[0],y:f[1]%y[1],width:y[0],height:y[1],patternUnits:`userSpaceOnUse`,patternTransform:`translate(-${T[0]},-${T[1]})`,children:h?(0,b.jsx)(Z,{radius:S/2,className:u}):(0,b.jsx)(bd,{dimensions:w,lineWidth:i,variant:t,className:u})}),(0,b.jsx)(`rect`,{x:`0`,y:`0`,width:`100%`,height:`100%`,fill:`url(#${E})`})]})}wd.displayName=`Background`;var Td=(0,_.memo)(wd);function Ed(){return(0,b.jsx)(`svg`,{xmlns:`http://www.w3.org/2000/svg`,viewBox:`0 0 32 32`,children:(0,b.jsx)(`path`,{d:`M32 18.133H18.133V32h-4.266V18.133H0v-4.266h13.867V0h4.266v13.867H32z`})})}function Dd(){return(0,b.jsx)(`svg`,{xmlns:`http://www.w3.org/2000/svg`,viewBox:`0 0 32 5`,children:(0,b.jsx)(`path`,{d:`M0 0h32v4.2H0z`})})}function Od(){return(0,b.jsx)(`svg`,{xmlns:`http://www.w3.org/2000/svg`,viewBox:`0 0 32 30`,children:(0,b.jsx)(`path`,{d:`M3.692 4.63c0-.53.4-.938.939-.938h5.215V0H4.708C2.13 0 0 2.054 0 4.63v5.216h3.692V4.631zM27.354 0h-5.2v3.692h5.17c.53 0 .984.4.984.939v5.215H32V4.631A4.624 4.624 0 0027.354 0zm.954 24.83c0 .532-.4.94-.939.94h-5.215v3.768h5.215c2.577 0 4.631-2.13 4.631-4.707v-5.139h-3.692v5.139zm-23.677.94c-.531 0-.939-.4-.939-.94v-5.138H0v5.139c0 2.577 2.13 4.707 4.708 4.707h5.138V25.77H4.631z`})})}function kd(){return(0,b.jsx)(`svg`,{xmlns:`http://www.w3.org/2000/svg`,viewBox:`0 0 25 32`,children:(0,b.jsx)(`path`,{d:`M21.333 10.667H19.81V7.619C19.81 3.429 16.38 0 12.19 0 8 0 4.571 3.429 4.571 7.619v3.048H3.048A3.056 3.056 0 000 13.714v15.238A3.056 3.056 0 003.048 32h18.285a3.056 3.056 0 003.048-3.048V13.714a3.056 3.056 0 00-3.048-3.047zM12.19 24.533a3.056 3.056 0 01-3.047-3.047 3.056 3.056 0 013.047-3.048 3.056 3.056 0 013.048 3.048 3.056 3.056 0 01-3.048 3.047zm4.724-13.866H7.467V7.619c0-2.59 2.133-4.724 4.723-4.724 2.591 0 4.724 2.133 4.724 4.724v3.048z`})})}function Ad(){return(0,b.jsx)(`svg`,{xmlns:`http://www.w3.org/2000/svg`,viewBox:`0 0 25 32`,children:(0,b.jsx)(`path`,{d:`M21.333 10.667H19.81V7.619C19.81 3.429 16.38 0 12.19 0c-4.114 1.828-1.37 2.133.305 2.438 1.676.305 4.42 2.59 4.42 5.181v3.048H3.047A3.056 3.056 0 000 13.714v15.238A3.056 3.056 0 003.048 32h18.285a3.056 3.056 0 003.048-3.048V13.714a3.056 3.056 0 00-3.048-3.047zM12.19 24.533a3.056 3.056 0 01-3.047-3.047 3.056 3.056 0 013.047-3.048 3.056 3.056 0 013.048 3.048 3.056 3.056 0 01-3.048 3.047z`})})}function jd({children:e,className:t,...n}){return(0,b.jsx)(`button`,{type:`button`,className:x([`react-flow__controls-button`,t]),...n,children:e})}var Md=e=>({isInteractive:e.nodesDraggable||e.nodesConnectable||e.elementsSelectable,minZoomReached:e.transform[2]<=e.minZoom,maxZoomReached:e.transform[2]>=e.maxZoom,ariaLabelConfig:e.ariaLabelConfig});function Nd({style:e,showZoom:t=!0,showFitView:n=!0,showInteractive:r=!0,fitViewOptions:i,onZoomIn:a,onZoomOut:o,onFitView:s,onInteractiveChange:c,className:l,children:u,position:d=`bottom-left`,orientation:f=`vertical`,"aria-label":p}){let m=_c(),{isInteractive:h,minZoomReached:g,maxZoomReached:_,ariaLabelConfig:v}=K(Md,pc),{zoomIn:y,zoomOut:S,fitView:C}=hl();return(0,b.jsxs)(Dc,{className:x([`react-flow__controls`,f===`horizontal`?`horizontal`:`vertical`,l]),position:d,style:e,"data-testid":`rf__controls`,"aria-label":p??v[`controls.ariaLabel`],children:[t&&(0,b.jsxs)(b.Fragment,{children:[(0,b.jsx)(jd,{onClick:()=>{y(),a?.()},className:`react-flow__controls-zoomin`,title:v[`controls.zoomIn.ariaLabel`],"aria-label":v[`controls.zoomIn.ariaLabel`],disabled:_,children:(0,b.jsx)(Ed,{})}),(0,b.jsx)(jd,{onClick:()=>{S(),o?.()},className:`react-flow__controls-zoomout`,title:v[`controls.zoomOut.ariaLabel`],"aria-label":v[`controls.zoomOut.ariaLabel`],disabled:g,children:(0,b.jsx)(Dd,{})})]}),n&&(0,b.jsx)(jd,{className:`react-flow__controls-fitview`,onClick:()=>{C(i),s?.()},title:v[`controls.fitView.ariaLabel`],"aria-label":v[`controls.fitView.ariaLabel`],children:(0,b.jsx)(Od,{})}),r&&(0,b.jsx)(jd,{className:`react-flow__controls-interactive`,onClick:()=>{m.setState({nodesDraggable:!h,nodesConnectable:!h,elementsSelectable:!h}),c?.(!h)},title:v[`controls.interactive.ariaLabel`],"aria-label":v[`controls.interactive.ariaLabel`],children:h?(0,b.jsx)(Ad,{}):(0,b.jsx)(kd,{})}),u]})}Nd.displayName=`Controls`;var Pd=(0,_.memo)(Nd);function Fd({id:e,x:t,y:n,width:r,height:i,style:a,color:o,strokeColor:s,strokeWidth:c,className:l,borderRadius:u,shapeRendering:d,selected:f,onClick:p}){let{background:m,backgroundColor:h}=a||{},g=o||m||h;return(0,b.jsx)(`rect`,{className:x([`react-flow__minimap-node`,{selected:f},l]),x:t,y:n,rx:u,ry:u,width:r,height:i,style:{fill:g,stroke:s,strokeWidth:c},shapeRendering:d,onClick:p?t=>p(t,e):void 0})}var Id=(0,_.memo)(Fd),Ld=e=>e.nodes.map(e=>e.id),Rd=e=>e instanceof Function?e:()=>e;function zd({nodeStrokeColor:e,nodeColor:t,nodeClassName:n=``,nodeBorderRadius:r=5,nodeStrokeWidth:i,nodeComponent:a=Id,onClick:o}){let s=K(Ld,pc),c=Rd(t),l=Rd(e),u=Rd(n),d=typeof window>`u`||window.chrome?`crispEdges`:`geometricPrecision`;return(0,b.jsx)(b.Fragment,{children:s.map(e=>(0,b.jsx)(Vd,{id:e,nodeColorFunc:c,nodeStrokeColorFunc:l,nodeClassNameFunc:u,nodeBorderRadius:r,nodeStrokeWidth:i,NodeComponent:a,onClick:o,shapeRendering:d},e))})}function Bd({id:e,nodeColorFunc:t,nodeStrokeColorFunc:n,nodeClassNameFunc:r,nodeBorderRadius:i,nodeStrokeWidth:a,shapeRendering:o,NodeComponent:s,onClick:c}){let{node:l,x:u,y:d,width:f,height:p}=K(t=>{let n=t.nodeLookup.get(e);if(!n)return{node:void 0,x:0,y:0,width:0,height:0};let r=n.internals.userNode,{x:i,y:a}=n.internals.positionAbsolute,{width:o,height:s}=lo(r);return{node:r,x:i,y:a,width:o,height:s}},pc);return!l||l.hidden||!uo(l)?null:(0,b.jsx)(s,{x:u,y:d,width:f,height:p,style:l.style,selected:!!l.selected,className:r(l),color:t(l),borderRadius:i,strokeColor:n(l),strokeWidth:a,shapeRendering:o,onClick:c,id:l.id})}var Vd=(0,_.memo)(Bd),Hd=(0,_.memo)(zd),Ud=200,Wd=150,Gd=e=>!e.hidden,Kd=e=>{let t={x:-e.transform[0]/e.transform[2],y:-e.transform[1]/e.transform[2],width:e.width/e.transform[2],height:e.height/e.transform[2]};return{viewBB:t,boundingRect:e.nodeLookup.size>0?Xa(Na(e.nodeLookup,{filter:Gd}),t):t,rfId:e.rfId,panZoom:e.panZoom,translateExtent:e.translateExtent,flowWidth:e.width,flowHeight:e.height,ariaLabelConfig:e.ariaLabelConfig}},qd=(e,t)=>e.x===t.x&&e.y===t.y&&e.width===t.width&&e.height===t.height,Jd=(e,t)=>qd(e.viewBB,t.viewBB)&&qd(e.boundingRect,t.boundingRect)&&e.rfId===t.rfId&&e.panZoom===t.panZoom&&e.translateExtent===t.translateExtent&&e.flowWidth===t.flowWidth&&e.flowHeight===t.flowHeight&&e.ariaLabelConfig===t.ariaLabelConfig,Yd=`react-flow__minimap-desc`;function Xd({style:e,className:t,nodeStrokeColor:n,nodeColor:r,nodeClassName:i=``,nodeBorderRadius:a=5,nodeStrokeWidth:o,nodeComponent:s,bgColor:c,maskColor:l,maskStrokeColor:u,maskStrokeWidth:d,position:f=`bottom-right`,onClick:p,onNodeClick:m,pannable:h=!1,zoomable:g=!1,ariaLabel:v,inversePan:y,zoomStep:S=1,offsetScale:C=5}){let w=_c(),T=(0,_.useRef)(null),{boundingRect:E,viewBB:D,rfId:O,panZoom:k,translateExtent:A,flowWidth:j,flowHeight:M,ariaLabelConfig:ee}=K(Kd,Jd),N=e?.width??Ud,te=e?.height??Wd,P=E.width/N,F=E.height/te,I=Math.max(P,F),ne=I*N,L=I*te,R=C*I,z=E.x-(ne-E.width)/2-R,B=E.y-(L-E.height)/2-R,re=ne+R*2,ie=L+R*2,ae=`${Yd}-${O}`,oe=(0,_.useRef)(0),se=(0,_.useRef)();oe.current=I,(0,_.useEffect)(()=>{if(T.current&&k)return se.current=Os({domNode:T.current,panZoom:k,getTransform:()=>w.getState().transform,getViewScale:()=>oe.current}),()=>{se.current?.destroy()}},[k]),(0,_.useEffect)(()=>{se.current?.update({translateExtent:A,width:j,height:M,inversePan:y,pannable:h,zoomStep:S,zoomable:g})},[h,g,y,S,A,j,M]);let ce=p?e=>{let[t,n]=se.current?.pointer(e)||[0,0];p(e,{x:t,y:n})}:void 0,le=m?(0,_.useCallback)((e,t)=>{let n=w.getState().nodeLookup.get(t).internals.userNode;m(e,n)},[]):void 0,ue=v??ee[`minimap.ariaLabel`];return(0,b.jsx)(Dc,{position:f,style:{...e,"--xy-minimap-background-color-props":typeof c==`string`?c:void 0,"--xy-minimap-mask-background-color-props":typeof l==`string`?l:void 0,"--xy-minimap-mask-stroke-color-props":typeof u==`string`?u:void 0,"--xy-minimap-mask-stroke-width-props":typeof d==`number`?d*I:void 0,"--xy-minimap-node-background-color-props":typeof r==`string`?r:void 0,"--xy-minimap-node-stroke-color-props":typeof n==`string`?n:void 0,"--xy-minimap-node-stroke-width-props":typeof o==`number`?o:void 0},className:x([`react-flow__minimap`,t]),"data-testid":`rf__minimap`,children:(0,b.jsxs)(`svg`,{width:N,height:te,viewBox:`${z} ${B} ${re} ${ie}`,className:`react-flow__minimap-svg`,role:`img`,"aria-labelledby":ae,ref:T,onClick:ce,children:[ue&&(0,b.jsx)(`title`,{id:ae,children:ue}),(0,b.jsx)(Hd,{onClick:le,nodeColor:r,nodeStrokeColor:n,nodeBorderRadius:a,nodeClassName:i,nodeStrokeWidth:o,nodeComponent:s}),(0,b.jsx)(`path`,{className:`react-flow__minimap-mask`,d:`M${z-R},${B-R}h${re+R*2}v${ie+R*2}h${-re-R*2}z
-        M${D.x},${D.y}h${D.width}v${D.height}h${-D.width}z`,fillRule:`evenodd`,pointerEvents:`none`})]})})}Xd.displayName=`MiniMap`;var Zd=(0,_.memo)(Xd),Qd=e=>t=>e?`${Math.max(1/t.transform[2],1)}`:void 0,$d={[Us.Line]:`right`,[Us.Handle]:`bottom-right`};function ef({nodeId:e,position:t,variant:n=Us.Handle,className:r,style:i=void 0,children:a,color:o,minWidth:s=10,minHeight:c=10,maxWidth:l=Number.MAX_VALUE,maxHeight:u=Number.MAX_VALUE,keepAspectRatio:d=!1,resizeDirection:f,autoScale:p=!0,shouldResize:m,onResizeStart:h,onResize:g,onResizeEnd:v}){let y=Pl(),S=typeof e==`string`?e:y,C=_c(),w=(0,_.useRef)(null),T=n===Us.Handle,E=K((0,_.useCallback)(Qd(T&&p),[T,p]),pc),D=(0,_.useRef)(null),O=t??$d[n];(0,_.useEffect)(()=>{if(!(!w.current||!S))return D.current||=ec({domNode:w.current,nodeId:S,getStoreItems:()=>{let{nodeLookup:e,transform:t,snapGrid:n,snapToGrid:r,nodeOrigin:i,domNode:a}=C.getState();return{nodeLookup:e,transform:t,snapGrid:n,snapToGrid:r,nodeOrigin:i,paneDomNode:a}},onChange:(e,t)=>{let{triggerNodeChanges:n,nodeLookup:r,parentLookup:i,nodeOrigin:a}=C.getState(),o=[],s={x:e.x,y:e.y},c=r.get(S);if(c&&c.expandParent&&c.parentId){let t=c.origin??a,n=e.width??c.measured.width??0,l=e.height??c.measured.height??0,u=ss([{id:c.id,parentId:c.parentId,rect:{width:n,height:l,...fo({x:e.x??c.position.x,y:e.y??c.position.y},{width:n,height:l},c.parentId,r,t)}}],r,i,a);o.push(...u),s.x=e.x?Math.max(t[0]*n,e.x):void 0,s.y=e.y?Math.max(t[1]*l,e.y):void 0}if(s.x!==void 0&&s.y!==void 0){let e={id:S,type:`position`,position:{...s}};o.push(e)}if(e.width!==void 0&&e.height!==void 0){let t={id:S,type:`dimensions`,resizing:!0,setAttributes:f?f===`horizontal`?`width`:`height`:!0,dimensions:{width:e.width,height:e.height}};o.push(t)}for(let e of t){let t={...e,type:`position`};o.push(t)}n(o)},onEnd:({width:e,height:t})=>{let n={id:S,type:`dimensions`,resizing:!1,dimensions:{width:e,height:t}};C.getState().triggerNodeChanges([n])}}),D.current.update({controlPosition:O,boundaries:{minWidth:s,minHeight:c,maxWidth:l,maxHeight:u},keepAspectRatio:d,resizeDirection:f,onResizeStart:h,onResize:g,onResizeEnd:v,shouldResize:m}),()=>{D.current?.destroy()}},[O,s,c,l,u,d,h,g,v,m]);let k=O.split(`-`);return(0,b.jsx)(`div`,{className:x([`react-flow__resize-control`,`nodrag`,...k,n,r]),ref:w,style:{...i,scale:E,...o&&{[T?`backgroundColor`:`borderColor`]:o}},children:a})}(0,_.memo)(ef);var tf=new Set([`io`,`routing`,`filter`,`delay`,`diffusion`,`pitch`,`tank`,`tap`]),nf=new Set([`stereo-input`,`stereo-output`,`sum`,`lowpass`,`allpass`]);function Q(e,t){if(!e)throw Error(`Runtime snapshot mismatch: ${t}`)}function rf(e){Q(typeof e==`object`&&!!e,`payload is not an object`);let t=e;Q(t.contractVersion===2,`unsupported contract version`),Q(t.engineId===`barr-reference`,`unexpected engine identity`),Q(typeof t.sampleRate==`number`&&Number.isFinite(t.sampleRate),`invalid sample rate`),Q(Array.isArray(t.nodes)&&t.nodes.length>0,`nodes are missing`),Q(Array.isArray(t.connections),`connections are missing`),Q(Array.isArray(t.outsidePatch),`outside-patch processing is missing`),Q(t.productVersion===void 0||typeof t.productVersion==`string`&&t.productVersion.length>0,`invalid product version`),Q(t.buildCommit===void 0||typeof t.buildCommit==`string`&&/^[0-9A-Za-z._-]+$/.test(t.buildCommit),`invalid build commit`),Q(t.restoredPatch===void 0||typeof t.restoredPatch==`object`&&t.restoredPatch!==null&&!Array.isArray(t.restoredPatch),`invalid restored patch`);let n=new Set,r=new Map;for(let e of t.nodes){Q(typeof e.id==`string`&&!n.has(e.id),`node IDs must be unique`),n.add(e.id),Q(nf.has(e.type),`unsupported node type ${e.type}`),Q(tf.has(e.role),`unsupported role ${e.role}`),Q(Array.isArray(e.ports)&&Array.isArray(e.parameters),`invalid node ${e.id}`),Q(Number.isFinite(e.position?.x)&&Number.isFinite(e.position?.y),`invalid layout for ${e.id}`);let t=new Map;for(let n of e.ports)Q(typeof n.id==`string`&&!t.has(n.id),`port IDs must be unique on ${e.id}`),Q(n.signal===`audio`||n.signal===`control`,`invalid signal on ${e.id}.${n.id}`),Q(n.direction===`input`||n.direction===`output`,`invalid direction on ${e.id}.${n.id}`),t.set(n.id,n);r.set(e.id,t);for(let n of e.parameters){Q(typeof n.id==`string`&&Number.isFinite(n.value),`invalid parameter on ${e.id}`),Q(typeof n.unit==`string`&&n.unit.length>0,`missing unit on ${e.id}.${n.id}`),Q(Number.isFinite(n.minimum)&&Number.isFinite(n.maximum)&&n.minimum<n.maximum,`invalid range on ${e.id}.${n.id}`),Q(Number.isFinite(n.step)&&n.step>0,`invalid step on ${e.id}.${n.id}`);let r=n.modulation;Q(typeof r==`object`&&!!r,`missing modulation mapping on ${e.id}.${n.id}`),Q(typeof r.portId==`string`,`invalid modulation socket on ${e.id}.${n.id}`);let i=t.get(r.portId);Q(i?.signal===`control`&&i.direction===`input`,`modulation socket is not a control input on ${e.id}.${n.id}`),Q(Number.isFinite(r.amount),`invalid modulation amount on ${e.id}.${n.id}`),Q(r.polarity===`unipolar`||r.polarity===`bipolar`,`invalid modulation polarity on ${e.id}.${n.id}`),Q(Number.isFinite(r.clampMinimum)&&Number.isFinite(r.clampMaximum)&&r.clampMinimum<r.clampMaximum,`invalid modulation clamp on ${e.id}.${n.id}`)}}for(let e of t.connections){Q(n.has(e.source)&&n.has(e.target),`connection ${e.id} references an unknown node`),Q(e.signal===`audio`||e.signal===`control`,`connection ${e.id} has an invalid signal`);let t=r.get(e.source)?.get(e.sourcePort),i=r.get(e.target)?.get(e.targetPort);Q(t?.direction===`output`&&t.signal===e.signal,`connection ${e.id} has an invalid source port`),Q(i?.direction===`input`&&i.signal===e.signal,`connection ${e.id} has an invalid target port`)}return t}function af(e){return{nodes:e.nodes.map(e=>({id:e.id,type:`patchNode`,position:{...e.position},data:{label:e.label,type:e.type,role:e.role,ports:e.ports.map(e=>({...e})),parameters:e.parameters.map(e=>({...e})),runtimeBound:!0,...e.name?{userName:e.name}:{},...e.presentation?{presentation:e.presentation}:{}}})),edges:e.connections.map(e=>({id:e.id,source:e.source,sourceHandle:e.sourcePort,target:e.target,targetHandle:e.targetPort,type:`smoothstep`,className:`signal-edge signal-${e.signal}`,data:{signal:e.signal},interactionWidth:24}))}}function of(e){let t=e.filter(e=>e.data.type===`stereo-input`).length,n=e.filter(e=>e.data.type===`stereo-output`).length;return t===1?n===1?null:`Patch requires exactly one Stereo Output (found ${n}).`:`Patch requires exactly one Stereo Input (found ${t}).`}function sf(e,t){let n=new Set(e.filter(e=>e.selected).map(e=>e.id)),r=new Set(t.filter(e=>e.selected).map(e=>e.id));return{nodes:e.filter(e=>!n.has(e.id)),edges:t.filter(e=>!r.has(e.id)&&!n.has(e.source)&&!n.has(e.target))}}var cf=(e=`in`)=>({id:e,signal:`audio`,direction:`input`}),lf=(e=`out`)=>({id:e,signal:`audio`,direction:`output`}),uf=e=>({id:e,signal:`control`,direction:`input`}),df=(e=`out`)=>({id:e,signal:`control`,direction:`output`}),ff=(e,t,n,r,i,a,o)=>({id:e,value:t,unit:n,minimum:r,maximum:i,step:a,modulation:{portId:`${e}-mod`,amount:o,polarity:`bipolar`,clampMinimum:r,clampMaximum:i}}),pf=(e,t,n,r,i,a,o)=>({...ff(e,t,n,r,i,a,o),modulation:{portId:`${e}-mod`,amount:o,polarity:`bipolar`,clampMinimum:r,clampMaximum:i}}),mf=(e,t,n,r,i,a)=>({id:e,value:t,unit:n,minimum:r,maximum:i,step:a}),hf=[{type:`stereo-input`,label:`Stereo Input`,role:`io`,ports:[lf(`out-l`),lf(`out-r`)],parameters:[]},{type:`stereo-output`,label:`Stereo Output`,role:`io`,ports:[cf(`in-l`),cf(`in-r`)],parameters:[]},{type:`gain`,label:`Gain / Invert`,role:`routing`,ports:[cf(),uf(`gain-mod`),lf()],parameters:[ff(`gain`,1,`linear`,-1,1,.001,.5)]},{type:`sum`,label:`Sum (+)`,role:`routing`,ports:[cf(`in-a`),cf(`in-b`),lf()],parameters:[]},{type:`delay`,label:`Delay`,role:`delay`,ports:[cf(),uf(`delay-mod`),lf()],parameters:[ff(`delay`,10,`milliseconds`,.1,1e4,.01,10)]},{type:`allpass`,label:`Allpass`,role:`diffusion`,ports:[cf(),uf(`delay-mod`),uf(`coefficient-mod`),lf()],parameters:[ff(`delay`,10,`milliseconds`,.1,100,.01,2),ff(`coefficient`,.5,`unitless`,-.95,.95,.001,.25)]},{type:`lowpass`,label:`Low-pass`,role:`filter`,ports:[cf(),uf(`cutoff-mod`),lf()],parameters:[ff(`cutoff`,7e3,`hertz`,20,2e4,1,5e3)]},{type:`pitch-shift`,label:`Pitch Shift`,role:`pitch`,ports:[cf(),uf(`semitones-mod`),uf(`grain-mod`),uf(`overlap-mod`),lf()],parameters:[ff(`semitones`,12,`semitones`,-24,24,.01,12),ff(`grain`,60,`milliseconds`,20,120,.1,20),ff(`overlap`,.5,`normalized`,.1,1,.01,.25),mf(`direction`,0,`direction`,0,1,1)]},{type:`macro`,label:`Macro`,role:`control`,ports:[df()],parameters:[mf(`value`,0,`normalized`,-1,1,.001),mf(`default-value`,0,`normalized`,-1,1,.001),mf(`center-detent`,1,`boolean`,0,1,1)]},{type:`lfo`,label:`LFO`,role:`control`,ports:[uf(`frequency-mod`),uf(`phase-mod`),uf(`waveform-mod`),uf(`run-mode-mod`),df()],parameters:[pf(`frequency`,1,`hertz`,.01,100,.01,1),pf(`phase`,0,`cycles`,0,.999,.001,.25),pf(`waveform`,0,`waveform`,0,1,1,1),pf(`run-mode`,0,`run-mode`,0,1,1,1)]},{type:`control-map`,label:`Curve Mapper`,role:`control`,ports:[uf(`in`),uf(`scale-mod`),uf(`offset-mod`),uf(`polarity-mod`),df()],parameters:[pf(`scale`,1,`linear`,-4,4,.01,1),pf(`offset`,0,`unitless`,-1,1,.01,.5),pf(`polarity`,1,`polarity`,0,1,1,1),mf(`curve-family`,0,`curve-family`,0,2,1),mf(`curve-amount`,0,`unitless`,-8,8,.01),mf(`exponent`,1,`unitless`,.1,8,.01),mf(`clamp-min`,-1,`unitless`,-1,1,.01),mf(`clamp-max`,1,`unitless`,-1,1,.01)]},{type:`envelope-follower`,label:`Envelope Follower`,role:`control`,ports:[cf(),df()],parameters:[mf(`attack`,5,`milliseconds`,.1,500,.1),mf(`release`,100,`milliseconds`,1,5e3,1)]},{type:`hold-gate`,label:`Hold Gate`,role:`routing`,ports:[cf(),uf(`gate`),lf()],parameters:[mf(`threshold`,.5,`unitless`,0,1,.01),mf(`attack`,2,`milliseconds`,.1,100,.1),mf(`hold`,250,`milliseconds`,1,2e3,1),mf(`release`,20,`milliseconds`,.1,1e3,.1)]}],gf=new Map(hf.map(e=>[e.type,e]));function _f(e,t){let n=new Set(t.map(e=>e.id)),r=1;for(;n.has(`${e}-${r}`);)r++;return`${e}-${r}`}function vf(e,t,n){let r=gf.get(e);if(!r)throw Error(`Unsupported module type '${e}'`);return{id:t,type:`patchNode`,position:{...n},data:{label:r.label,type:e,role:r.role,ports:structuredClone(r.ports),parameters:structuredClone(r.parameters),runtimeBound:!1,...e===`macro`?{userName:`Macro`}:{}}}}function yf(e){let t=structuredClone(e);return delete t.selected,delete t.dragging,t}function bf(e){let t=structuredClone(e);return delete t.selected,t}function xf(e){return{nodes:e.nodes.map(yf),edges:e.edges.map(bf)}}function Sf(e,t){return{nodes:e.nodes.map(e=>({id:e.id,type:e.data.type,userName:e.data.userName,presentation:e.data.presentation,...t?{position:{x:e.position.x,y:e.position.y}}:{},ports:e.data.ports.map(({id:e,signal:t,direction:n})=>({id:e,signal:t,direction:n})),parameters:e.data.parameters.map(({id:e,value:t,unit:n,modulation:r})=>({id:e,value:t,unit:n,modulation:r?{...r}:void 0}))})).sort((e,t)=>e.id.localeCompare(t.id)),edges:e.edges.map(e=>({id:e.id,source:e.source,sourceHandle:e.sourceHandle??``,target:e.target,targetHandle:e.targetHandle??``})).sort((e,t)=>e.id.localeCompare(t.id))}}function Cf(e){let t=2166136261;for(let n=0;n<e.length;n++)t^=e.charCodeAt(n),t=Math.imul(t,16777619);return(t>>>0).toString(16).padStart(8,`0`)}function wf(e){return Cf(JSON.stringify(Sf(e,!0)))}var Tf=(e={nodes:[],edges:[]})=>({undo:[],redo:[],cleanHash:wf(e)});function Ef(e,t,n,r){let i=xf(n),a=xf(r);if(wf(i)===wf(a))return e;let o={label:t,before:i,after:a,bytes:new TextEncoder().encode(JSON.stringify({label:t,before:i,after:a})).byteLength},s=[...e.undo,o].slice(-100);for(;s.length&&s.reduce((e,t)=>e+t.bytes,0)>8388608;)s.shift();return{undo:s,redo:[],cleanHash:e.cleanHash}}function Df(e){let t=e.undo.at(-1);return{edit:t,history:t?{...e,undo:e.undo.slice(0,-1),redo:[t,...e.redo]}:e}}function Of(e){let t=e.redo[0];return{edit:t,history:t?{...e,undo:[...e.undo,t],redo:e.redo.slice(1)}:e}}function kf(e,t){return{...e,cleanHash:wf(t)}}function Af(e,t){return e.cleanHash===wf(t)}function jf(e){let t=e.nodes.filter(e=>e.selected&&e.data.role!==`io`).map(e=>structuredClone(e));if(!t.length)return null;let n=new Set(t.map(e=>e.id));return{nodes:t,edges:e.edges.filter(e=>n.has(e.source)&&n.has(e.target)).map(e=>structuredClone(e))}}function Mf(e,t){let n=1,r=`${e}-copy`;for(;t.has(r);)r=`${e}-copy-${++n}`;return t.add(r),r}function Nf(e,t,n=40){let r=new Set(e.nodes.map(e=>e.id)),i=new Set(e.edges.map(e=>e.id)),a=new Map,o=t.nodes.map(e=>{let t=Mf(e.id,r);return a.set(e.id,t),{...structuredClone(e),id:t,position:{x:e.position.x+n,y:e.position.y+n},selected:!0,data:{...structuredClone(e.data),runtimeBound:!1}}}),s=t.edges.map(e=>({...structuredClone(e),id:Mf(e.id,i),source:a.get(e.source),target:a.get(e.target),selected:!0}));return{nodes:[...e.nodes.map(e=>({...e,selected:!1})),...o],edges:[...e.edges.map(e=>({...e,selected:!1})),...s]}}var Pf=1e5;function Ff(e,t,n,r){let i=n?.loops[r],a=new Set(i?.nodeIds??[]),o=new Set(i?.edgeIds??[]),s=new Set(n?.loops.flatMap(e=>e.nodeIds)??[]),c=new Set(n?.loops.flatMap(e=>e.edgeIds)??[]),l=(e,t,n)=>[e?.replace(/\bloop-(?:active|related)\b/g,``).trim(),t?`loop-active`:n?`loop-related`:``].filter(Boolean).join(` `);return{nodes:e.map(e=>({...e,className:l(e.className,a.has(e.id),s.has(e.id))})),edges:t.map(e=>({...e,className:l(e.className,o.has(e.id),c.has(e.id))}))}}function If(e,t,n){let r=n?.loops[0],i=new Set(r?.nodeIds??[]),a=new Set(r?.edgeIds??[]),o=(e,t)=>[e?.replace(/\bsafety-loop-active\b/g,``).trim(),t?`safety-loop-active`:``].filter(Boolean).join(` `);return{nodes:e.map(e=>({...e,className:o(e.className,i.has(e.id))})),edges:t.map(e=>({...e,className:o(e.className,a.has(e.id))}))}}function Lf(e,t){let n=new Map(e.map(e=>[e,[]]));for(let e of t)n.get(e.source)?.push(e.target);for(let e of n.values())e.sort();let r=new Map,i=new Map,a=[],o=new Set,s=[],c=0,l=e=>{r.set(e,c),i.set(e,c++),a.push(e),o.add(e);for(let t of n.get(e)??[])r.has(t)?o.has(t)&&i.set(e,Math.min(i.get(e),r.get(t))):(l(t),i.set(e,Math.min(i.get(e),i.get(t))));if(i.get(e)!==r.get(e))return;let t=[];for(;a.length;){let n=a.pop();if(o.delete(n),t.push(n),n===e)break}s.push(t)};for(let t of[...e].sort())r.has(t)||l(t);let u=new Map;for(let e of s){let t=new Set(e);for(let n of e)u.set(n,t)}return u}function Rf(e,t,n){let r=0,i=[],a=[];for(let t of e){let e=n.get(t);if(!e)continue;let o=e.data.parameters.find(e=>e.id===`delay`&&e.unit===`milliseconds`);o&&(e.data.type===`delay`||e.data.type===`allpass`)&&(r+=o.value);for(let n of e.data.parameters)(n.id===`gain`||n.id===`coefficient`)&&i.push({nodeId:t,label:e.data.label,parameter:n.id,value:n.value,unit:n.unit}),e.data.type===`lowpass`&&n.id===`cutoff`&&a.push({nodeId:t,label:e.data.label,parameter:n.id,value:n.value,unit:n.unit})}return{id:t.join(`|`),nodeIds:e,edgeIds:t,nominalDelayMilliseconds:r,gainElements:i,filters:a}}function zf(e,t,n,r=64,i=Pf){let a=new Map(e.map(e=>[e.id,e])),o=new Map(t.map(e=>[e.id,e])),s=`edgeId`in n?o.get(n.edgeId):void 0,c=`nodeId`in n?n.nodeId:s?.source;if(!c||!a.has(c))return{loops:[],truncated:!1,exploredTransitions:0};let l=Lf([...a.keys()],t).get(c)??new Set,u=t.some(e=>e.source===c&&e.target===c);if(l.size<2&&!u||s&&(!l.has(s.target)||!l.has(s.source)))return{loops:[],truncated:!1,exploredTransitions:0};let d=new Map;for(let e of t)if(l.has(e.source)&&l.has(e.target)){let t=d.get(e.source)??[];t.push(e),d.set(e.source,t)}for(let e of d.values())e.sort((e,t)=>e.id.localeCompare(t.id));let f=s?[s]:d.get(c)??[],p=[],m=new Set,h=0,g=!1;for(let e of f){if(p.length>=r||h>=i){g=!0;break}if(e.target===e.source){let t=Rf([e.source],[e.id],a);m.has(t.id)||(m.add(t.id),p.push(t));continue}let t=new Set([e.source,e.target]),n=[e.source,e.target],o=[e.id],s=c=>{for(let l of d.get(c)??[]){if(h>=i){g=!0;return}if(h++,l.target===e.source){let e=[...o,l.id],t=e.join(`|`);if(m.has(t)||(m.add(t),p.push(Rf([...n],e,a))),p.length>=r){g=!0;return}}else if(!t.has(l.target)&&(t.add(l.target),n.push(l.target),o.push(l.id),s(l.target),o.pop(),n.pop(),t.delete(l.target),g))return}};if(s(e.target),g)break}return p.sort((e,t)=>e.id.localeCompare(t.id)),{loops:p,truncated:g,exploredTransitions:h}}function Bf(e){return e.gainElements.reduce((e,t)=>e*Math.max(.001,Math.abs(t.value)),1)/Math.max(.001,e.nominalDelayMilliseconds)}function Vf(e,t,n=Pf){let r=e.filter(e=>e.data.type===`delay`).sort((e,t)=>e.id.localeCompare(t.id)),i=new Map,a=0,o=!1;for(let s of r){let r=n-a;if(r<=0||i.size>=64){o=!0;break}let c=zf(e,t,{nodeId:s.id},64-i.size,r);a+=c.exploredTransitions,o||=c.truncated;for(let e of c.loops)i.set([...e.edgeIds].sort().join(`|`),e)}return{loops:[...i.values()].sort((e,t)=>Bf(t)-Bf(e)||e.nominalDelayMilliseconds-t.nominalDelayMilliseconds||e.id.localeCompare(t.id)).slice(0,1),truncated:o,exploredTransitions:a}}function Hf(e,t,n){return e.find(e=>e.id===t)?.data.ports.find(e=>e.id===n)}function Uf(e,t,n){let r=Hf(e,n.source,n.sourceHandle),i=Hf(e,n.target,n.targetHandle);if(!r||!i)return{kind:`invalid`,message:`Connect an existing output port to an existing input port.`};if(r.direction!==`output`||i.direction!==`input`)return{kind:`invalid`,message:`Cables must run from an output to an input.`};if(r.signal!==i.signal)return{kind:`invalid`,message:`${r.signal} cannot connect to an ${i.signal} input.`};let a=t.find(e=>e.target===n.target&&e.targetHandle===n.targetHandle);return a?{kind:`occupied`,signal:r.signal,existing:a}:{kind:`valid`,signal:r.signal}}function Wf(e,t){let n=`${e.source}-${e.sourceHandle}-to-${e.target}-${e.targetHandle}`,r=new Set(t.map(e=>e.id));if(!r.has(n))return n;let i=2;for(;r.has(`${n}-${i}`);)i++;return`${n}-${i}`}function Gf(e,t,n){return{id:Wf(e,n),source:e.source,sourceHandle:e.sourceHandle,target:e.target,targetHandle:e.targetHandle,type:`smoothstep`,className:`signal-edge signal-${t}`,data:{signal:t},interactionWidth:24}}function Kf(e,t,n=!1){let r=Uf(e.nodes,e.edges,t);if(r.kind===`invalid`)throw Error(r.message);if(r.kind===`occupied`&&!n)throw Error(`Input is occupied. Replace its cable or insert +.`);let i=r.kind===`occupied`?e.edges.filter(e=>e.id!==r.existing.id):e.edges;return{nodes:e.nodes,edges:[...i,Gf(t,r.signal,i)]}}function qf(e,t){let n=Uf(e.nodes,e.edges,t);if(n.kind!==`occupied`||n.signal!==`audio`)throw Error(`Automatic + insertion requires an occupied audio input.`);let r=e.nodes.find(e=>e.id===t.target),i=_f(`sum`,e.nodes),a=vf(`sum`,i,{x:r.position.x-210,y:r.position.y+110}),o=e.edges.filter(e=>e.id!==n.existing.id),s={source:n.existing.source,sourceHandle:n.existing.sourceHandle??null,target:i,targetHandle:`in-a`},c={source:t.source,sourceHandle:t.sourceHandle,target:i,targetHandle:`in-b`},l={source:i,sourceHandle:`out`,target:t.target,targetHandle:t.targetHandle},u=[...o,Gf(s,`audio`,o)];return u=[...u,Gf(c,`audio`,u)],u=[...u,Gf(l,`audio`,u)],{nodes:[...e.nodes,a],edges:u}}var Jf=(e,t,n)=>e.find(e=>e.id===t)?.value??n;function Yf({parameters:e,reducedMotion:t,sampleRate:n=48e3,compact:r=!1}){let i=Jf(e,`semitones`,12),a=Jf(e,`grain`,60),o=Jf(e,`overlap`,.5),s=Jf(e,`direction`,0)>=.5,c=Math.ceil(.6*n)+2,l={"--grain-cycle":`${Math.max(.65,a/55).toFixed(2)}s`,"--grain-overlap":`${Math.round(o*100)}%`};return(0,b.jsxs)(`figure`,{className:`pitch-visualization${r?` is-compact`:``}${s?` is-reverse`:``}${t?` is-reduced`:``}`,style:l,"aria-label":`Illustrative dual grain phase, ${s?`reverse`:`forward`}, ${i>=0?`+`:``}${i.toFixed(2)} semitones`,children:[r?null:(0,b.jsxs)(`figcaption`,{children:[(0,b.jsx)(`span`,{children:`ILLUSTRATIVE GRAIN PHASE`}),(0,b.jsx)(`strong`,{children:s?`REVERSE GRAINS`:`FORWARD GRAINS`})]}),(0,b.jsxs)(`div`,{className:`grain-rails`,"aria-hidden":`true`,children:[(0,b.jsx)(`i`,{className:`grain-window grain-window-a`,children:(0,b.jsx)(`b`,{})}),(0,b.jsx)(`i`,{className:`grain-window grain-window-b`,children:(0,b.jsx)(`b`,{})})]}),r?null:(0,b.jsxs)(b.Fragment,{children:[(0,b.jsxs)(`div`,{className:`pitch-visual-facts`,children:[(0,b.jsxs)(`span`,{children:[i>=0?`+`:``,i.toFixed(2),` st`]}),(0,b.jsxs)(`span`,{children:[a.toFixed(1),` ms grain`]}),(0,b.jsxs)(`span`,{children:[Math.round(o*100),`% overlap`]})]}),(0,b.jsxs)(`dl`,{className:`pitch-readonly`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`LATENCY`}),(0,b.jsxs)(`dd`,{children:[c.toLocaleString(),` samples / `,(c*1e3/n).toFixed(2),` ms`]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`QUALITY`}),(0,b.jsx)(`dd`,{children:`Dual grain · linear interpolation`})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`MOTION`}),(0,b.jsx)(`dd`,{children:t?`Static reduced-motion phase`:`Design-state animation`})]})]}),(0,b.jsx)(`p`,{children:`Phase is derived from saved controls for teaching only. It is not measured audio or sample-accurate read-head telemetry. Musical-ratio resampling is not a fixed-Hz frequency shift or moving-Delay Doppler effect. Reverse changes samples inside each causal grain—not the whole reverb and never pre-input audio.`})]})]})}var Xf=e=>e===`milliseconds`?`ms`:e===`hertz`?`Hz`:e===`semitones`?`st`:``;function Zf({data:e,selected:t}){let n=e.ports.filter(e=>e.direction===`input`),r=e.ports.filter(e=>e.direction===`output`),i=(e,t)=>`${(e+1)/(t+1)*100}%`;return(0,b.jsxs)(`article`,{className:`patch-node role-${e.role}${t?` is-selected`:``}`,"aria-label":`${e.label} ${e.type}`,children:[n.map((e,t)=>(0,b.jsx)(X,{className:`port port-${e.signal}`,id:e.id,position:U.Left,style:{top:i(t,n.length)},type:`target`},e.id)),(0,b.jsx)(`div`,{className:`node-kicker`,children:e.role}),(0,b.jsx)(`h3`,{children:e.type===`macro`?e.userName:e.label}),(0,b.jsx)(`div`,{className:`node-type`,children:e.type}),e.type===`envelope-follower`?(0,b.jsx)(`div`,{className:`signal-operation`,children:`AUDIO → ENVELOPE 0…1`}):null,e.type===`hold-gate`?(0,b.jsx)(`div`,{className:`signal-operation`,children:`AUDIO × CONTROL GATE`}):null,e.type===`pitch-shift`?(0,b.jsx)(`div`,{className:`signal-operation`,children:`MUSICAL RATIO · NOT FIXED HZ / DOPPLER`}):null,(0,b.jsxs)(`div`,{className:`energy-meter`,"aria-hidden":`true`,children:[(0,b.jsx)(`i`,{}),(0,b.jsx)(`i`,{}),(0,b.jsx)(`i`,{}),(0,b.jsx)(`i`,{}),(0,b.jsx)(`i`,{})]}),e.type===`pitch-shift`?(0,b.jsx)(Yf,{parameters:e.parameters,reducedMotion:!1,compact:!0}):null,e.controlPreview?(0,b.jsxs)(`div`,{className:`control-preview`,"aria-label":`${e.controlPreview.label} control preview ${e.controlPreview.value.toFixed(2)}`,children:[(0,b.jsx)(`span`,{children:e.controlPreview.label}),(0,b.jsxs)(`output`,{children:[e.controlPreview.value>=0?`+`:``,e.controlPreview.value.toFixed(2)]}),(0,b.jsx)(`i`,{style:{left:`${(e.controlPreview.value+1)*50}%`}})]}):null,e.parameters.length>0&&(0,b.jsxs)(`div`,{className:`node-parameter`,children:[e.parameters[0].value.toLocaleString(void 0,{maximumFractionDigits:2}),` `,Xf(e.parameters[0].unit)]}),r.map((e,t)=>(0,b.jsx)(X,{className:`port port-${e.signal}`,id:e.id,position:U.Right,style:{top:i(t,r.length)},type:`source`},e.id))]})}var Qf=0,$f=new Map,ep=!1;function tp(){let e=window.__JUCE__?.backend;if(!e)throw Error(`JUCE native integration is unavailable`);return ep||=(e.addEventListener(`__juce__complete`,({promiseId:e,result:t})=>{$f.get(e)?.(t),$f.delete(e)}),!0),e}function np(e,...t){let n=tp();if(!n)return Promise.resolve(void 0);let r=Qf++,i=new Promise(e=>$f.set(r,e));return n.emitEvent(`__juce__invoke`,{name:e,params:t,resultId:r}),i}function $(e){throw Error(`Patch load rejected: ${e}`)}function rp(e,t){return(typeof e!=`object`||!e||Array.isArray(e))&&$(`${t} must be an object`),e}function ip(e,t,n,r=[]){let i=new Set([...t,...r]),a=Object.keys(e).find(e=>!i.has(e));a&&$(`${n} contains unknown field '${a}' (closed schemas reject future fields)`);for(let r of t)r in e||$(`${n} is missing '${r}'`)}function ap(e,t){return(typeof e!=`number`||!Number.isFinite(e))&&$(`${t} must be a finite number`),e}function op(e,t,n,r){if(r===1)return t.modulation?{...t.modulation}:void 0;if(!t.modulation){e!==void 0&&$(`${n} does not expose a modulation socket`);return}let i=rp(e,`${n}.modulation`);ip(i,[`portId`,`amount`,`polarity`,`clampMinimum`,`clampMaximum`],`${n}.modulation`),(!t.modulation||i.portId!==t.modulation.portId)&&$(`${n}.modulation references the wrong parameter socket`),i.polarity!==`unipolar`&&i.polarity!==`bipolar`&&$(`${n}.modulation has an invalid polarity`);let a=ap(i.amount,`${n}.modulation.amount`),o=ap(i.clampMinimum,`${n}.modulation.clampMinimum`),s=ap(i.clampMaximum,`${n}.modulation.clampMaximum`);return(o<t.minimum||s>t.maximum||o>=s)&&$(`${n}.modulation clamp is outside the parameter range`),{portId:t.modulation.portId,amount:a,polarity:i.polarity,clampMinimum:o,clampMaximum:s}}function sp(e,t,n){return{schemaVersion:2,engineVersion:`0.1`,semantic:{nodes:e.map(e=>({id:e.id,type:e.data.type,...e.data.userName?{name:e.data.userName}:{},...e.data.presentation?{presentation:e.data.presentation}:{},ports:e.data.ports.map(e=>({...e})),parameters:e.data.parameters.map(({id:e,value:t,unit:n,modulation:r})=>({id:e,value:t,unit:n,...r?{modulation:{...r}}:{}}))})),connections:t.map(e=>({id:e.id,from:{nodeId:e.source,portId:String(e.sourceHandle??``)},to:{nodeId:e.target,portId:String(e.targetHandle??``)}}))},layout:{nodes:e.map(e=>({nodeId:e.id,x:e.position.x,y:e.position.y})),viewport:{...n}}}}function cp(e,t,n){return`${JSON.stringify(sp(e,t,n),null,2)}\n`}function lp(e,t){let n;try{n=JSON.parse(e)}catch(e){$(`invalid JSON (${e instanceof Error?e.message:`parse failure`})`)}let r=rp(n,`document`);ip(r,[`schemaVersion`,`engineVersion`,`semantic`,`layout`],`document`),r.schemaVersion!==1&&r.schemaVersion!==2&&$(`unsupported schemaVersion '${String(r.schemaVersion)}'`),r.engineVersion!==`0.1`&&$(`unsupported engineVersion '${String(r.engineVersion)}'`);let i=r.schemaVersion,a=rp(r.semantic,`semantic`);ip(a,[`nodes`,`connections`],`semantic`),(!Array.isArray(a.nodes)||!Array.isArray(a.connections))&&$(`semantic nodes/connections must be arrays`);let o=a.nodes,s=a.connections,c=new Map(t.nodes.map(e=>[e.id,e])),l=new Set,u=[];for(let[e,t]of o.entries()){let n=rp(t,`semantic.nodes[${e}]`);ip(n,[`id`,`type`,`ports`,`parameters`],`semantic.nodes[${e}]`,[`name`,`presentation`]),(typeof n.id!=`string`||!n.id||l.has(n.id))&&$(`node identity at index ${e} is invalid or duplicated`),l.add(n.id),typeof n.type!=`string`&&$(`node '${n.id}' has an invalid type`);let r=n.id,a=n.type,o=c.get(r),s=gf.get(a);a===`macro`&&(typeof n.name!=`string`||n.name.length<1||n.name.length>64)&&$(`macro '${r}' requires a name of 1 through 64 characters`),a!==`macro`&&n.name!==void 0&&$(`node '${r}' cannot contain a user name`),n.presentation!==void 0&&(a!==`macro`||n.presentation!==`gravity`)&&$(`node '${r}' has an unsupported presentation designation`),o&&o.type!==n.type&&$(`node '${n.id}' does not match the Barr reference`),!o&&!s&&$(`unsupported node type '${n.type}'`);let d=o?.ports??s.ports,f=o?.parameters??s.parameters,p=n.ports,m=n.parameters;(!Array.isArray(n.ports)||i===2&&n.ports.length!==d.length)&&$(`ports differ for node '${n.id}'`),p.forEach((e,t)=>{let n=rp(e,`node '${r}' port`);ip(n,[`id`,`signal`,`direction`],`node '${r}' port`);let i=d.find(e=>e.id===n.id);(!i||n.signal!==i.signal||n.direction!==i.direction)&&$(`port ${t} differs for node '${r}'`)});let h=a===`control-map`&&m.length===3&&f.length===8;(!Array.isArray(n.parameters)||n.parameters.length!==f.length&&!h)&&$(`parameters differ for node '${n.id}'`);let g=m.map((e,t)=>{let n=rp(e,`node '${r}' parameter`),a=f[t];ip(n,i===1||!a?.modulation?[`id`,`value`,`unit`]:[`id`,`value`,`unit`,`modulation`],`node '${r}' parameter`);let o=ap(n.value,`${r}.${String(n.id)}`);return(n.id!==a?.id||n.unit!==a.unit)&&$(`parameter ${t} differs for node '${r}'`),(o<a.minimum||o>a.maximum)&&$(`${r}.${a.id} is outside ${a.minimum}..${a.maximum}`),{...a,value:o,modulation:op(n.modulation,a,`${r}.${a.id}`,i)}});h&&g.push(...structuredClone(f.slice(3)));let _=o?{id:r,type:`patchNode`,position:{x:0,y:0},data:{label:o.label,type:o.type,role:o.role,ports:structuredClone(o.ports),parameters:g,runtimeBound:!0}}:vf(a,r,{x:0,y:0});_.data.parameters=g,a===`macro`&&(_.data.userName=n.name),n.presentation===`gravity`&&(_.data.presentation=`gravity`),u.push(_)}let d=of(u);d&&$(d);let f=new Map(u.map(e=>[e.id,new Map(e.data.ports.map(e=>[e.id,e]))])),p=new Set,m=new Set,h=s.map((e,t)=>{let n=rp(e,`semantic.connections[${t}]`);ip(n,[`id`,`from`,`to`],`semantic.connections[${t}]`);let r=rp(n.from,`connection.from`),i=rp(n.to,`connection.to`);ip(r,[`nodeId`,`portId`],`connection.from`),ip(i,[`nodeId`,`portId`],`connection.to`),(typeof n.id!=`string`||p.has(n.id))&&$(`connection identity at index ${t} is invalid or duplicated`);let a=n.id;p.add(a);let o=String(r.nodeId),s=String(i.nodeId),c=`${s}.${String(i.portId)}`,l=f.get(o)?.get(String(r.portId)),u=f.get(s)?.get(String(i.portId));return(!l||l.direction!==`output`||!u||u.direction!==`input`||l.signal!==u.signal)&&$(`connection '${a}' has invalid endpoints`),m.has(c)&&$(`input '${c}' has more than one cable; insert Sum (+)`),m.add(c),{id:a,source:o,sourceHandle:String(r.portId),target:s,targetHandle:String(i.portId),type:`smoothstep`,className:`signal-edge signal-${l.signal}`,data:{signal:l.signal},interactionWidth:24}}),g=rp(r.layout,`layout`);ip(g,[`nodes`,`viewport`],`layout`),(!Array.isArray(g.nodes)||g.nodes.length!==u.length)&&$(`layout must position every node exactly once`);let _=g.nodes,v=new Map;_.forEach((e,t)=>{let n=rp(e,`layout.nodes[${t}]`);ip(n,[`nodeId`,`x`,`y`],`layout.nodes[${t}]`),(typeof n.nodeId!=`string`||!l.has(n.nodeId)||v.has(n.nodeId))&&$(`layout node identity at index ${t} is invalid or duplicated`);let r=n.nodeId;v.set(r,{x:ap(n.x,`${r}.x`),y:ap(n.y,`${r}.y`)})}),u.forEach(e=>{e.position=v.get(e.id)});let y=rp(g.viewport,`layout.viewport`);ip(y,[`x`,`y`,`zoom`],`layout.viewport`);let b={x:ap(y.x,`viewport.x`),y:ap(y.y,`viewport.y`),zoom:ap(y.zoom,`viewport.zoom`)};return b.zoom<=0&&$(`viewport.zoom must be positive`),{nodes:u,edges:h,viewport:b,source:sp(u,h,b)}}var up=`# Keith Barr reverb architectures
+        M${D.x},${D.y}h${D.width}v${D.height}h${-D.width}z`,fillRule:`evenodd`,pointerEvents:`none`})]})})}Xd.displayName=`MiniMap`;var Zd=(0,_.memo)(Xd),Qd=e=>t=>e?`${Math.max(1/t.transform[2],1)}`:void 0,$d={[Us.Line]:`right`,[Us.Handle]:`bottom-right`};function ef({nodeId:e,position:t,variant:n=Us.Handle,className:r,style:i=void 0,children:a,color:o,minWidth:s=10,minHeight:c=10,maxWidth:l=Number.MAX_VALUE,maxHeight:u=Number.MAX_VALUE,keepAspectRatio:d=!1,resizeDirection:f,autoScale:p=!0,shouldResize:m,onResizeStart:h,onResize:g,onResizeEnd:v}){let y=Pl(),S=typeof e==`string`?e:y,C=_c(),w=(0,_.useRef)(null),T=n===Us.Handle,E=K((0,_.useCallback)(Qd(T&&p),[T,p]),pc),D=(0,_.useRef)(null),O=t??$d[n];(0,_.useEffect)(()=>{if(!(!w.current||!S))return D.current||=ec({domNode:w.current,nodeId:S,getStoreItems:()=>{let{nodeLookup:e,transform:t,snapGrid:n,snapToGrid:r,nodeOrigin:i,domNode:a}=C.getState();return{nodeLookup:e,transform:t,snapGrid:n,snapToGrid:r,nodeOrigin:i,paneDomNode:a}},onChange:(e,t)=>{let{triggerNodeChanges:n,nodeLookup:r,parentLookup:i,nodeOrigin:a}=C.getState(),o=[],s={x:e.x,y:e.y},c=r.get(S);if(c&&c.expandParent&&c.parentId){let t=c.origin??a,n=e.width??c.measured.width??0,l=e.height??c.measured.height??0,u=ss([{id:c.id,parentId:c.parentId,rect:{width:n,height:l,...fo({x:e.x??c.position.x,y:e.y??c.position.y},{width:n,height:l},c.parentId,r,t)}}],r,i,a);o.push(...u),s.x=e.x?Math.max(t[0]*n,e.x):void 0,s.y=e.y?Math.max(t[1]*l,e.y):void 0}if(s.x!==void 0&&s.y!==void 0){let e={id:S,type:`position`,position:{...s}};o.push(e)}if(e.width!==void 0&&e.height!==void 0){let t={id:S,type:`dimensions`,resizing:!0,setAttributes:f?f===`horizontal`?`width`:`height`:!0,dimensions:{width:e.width,height:e.height}};o.push(t)}for(let e of t){let t={...e,type:`position`};o.push(t)}n(o)},onEnd:({width:e,height:t})=>{let n={id:S,type:`dimensions`,resizing:!1,dimensions:{width:e,height:t}};C.getState().triggerNodeChanges([n])}}),D.current.update({controlPosition:O,boundaries:{minWidth:s,minHeight:c,maxWidth:l,maxHeight:u},keepAspectRatio:d,resizeDirection:f,onResizeStart:h,onResize:g,onResizeEnd:v,shouldResize:m}),()=>{D.current?.destroy()}},[O,s,c,l,u,d,h,g,v,m]);let k=O.split(`-`);return(0,b.jsx)(`div`,{className:x([`react-flow__resize-control`,`nodrag`,...k,n,r]),ref:w,style:{...i,scale:E,...o&&{[T?`backgroundColor`:`borderColor`]:o}},children:a})}(0,_.memo)(ef);var tf=new Set([`io`,`routing`,`filter`,`delay`,`diffusion`,`pitch`,`tank`,`tap`]),nf=new Set([`stereo-input`,`stereo-output`,`sum`,`lowpass`,`allpass`]);function Q(e,t){if(!e)throw Error(`Runtime snapshot mismatch: ${t}`)}function rf(e){Q(typeof e==`object`&&!!e,`payload is not an object`);let t=e;Q(t.contractVersion===2,`unsupported contract version`),Q(t.engineId===`barr-reference`,`unexpected engine identity`),Q(typeof t.sampleRate==`number`&&Number.isFinite(t.sampleRate),`invalid sample rate`),Q(Array.isArray(t.nodes)&&t.nodes.length>0,`nodes are missing`),Q(Array.isArray(t.connections),`connections are missing`),Q(Array.isArray(t.outsidePatch),`outside-patch processing is missing`),Q(t.productVersion===void 0||typeof t.productVersion==`string`&&t.productVersion.length>0,`invalid product version`),Q(t.buildCommit===void 0||typeof t.buildCommit==`string`&&/^[0-9A-Za-z._-]+$/.test(t.buildCommit),`invalid build commit`),Q(t.restoredPatch===void 0||typeof t.restoredPatch==`object`&&t.restoredPatch!==null&&!Array.isArray(t.restoredPatch),`invalid restored patch`);let n=new Set,r=new Map;for(let e of t.nodes){Q(typeof e.id==`string`&&!n.has(e.id),`node IDs must be unique`),n.add(e.id),Q(nf.has(e.type),`unsupported node type ${e.type}`),Q(tf.has(e.role),`unsupported role ${e.role}`),Q(Array.isArray(e.ports)&&Array.isArray(e.parameters),`invalid node ${e.id}`),Q(Number.isFinite(e.position?.x)&&Number.isFinite(e.position?.y),`invalid layout for ${e.id}`);let t=new Map;for(let n of e.ports)Q(typeof n.id==`string`&&!t.has(n.id),`port IDs must be unique on ${e.id}`),Q(n.signal===`audio`||n.signal===`control`,`invalid signal on ${e.id}.${n.id}`),Q(n.direction===`input`||n.direction===`output`,`invalid direction on ${e.id}.${n.id}`),t.set(n.id,n);r.set(e.id,t);for(let n of e.parameters){Q(typeof n.id==`string`&&Number.isFinite(n.value),`invalid parameter on ${e.id}`),Q(typeof n.unit==`string`&&n.unit.length>0,`missing unit on ${e.id}.${n.id}`),Q(Number.isFinite(n.minimum)&&Number.isFinite(n.maximum)&&n.minimum<n.maximum,`invalid range on ${e.id}.${n.id}`),Q(Number.isFinite(n.step)&&n.step>0,`invalid step on ${e.id}.${n.id}`);let r=n.modulation;Q(typeof r==`object`&&!!r,`missing modulation mapping on ${e.id}.${n.id}`),Q(typeof r.portId==`string`,`invalid modulation socket on ${e.id}.${n.id}`);let i=t.get(r.portId);Q(i?.signal===`control`&&i.direction===`input`,`modulation socket is not a control input on ${e.id}.${n.id}`),Q(Number.isFinite(r.amount),`invalid modulation amount on ${e.id}.${n.id}`),Q(r.polarity===`unipolar`||r.polarity===`bipolar`,`invalid modulation polarity on ${e.id}.${n.id}`),Q(Number.isFinite(r.clampMinimum)&&Number.isFinite(r.clampMaximum)&&r.clampMinimum<r.clampMaximum,`invalid modulation clamp on ${e.id}.${n.id}`)}}for(let e of t.connections){Q(n.has(e.source)&&n.has(e.target),`connection ${e.id} references an unknown node`),Q(e.signal===`audio`||e.signal===`control`,`connection ${e.id} has an invalid signal`);let t=r.get(e.source)?.get(e.sourcePort),i=r.get(e.target)?.get(e.targetPort);Q(t?.direction===`output`&&t.signal===e.signal,`connection ${e.id} has an invalid source port`),Q(i?.direction===`input`&&i.signal===e.signal,`connection ${e.id} has an invalid target port`)}return t}function af(e){return{nodes:e.nodes.map(e=>({id:e.id,type:`patchNode`,position:{...e.position},data:{label:e.label,type:e.type,role:e.role,ports:e.ports.map(e=>({...e})),parameters:e.parameters.map(e=>({...e})),runtimeBound:!0,...e.name?{userName:e.name}:{},...e.presentation?{presentation:e.presentation}:{}}})),edges:e.connections.map(e=>({id:e.id,source:e.source,sourceHandle:e.sourcePort,target:e.target,targetHandle:e.targetPort,type:`smoothstep`,className:`signal-edge signal-${e.signal}`,data:{signal:e.signal},interactionWidth:24}))}}function of(e){let t=e.filter(e=>e.data.type===`stereo-input`).length,n=e.filter(e=>e.data.type===`stereo-output`).length;return t===1?n===1?null:`Patch requires exactly one Stereo Output (found ${n}).`:`Patch requires exactly one Stereo Input (found ${t}).`}function sf(e,t){let n=new Set(e.filter(e=>e.selected).map(e=>e.id)),r=new Set(t.filter(e=>e.selected).map(e=>e.id));return{nodes:e.filter(e=>!n.has(e.id)),edges:t.filter(e=>!r.has(e.id)&&!n.has(e.source)&&!n.has(e.target))}}var cf=(e=`in`)=>({id:e,signal:`audio`,direction:`input`}),lf=(e=`out`)=>({id:e,signal:`audio`,direction:`output`}),uf=e=>({id:e,signal:`control`,direction:`input`}),df=(e=`out`)=>({id:e,signal:`control`,direction:`output`}),ff=(e,t,n,r,i,a,o)=>({id:e,value:t,unit:n,minimum:r,maximum:i,step:a,modulation:{portId:`${e}-mod`,amount:o,polarity:`bipolar`,clampMinimum:r,clampMaximum:i}}),pf=(e,t,n,r,i,a,o)=>({...ff(e,t,n,r,i,a,o),modulation:{portId:`${e}-mod`,amount:o,polarity:`bipolar`,clampMinimum:r,clampMaximum:i}}),mf=(e,t,n,r,i,a)=>({id:e,value:t,unit:n,minimum:r,maximum:i,step:a}),hf=[{type:`stereo-input`,label:`Stereo Input`,role:`io`,ports:[lf(`out-l`),lf(`out-r`)],parameters:[]},{type:`stereo-output`,label:`Stereo Output`,role:`io`,ports:[cf(`in-l`),cf(`in-r`)],parameters:[]},{type:`gain`,label:`Gain / Invert`,role:`routing`,ports:[cf(),uf(`gain-mod`),lf()],parameters:[ff(`gain`,1,`linear`,-1,1,.001,.5)]},{type:`sum`,label:`Sum (+)`,role:`routing`,ports:[cf(`in-a`),cf(`in-b`),lf()],parameters:[]},{type:`delay`,label:`Delay`,role:`delay`,ports:[cf(),uf(`delay-mod`),lf()],parameters:[ff(`delay`,10,`milliseconds`,.1,1e4,.01,10)]},{type:`allpass`,label:`Allpass`,role:`diffusion`,ports:[cf(),uf(`delay-mod`),uf(`coefficient-mod`),lf()],parameters:[ff(`delay`,10,`milliseconds`,.1,100,.01,2),ff(`coefficient`,.5,`unitless`,-.95,.95,.001,.25)]},{type:`lowpass`,label:`Low-pass`,role:`filter`,ports:[cf(),uf(`cutoff-mod`),lf()],parameters:[ff(`cutoff`,7e3,`hertz`,20,2e4,1,5e3)]},{type:`pitch-shift`,label:`Pitch Shift`,role:`pitch`,ports:[cf(),uf(`semitones-mod`),uf(`grain-mod`),uf(`overlap-mod`),lf()],parameters:[ff(`semitones`,12,`semitones`,-24,24,.01,12),ff(`grain`,60,`milliseconds`,20,120,.1,20),ff(`overlap`,.5,`normalized`,.1,1,.01,.25),mf(`direction`,0,`direction`,0,1,1)]},{type:`macro`,label:`Macro`,role:`control`,ports:[df()],parameters:[mf(`value`,0,`normalized`,-1,1,.001),mf(`default-value`,0,`normalized`,-1,1,.001),mf(`center-detent`,1,`boolean`,0,1,1)]},{type:`lfo`,label:`LFO`,role:`control`,ports:[uf(`frequency-mod`),uf(`phase-mod`),uf(`waveform-mod`),uf(`run-mode-mod`),df()],parameters:[pf(`frequency`,1,`hertz`,.01,100,.01,1),pf(`phase`,0,`cycles`,0,.999,.001,.25),pf(`waveform`,0,`waveform`,0,1,1,1),pf(`run-mode`,0,`run-mode`,0,1,1,1)]},{type:`control-map`,label:`Curve Mapper`,role:`control`,ports:[uf(`in`),uf(`scale-mod`),uf(`offset-mod`),uf(`polarity-mod`),df()],parameters:[pf(`scale`,1,`linear`,-4,4,.01,1),pf(`offset`,0,`unitless`,-1,1,.01,.5),pf(`polarity`,1,`polarity`,0,1,1,1),mf(`curve-family`,0,`curve-family`,0,2,1),mf(`curve-amount`,0,`unitless`,-8,8,.01),mf(`exponent`,1,`unitless`,.1,8,.01),mf(`clamp-min`,-1,`unitless`,-1,1,.01),mf(`clamp-max`,1,`unitless`,-1,1,.01)]},{type:`envelope-follower`,label:`Envelope Follower`,role:`control`,ports:[cf(),df()],parameters:[mf(`attack`,5,`milliseconds`,.1,500,.1),mf(`release`,100,`milliseconds`,1,5e3,1)]},{type:`hold-gate`,label:`Hold Gate`,role:`routing`,ports:[cf(),uf(`gate`),lf()],parameters:[mf(`threshold`,.5,`unitless`,0,1,.01),mf(`attack`,2,`milliseconds`,.1,100,.1),mf(`hold`,250,`milliseconds`,1,2e3,1),mf(`release`,20,`milliseconds`,.1,1e3,.1)]}],gf=new Map(hf.map(e=>[e.type,e]));function _f(e,t){let n=new Set(t.map(e=>e.id)),r=1;for(;n.has(`${e}-${r}`);)r++;return`${e}-${r}`}function vf(e,t,n){let r=gf.get(e);if(!r)throw Error(`Unsupported module type '${e}'`);return{id:t,type:`patchNode`,position:{...n},data:{label:r.label,type:e,role:r.role,ports:structuredClone(r.ports),parameters:structuredClone(r.parameters),runtimeBound:!1,...e===`macro`?{userName:`Macro`}:{}}}}function yf(e){let t=structuredClone(e);return delete t.selected,delete t.dragging,t}function bf(e){let t=structuredClone(e);return delete t.selected,t}function xf(e){return{nodes:e.nodes.map(yf),edges:e.edges.map(bf)}}function Sf(e,t){return{nodes:e.nodes.map(e=>({id:e.id,type:e.data.type,userName:e.data.userName,presentation:e.data.presentation,...t?{position:{x:e.position.x,y:e.position.y}}:{},ports:e.data.ports.map(({id:e,signal:t,direction:n})=>({id:e,signal:t,direction:n})),parameters:e.data.parameters.map(({id:e,value:t,unit:n,modulation:r})=>({id:e,value:t,unit:n,modulation:r?{...r}:void 0}))})).sort((e,t)=>e.id.localeCompare(t.id)),edges:e.edges.map(e=>({id:e.id,source:e.source,sourceHandle:e.sourceHandle??``,target:e.target,targetHandle:e.targetHandle??``})).sort((e,t)=>e.id.localeCompare(t.id))}}function Cf(e){let t=2166136261;for(let n=0;n<e.length;n++)t^=e.charCodeAt(n),t=Math.imul(t,16777619);return(t>>>0).toString(16).padStart(8,`0`)}function wf(e){return Cf(JSON.stringify(Sf(e,!0)))}var Tf=(e={nodes:[],edges:[]})=>({undo:[],redo:[],cleanHash:wf(e)});function Ef(e,t,n,r){let i=xf(n),a=xf(r);if(wf(i)===wf(a))return e;let o={label:t,before:i,after:a,bytes:new TextEncoder().encode(JSON.stringify({label:t,before:i,after:a})).byteLength},s=[...e.undo,o].slice(-100);for(;s.length&&s.reduce((e,t)=>e+t.bytes,0)>8388608;)s.shift();return{undo:s,redo:[],cleanHash:e.cleanHash}}function Df(e){let t=e.undo.at(-1);return{edit:t,history:t?{...e,undo:e.undo.slice(0,-1),redo:[t,...e.redo]}:e}}function Of(e){let t=e.redo[0];return{edit:t,history:t?{...e,undo:[...e.undo,t],redo:e.redo.slice(1)}:e}}function kf(e,t){return{...e,cleanHash:wf(t)}}function Af(e,t){return e.cleanHash===wf(t)}function jf(e){let t=e.nodes.filter(e=>e.selected&&e.data.role!==`io`).map(e=>structuredClone(e));if(!t.length)return null;let n=new Set(t.map(e=>e.id));return{nodes:t,edges:e.edges.filter(e=>n.has(e.source)&&n.has(e.target)).map(e=>structuredClone(e))}}function Mf(e,t){let n=1,r=`${e}-copy`;for(;t.has(r);)r=`${e}-copy-${++n}`;return t.add(r),r}function Nf(e,t,n=40){let r=new Set(e.nodes.map(e=>e.id)),i=new Set(e.edges.map(e=>e.id)),a=new Map,o=t.nodes.map(e=>{let t=Mf(e.id,r);return a.set(e.id,t),{...structuredClone(e),id:t,position:{x:e.position.x+n,y:e.position.y+n},selected:!0,data:{...structuredClone(e.data),runtimeBound:!1}}}),s=t.edges.map(e=>({...structuredClone(e),id:Mf(e.id,i),source:a.get(e.source),target:a.get(e.target),selected:!0}));return{nodes:[...e.nodes.map(e=>({...e,selected:!1})),...o],edges:[...e.edges.map(e=>({...e,selected:!1})),...s]}}var Pf=1e5;function Ff(e,t,n,r){let i=n?.loops[r],a=new Set(i?.nodeIds??[]),o=new Set(i?.edgeIds??[]),s=new Set(n?.loops.flatMap(e=>e.nodeIds)??[]),c=new Set(n?.loops.flatMap(e=>e.edgeIds)??[]),l=(e,t,n)=>[e?.replace(/\bloop-(?:active|related)\b/g,``).trim(),t?`loop-active`:n?`loop-related`:``].filter(Boolean).join(` `);return{nodes:e.map(e=>({...e,className:l(e.className,a.has(e.id),s.has(e.id))})),edges:t.map(e=>({...e,className:l(e.className,o.has(e.id),c.has(e.id))}))}}function If(e,t,n){let r=n?.loops[0],i=new Set(r?.nodeIds??[]),a=new Set(r?.edgeIds??[]),o=(e,t)=>[e?.replace(/\bsafety-loop-active\b/g,``).trim(),t?`safety-loop-active`:``].filter(Boolean).join(` `);return{nodes:e.map(e=>({...e,className:o(e.className,i.has(e.id))})),edges:t.map(e=>({...e,className:o(e.className,a.has(e.id))}))}}function Lf(e,t){let n=new Map(e.map(e=>[e,[]]));for(let e of t)n.get(e.source)?.push(e.target);for(let e of n.values())e.sort();let r=new Map,i=new Map,a=[],o=new Set,s=[],c=0,l=e=>{r.set(e,c),i.set(e,c++),a.push(e),o.add(e);for(let t of n.get(e)??[])r.has(t)?o.has(t)&&i.set(e,Math.min(i.get(e),r.get(t))):(l(t),i.set(e,Math.min(i.get(e),i.get(t))));if(i.get(e)!==r.get(e))return;let t=[];for(;a.length;){let n=a.pop();if(o.delete(n),t.push(n),n===e)break}s.push(t)};for(let t of[...e].sort())r.has(t)||l(t);let u=new Map;for(let e of s){let t=new Set(e);for(let n of e)u.set(n,t)}return u}function Rf(e,t,n){let r=0,i=[],a=[];for(let t of e){let e=n.get(t);if(!e)continue;let o=e.data.parameters.find(e=>e.id===`delay`&&e.unit===`milliseconds`);o&&(e.data.type===`delay`||e.data.type===`allpass`)&&(r+=o.value);for(let n of e.data.parameters)(n.id===`gain`||n.id===`coefficient`)&&i.push({nodeId:t,label:e.data.label,parameter:n.id,value:n.value,unit:n.unit}),e.data.type===`lowpass`&&n.id===`cutoff`&&a.push({nodeId:t,label:e.data.label,parameter:n.id,value:n.value,unit:n.unit})}return{id:t.join(`|`),nodeIds:e,edgeIds:t,nominalDelayMilliseconds:r,gainElements:i,filters:a}}function zf(e,t,n,r=64,i=Pf){let a=new Map(e.map(e=>[e.id,e])),o=new Map(t.map(e=>[e.id,e])),s=`edgeId`in n?o.get(n.edgeId):void 0,c=`nodeId`in n?n.nodeId:s?.source;if(!c||!a.has(c))return{loops:[],truncated:!1,exploredTransitions:0};let l=Lf([...a.keys()],t).get(c)??new Set,u=t.some(e=>e.source===c&&e.target===c);if(l.size<2&&!u||s&&(!l.has(s.target)||!l.has(s.source)))return{loops:[],truncated:!1,exploredTransitions:0};let d=new Map;for(let e of t)if(l.has(e.source)&&l.has(e.target)){let t=d.get(e.source)??[];t.push(e),d.set(e.source,t)}for(let e of d.values())e.sort((e,t)=>e.id.localeCompare(t.id));let f=s?[s]:d.get(c)??[],p=[],m=new Set,h=0,g=!1;for(let e of f){if(p.length>=r||h>=i){g=!0;break}if(e.target===e.source){let t=Rf([e.source],[e.id],a);m.has(t.id)||(m.add(t.id),p.push(t));continue}let t=new Set([e.source,e.target]),n=[e.source,e.target],o=[e.id],s=c=>{for(let l of d.get(c)??[]){if(h>=i){g=!0;return}if(h++,l.target===e.source){let e=[...o,l.id],t=e.join(`|`);if(m.has(t)||(m.add(t),p.push(Rf([...n],e,a))),p.length>=r){g=!0;return}}else if(!t.has(l.target)&&(t.add(l.target),n.push(l.target),o.push(l.id),s(l.target),o.pop(),n.pop(),t.delete(l.target),g))return}};if(s(e.target),g)break}return p.sort((e,t)=>e.id.localeCompare(t.id)),{loops:p,truncated:g,exploredTransitions:h}}function Bf(e){return e.gainElements.reduce((e,t)=>e*Math.max(.001,Math.abs(t.value)),1)/Math.max(.001,e.nominalDelayMilliseconds)}function Vf(e,t,n=Pf){let r=e.filter(e=>e.data.type===`delay`).sort((e,t)=>e.id.localeCompare(t.id)),i=new Map,a=0,o=!1;for(let s of r){let r=n-a;if(r<=0||i.size>=64){o=!0;break}let c=zf(e,t,{nodeId:s.id},64-i.size,r);a+=c.exploredTransitions,o||=c.truncated;for(let e of c.loops)i.set([...e.edgeIds].sort().join(`|`),e)}return{loops:[...i.values()].sort((e,t)=>Bf(t)-Bf(e)||e.nominalDelayMilliseconds-t.nominalDelayMilliseconds||e.id.localeCompare(t.id)).slice(0,1),truncated:o,exploredTransitions:a}}function Hf(e,t,n){return e.find(e=>e.id===t)?.data.ports.find(e=>e.id===n)}function Uf(e,t,n){let r=Hf(e,n.source,n.sourceHandle),i=Hf(e,n.target,n.targetHandle);if(!r||!i)return{kind:`invalid`,message:`Connect an existing output port to an existing input port.`};if(r.direction!==`output`||i.direction!==`input`)return{kind:`invalid`,message:`Cables must run from an output to an input.`};if(r.signal!==i.signal)return{kind:`invalid`,message:`${r.signal} cannot connect to an ${i.signal} input.`};let a=t.find(e=>e.target===n.target&&e.targetHandle===n.targetHandle);return a?{kind:`occupied`,signal:r.signal,existing:a}:{kind:`valid`,signal:r.signal}}function Wf(e,t){let n=`${e.source}-${e.sourceHandle}-to-${e.target}-${e.targetHandle}`,r=new Set(t.map(e=>e.id));if(!r.has(n))return n;let i=2;for(;r.has(`${n}-${i}`);)i++;return`${n}-${i}`}function Gf(e,t,n){return{id:Wf(e,n),source:e.source,sourceHandle:e.sourceHandle,target:e.target,targetHandle:e.targetHandle,type:`smoothstep`,className:`signal-edge signal-${t}`,data:{signal:t},interactionWidth:24}}function Kf(e,t,n=!1){let r=Uf(e.nodes,e.edges,t);if(r.kind===`invalid`)throw Error(r.message);if(r.kind===`occupied`&&!n)throw Error(`Input is occupied. Replace its cable or insert +.`);let i=r.kind===`occupied`?e.edges.filter(e=>e.id!==r.existing.id):e.edges;return{nodes:e.nodes,edges:[...i,Gf(t,r.signal,i)]}}function qf(e,t){let n=Uf(e.nodes,e.edges,t);if(n.kind!==`occupied`||n.signal!==`audio`)throw Error(`Automatic + insertion requires an occupied audio input.`);let r=e.nodes.find(e=>e.id===t.target),i=_f(`sum`,e.nodes),a=vf(`sum`,i,{x:r.position.x-210,y:r.position.y+110}),o=e.edges.filter(e=>e.id!==n.existing.id),s={source:n.existing.source,sourceHandle:n.existing.sourceHandle??null,target:i,targetHandle:`in-a`},c={source:t.source,sourceHandle:t.sourceHandle,target:i,targetHandle:`in-b`},l={source:i,sourceHandle:`out`,target:t.target,targetHandle:t.targetHandle},u=[...o,Gf(s,`audio`,o)];return u=[...u,Gf(c,`audio`,u)],u=[...u,Gf(l,`audio`,u)],{nodes:[...e.nodes,a],edges:u}}var Jf=(e,t,n)=>e.find(e=>e.id===t)?.value??n;function Yf({parameters:e,reducedMotion:t,sampleRate:n=48e3,compact:r=!1}){let i=Jf(e,`semitones`,12),a=Jf(e,`grain`,60),o=Jf(e,`overlap`,.5),s=Jf(e,`direction`,0)>=.5,c=Math.ceil(.6*n)+2,l={"--grain-cycle":`${Math.max(.65,a/55).toFixed(2)}s`,"--grain-overlap":`${Math.round(o*100)}%`};return(0,b.jsxs)(`figure`,{className:`pitch-visualization${r?` is-compact`:``}${s?` is-reverse`:``}${t?` is-reduced`:``}`,style:l,"aria-label":`Illustrative dual grain phase, ${s?`reverse`:`forward`}, ${i>=0?`+`:``}${i.toFixed(2)} semitones`,children:[r?null:(0,b.jsxs)(`figcaption`,{children:[(0,b.jsx)(`span`,{children:`ILLUSTRATIVE GRAIN PHASE`}),(0,b.jsx)(`strong`,{children:s?`REVERSE GRAINS`:`FORWARD GRAINS`})]}),(0,b.jsxs)(`div`,{className:`grain-rails`,"aria-hidden":`true`,children:[(0,b.jsx)(`i`,{className:`grain-window grain-window-a`,children:(0,b.jsx)(`b`,{})}),(0,b.jsx)(`i`,{className:`grain-window grain-window-b`,children:(0,b.jsx)(`b`,{})})]}),r?null:(0,b.jsxs)(b.Fragment,{children:[(0,b.jsxs)(`div`,{className:`pitch-visual-facts`,children:[(0,b.jsxs)(`span`,{children:[i>=0?`+`:``,i.toFixed(2),` st`]}),(0,b.jsxs)(`span`,{children:[a.toFixed(1),` ms grain`]}),(0,b.jsxs)(`span`,{children:[Math.round(o*100),`% overlap`]})]}),(0,b.jsxs)(`dl`,{className:`pitch-readonly`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`LATENCY`}),(0,b.jsxs)(`dd`,{children:[c.toLocaleString(),` samples / `,(c*1e3/n).toFixed(2),` ms`]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`QUALITY`}),(0,b.jsx)(`dd`,{children:`Dual grain · linear interpolation`})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`MOTION`}),(0,b.jsx)(`dd`,{children:t?`Static reduced-motion phase`:`Design-state animation`})]})]}),(0,b.jsx)(`p`,{children:`Phase is derived from saved controls for teaching only. It is not measured audio or sample-accurate read-head telemetry. Musical-ratio resampling is not a fixed-Hz frequency shift or moving-Delay Doppler effect. Reverse changes samples inside each causal grain—not the whole reverb and never pre-input audio.`})]})]})}var Xf=e=>e===`milliseconds`?`ms`:e===`hertz`?`Hz`:e===`semitones`?`st`:``;function Zf({data:e,selected:t}){let n=e.ports.filter(e=>e.direction===`input`),r=e.ports.filter(e=>e.direction===`output`),i=(e,t)=>`${(e+1)/(t+1)*100}%`;return(0,b.jsxs)(`article`,{className:`patch-node role-${e.role}${t?` is-selected`:``}`,"aria-label":`${e.label} ${e.type}`,children:[n.map((e,t)=>(0,b.jsx)(X,{className:`port port-${e.signal}`,id:e.id,position:U.Left,style:{top:i(t,n.length)},type:`target`},e.id)),(0,b.jsx)(`div`,{className:`node-kicker`,children:e.role}),(0,b.jsx)(`h3`,{children:e.userName?.trim()||e.label}),(0,b.jsx)(`div`,{className:`node-type`,children:e.type}),e.type===`envelope-follower`?(0,b.jsx)(`div`,{className:`signal-operation`,children:`AUDIO → ENVELOPE 0…1`}):null,e.type===`hold-gate`?(0,b.jsx)(`div`,{className:`signal-operation`,children:`AUDIO × CONTROL GATE`}):null,e.type===`pitch-shift`?(0,b.jsx)(`div`,{className:`signal-operation`,children:`MUSICAL RATIO · NOT FIXED HZ / DOPPLER`}):null,(0,b.jsxs)(`div`,{className:`energy-meter`,"aria-hidden":`true`,children:[(0,b.jsx)(`i`,{}),(0,b.jsx)(`i`,{}),(0,b.jsx)(`i`,{}),(0,b.jsx)(`i`,{}),(0,b.jsx)(`i`,{})]}),e.type===`pitch-shift`?(0,b.jsx)(Yf,{parameters:e.parameters,reducedMotion:!1,compact:!0}):null,e.controlPreview?(0,b.jsxs)(`div`,{className:`control-preview`,"aria-label":`${e.controlPreview.label} control preview ${e.controlPreview.value.toFixed(2)}`,children:[(0,b.jsx)(`span`,{children:e.controlPreview.label}),(0,b.jsxs)(`output`,{children:[e.controlPreview.value>=0?`+`:``,e.controlPreview.value.toFixed(2)]}),(0,b.jsx)(`i`,{style:{left:`${(e.controlPreview.value+1)*50}%`}})]}):null,e.parameters.length>0&&(0,b.jsxs)(`div`,{className:`node-parameter`,children:[e.parameters[0].value.toLocaleString(void 0,{maximumFractionDigits:2}),` `,Xf(e.parameters[0].unit)]}),r.map((e,t)=>(0,b.jsx)(X,{className:`port port-${e.signal}`,id:e.id,position:U.Right,style:{top:i(t,r.length)},type:`source`},e.id))]})}var Qf=0,$f=new Map,ep=!1;function tp(){let e=window.__JUCE__?.backend;if(!e)throw Error(`JUCE native integration is unavailable`);return ep||=(e.addEventListener(`__juce__complete`,({promiseId:e,result:t})=>{$f.get(e)?.(t),$f.delete(e)}),!0),e}function np(e,...t){let n=tp();if(!n)return Promise.resolve(void 0);let r=Qf++,i=new Promise(e=>$f.set(r,e));return n.emitEvent(`__juce__invoke`,{name:e,params:t,resultId:r}),i}function $(e){throw Error(`Patch load rejected: ${e}`)}function rp(e,t){return(typeof e!=`object`||!e||Array.isArray(e))&&$(`${t} must be an object`),e}function ip(e,t,n,r=[]){let i=new Set([...t,...r]),a=Object.keys(e).find(e=>!i.has(e));a&&$(`${n} contains unknown field '${a}' (closed schemas reject future fields)`);for(let r of t)r in e||$(`${n} is missing '${r}'`)}function ap(e,t){return(typeof e!=`number`||!Number.isFinite(e))&&$(`${t} must be a finite number`),e}function op(e,t,n,r){if(r===1)return t.modulation?{...t.modulation}:void 0;if(!t.modulation){e!==void 0&&$(`${n} does not expose a modulation socket`);return}let i=rp(e,`${n}.modulation`);ip(i,[`portId`,`amount`,`polarity`,`clampMinimum`,`clampMaximum`],`${n}.modulation`),(!t.modulation||i.portId!==t.modulation.portId)&&$(`${n}.modulation references the wrong parameter socket`),i.polarity!==`unipolar`&&i.polarity!==`bipolar`&&$(`${n}.modulation has an invalid polarity`);let a=ap(i.amount,`${n}.modulation.amount`),o=ap(i.clampMinimum,`${n}.modulation.clampMinimum`),s=ap(i.clampMaximum,`${n}.modulation.clampMaximum`);return(o<t.minimum||s>t.maximum||o>=s)&&$(`${n}.modulation clamp is outside the parameter range`),{portId:t.modulation.portId,amount:a,polarity:i.polarity,clampMinimum:o,clampMaximum:s}}function sp(e,t,n){return{schemaVersion:2,engineVersion:`0.1`,semantic:{nodes:e.map(e=>({id:e.id,type:e.data.type,...e.data.userName?{name:e.data.userName}:{},...e.data.presentation?{presentation:e.data.presentation}:{},ports:e.data.ports.map(e=>({...e})),parameters:e.data.parameters.map(({id:e,value:t,unit:n,modulation:r})=>({id:e,value:t,unit:n,...r?{modulation:{...r}}:{}}))})),connections:t.map(e=>({id:e.id,from:{nodeId:e.source,portId:String(e.sourceHandle??``)},to:{nodeId:e.target,portId:String(e.targetHandle??``)}}))},layout:{nodes:e.map(e=>({nodeId:e.id,x:e.position.x,y:e.position.y})),viewport:{...n}}}}function cp(e,t,n){return`${JSON.stringify(sp(e,t,n),null,2)}\n`}function lp(e,t){let n;try{n=JSON.parse(e)}catch(e){$(`invalid JSON (${e instanceof Error?e.message:`parse failure`})`)}let r=rp(n,`document`);ip(r,[`schemaVersion`,`engineVersion`,`semantic`,`layout`],`document`),r.schemaVersion!==1&&r.schemaVersion!==2&&$(`unsupported schemaVersion '${String(r.schemaVersion)}'`),r.engineVersion!==`0.1`&&$(`unsupported engineVersion '${String(r.engineVersion)}'`);let i=r.schemaVersion,a=rp(r.semantic,`semantic`);ip(a,[`nodes`,`connections`],`semantic`),(!Array.isArray(a.nodes)||!Array.isArray(a.connections))&&$(`semantic nodes/connections must be arrays`);let o=a.nodes,s=a.connections,c=new Map(t.nodes.map(e=>[e.id,e])),l=new Set,u=[];for(let[e,t]of o.entries()){let n=rp(t,`semantic.nodes[${e}]`);ip(n,[`id`,`type`,`ports`,`parameters`],`semantic.nodes[${e}]`,[`name`,`presentation`]),(typeof n.id!=`string`||!n.id||l.has(n.id))&&$(`node identity at index ${e} is invalid or duplicated`),l.add(n.id),typeof n.type!=`string`&&$(`node '${n.id}' has an invalid type`);let r=n.id,a=n.type,o=c.get(r),s=gf.get(a);a===`macro`&&(typeof n.name!=`string`||n.name.length<1||n.name.length>64)&&$(`macro '${r}' requires a name of 1 through 64 characters`),n.name!==void 0&&(typeof n.name!=`string`||n.name.length<1||n.name.length>64)&&$(`node '${r}' name must contain 1 through 64 characters`),n.presentation!==void 0&&(a!==`macro`||n.presentation!==`gravity`)&&$(`node '${r}' has an unsupported presentation designation`),o&&o.type!==n.type&&$(`node '${n.id}' does not match the Barr reference`),!o&&!s&&$(`unsupported node type '${n.type}'`);let d=o?.ports??s.ports,f=o?.parameters??s.parameters,p=n.ports,m=n.parameters;(!Array.isArray(n.ports)||i===2&&n.ports.length!==d.length)&&$(`ports differ for node '${n.id}'`),p.forEach((e,t)=>{let n=rp(e,`node '${r}' port`);ip(n,[`id`,`signal`,`direction`],`node '${r}' port`);let i=d.find(e=>e.id===n.id);(!i||n.signal!==i.signal||n.direction!==i.direction)&&$(`port ${t} differs for node '${r}'`)});let h=a===`control-map`&&m.length===3&&f.length===8;(!Array.isArray(n.parameters)||n.parameters.length!==f.length&&!h)&&$(`parameters differ for node '${n.id}'`);let g=m.map((e,t)=>{let n=rp(e,`node '${r}' parameter`),a=f[t];ip(n,i===1||!a?.modulation?[`id`,`value`,`unit`]:[`id`,`value`,`unit`,`modulation`],`node '${r}' parameter`);let o=ap(n.value,`${r}.${String(n.id)}`);return(n.id!==a?.id||n.unit!==a.unit)&&$(`parameter ${t} differs for node '${r}'`),(o<a.minimum||o>a.maximum)&&$(`${r}.${a.id} is outside ${a.minimum}..${a.maximum}`),{...a,value:o,modulation:op(n.modulation,a,`${r}.${a.id}`,i)}});h&&g.push(...structuredClone(f.slice(3)));let _=o?{id:r,type:`patchNode`,position:{x:0,y:0},data:{label:o.label,type:o.type,role:o.role,ports:structuredClone(o.ports),parameters:g,runtimeBound:!0}}:vf(a,r,{x:0,y:0});_.data.parameters=g,typeof n.name==`string`&&(_.data.userName=n.name),n.presentation===`gravity`&&(_.data.presentation=`gravity`),u.push(_)}let d=of(u);d&&$(d);let f=new Map(u.map(e=>[e.id,new Map(e.data.ports.map(e=>[e.id,e]))])),p=new Set,m=new Set,h=s.map((e,t)=>{let n=rp(e,`semantic.connections[${t}]`);ip(n,[`id`,`from`,`to`],`semantic.connections[${t}]`);let r=rp(n.from,`connection.from`),i=rp(n.to,`connection.to`);ip(r,[`nodeId`,`portId`],`connection.from`),ip(i,[`nodeId`,`portId`],`connection.to`),(typeof n.id!=`string`||p.has(n.id))&&$(`connection identity at index ${t} is invalid or duplicated`);let a=n.id;p.add(a);let o=String(r.nodeId),s=String(i.nodeId),c=`${s}.${String(i.portId)}`,l=f.get(o)?.get(String(r.portId)),u=f.get(s)?.get(String(i.portId));return(!l||l.direction!==`output`||!u||u.direction!==`input`||l.signal!==u.signal)&&$(`connection '${a}' has invalid endpoints`),m.has(c)&&$(`input '${c}' has more than one cable; insert Sum (+)`),m.add(c),{id:a,source:o,sourceHandle:String(r.portId),target:s,targetHandle:String(i.portId),type:`smoothstep`,className:`signal-edge signal-${l.signal}`,data:{signal:l.signal},interactionWidth:24}}),g=rp(r.layout,`layout`);ip(g,[`nodes`,`viewport`],`layout`),(!Array.isArray(g.nodes)||g.nodes.length!==u.length)&&$(`layout must position every node exactly once`);let _=g.nodes,v=new Map;_.forEach((e,t)=>{let n=rp(e,`layout.nodes[${t}]`);ip(n,[`nodeId`,`x`,`y`],`layout.nodes[${t}]`),(typeof n.nodeId!=`string`||!l.has(n.nodeId)||v.has(n.nodeId))&&$(`layout node identity at index ${t} is invalid or duplicated`);let r=n.nodeId;v.set(r,{x:ap(n.x,`${r}.x`),y:ap(n.y,`${r}.y`)})}),u.forEach(e=>{e.position=v.get(e.id)});let y=rp(g.viewport,`layout.viewport`);ip(y,[`x`,`y`,`zoom`],`layout.viewport`);let b={x:ap(y.x,`viewport.x`),y:ap(y.y,`viewport.y`),zoom:ap(y.zoom,`viewport.zoom`)};return b.zoom<=0&&$(`viewport.zoom must be positive`),{nodes:u,edges:h,viewport:b,source:sp(u,h,b)}}var up=`# Keith Barr reverb architectures
 
 ## Executive summary
 
@@ -7248,7 +7248,1599 @@ These are the strongest lessons for a new design inspired by Barr rather than a 
     }
   }
 }
-`,Jp=[{id:`barr-reference`,label:`Barr Reference`,graphName:`BARR-REFERENCE.graph`,filename:`barr-reference.rvp.json`,summary:`Keith Barr-style recirculating diffusion tank`},{id:`causal-reverse-envelope`,label:`Causal Reverse Envelope`,graphName:`CAUSAL-REVERSE.graph`,filename:`causal-reverse-envelope.rvp.json`,summary:`Weighted delay taps build toward a late peak`},{id:`level-gated-room`,label:`Level-Gated Room`,graphName:`LEVEL-GATED-ROOM.graph`,filename:`level-gated-room.rvp.json`,summary:`Envelope follower and hold gates cut a diffuse room tail`},{id:`modulated-cosmic-reverse`,label:`Modulated Cosmic Reverse`,graphName:`MODULATED-COSMIC-REVERSE.graph`,filename:`modulated-cosmic-reverse.rvp.json`,summary:`Rising taps enter a damped, slowly modulated feedback space`},{id:`gravity-diffusion`,label:`Gravity Diffusion`,graphName:`GRAVITY-DIFFUSION.graph`,filename:`gravity-diffusion.rvp.json`,summary:`Eight-stage causal inverse, bloom, and forward diffusion instrument`}],Yp={"causal-reverse-envelope":Wp,"level-gated-room":Gp,"modulated-cosmic-reverse":Kp,"gravity-diffusion":qp};function Xp(e){return Jp.find(t=>t.id===e)}function Zp(e,t){return e===`barr-reference`||e===`custom`?t:e}function Qp(e){switch(e){case`causal-reverse-envelope`:return`REVERSE ENV`;case`level-gated-room`:return`GATED`;case`modulated-cosmic-reverse`:return`COSMIC REV`;case`gravity-diffusion`:return`GRAVITY`}}function $p(e,t){return e===`barr-reference`?{...af(t),viewport:{x:0,y:0,zoom:1}}:lp(Yp[e],t)}function em(e){let t=Math.max(1,Math.round(e.sampleRate*.01)),n=Math.ceil(e.frameCount/t),r=Array(n).fill(0);for(let n=0;n<e.frameCount;n+=1)r[Math.floor(n/t)]+=e.left[n]**2+e.right[n]**2;let i=Math.max(...r);if(!(i>0))return null;let a=r.indexOf(i),o=r.findIndex(e=>e>i*1e-8),s=r.findIndex((e,t)=>t>a&&e<=i*1e-4);return s<0&&(s=n-1),{onsetFrame:Math.min(e.frameCount-1,o*t),peakFrame:Math.min(e.frameCount-1,a*t+Math.floor(t/2)),cutoffFrame:Math.min(e.frameCount-1,s*t)}}function tm(e,t,n={detectorReleaseMilliseconds:20,holdMilliseconds:120,releaseMilliseconds:8}){let r=em(e);if(!r)return null;if(t===`causal-reverse-envelope`||t===`modulated-cosmic-reverse`)return{title:`Why this swells`,explanation:t===`modulated-cosmic-reverse`?`Visible weighted delays build a causal rise before a damped feedback space. Slow moving allpass times add pitch-active motion; this is an original large-space design, not a proprietary algorithm reconstruction or true time reversal.`:`Visible weighted delays build a causal response toward a late peak. This does not reverse sample order and cannot place wet sound before the triggering event.`,regions:[{label:`RISING ENERGY`,startFrame:r.onsetFrame,endFrame:r.peakFrame,tone:`rise`}],markers:[{label:`LATE PEAK`,frame:r.peakFrame,tone:`peak`},{label:`-40 dB`,frame:r.cutoffFrame,tone:`cutoff`}]};if(t===`level-gated-room`){let t=t=>Math.round(e.sampleRate*t/1e3),i=Math.min(r.cutoffFrame,r.onsetFrame+t(n.detectorReleaseMilliseconds)),a=Math.min(r.cutoffFrame,i+t(n.holdMilliseconds)),o=Math.min(r.cutoffFrame,a+t(n.releaseMilliseconds));return{title:`Why this stops`,explanation:`The input-derived detector opens the visible gates, their hold keeps the diffuse room audible, and release closes it. Repeated or sustained input can retrigger this level gate.`,regions:[{label:`GATE OPEN`,startFrame:r.onsetFrame,endFrame:i,tone:`gate`},{label:`HOLD`,startFrame:i,endFrame:a,tone:`hold`},{label:`RELEASE`,startFrame:a,endFrame:o,tone:`release`}],markers:[{label:`CUTOFF`,frame:r.cutoffFrame,tone:`cutoff`}]}}return t===`gravity-diffusion`?{title:`Measured Gravity response`,explanation:`These landmarks come from the current captured samples and are authoritative for this capture. The Gravity panel’s violet design guide and teal checked-reference curve are comparisons; neither replaces this measurement, and disagreement remains visible.`,regions:[{label:`MEASURED BUILDUP`,startFrame:r.onsetFrame,endFrame:r.peakFrame,tone:`rise`}],markers:[{label:`MEASURED PEAK`,frame:r.peakFrame,tone:`peak`},{label:`-40 dB`,frame:r.cutoffFrame,tone:`cutoff`}]}:null}function nm(e){let t=e;if(typeof t==`string`)try{t=JSON.parse(t)}catch{throw Error(`Host state response is not valid JSON`)}if(typeof t!=`object`||!t||Array.isArray(t))throw Error(`Host state response is not an object`);let n=t;if(typeof n.accepted!=`boolean`||typeof n.error!=`string`)throw Error(`Host state response fields are invalid`);return n}var rm=(e,t,n)=>e.data.parameters.find(e=>e.id===t)?.value??n;function im(e,t){let n=rm(e,`curve-family`,0),r=n>=1.5?`exponential`:n>=.5?`power`:`linear`,i=rm(e,`polarity`,1)>=.5?`bipolar`:`unipolar`,a=t=>Vp(t,r,rm(e,`curve-amount`,0),rm(e,`exponent`,1),rm(e,`scale`,1),rm(e,`offset`,0),i,rm(e,`clamp-min`,-1),rm(e,`clamp-max`,1)),o=a(t.minimum),s=a(t.maximum);return{minimum:Math.min(o,s),maximum:Math.max(o,s)}}function am(e,t,n,r=128){let i=new Map(t.map(e=>[e.id,e])),a=new Map;for(let e of n.filter(e=>e.data?.signal===`control`)){let t=a.get(e.source)??[];t.push(e),a.set(e.source,t)}let o=new Set([e]),s=new Set,c=[],l=[{nodeId:e,range:{minimum:-1,maximum:1}}],u=new Set;for(;l.length&&c.length<r;){let e=l.shift(),t=`${e.nodeId}:${e.range.minimum}:${e.range.maximum}`;if(!u.has(t)){u.add(t);for(let t of a.get(e.nodeId)??[]){s.add(t.id),o.add(t.target);let n=i.get(t.target);if(!n)continue;if(n.data.type===`control-map`&&t.targetHandle===`in`){l.push({nodeId:n.id,range:im(n,e.range)});continue}let r=n.data.parameters.find(e=>e.modulation?.portId===t.targetHandle);if(!r?.modulation)continue;let a=r.modulation,u=e=>a.polarity===`bipolar`?Math.min(1,Math.max(-1,e)):Math.min(1,Math.max(0,e)),d=e=>Math.min(a.clampMaximum,Math.max(a.clampMinimum,r.value+a.amount*u(e))),f=d(e.range.minimum),p=d(e.range.maximum);c.push({nodeId:n.id,parameterId:r.id,minimum:Math.min(f,p),maximum:Math.max(f,p),unit:r.unit})}}}return{nodeIds:[...o],edgeIds:[...s],destinations:c}}function om(e,t,n){if(!n)return{nodes:e,edges:t};let r=new Set(n.nodeIds),i=new Set(n.edgeIds);return{nodes:e.map(e=>r.has(e.id)?{...e,className:`${e.className??``} macro-reachable`.trim()}:e),edges:t.map(e=>i.has(e.id)?{...e,className:`${e.className??``} macro-reachable`.trim()}:e)}}var sm=e=>Math.min(1,Math.max(-1,Number.isFinite(e)?e:0));function cm(e){let t=sm(e);return Math.abs(t)<5e-4?`BLOOM`:t<0?`INVERSE`:`FORWARD`}function lm(e,t=49){let n=sm(e),r=.48-.35*n,i=Math.max(3,t),a=Array.from({length:i},(e,t)=>{let n=t/(i-1),a=n<=r?.06+.94*(n/r)**1.65:Math.exp(-3.2*(n-r)/(1-r));return`${(n*100).toFixed(2)},${(38-a*32).toFixed(2)}`}),o=cm(n);return{state:o,peakPosition:r,path:`M ${a.join(` L `)}`,description:`${o} design prediction; energy peak at ${Math.round(r*100)}% of the displayed horizon. Not measured audio.`}}function um(e){return[...new Set(e.nodeIds)]}var dm=new Map([[`INVERSE`,JSON.parse(`{
+`,Jp=`{
+  "schemaVersion": 2,
+  "engineVersion": "0.1",
+  "semantic": {
+    "nodes": [
+      {
+        "id": "input",
+        "type": "stereo-input",
+        "ports": [
+          {
+            "id": "out-l",
+            "signal": "audio",
+            "direction": "output"
+          },
+          {
+            "id": "out-r",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "input-left-half",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.5,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "input-right-half",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.5,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "input-mono-sum",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [],
+        "name": "Mono input"
+      },
+      {
+        "id": "input-diffusion-a",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 4.7,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 100.0
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "input-diffusion-b",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 8.9,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 100.0
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "tank-entry",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [],
+        "name": "Reverb tank"
+      },
+      {
+        "id": "tank-diffusion-a",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 13.7,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 100.0
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "tank-delay",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 149.0,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 10.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 10000.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "tank-diffusion-b",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 23.9,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 100.0
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "tank-damping",
+        "type": "lowpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "cutoff-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "cutoff",
+            "value": 6500.0,
+            "unit": "hertz",
+            "modulation": {
+              "portId": "cutoff-mod",
+              "amount": 2000.0,
+              "polarity": "bipolar",
+              "clampMinimum": 20.0,
+              "clampMaximum": 20000.0
+            }
+          }
+        ],
+        "name": "Tank damping"
+      },
+      {
+        "id": "reverb-decay",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.55,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ],
+        "name": "Reverb decay"
+      },
+      {
+        "id": "feedback-delay",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 61.0,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 10.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 10000.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "normal-latency-alignment",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 600.01,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 10.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 10000.0
+            }
+          }
+        ],
+        "name": "Normal / aligned"
+      },
+      {
+        "id": "normal-level",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.5,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ],
+        "name": "Normal level"
+      },
+      {
+        "id": "shimmer-highpass-lowpass",
+        "type": "lowpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "cutoff-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "cutoff",
+            "value": 250.0,
+            "unit": "hertz",
+            "modulation": {
+              "portId": "cutoff-mod",
+              "amount": 2000.0,
+              "polarity": "bipolar",
+              "clampMinimum": 20.0,
+              "clampMaximum": 20000.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "shimmer-highpass-invert",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": -1.0,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "shimmer-highpass-sum",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [],
+        "name": "Shimmer high-pass"
+      },
+      {
+        "id": "shimmer-pitch",
+        "type": "pitch-shift",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "semitones-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "grain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "overlap-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "semitones",
+            "value": 12.0,
+            "unit": "semitones",
+            "modulation": {
+              "portId": "semitones-mod",
+              "amount": 12.0,
+              "polarity": "bipolar",
+              "clampMinimum": -24.0,
+              "clampMaximum": 24.0
+            }
+          },
+          {
+            "id": "grain",
+            "value": 60.0,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "grain-mod",
+              "amount": 20.0,
+              "polarity": "bipolar",
+              "clampMinimum": 20.0,
+              "clampMaximum": 120.0
+            }
+          },
+          {
+            "id": "overlap",
+            "value": 0.5,
+            "unit": "normalized",
+            "modulation": {
+              "portId": "overlap-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "direction",
+            "value": 0.0,
+            "unit": "direction"
+          }
+        ],
+        "name": "Octave / +12 st"
+      },
+      {
+        "id": "shimmer-damping",
+        "type": "lowpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "cutoff-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "cutoff",
+            "value": 6000.0,
+            "unit": "hertz",
+            "modulation": {
+              "portId": "cutoff-mod",
+              "amount": 2000.0,
+              "polarity": "bipolar",
+              "clampMinimum": 20.0,
+              "clampMaximum": 20000.0
+            }
+          }
+        ],
+        "name": "Shimmer damping"
+      },
+      {
+        "id": "shimmer-diffusion-a",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 17.3,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 100.0
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "shimmer-diffusion-b",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 29.1,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 100.0
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ]
+      },
+      {
+        "id": "shimmer-level",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.22,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ],
+        "name": "Shimmer level"
+      },
+      {
+        "id": "parallel-wet-sum",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [],
+        "name": "Parallel recombine"
+      },
+      {
+        "id": "wet-balance",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.75,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 0.5,
+              "polarity": "bipolar",
+              "clampMinimum": -1.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ],
+        "name": "Wet balance"
+      },
+      {
+        "id": "left-extraction",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 11.9,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 100.0
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ],
+        "name": "Left extraction"
+      },
+      {
+        "id": "right-extraction",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 19.7,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.1,
+              "clampMaximum": 100.0
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.5,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": -0.95,
+              "clampMaximum": 0.95
+            }
+          }
+        ],
+        "name": "Right extraction"
+      },
+      {
+        "id": "output",
+        "type": "stereo-output",
+        "ports": [
+          {
+            "id": "in-l",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-r",
+            "signal": "audio",
+            "direction": "input"
+          }
+        ],
+        "parameters": []
+      }
+    ],
+    "connections": [
+      {
+        "id": "input-left-gain",
+        "from": {
+          "nodeId": "input",
+          "portId": "out-l"
+        },
+        "to": {
+          "nodeId": "input-left-half",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "input-right-gain",
+        "from": {
+          "nodeId": "input",
+          "portId": "out-r"
+        },
+        "to": {
+          "nodeId": "input-right-half",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "input-left-sum",
+        "from": {
+          "nodeId": "input-left-half",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-mono-sum",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "input-right-sum",
+        "from": {
+          "nodeId": "input-right-half",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-mono-sum",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "input-diffusion-a",
+        "from": {
+          "nodeId": "input-mono-sum",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-diffusion-a",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "input-diffusion-b",
+        "from": {
+          "nodeId": "input-diffusion-a",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-diffusion-b",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "input-tank",
+        "from": {
+          "nodeId": "input-diffusion-b",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tank-entry",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "feedback-tank",
+        "from": {
+          "nodeId": "feedback-delay",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tank-entry",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "tank-diffusion-a",
+        "from": {
+          "nodeId": "tank-entry",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tank-diffusion-a",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "tank-delay",
+        "from": {
+          "nodeId": "tank-diffusion-a",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tank-delay",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "tank-diffusion-b",
+        "from": {
+          "nodeId": "tank-delay",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tank-diffusion-b",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "tank-damping",
+        "from": {
+          "nodeId": "tank-diffusion-b",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "tank-damping",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "tank-decay",
+        "from": {
+          "nodeId": "tank-damping",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "reverb-decay",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "tank-feedback-delay",
+        "from": {
+          "nodeId": "reverb-decay",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "feedback-delay",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "normal-alignment",
+        "from": {
+          "nodeId": "tank-damping",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "normal-latency-alignment",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "normal-level",
+        "from": {
+          "nodeId": "normal-latency-alignment",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "normal-level",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "highpass-direct",
+        "from": {
+          "nodeId": "tank-damping",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "shimmer-highpass-sum",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "highpass-lowpass",
+        "from": {
+          "nodeId": "tank-damping",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "shimmer-highpass-lowpass",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "highpass-invert",
+        "from": {
+          "nodeId": "shimmer-highpass-lowpass",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "shimmer-highpass-invert",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "highpass-subtract",
+        "from": {
+          "nodeId": "shimmer-highpass-invert",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "shimmer-highpass-sum",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "shimmer-pitch",
+        "from": {
+          "nodeId": "shimmer-highpass-sum",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "shimmer-pitch",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "shimmer-damping",
+        "from": {
+          "nodeId": "shimmer-pitch",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "shimmer-damping",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "shimmer-diffusion-a",
+        "from": {
+          "nodeId": "shimmer-damping",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "shimmer-diffusion-a",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "shimmer-diffusion-b",
+        "from": {
+          "nodeId": "shimmer-diffusion-a",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "shimmer-diffusion-b",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "shimmer-level",
+        "from": {
+          "nodeId": "shimmer-diffusion-b",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "shimmer-level",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "normal-wet-sum",
+        "from": {
+          "nodeId": "normal-level",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "parallel-wet-sum",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "shimmer-wet-sum",
+        "from": {
+          "nodeId": "shimmer-level",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "parallel-wet-sum",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "wet-balance",
+        "from": {
+          "nodeId": "parallel-wet-sum",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "wet-balance",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "left-extraction",
+        "from": {
+          "nodeId": "wet-balance",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "left-extraction",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "right-extraction",
+        "from": {
+          "nodeId": "wet-balance",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "right-extraction",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "left-output",
+        "from": {
+          "nodeId": "left-extraction",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "output",
+          "portId": "in-l"
+        }
+      },
+      {
+        "id": "right-output",
+        "from": {
+          "nodeId": "right-extraction",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "output",
+          "portId": "in-r"
+        }
+      }
+    ]
+  },
+  "layout": {
+    "nodes": [
+      {
+        "nodeId": "input",
+        "x": -1100.0,
+        "y": -140.0
+      },
+      {
+        "nodeId": "input-left-half",
+        "x": -900.0,
+        "y": -220.0
+      },
+      {
+        "nodeId": "input-right-half",
+        "x": -900.0,
+        "y": -60.0
+      },
+      {
+        "nodeId": "input-mono-sum",
+        "x": -680.0,
+        "y": -140.0
+      },
+      {
+        "nodeId": "input-diffusion-a",
+        "x": -460.0,
+        "y": -140.0
+      },
+      {
+        "nodeId": "input-diffusion-b",
+        "x": -240.0,
+        "y": -140.0
+      },
+      {
+        "nodeId": "tank-entry",
+        "x": 0.0,
+        "y": -140.0
+      },
+      {
+        "nodeId": "tank-diffusion-a",
+        "x": 220.0,
+        "y": -140.0
+      },
+      {
+        "nodeId": "tank-delay",
+        "x": 440.0,
+        "y": -140.0
+      },
+      {
+        "nodeId": "tank-diffusion-b",
+        "x": 660.0,
+        "y": -140.0
+      },
+      {
+        "nodeId": "tank-damping",
+        "x": 880.0,
+        "y": -140.0
+      },
+      {
+        "nodeId": "reverb-decay",
+        "x": 660.0,
+        "y": 100.0
+      },
+      {
+        "nodeId": "feedback-delay",
+        "x": 260.0,
+        "y": 100.0
+      },
+      {
+        "nodeId": "normal-latency-alignment",
+        "x": 1100.0,
+        "y": -300.0
+      },
+      {
+        "nodeId": "normal-level",
+        "x": 1340.0,
+        "y": -300.0
+      },
+      {
+        "nodeId": "shimmer-highpass-lowpass",
+        "x": 1080.0,
+        "y": 80.0
+      },
+      {
+        "nodeId": "shimmer-highpass-invert",
+        "x": 1300.0,
+        "y": 80.0
+      },
+      {
+        "nodeId": "shimmer-highpass-sum",
+        "x": 1520.0,
+        "y": -20.0
+      },
+      {
+        "nodeId": "shimmer-pitch",
+        "x": 1740.0,
+        "y": -20.0
+      },
+      {
+        "nodeId": "shimmer-damping",
+        "x": 1960.0,
+        "y": -20.0
+      },
+      {
+        "nodeId": "shimmer-diffusion-a",
+        "x": 2180.0,
+        "y": -20.0
+      },
+      {
+        "nodeId": "shimmer-diffusion-b",
+        "x": 2400.0,
+        "y": -20.0
+      },
+      {
+        "nodeId": "shimmer-level",
+        "x": 2620.0,
+        "y": -20.0
+      },
+      {
+        "nodeId": "parallel-wet-sum",
+        "x": 2860.0,
+        "y": -220.0
+      },
+      {
+        "nodeId": "wet-balance",
+        "x": 3080.0,
+        "y": -220.0
+      },
+      {
+        "nodeId": "left-extraction",
+        "x": 3300.0,
+        "y": -320.0
+      },
+      {
+        "nodeId": "right-extraction",
+        "x": 3300.0,
+        "y": -120.0
+      },
+      {
+        "nodeId": "output",
+        "x": 3540.0,
+        "y": -220.0
+      }
+    ],
+    "viewport": {
+      "x": 1120.0,
+      "y": -20.0,
+      "zoom": 0.38
+    }
+  }
+}
+`,Yp=[{id:`barr-reference`,label:`Barr Reference`,graphName:`BARR-REFERENCE.graph`,filename:`barr-reference.rvp.json`,summary:`Keith Barr-style recirculating diffusion tank`},{id:`causal-reverse-envelope`,label:`Causal Reverse Envelope`,graphName:`CAUSAL-REVERSE.graph`,filename:`causal-reverse-envelope.rvp.json`,summary:`Weighted delay taps build toward a late peak`},{id:`level-gated-room`,label:`Level-Gated Room`,graphName:`LEVEL-GATED-ROOM.graph`,filename:`level-gated-room.rvp.json`,summary:`Envelope follower and hold gates cut a diffuse room tail`},{id:`modulated-cosmic-reverse`,label:`Modulated Cosmic Reverse`,graphName:`MODULATED-COSMIC-REVERSE.graph`,filename:`modulated-cosmic-reverse.rvp.json`,summary:`Rising taps enter a damped, slowly modulated feedback space`},{id:`gravity-diffusion`,label:`Gravity Diffusion`,graphName:`GRAVITY-DIFFUSION.graph`,filename:`gravity-diffusion.rvp.json`,summary:`Eight-stage causal inverse, bloom, and forward diffusion instrument`},{id:`safe-parallel-shimmer`,label:`Safe Parallel Shimmer`,graphName:`SAFE-PARALLEL-SHIMMER.graph`,filename:`safe-parallel-shimmer.rvp.json`,summary:`One non-recirculating +12-semitone halo beside an aligned normal tail`}],Xp={"causal-reverse-envelope":Wp,"level-gated-room":Gp,"modulated-cosmic-reverse":Kp,"gravity-diffusion":qp,"safe-parallel-shimmer":Jp};function Zp(e){return Yp.find(t=>t.id===e)}function Qp(e,t){return e===`barr-reference`||e===`custom`?t:e}function $p(e){switch(e){case`causal-reverse-envelope`:return`REVERSE ENV`;case`level-gated-room`:return`GATED`;case`modulated-cosmic-reverse`:return`COSMIC REV`;case`gravity-diffusion`:return`GRAVITY`;case`safe-parallel-shimmer`:return`PAR SHIMMER`}}function em(e,t){return e===`barr-reference`?{...af(t),viewport:{x:0,y:0,zoom:1}}:lp(Xp[e],t)}function tm(e){let t=Math.max(1,Math.round(e.sampleRate*.01)),n=Math.ceil(e.frameCount/t),r=Array(n).fill(0);for(let n=0;n<e.frameCount;n+=1)r[Math.floor(n/t)]+=e.left[n]**2+e.right[n]**2;let i=Math.max(...r);if(!(i>0))return null;let a=r.indexOf(i),o=r.findIndex(e=>e>i*1e-8),s=r.findIndex((e,t)=>t>a&&e<=i*1e-4);return s<0&&(s=n-1),{onsetFrame:Math.min(e.frameCount-1,o*t),peakFrame:Math.min(e.frameCount-1,a*t+Math.floor(t/2)),cutoffFrame:Math.min(e.frameCount-1,s*t)}}function nm(e,t,n={detectorReleaseMilliseconds:20,holdMilliseconds:120,releaseMilliseconds:8}){let r=tm(e);if(!r)return null;if(t===`causal-reverse-envelope`||t===`modulated-cosmic-reverse`)return{title:`Why this swells`,explanation:t===`modulated-cosmic-reverse`?`Visible weighted delays build a causal rise before a damped feedback space. Slow moving allpass times add pitch-active motion; this is an original large-space design, not a proprietary algorithm reconstruction or true time reversal.`:`Visible weighted delays build a causal response toward a late peak. This does not reverse sample order and cannot place wet sound before the triggering event.`,regions:[{label:`RISING ENERGY`,startFrame:r.onsetFrame,endFrame:r.peakFrame,tone:`rise`}],markers:[{label:`LATE PEAK`,frame:r.peakFrame,tone:`peak`},{label:`-40 dB`,frame:r.cutoffFrame,tone:`cutoff`}]};if(t===`level-gated-room`){let t=t=>Math.round(e.sampleRate*t/1e3),i=Math.min(r.cutoffFrame,r.onsetFrame+t(n.detectorReleaseMilliseconds)),a=Math.min(r.cutoffFrame,i+t(n.holdMilliseconds)),o=Math.min(r.cutoffFrame,a+t(n.releaseMilliseconds));return{title:`Why this stops`,explanation:`The input-derived detector opens the visible gates, their hold keeps the diffuse room audible, and release closes it. Repeated or sustained input can retrigger this level gate.`,regions:[{label:`GATE OPEN`,startFrame:r.onsetFrame,endFrame:i,tone:`gate`},{label:`HOLD`,startFrame:i,endFrame:a,tone:`hold`},{label:`RELEASE`,startFrame:a,endFrame:o,tone:`release`}],markers:[{label:`CUTOFF`,frame:r.cutoffFrame,tone:`cutoff`}]}}return t===`gravity-diffusion`?{title:`Measured Gravity response`,explanation:`These landmarks come from the current captured samples and are authoritative for this capture. The Gravity panel’s violet design guide and teal checked-reference curve are comparisons; neither replaces this measurement, and disagreement remains visible.`,regions:[{label:`MEASURED BUILDUP`,startFrame:r.onsetFrame,endFrame:r.peakFrame,tone:`rise`}],markers:[{label:`MEASURED PEAK`,frame:r.peakFrame,tone:`peak`},{label:`-40 dB`,frame:r.cutoffFrame,tone:`cutoff`}]}:null}function rm(e){let t=e;if(typeof t==`string`)try{t=JSON.parse(t)}catch{throw Error(`Host state response is not valid JSON`)}if(typeof t!=`object`||!t||Array.isArray(t))throw Error(`Host state response is not an object`);let n=t;if(typeof n.accepted!=`boolean`||typeof n.error!=`string`)throw Error(`Host state response fields are invalid`);return n}var im=(e,t,n)=>e.data.parameters.find(e=>e.id===t)?.value??n;function am(e,t){let n=im(e,`curve-family`,0),r=n>=1.5?`exponential`:n>=.5?`power`:`linear`,i=im(e,`polarity`,1)>=.5?`bipolar`:`unipolar`,a=t=>Vp(t,r,im(e,`curve-amount`,0),im(e,`exponent`,1),im(e,`scale`,1),im(e,`offset`,0),i,im(e,`clamp-min`,-1),im(e,`clamp-max`,1)),o=a(t.minimum),s=a(t.maximum);return{minimum:Math.min(o,s),maximum:Math.max(o,s)}}function om(e,t,n,r=128){let i=new Map(t.map(e=>[e.id,e])),a=new Map;for(let e of n.filter(e=>e.data?.signal===`control`)){let t=a.get(e.source)??[];t.push(e),a.set(e.source,t)}let o=new Set([e]),s=new Set,c=[],l=[{nodeId:e,range:{minimum:-1,maximum:1}}],u=new Set;for(;l.length&&c.length<r;){let e=l.shift(),t=`${e.nodeId}:${e.range.minimum}:${e.range.maximum}`;if(!u.has(t)){u.add(t);for(let t of a.get(e.nodeId)??[]){s.add(t.id),o.add(t.target);let n=i.get(t.target);if(!n)continue;if(n.data.type===`control-map`&&t.targetHandle===`in`){l.push({nodeId:n.id,range:am(n,e.range)});continue}let r=n.data.parameters.find(e=>e.modulation?.portId===t.targetHandle);if(!r?.modulation)continue;let a=r.modulation,u=e=>a.polarity===`bipolar`?Math.min(1,Math.max(-1,e)):Math.min(1,Math.max(0,e)),d=e=>Math.min(a.clampMaximum,Math.max(a.clampMinimum,r.value+a.amount*u(e))),f=d(e.range.minimum),p=d(e.range.maximum);c.push({nodeId:n.id,parameterId:r.id,minimum:Math.min(f,p),maximum:Math.max(f,p),unit:r.unit})}}}return{nodeIds:[...o],edgeIds:[...s],destinations:c}}function sm(e,t,n){if(!n)return{nodes:e,edges:t};let r=new Set(n.nodeIds),i=new Set(n.edgeIds);return{nodes:e.map(e=>r.has(e.id)?{...e,className:`${e.className??``} macro-reachable`.trim()}:e),edges:t.map(e=>i.has(e.id)?{...e,className:`${e.className??``} macro-reachable`.trim()}:e)}}var cm=e=>Math.min(1,Math.max(-1,Number.isFinite(e)?e:0));function lm(e){let t=cm(e);return Math.abs(t)<5e-4?`BLOOM`:t<0?`INVERSE`:`FORWARD`}function um(e,t=49){let n=cm(e),r=.48-.35*n,i=Math.max(3,t),a=Array.from({length:i},(e,t)=>{let n=t/(i-1),a=n<=r?.06+.94*(n/r)**1.65:Math.exp(-3.2*(n-r)/(1-r));return`${(n*100).toFixed(2)},${(38-a*32).toFixed(2)}`}),o=lm(n);return{state:o,peakPosition:r,path:`M ${a.join(` L `)}`,description:`${o} design prediction; energy peak at ${Math.round(r*100)}% of the displayed horizon. Not measured audio.`}}function dm(e){return[...new Set(e.nodeIds)]}var fm=new Map([[`INVERSE`,JSON.parse(`{
   "formatVersion": 1,
   "engineVersion": "0.1",
   "referenceId": "inverse",
@@ -7959,4 +9551,4 @@ These are the strongest lessons for a new design inspired by Barr rather than a 
   "leftPcm16Fnv1a": "1957219577285692479",
   "rightPcm16Fnv1a": "3302036075149738871"
 }
-`)]]);function fm(e){let t=cm(e),n=dm.get(t),r=n.matchedEnvelope.map(([e,t])=>`${(e*100).toFixed(2)},${(38-Math.max(0,Math.min(1,t))*32).toFixed(2)}`),i=Object.entries(n.controls).map(([e,t])=>`${e} ${t>=0?`+`:``}${t.toFixed(2)}`).join(`, `);return{state:t,label:`MEASURED ${t} REFERENCE`,path:`M ${r.join(` L `)}`,peakMilliseconds:n.matched.timeToPeakMs,earlyLateEnergyRatioDb:n.matched.earlyLateEnergyRatioDb,controlsDescription:i,description:`Checked ${t.toLowerCase()} impulse fixture: peak ${n.matched.timeToPeakMs.toFixed(1)} milliseconds, early/late ratio ${n.matched.earlyLateEnergyRatioDb.toFixed(1)} decibels. Reference evidence, not the current live capture.`}}var pm=[{group:`I/O`,items:hf.filter(e=>e.role===`io`)},{group:`SIGNAL`,items:hf.filter(e=>e.role!==`io`&&e.role!==`control`)},{group:`CONTROL`,items:hf.filter(e=>e.role===`control`)}],mm=e=>e===`boolean`?[{value:0,label:`OFF`},{value:1,label:`ON`}]:e===`curve-family`?[{value:0,label:`LINEAR`},{value:1,label:`POWER`},{value:2,label:`EXPONENTIAL`}]:e===`waveform`?[{value:0,label:`SINE`},{value:1,label:`TRIANGLE`}]:e===`run-mode`?[{value:0,label:`FREE RUN`},{value:1,label:`RESTART ON TRANSPORT`}]:e===`polarity`?[{value:0,label:`UNIPOLAR 0…1`},{value:1,label:`BIPOLAR −1…+1`}]:e===`direction`?[{value:0,label:`FORWARD GRAINS`},{value:1,label:`REVERSE INSIDE EACH GRAIN`}]:null;function hm({topic:e,onDismiss:t,onResearch:n}){return(0,b.jsxs)(`section`,{className:`teaching-card`,"aria-label":`Contextual explanation`,children:[(0,b.jsxs)(`div`,{className:`teaching-title`,children:[(0,b.jsx)(`span`,{children:`LEARN / CONTEXT`}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Dismiss explanation`,onClick:t,children:`×`})]}),(0,b.jsx)(`h3`,{children:e.title}),(0,b.jsx)(`h4`,{children:`DOCUMENTED BARR / MIDIVERB`}),(0,b.jsx)(`p`,{children:e.documented}),(0,b.jsx)(`h4`,{children:`THIS RECONSTRUCTION`}),(0,b.jsx)(`p`,{children:e.reconstruction}),(0,b.jsx)(`h4`,{children:`LISTEN / NOTICE`}),(0,b.jsx)(`p`,{children:e.takeaway}),(0,b.jsx)(`button`,{className:`research-link`,type:`button`,onClick:n,children:`READ OFFLINE ARCHITECTURE RESEARCH`})]})}function gm({inspection:e,activeIndex:t,onActiveIndex:n}){let r=e.loops[t];return r?(0,b.jsxs)(`section`,{className:`loop-inspector`,"aria-label":`Feedback loop inspection`,children:[(0,b.jsxs)(`div`,{className:`loop-heading`,children:[(0,b.jsx)(`span`,{children:`FEEDBACK LOOP`}),(0,b.jsxs)(`strong`,{children:[t+1,` / `,e.loops.length]})]}),e.loops.length>1?(0,b.jsxs)(`div`,{className:`loop-navigation`,children:[(0,b.jsx)(`button`,{type:`button`,"aria-label":`Previous feedback loop`,onClick:()=>n((t+e.loops.length-1)%e.loops.length),children:`PREV`}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Next feedback loop`,onClick:()=>n((t+1)%e.loops.length),children:`NEXT`})]}):null,(0,b.jsxs)(`dl`,{className:`loop-facts`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`NOMINAL DELAY`}),(0,b.jsxs)(`dd`,{children:[r.nominalDelayMilliseconds.toFixed(2),` ms`]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`BLOCKS`}),(0,b.jsx)(`dd`,{children:r.nodeIds.length})]})]}),(0,b.jsx)(`h3`,{children:`CONSTITUENT BLOCKS`}),(0,b.jsx)(`code`,{className:`loop-path`,children:[...r.nodeIds,r.nodeIds[0]].join(` → `)}),(0,b.jsx)(`h3`,{children:`POLARITY / GAIN`}),r.gainElements.length?(0,b.jsx)(`ul`,{children:r.gainElements.map(e=>(0,b.jsxs)(`li`,{children:[(0,b.jsx)(`code`,{children:e.nodeId}),(0,b.jsxs)(`span`,{children:[e.parameter,` `,e.value.toLocaleString()]})]},`${e.nodeId}.${e.parameter}`))}):(0,b.jsx)(`p`,{children:`None in this loop.`}),(0,b.jsx)(`h3`,{children:`FILTERS`}),r.filters.length?(0,b.jsx)(`ul`,{children:r.filters.map(e=>(0,b.jsxs)(`li`,{children:[(0,b.jsx)(`code`,{children:e.nodeId}),(0,b.jsxs)(`span`,{children:[e.value.toLocaleString(),` Hz`]})]},`${e.nodeId}.${e.parameter}`))}):(0,b.jsx)(`p`,{children:`None in this loop.`}),e.truncated?(0,b.jsx)(`p`,{className:`loop-truncated`,children:`Additional loops omitted at the bounded inspection limit.`}):null]}):(0,b.jsxs)(`section`,{className:`loop-inspector loop-empty`,"aria-label":`Feedback loop inspection`,children:[(0,b.jsxs)(`div`,{className:`loop-heading`,children:[(0,b.jsx)(`span`,{children:`FEEDBACK LOOPS`}),(0,b.jsx)(`strong`,{children:`NONE`})]}),(0,b.jsx)(`p`,{children:`No directed feedback loop contains this selection.`})]})}function _m({sampleRate:e,onCapture:t}){let[n,r]=(0,_.useState)(2e3),[i,a]=(0,_.useState)(-80),[o,s]=(0,_.useState)(!0),[c,l]=(0,_.useState)(null),[u,d]=(0,_.useState)(null),[f,p]=(0,_.useState)(``),m=(0,_.useCallback)(async()=>{p(``),d(null);try{let e=await np(`startImpulseCapture`,n,i,o);if(e===void 0){p(`NATIVE AUDIO REQUIRED FOR CAPTURE`);return}l(hp(e))}catch(e){p(e instanceof Error?e.message:`Capture could not start`)}},[n,o,i]);(0,_.useEffect)(()=>{if(c?.state!==`armed`&&c?.state!==`capturing`)return;let e=window.setInterval(()=>{np(`getImpulseCaptureStatus`).then(n=>{let r=hp(n);if(l(r),r.state===`complete`)return window.clearInterval(e),np(`getImpulseCapture`).then(e=>{let n=gp(e);d(n),t(n)})}).catch(e=>p(e instanceof Error?e.message:`Capture status failed`))},100);return()=>window.clearInterval(e)},[t,c?.state]);let h=c?.state===`armed`||c?.state===`capturing`;return(0,b.jsxs)(`section`,{className:`measurement-bar ${h?`is-capturing`:``}`,"aria-label":`Impulse response capture`,children:[(0,b.jsxs)(`div`,{className:`measurement-title`,children:[(0,b.jsx)(`span`,{children:`MEASURE`}),(0,b.jsx)(`strong`,{children:`IMPULSE RESPONSE`})]}),(0,b.jsxs)(`label`,{children:[`MAX LENGTH `,(0,b.jsxs)(`select`,{"aria-label":`Capture maximum length`,value:n,disabled:h,onChange:e=>r(Number(e.target.value)),children:[(0,b.jsx)(`option`,{value:500,children:`500 ms`}),(0,b.jsx)(`option`,{value:2e3,children:`2,000 ms`}),(0,b.jsx)(`option`,{value:5e3,children:`5,000 ms`}),(0,b.jsx)(`option`,{value:1e4,children:`10,000 ms`})]})]}),(0,b.jsxs)(`label`,{children:[`STOP BELOW `,(0,b.jsxs)(`select`,{"aria-label":`Capture stop threshold`,value:i,disabled:h,onChange:e=>a(Number(e.target.value)),children:[(0,b.jsx)(`option`,{value:-60,children:`-60 dBFS`}),(0,b.jsx)(`option`,{value:-80,children:`-80 dBFS`}),(0,b.jsx)(`option`,{value:-100,children:`-100 dBFS`}),(0,b.jsx)(`option`,{value:-120,children:`-120 dBFS`})]})]}),(0,b.jsxs)(`label`,{className:`measurement-check`,children:[(0,b.jsx)(`input`,{type:`checkbox`,checked:o,disabled:h,onChange:e=>s(e.target.checked)}),` MUTE LIVE INPUT`]}),(0,b.jsx)(`button`,{type:`button`,disabled:h||e<=0,onClick:()=>void m(),children:h?`CAPTURING…`:`CAPTURE IMPULSE`}),(0,b.jsx)(`div`,{className:`measurement-readout`,role:`status`,children:f||(e<=0?`WAITING FOR AUDIO DEVICE`:u?`${u.frameCount.toLocaleString()} FRAMES / ${(u.frameCount/u.sampleRate*1e3).toFixed(1)} ms / STOP: ${u.stopReason===`threshold`?`${u.stopThresholdDb} dBFS`:`MAX LENGTH`}`:h&&c?`${c.capturedMilliseconds.toFixed(1)} / ${c.maximumLengthMilliseconds.toFixed(0)} ms`:`0.1 PEAK / READY`)})]})}function vm({capture:e,patchId:t,gateTeaching:n,teachingEnabled:r,onClose:i}){let a=(0,_.useMemo)(()=>bp(e),[e]),o=t===`level-gated-room`?null:a.rt60Seconds,s=t===`level-gated-room`?`abrupt-cutoff`:a.rt60Refusal,c=(0,_.useMemo)(()=>r?tm(e,t,n):null,[e,n,t,r]),[l,u]=(0,_.useState)(1),[d,f]=(0,_.useState)(0),p=_p(e.frameCount,l,d),m=vp(e.left,p,450),h=vp(e.right,p,450),g=yp(a.decayDb,p,450),v=e=>70+900*(e-p.start)/Math.max(1,p.end-p.start-1),y=Math.max(a.peakLeft,a.peakRight,1e-9),x=(e,t)=>e.map(e=>`M${v(e.frame).toFixed(1)},${(t-34*e.maximum/y).toFixed(1)}L${v(e.frame).toFixed(1)},${(t-34*e.minimum/y).toFixed(1)}`).join(``),S=g.map((e,t)=>`${t?`L`:`M`}${v(e.frame).toFixed(1)},${(228+Math.min(90,Math.max(0,-e.decibels))).toFixed(1)}`).join(``),C=c?.regions.map(e=>({...e,startFrame:Math.max(p.start,e.startFrame),endFrame:Math.min(p.end-1,e.endFrame)})).filter(e=>e.endFrame>e.startFrame)??[],w=c?.markers.filter(e=>e.frame>=p.start&&e.frame<p.end)??[],T=p.start/e.sampleRate*1e3,E=p.end/e.sampleRate*1e3,D=e=>u(Math.max(1,Math.min(256,e)));return(0,b.jsxs)(`section`,{className:`response-viewer`,"aria-label":`Stereo impulse response viewer`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsxs)(`div`,{children:[(0,b.jsxs)(`span`,{children:[`CAPTURE #`,e.generation,` / STEREO RESPONSE`]}),(0,b.jsx)(`h2`,{children:`Impulse and energy decay`})]}),(0,b.jsx)(`button`,{type:`button`,onClick:i,children:`CLOSE ×`})]}),(0,b.jsxs)(`div`,{className:`response-metrics`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`WINDOW`}),(0,b.jsxs)(`strong`,{children:[T.toFixed(2),`–`,E.toFixed(2),` ms`]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`PEAK L / R`}),(0,b.jsxs)(`strong`,{children:[a.peakLeft.toFixed(4),` / `,a.peakRight.toFixed(4)]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`ONSET`}),(0,b.jsx)(`strong`,{children:a.onsetFrame===null?`NONE`:`${(a.onsetFrame/e.sampleRate*1e3).toFixed(2)} ms`})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`RT60 / T30 FIT`}),(0,b.jsx)(`strong`,{children:o===null?t===`level-gated-room`?`NOT MEANINGFUL`:`NOT ESTIMATED`:`${o.toFixed(3)} s`})]})]}),(0,b.jsxs)(`div`,{className:`response-navigation`,children:[(0,b.jsx)(`button`,{type:`button`,onClick:()=>{D(16),f(0)},children:`EARLY / 16×`}),(0,b.jsx)(`button`,{type:`button`,disabled:l>=256,onClick:()=>D(l*2),children:`ZOOM IN`}),(0,b.jsx)(`button`,{type:`button`,disabled:l<=1,onClick:()=>D(l/2),children:`ZOOM OUT`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>{D(1),f(0)},children:`FULL TAIL`}),(0,b.jsxs)(`label`,{children:[`PAN `,(0,b.jsx)(`input`,{"aria-label":`Pan response window`,type:`range`,min:`0`,max:`1`,step:`0.001`,value:d,disabled:l===1,onChange:e=>f(Number(e.target.value))})]}),(0,b.jsxs)(`output`,{children:[l.toFixed(0),`×`]})]}),(0,b.jsxs)(`div`,{className:`response-legend`,"aria-label":`Channel line styles`,children:[(0,b.jsxs)(`span`,{children:[(0,b.jsx)(`i`,{className:`legend-left`}),`L / SOLID / UPPER`]}),(0,b.jsxs)(`span`,{children:[(0,b.jsx)(`i`,{className:`legend-right`}),`R / DASHED / LOWER`]}),(0,b.jsxs)(`span`,{children:[(0,b.jsx)(`i`,{className:`legend-decay`}),`ENERGY DECAY / SCHROEDER`]})]}),(0,b.jsxs)(`svg`,{className:`response-chart`,viewBox:`0 0 1000 330`,role:`img`,"aria-label":`Left solid upper waveform, right dashed lower waveform, and combined energy decay from ${T.toFixed(2)} to ${E.toFixed(2)} milliseconds${c?`, with ${c.regions.map(e=>e.label).join(`, `)} regions`:``}`,onWheel:e=>{e.preventDefault(),D(e.deltaY<0?l*2:l/2)},children:[(0,b.jsxs)(`g`,{className:`chart-grid`,children:[(0,b.jsx)(`path`,{d:`M70 75H970M70 160H970M70 228H970M70 263H970M70 298H970M70 318H970`}),(0,b.jsx)(`text`,{x:`12`,y:`79`,children:`L`}),(0,b.jsx)(`text`,{x:`12`,y:`164`,children:`R`}),(0,b.jsx)(`text`,{x:`12`,y:`232`,children:`0 dB`}),(0,b.jsx)(`text`,{x:`12`,y:`267`,children:`-35`}),(0,b.jsx)(`text`,{x:`12`,y:`322`,children:`-90`})]}),c?(0,b.jsxs)(`g`,{className:`architecture-overlay`,"aria-label":c.title,children:[C.map(e=>(0,b.jsxs)(`g`,{className:`overlay-${e.tone}`,children:[(0,b.jsx)(`rect`,{x:v(e.startFrame),y:`203`,width:Math.max(2,v(e.endFrame)-v(e.startFrame)),height:`115`}),(0,b.jsx)(`text`,{x:v(e.startFrame)+5,y:`219`,children:e.label})]},`${e.label}-${e.startFrame}`)),w.map(e=>(0,b.jsxs)(`g`,{className:`overlay-marker overlay-${e.tone}`,children:[(0,b.jsx)(`path`,{d:`M${v(e.frame).toFixed(1)} 42V318`}),(0,b.jsx)(`text`,{x:Math.min(905,v(e.frame)+5),y:`52`,children:e.label})]},`${e.label}-${e.frame}`))]}):null,(0,b.jsx)(`path`,{className:`wave-left`,d:x(m,75)}),(0,b.jsx)(`path`,{className:`wave-right`,d:x(h,160)}),(0,b.jsx)(`path`,{className:`decay-line`,d:S}),(0,b.jsx)(`path`,{className:`fit-band`,d:`M70 233H970M70 263H970`}),(0,b.jsxs)(`text`,{className:`axis-label`,x:`70`,y:`328`,children:[T.toFixed(2),` ms`]}),(0,b.jsxs)(`text`,{className:`axis-label axis-end`,x:`970`,y:`328`,children:[E.toFixed(2),` ms`]})]}),c?(0,b.jsxs)(`section`,{className:`architecture-explanation`,"aria-label":`Architecture explanation`,children:[(0,b.jsx)(`strong`,{children:c.title}),(0,b.jsx)(`span`,{children:c.explanation})]}):null,s?(0,b.jsxs)(`div`,{className:`rt60-refusal`,role:`note`,children:[(0,b.jsx)(`strong`,{children:`RT60 withheld`}),(0,b.jsx)(`span`,{children:xp(s)})]}):(0,b.jsxs)(`div`,{className:`rt60-method`,children:[(0,b.jsx)(`strong`,{children:`T30 estimate`}),(0,b.jsx)(`span`,{children:`Linear fit from -5 to -35 dB, extrapolated to -60 dB.`})]})]})}function ym({diagnostics:e,runawayLoop:t,canUndo:n,onUndo:r,onRecover:i,onClose:a}){return(0,b.jsxs)(`aside`,{className:`diagnostics-panel ${e?.mute.safetyLatched?`has-safety-latch`:``}`,"aria-label":`Runtime resource and safety diagnostics`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`RUNTIME DIAGNOSTICS`}),(0,b.jsx)(`h2`,{children:`Resources and safety`})]}),(0,b.jsx)(`button`,{type:`button`,onClick:a,children:`CLOSE ×`})]}),e?(0,b.jsxs)(b.Fragment,{children:[(0,b.jsxs)(`div`,{className:`mute-diagnostic ${e.mute.active?`is-muted`:``}`,role:e.mute.safetyLatched?`alert`:`status`,children:[(0,b.jsx)(`strong`,{children:e.mute.safetyLatched?`SAFETY MUTE LATCHED`:e.mute.manual?`MANUAL MUTE ACTIVE`:`AUDIO SAFETY READY`}),(0,b.jsx)(`span`,{children:e.mute.safetyLatched?`Editing and Undo remain available. Reduce gain or undo the risky edit, then recover explicitly.`:`No numerical safety latch is active.`})]}),(0,b.jsxs)(`div`,{className:`diagnostic-grid`,children:[(0,b.jsxs)(`section`,{children:[(0,b.jsx)(`span`,{children:`ESTIMATE / STATIC`}),(0,b.jsxs)(`strong`,{children:[e.workloadEstimate.scalarOperationsPerSample,` ops/sample`]}),(0,b.jsxs)(`small`,{children:[(e.workloadEstimate.scalarOperationsPerSecond/1e6).toFixed(2),` M scalar ops/s`]})]}),(0,b.jsxs)(`section`,{children:[(0,b.jsx)(`span`,{children:`LIVE / MEASURED`}),(0,b.jsxs)(`strong`,{children:[e.liveCpu.loadPercent.toFixed(2),`% CPU`]}),(0,b.jsxs)(`small`,{children:[e.liveCpu.peakLoadPercent.toFixed(2),`% peak · `,e.liveCpu.processedBlocks.toLocaleString(),` blocks`]})]}),(0,b.jsxs)(`section`,{children:[(0,b.jsx)(`span`,{children:`MEMORY / PREPARED`}),(0,b.jsx)(`strong`,{children:Fp(e.delayMemory.bytes)}),(0,b.jsxs)(`small`,{children:[e.delayMemory.lineCount,` delay-bearing lines`]})]}),(0,b.jsxs)(`section`,{children:[(0,b.jsx)(`span`,{children:`CLIPPING / MEASURED`}),(0,b.jsxs)(`strong`,{children:[e.clipping.samples.toLocaleString(),` samples`]}),(0,b.jsxs)(`small`,{children:[e.clipping.blocks.toLocaleString(),` affected blocks`]})]})]}),(0,b.jsxs)(`dl`,{className:`revision-diagnostic`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`ACTIVE GRAPH REVISION`}),(0,b.jsxs)(`dd`,{children:[`#`,e.topologyPublication.activeRevision||e.activeGraphRevision]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`PENDING / FAILED`}),(0,b.jsxs)(`dd`,{children:[e.topologyPublication.pendingRevision?`#${e.topologyPublication.pendingRevision}`:`—`,` / `,e.topologyPublication.failedRevision?`#${e.topologyPublication.failedRevision}`:`—`]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`TOPOLOGY CROSSFADE`}),(0,b.jsx)(`dd`,{children:e.topologyPublication.crossfadeTotalSamples?`${e.topologyPublication.crossfadePositionSamples}/${e.topologyPublication.crossfadeTotalSamples} samples`:`IDLE`})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`LAST CROSSFADE`}),(0,b.jsx)(`dd`,{children:e.topologyPublication.completedCrossfades?`#${e.topologyPublication.lastCrossfadeFromRevision} → #${e.topologyPublication.lastCrossfadeToRevision}`:`—`})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`SUPERSEDED / RECLAIMED`}),(0,b.jsxs)(`dd`,{children:[e.topologyPublication.supersededRequests,` / `,e.topologyPublication.reclaimedRuntimes]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`SUCCESSFUL RECOVERIES`}),(0,b.jsx)(`dd`,{children:e.recoveryCount})]})]}),e.topologyPublication.failure?(0,b.jsxs)(`p`,{className:`topology-failure`,children:[`REVISION #`,e.topologyPublication.failedRevision,`: `,e.topologyPublication.failure]}):null,e.lastSafetyEvent?(0,b.jsxs)(`section`,{className:`safety-event`,children:[(0,b.jsxs)(`span`,{children:[`LAST SAFETY EVENT #`,e.lastSafetyEvent.generation]}),(0,b.jsxs)(`strong`,{children:[e.lastSafetyEvent.kind.toUpperCase(),` / `,e.lastSafetyEvent.channel.toUpperCase()]}),(0,b.jsxs)(`p`,{children:[`Sample `,e.lastSafetyEvent.sampleIndex.toLocaleString(),` of graph revision `,(0,b.jsxs)(`b`,{children:[`#`,e.lastSafetyEvent.graphRevision]}),`. This identity remains fixed when later edits change the active revision.`]})]}):(0,b.jsx)(`p`,{className:`no-safety-event`,children:`No NaN, infinity, or runaway event recorded.`}),e.mute.safetyLatched?t?.loops[0]?(0,b.jsxs)(`section`,{className:`runaway-loop-event`,children:[(0,b.jsx)(`span`,{children:`LIKELY FEEDBACK LOOP / HEURISTIC`}),(0,b.jsxs)(`strong`,{children:[t.loops[0].nominalDelayMilliseconds.toFixed(2),` ms · `,t.loops[0].nodeIds.length,` blocks`]}),(0,b.jsx)(`code`,{children:[...t.loops[0].nodeIds,t.loops[0].nodeIds[0]].join(` → `)}),(0,b.jsx)(`p`,{children:`Marked red on the graph. Ranking uses visible loop gain and nominal delay; it is guidance, not a stability proof.`})]}):(0,b.jsx)(`p`,{className:`no-safety-event`,children:`No explicit delayed feedback loop could be identified for this event.`}):null,(0,b.jsxs)(`div`,{className:`diagnostic-actions`,children:[(0,b.jsx)(`button`,{type:`button`,disabled:!n,onClick:r,children:`UNDO LAST EDIT`}),(0,b.jsx)(`button`,{type:`button`,disabled:!e.mute.safetyLatched,onClick:i,children:`RECOVER AUDIO`})]})]}):(0,b.jsx)(`p`,{className:`diagnostics-waiting`,children:`Waiting for a coherent native snapshot…`})]})}function bm({value:e,destinationCount:t,showMeasuredReference:n,onBegin:r,onValue:i,onCommit:a,onFocus:o}){let s=(0,_.useMemo)(()=>lm(e),[e]),c=(0,_.useMemo)(()=>n?fm(e):null,[n,e]);return(0,b.jsxs)(`section`,{className:`gravity-presentation`,"aria-label":`Gravity macro control`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:`GRAVITY`}),(0,b.jsx)(`strong`,{children:s.state})]}),(0,b.jsxs)(`div`,{className:`gravity-scale`,"aria-hidden":`true`,children:[(0,b.jsx)(`span`,{children:`INVERSE`}),(0,b.jsx)(`span`,{children:`BLOOM`}),(0,b.jsx)(`span`,{children:`FORWARD`})]}),(0,b.jsx)(`input`,{className:`gravity-slider`,"aria-label":`Gravity bipolar control`,type:`range`,min:-1,max:1,step:.001,value:e,onPointerDown:r,onChange:e=>i(Number(e.target.value)),onPointerUp:a,onKeyDown:e=>{r(),e.key===`Enter`&&a()},onBlur:a}),(0,b.jsxs)(`label`,{className:`gravity-exact-value`,children:[(0,b.jsx)(`span`,{children:`EXACT VALUE`}),(0,b.jsx)(`input`,{"aria-label":`Gravity exact numeric value`,type:`number`,min:-1,max:1,step:.001,value:e,onFocus:r,onChange:e=>i(Number(e.target.value)),onKeyDown:e=>{e.key===`Enter`&&a()},onBlur:a})]}),(0,b.jsxs)(`figure`,{className:`gravity-envelope`,children:[(0,b.jsxs)(`figcaption`,{children:[(0,b.jsx)(`span`,{children:`DESIGN PREDICTION`}),(0,b.jsx)(`strong`,{children:`NOT MEASURED AUDIO`})]}),(0,b.jsxs)(`svg`,{viewBox:`0 0 100 42`,role:`img`,"aria-label":s.description,preserveAspectRatio:`none`,children:[(0,b.jsx)(`line`,{x1:s.peakPosition*100,x2:s.peakPosition*100,y1:`4`,y2:`40`}),(0,b.jsx)(`path`,{d:s.path}),c?(0,b.jsx)(`path`,{className:`gravity-measured-envelope`,d:c.path}):null]}),(0,b.jsx)(`p`,{children:`Shape guide from the Gravity coordinate. Capture an impulse to inspect actual response.`}),c?(0,b.jsxs)(`aside`,{className:`gravity-reference-comparison`,"aria-label":c.description,children:[(0,b.jsx)(`strong`,{children:c.label}),(0,b.jsxs)(`span`,{children:[`PEAK `,c.peakMilliseconds.toFixed(1),` ms · EARLY/LATE `,c.earlyLateEnergyRatioDb.toFixed(1),` dB`]}),(0,b.jsxs)(`p`,{children:[`Checked fixture (`,c.controlsDescription,`). Reference evidence—not the current capture. Any disagreement with the prediction is shown, not corrected.`]})]}):null]}),(0,b.jsxs)(`button`,{type:`button`,className:`gravity-focus`,onClick:o,children:[`EXPAND / FOCUS `,t,` MAPPINGS`]})]})}function xm({snapshot:e}){let{fitView:t,setViewport:n,screenToFlowPosition:r}=hl(),i=(0,_.useMemo)(()=>e.restoredPatch?lp(JSON.stringify(e.restoredPatch),e):null,[e]),a=(0,_.useMemo)(()=>i??{...af(e),viewport:{x:0,y:0,zoom:1}},[i,e]),[o,s,c]=vd(a.nodes),[l,u,d]=yd(a.edges),[f,p]=(0,_.useState)(null),[m,h]=(0,_.useState)(null),[g,v]=(0,_.useState)(a.viewport),y=(0,_.useRef)(null),x=(0,_.useRef)(null),S=(0,_.useRef)(null),C=(0,_.useRef)(0),w=(0,_.useRef)(null),[T,E]=(0,_.useState)(null),[D,O]=(0,_.useState)(i?`custom`:`barr-reference`),[k,A]=(0,_.useState)(`causal-reverse-envelope`),[j,M]=(0,_.useState)(()=>{try{return window.localStorage.getItem(`reverb-playground-teaching`)!==`off`}catch{return!0}}),[ee,N]=(0,_.useState)(null),[te,P]=(0,_.useState)(!1),[F,I]=(0,_.useState)(()=>Tf(a)),[ne,L]=(0,_.useState)(null),[R,z]=(0,_.useState)(null),[B,re]=(0,_.useState)(0),[ie,ae]=(0,_.useState)(null),oe=(0,_.useCallback)(e=>{let t=(e,t,n)=>o.find(t=>t.data.type===e)?.data.parameters.find(e=>e.id===t)?.value??n;ae({capture:e,patchId:D,gateTeaching:{detectorReleaseMilliseconds:t(`envelope-follower`,`release`,20),holdMilliseconds:t(`hold-gate`,`hold`,120),releaseMilliseconds:t(`hold-gate`,`release`,8)}})},[D,o]),[se,ce]=(0,_.useState)(()=>window.matchMedia(`(prefers-reduced-motion: reduce)`).matches),[le,ue]=(0,_.useState)(()=>!window.matchMedia(`(prefers-reduced-motion: reduce)`).matches),[de,fe]=(0,_.useState)({}),[pe,me]=(0,_.useState)(!1),[he,ge]=(0,_.useState)(null),[_e,ve]=(0,_.useState)(()=>performance.now()/1e3),ye=(0,_.useMemo)(()=>Ip(o,l),[l,o]),be=(0,_.useMemo)(()=>cp(o,l,g),[l,o,g]),xe=D===`custom`?null:Xp(D),Se=(0,_.useMemo)(()=>f?zf(o,l,{nodeId:f.id}):m?zf(o,l,{edgeId:m.id}):null,[l,o,m,f]),Ce=(0,_.useMemo)(()=>he?.mute.safetyLatched?Vf(o,l):null,[he?.mute.safetyLatched,l,o]),we=Se?.loops.length?B%Se.loops.length:0,Te=(0,_.useMemo)(()=>Ff(o,l,Se,we),[l,Se,o,we]),Ee=(0,_.useMemo)(()=>If(Te.nodes,Te.edges,Ce),[Te,Ce]),De=(0,_.useMemo)(()=>kp(Ee.nodes,Ee.edges,de),[de,Ee]),Oe=(0,_.useMemo)(()=>{if(f?.data.type!==`control-map`)return null;let e=(e,t)=>f.data.parameters.find(t=>t.id===e)?.value??t,t=e(`curve-family`,0);return Hp(t>=1.5?`exponential`:t>=.5?`power`:`linear`,e(`curve-amount`,0),e(`exponent`,1),e(`scale`,1),e(`offset`,0),e(`polarity`,1)>=.5?`bipolar`:`unipolar`,e(`clamp-min`,-1),e(`clamp-max`,1))},[f]),ke=(0,_.useMemo)(()=>f?.data.type===`macro`?am(f.id,o,l):null,[l,o,f]),Ae=(0,_.useMemo)(()=>om(De.nodes,De.edges,ke),[De,ke]),je=(0,_.useMemo)(()=>Up(Ae.nodes,Ae.edges,_e),[_e,Ae]),Me=(0,_.useCallback)(()=>{if(!ke)return;let e=new Set(um(ke));t({nodes:o.filter(t=>e.has(t.id)),padding:.22,duration:se?0:350,maxZoom:1.1})},[t,o,se,ke]);(0,_.useEffect)(()=>{if(se||!o.some(e=>e.data.role===`control`))return;let e=window.setInterval(()=>ve(performance.now()/1e3),33);return()=>window.clearInterval(e)},[o,se]),(0,_.useEffect)(()=>{let e=window.matchMedia(`(prefers-reduced-motion: reduce)`),t=()=>{ce(e.matches),e.matches&&ue(!1)};return e.addEventListener(`change`,t),()=>e.removeEventListener(`change`,t)},[]),(0,_.useEffect)(()=>{let e=!1,t=window.setTimeout(async()=>{try{let t=Lp(await np(`publishGraph`,cp(o,l,g)));e||L(t.accepted?{kind:`ok`,message:`GRAPH REVISION #${t.revision} QUEUED FOR AUDITION`}:{kind:`error`,message:t.error})}catch(t){e||L({kind:`error`,message:t instanceof Error?t.message:`Graph publication failed`})}},35);return()=>{e=!0,window.clearTimeout(t)}},[ye]),(0,_.useEffect)(()=>{let e=!1,t=window.setTimeout(async()=>{try{let t=await np(`storePatchState`,be);if(t!==void 0){let n=nm(t);!e&&!n.accepted&&L({kind:`error`,message:n.error||`Host state rejected`})}}catch(t){e||L({kind:`error`,message:t instanceof Error?t.message:`Host state failed`})}},120);return()=>{e=!0,window.clearTimeout(t)}},[be]),(0,_.useEffect)(()=>{if(!Dp(le,se)){fe({}),np(`setEnergyTelemetryEnabled`,!1).catch(()=>void 0);return}let e=!1,t=!1,n=performance.now(),r=-1,i=n;np(`setEnergyTelemetryEnabled`,!0).catch(()=>void 0);let a=async()=>{if(!t){t=!0;try{let t=Cp(await np(`getEnergyTelemetry`)),a=performance.now();t.generation===r?a-i>100&&(t={...t,nodes:t.nodes.map(e=>({...e,rms:0}))}):(r=t.generation,i=a),e||fe(e=>Tp(e,t,a-n)),n=a}catch{}finally{t=!1}}};a();let o=window.setInterval(()=>void a(),33);return()=>{e=!0,window.clearInterval(o),np(`setEnergyTelemetryEnabled`,!1).catch(()=>void 0)}},[le,se]),(0,_.useEffect)(()=>{let e=!1,t=!1,n=async()=>{if(!t){t=!0;try{let t=Pp(await np(`getRuntimeDiagnostics`));e||(ge(t),t.topologyPublication.failedRevision>0&&t.topologyPublication.failedRevision===t.topologyPublication.requestedRevision&&t.topologyPublication.failure&&L({kind:`error`,message:`REVISION #${t.topologyPublication.failedRevision} REJECTED: ${t.topologyPublication.failure}`}),t.mute.safetyLatched&&me(!0))}catch{}finally{t=!1}}};n();let r=window.setInterval(()=>void n(),250);return()=>{e=!0,window.clearInterval(r)}},[]);let V=(0,_.useCallback)(e=>{s(e.nodes),u(e.edges),p(null),h(null)},[u,s]),Ne=(0,_.useCallback)(e=>{for(let t of e.nodes)for(let e of t.data.parameters)if(t.data.runtimeBound||t.data.type===`macro`&&e.id===`value`)try{np(`setRuntimeParameter`,t.id,e.id,e.value).catch(()=>void 0)}catch{}},[]),Pe=(0,_.useCallback)(e=>{if((e===`stereo-input`||e===`stereo-output`)&&o.some(t=>t.data.type===e)){L({kind:`error`,message:`Exactly one ${e===`stereo-input`?`Stereo Input`:`Stereo Output`} is required and already exists.`});return}let t={nodes:o,edges:l},n=o.filter(e=>!e.data.runtimeBound).length,i=r({x:window.innerWidth*.5,y:window.innerHeight*.5}),a=vf(e,_f(e,o),{x:i.x-190+n%3*190,y:i.y-100+Math.floor(n/3)*130}),s={nodes:[...o.map(e=>({...e,selected:!1})),{...a,selected:!0}],edges:l};V(s),p(a),I(e=>Ef(e,`Create ${a.data.label}`,t,s)),L({kind:`ok`,message:`CREATED ${a.id} / DRAFT GRAPH`})},[V,l,o,r]),Fe=(0,_.useCallback)(()=>{let e=o.find(e=>e.selected&&(e.data.type===`stereo-input`||e.data.type===`stereo-output`));if(e){L({kind:`error`,message:`${e.data.label} is required and cannot be deleted.`});return}let t={nodes:o,edges:l},n=sf(o,l);(n.nodes.length!==o.length||n.edges.length!==l.length)&&(V(n),I(e=>Ef(e,`Delete selection`,t,n)),L({kind:`ok`,message:`DELETED SELECTION + INCIDENT CABLES / UNDO AVAILABLE`}))},[V,l,o]),Ie=(0,_.useCallback)(()=>{let e=Df(F);e.edit&&(V(e.edit.before),Ne(e.edit.before),I(e.history),L({kind:`ok`,message:`UNDID ${e.edit.label.toUpperCase()}`}))},[V,F,Ne]),Le=(0,_.useCallback)(()=>{let e=Of(F);e.edit&&(V(e.edit.after),Ne(e.edit.after),I(e.history),L({kind:`ok`,message:`REDID ${e.edit.label.toUpperCase()}`}))},[V,F,Ne]),Re=(0,_.useCallback)(e=>{let t={nodes:o,edges:l},n=Uf(o,l,e);if(n.kind===`invalid`){L({kind:`error`,message:n.message});return}if(n.kind===`occupied`){z(e),L({kind:`error`,message:`INPUT OCCUPIED / REPLACE ITS CABLE OR INSERT +`});return}let r=Kf(t,e);V(r),I(e=>Ef(e,`Create cable`,t,r)),L({kind:`ok`,message:`CONNECTED ${n.signal.toUpperCase()} CABLE`})},[V,l,o]),ze=(0,_.useCallback)(e=>{let t=R;if(z(null),!t||e===`cancel`){L(null);return}let n=Uf(o,l,t);if(e===`sum`&&(n.kind!==`occupied`||n.signal!==`audio`)){L({kind:`error`,message:`CONTROL INPUTS CANNOT INSERT AN AUDIO SUM`});return}let r={nodes:o,edges:l},i=e===`replace`?Kf(r,t,!0):qf(r,t);V(i),I(t=>Ef(t,e===`replace`?`Replace cable`:`Insert +`,r,i)),L({kind:`ok`,message:e===`replace`?`REPLACED OCCUPIED INPUT CABLE`:`INSERTED + AND REWIRED BOTH SOURCES`})},[V,l,o,R]),Be=(0,_.useCallback)((e,t,n)=>{let r=o.find(t=>t.id===e),i=r?.data.type===`macro`&&r.data.parameters.find(e=>e.id===`center-detent`)?.value===1,a=r?.data.type===`macro`&&t===`value`&&i&&Math.abs(n)<=.02?0:n,c=n=>n.id===e?{...n,data:{...n.data,parameters:n.data.parameters.map(e=>e.id===t?{...e,value:a}:e)}}:n;if(s(e=>e.map(c)),p(e=>e?c(e):null),r?.data.runtimeBound||r?.data.type===`macro`&&t===`value`)try{np(`setRuntimeParameter`,e,t,a).catch(()=>void 0)}catch{}},[o,s]),Ve=(0,_.useCallback)((e,t,n)=>{let r=r=>r.id===e?{...r,data:{...r.data,parameters:r.data.parameters.map(e=>e.id!==t||!e.modulation?e:{...e,modulation:{...e.modulation,...n}})}}:r;s(e=>e.map(r)),p(e=>e?r(e):null)},[s]),He=(0,_.useCallback)((e,t)=>{let n=t.slice(0,64),r=t=>t.id===e?{...t,data:{...t.data,userName:n}}:t;s(e=>e.map(r)),p(e=>e?r(e):null)},[s]),Ue=(0,_.useCallback)(()=>{let n=D===`custom`?`barr-reference`:D,r=$p(n,e),i={nodes:o,edges:l};V(r),Ne(r),I(e=>Ef(e,`Reset patch`,i,r)),z(null),O(n),requestAnimationFrame(()=>void t({padding:.16,minZoom:.25,maxZoom:1.1}))},[D,V,l,t,o,Ne,e]),We=(0,_.useCallback)(async r=>{try{let i=$p(r,e);V(i),Ne(i),v(i.viewport),await n(i.viewport),I(Tf(i)),z(null),O(r),A(e=>Zp(r,e));let a=Xp(r);E({kind:`ok`,message:`LOADED FACTORY / ${a.label.toUpperCase()}`}),requestAnimationFrame(()=>void t({padding:.16,minZoom:.25,maxZoom:1.1}))}catch(e){E({kind:`error`,message:e instanceof Error?e.message:`Factory patch load failed`})}},[V,t,Ne,n,e]),Ge=(0,_.useCallback)(()=>{let e=jf({nodes:o,edges:l});if(!e){L({kind:`error`,message:`SELECT ONE OR MORE NON-I/O BLOCKS TO COPY`});return}S.current=e,C.current=0,navigator.clipboard?.writeText(JSON.stringify({format:`reverb-playground-subgraph-v1`,...e})).catch(()=>void 0),L({kind:`ok`,message:`COPIED ${e.nodes.length} BLOCK${e.nodes.length===1?``:`S`} + ${e.edges.length} INTERNAL CABLE${e.edges.length===1?``:`S`}`})},[l,o]),Ke=(0,_.useCallback)(()=>{if(!S.current){L({kind:`error`,message:`GRAPH CLIPBOARD IS EMPTY`});return}let e={nodes:o,edges:l},t=Nf(e,S.current,40*++C.current);V(t),I(n=>Ef(n,`Paste selection`,e,t)),L({kind:`ok`,message:`PASTED ${S.current.nodes.length} BLOCK${S.current.nodes.length===1?``:`S`} / NEW IDS ASSIGNED`})},[V,l,o]),qe=(0,_.useCallback)(({nodes:e,edges:t})=>{p(e[0]??null),h(t[0]??null),re(0)},[]);(0,_.useEffect)(()=>{let e=e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===`z`){e.preventDefault(),e.shiftKey?Le():Ie();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===`y`){e.preventDefault(),Le();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===`c`&&!(e.target instanceof HTMLInputElement)){e.preventDefault(),Ge();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===`v`&&!(e.target instanceof HTMLInputElement)){e.preventDefault(),Ke();return}if((e.key===`Delete`||e.key===`Backspace`)&&!(e.target instanceof HTMLInputElement)){e.preventDefault(),Fe();return}e.key.toLowerCase()===`r`&&!(e.target instanceof HTMLInputElement)&&Ue()};return window.addEventListener(`keydown`,e),()=>window.removeEventListener(`keydown`,e)},[Ge,Ke,Le,Fe,Ue,Ie]);let Je=(0,_.useCallback)((e,t,n)=>{y.current={label:`Edit ${e}.${t}`,before:xf({nodes:o,edges:l})}},[l,o]),Ye=(0,_.useCallback)((e,t,n)=>{Be(e,t,n)},[Be]),Xe=(0,_.useCallback)(()=>{let e=y.current;y.current=null,e&&I(t=>Ef(t,e.label,e.before,{nodes:o,edges:l}))},[l,o]),Ze=(0,_.useCallback)(()=>{try{let t=cp(o,l,g);lp(t,e);let n=URL.createObjectURL(new Blob([t],{type:`application/json`})),r=document.createElement(`a`);r.href=n;let i=xe?.filename??`custom-patch.rvp.json`;r.download=i,document.body.appendChild(r),r.click(),r.remove(),window.setTimeout(()=>URL.revokeObjectURL(n),0),I(e=>kf(e,{nodes:o,edges:l})),E({kind:`ok`,message:`SAVED ${i.toUpperCase()} / SCHEMA V2`})}catch(e){E({kind:`error`,message:e instanceof Error?e.message:`Patch save failed`})}},[xe,l,o,e,g]),Qe=(0,_.useCallback)(async t=>{try{let r=lp(await t.text(),e);s(r.nodes),u(r.edges),v(r.viewport),await n(r.viewport);for(let e of r.nodes)for(let t of e.data.parameters)(e.data.runtimeBound||e.data.type===`macro`&&t.id===`value`)&&await np(`setRuntimeParameter`,e.id,t.id,t.value);p(null),h(null),I(Tf(r)),z(null),O(`custom`),E({kind:`ok`,message:`LOADED ${t.name.toUpperCase()} / SCHEMA V2`})}catch(e){E({kind:`error`,message:e instanceof Error?e.message:`Patch load failed`})}},[u,n,s,e]),$e=f?.id??`overview`,et=R?Uf(o,l,R):null,tt=et?.kind===`occupied`?et.signal:null,nt=j&&ee!==$e,rt=(0,_.useCallback)(()=>{M(e=>{let t=!e;try{window.localStorage.setItem(`reverb-playground-teaching`,t?`on`:`off`)}catch{}return t})},[]);return(0,b.jsxs)(`main`,{className:`editor-shell`,children:[(0,b.jsxs)(`header`,{className:`editor-header`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsxs)(`div`,{className:`eyebrow`,children:[`SCHEMATIC EDITOR / `,xe?.label.toUpperCase()??`CUSTOM PATCH`]}),(0,b.jsx)(`h1`,{children:`Patch architecture`}),e.productVersion&&e.buildCommit?(0,b.jsxs)(`span`,{className:`build-identity`,children:[`v`,e.productVersion,` / `,e.buildCommit]}):null]}),(0,b.jsxs)(`div`,{className:`header-runtime`,children:[(0,b.jsxs)(`label`,{className:`factory-picker`,children:[(0,b.jsx)(`span`,{children:`FACTORY PATCH`}),(0,b.jsxs)(`select`,{"aria-label":`Factory patch`,value:D,onChange:e=>{let t=e.target.value;t!==`custom`&&We(t)},children:[D===`custom`?(0,b.jsx)(`option`,{value:`custom`,children:`Custom / loaded file`}):null,Jp.map(e=>(0,b.jsx)(`option`,{value:e.id,children:e.label},e.id))]})]}),(0,b.jsxs)(`div`,{className:`comparison-switch`,role:`group`,"aria-label":`Compare Barr reference with selected design`,children:[(0,b.jsx)(`button`,{type:`button`,"aria-pressed":D===`barr-reference`,onClick:()=>void We(`barr-reference`),children:`A / BARR`}),(0,b.jsxs)(`button`,{type:`button`,"aria-pressed":D===k,onClick:()=>void We(k),children:[`B / `,Qp(k)]})]}),(0,b.jsxs)(`button`,{className:`energy-toggle`,type:`button`,"aria-pressed":le,disabled:se,onClick:()=>ue(e=>!e),title:se?`Disabled by the operating-system reduced-motion preference`:`Toggle measured node and cable energy`,children:[`ENERGY `,se?`REDUCED`:le?`ON`:`OFF`]}),(0,b.jsx)(`button`,{className:`diagnostics-toggle`,type:`button`,"aria-expanded":pe,onClick:()=>me(e=>!e),children:`DIAGNOSTICS`}),(0,b.jsxs)(`div`,{className:`header-status`,"aria-label":`Audition status`,children:[(0,b.jsx)(`span`,{className:`status-dot`,"aria-hidden":`true`}),(0,b.jsx)(`span`,{children:he?.topologyPublication.crossfadeTotalSamples?`CROSSFADING #${he.topologyPublication.crossfadeFromRevision} → #${he.topologyPublication.activeRevision}`:he?.topologyPublication.pendingRevision?`COMPILING #${he.topologyPublication.pendingRevision}`:he?.topologyPublication.activeRevision?`GRAPH ACTIVE #${he.topologyPublication.activeRevision}`:`RUNTIME BOUND / ${e.sampleRate>0?`${(e.sampleRate/1e3).toFixed(1)} kHz`:`awaiting audio`}`})]})]})]}),(0,b.jsx)(_m,{sampleRate:e.sampleRate,onCapture:oe}),ie?(0,b.jsx)(vm,{capture:ie.capture,patchId:ie.patchId,gateTeaching:ie.gateTeaching,teachingEnabled:j,onClose:()=>ae(null)},ie.capture.generation):null,pe?(0,b.jsx)(ym,{diagnostics:he,runawayLoop:Ce,canUndo:F.undo.length>0,onUndo:Ie,onRecover:()=>{np(`resetSafety`).catch(()=>void 0)},onClose:()=>me(!1)}):null,(0,b.jsxs)(`section`,{className:`workspace`,children:[(0,b.jsxs)(`aside`,{className:`module-library`,"aria-label":`Module library`,children:[(0,b.jsxs)(`div`,{className:`pane-heading`,children:[(0,b.jsx)(`span`,{children:`MODULES`}),(0,b.jsx)(`span`,{className:`pane-count`,children:hf.length})]}),(0,b.jsx)(`p`,{className:`pane-help`,children:`Click a primitive to place it near the canvas center. Audio cables are mono.`}),pm.map(e=>(0,b.jsxs)(`section`,{className:`module-group`,children:[(0,b.jsx)(`h2`,{children:e.group}),e.items.map(e=>(0,b.jsxs)(`button`,{className:`module-item${e.role===`control`?` module-control`:``}`,type:`button`,onClick:()=>Pe(e.type),children:[(0,b.jsx)(`span`,{className:`module-glyph`,"aria-hidden":`true`}),(0,b.jsx)(`span`,{children:e.label})]},e.type))]},e.group)),(0,b.jsxs)(`div`,{className:`signal-legend`,"aria-label":`Cable styles`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{className:`legend-line audio-line`}),` AUDIO / SOLID`]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{className:`legend-line control-line`}),` CONTROL / DASHED`]})]})]}),(0,b.jsxs)(`section`,{className:`canvas-pane`,"aria-label":`Patch canvas`,children:[(0,b.jsxs)(`div`,{className:`canvas-toolbar`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`strong`,{children:xe?.graphName??`CUSTOM.graph`}),(0,b.jsxs)(`span`,{children:[o.length,` blocks / `,l.length,` cables`]})]}),(0,b.jsxs)(`div`,{className:`canvas-actions`,children:[(0,b.jsxs)(`span`,{children:[Math.round(g.zoom*100),`%`]}),(0,b.jsx)(`span`,{className:`clean-state ${Af(F,{nodes:o,edges:l})?`is-clean`:`is-dirty`}`,children:Af(F,{nodes:o,edges:l})?`SAVED`:`UNSAVED`}),(0,b.jsx)(`button`,{type:`button`,onClick:Ze,children:`SAVE PATCH`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>w.current?.click(),children:`LOAD PATCH`}),(0,b.jsx)(`button`,{type:`button`,disabled:!F.undo.length,onClick:Ie,children:`UNDO`}),(0,b.jsx)(`button`,{type:`button`,disabled:!F.redo.length,onClick:Le,children:`REDO`}),(0,b.jsx)(`button`,{type:`button`,onClick:Ge,children:`COPY`}),(0,b.jsx)(`button`,{type:`button`,disabled:!S.current,onClick:Ke,children:`PASTE`}),(0,b.jsx)(`button`,{type:`button`,onClick:Fe,children:`DELETE`}),(0,b.jsx)(`button`,{type:`button`,onClick:Ue,children:`RESET PATCH`}),(0,b.jsx)(`input`,{ref:w,className:`file-input`,"aria-label":`Load patch file`,type:`file`,accept:`.json,application/json`,onChange:e=>{let t=e.target.files?.[0];t&&Qe(t),e.target.value=``}})]})]}),T?(0,b.jsxs)(`div`,{className:`file-status file-status-${T.kind}`,role:T.kind===`error`?`alert`:`status`,children:[(0,b.jsx)(`span`,{children:T.message}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Dismiss file status`,onClick:()=>E(null),children:`×`})]}):null,ne?(0,b.jsxs)(`div`,{className:`file-status file-status-${ne.kind}`,role:ne.kind===`error`?`alert`:`status`,children:[(0,b.jsx)(`span`,{children:ne.message}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Dismiss graph status`,onClick:()=>L(null),children:`×`})]}):null,R?(0,b.jsxs)(`div`,{className:`connection-offer`,role:`dialog`,"aria-label":`Occupied input options`,children:[(0,b.jsx)(`strong`,{children:`INPUT ALREADY HAS A CABLE`}),(0,b.jsx)(`span`,{children:tt===`control`?`A parameter socket accepts one control cable. Replace it or cancel.`:`Replace it, or insert an explicit Sum (+) block to preserve both audio sources.`}),(0,b.jsxs)(`div`,{children:[tt===`audio`?(0,b.jsx)(`button`,{type:`button`,onClick:()=>ze(`sum`),children:`INSERT +`}):null,(0,b.jsx)(`button`,{type:`button`,onClick:()=>ze(`replace`),children:`REPLACE CABLE`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>ze(`cancel`),children:`CANCEL`})]})]}):null,(0,b.jsxs)(`div`,{className:`flow-wrap`,children:[(0,b.jsxs)(_d,{nodes:je.nodes,edges:je.edges,nodeTypes:{patchNode:Zf},onNodesChange:c,onEdgesChange:d,onNodeDragStart:()=>{x.current=xf({nodes:o,edges:l})},onNodeDragStop:(e,t,n)=>{let r=x.current;if(x.current=null,!r)return;let i=new Map(n.map(e=>[e.id,e.position]));i.set(t.id,t.position);let a={nodes:o.map(e=>i.has(e.id)?{...e,position:{...i.get(e.id)}}:e),edges:l};I(e=>Ef(e,`Move ${t.id}`,r,a))},onConnect:Re,isValidConnection:e=>Uf(o,l,{source:e.source,sourceHandle:e.sourceHandle??null,target:e.target,targetHandle:e.targetHandle??null}).kind!==`invalid`,defaultEdgeOptions:{interactionWidth:24},onSelectionChange:qe,onViewportChange:v,defaultViewport:a.viewport,fitView:!i,fitViewOptions:{padding:.16,minZoom:.58,maxZoom:1.1},minZoom:.2,maxZoom:1.8,deleteKeyCode:null,selectionKeyCode:`Shift`,multiSelectionKeyCode:`Shift`,panActivationKeyCode:`Space`,panOnDrag:[1,2],selectionOnDrag:!0,nodesFocusable:!0,edgesFocusable:!0,elevateEdgesOnSelect:!0,proOptions:{hideAttribution:!1},"aria-label":`${xe?.label??`Custom`} patch graph`,children:[(0,b.jsx)(Td,{color:`#34414a`,gap:22,size:1.2,variant:xd.Dots}),(0,b.jsx)(Pd,{position:`bottom-left`,showInteractive:!1}),(0,b.jsx)(Zd,{pannable:!0,zoomable:!0,position:`bottom-right`,nodeColor:e=>e.selected?`#f2b44e`:`#52616d`,maskColor:`rgba(9, 12, 15, 0.78)`})]}),(0,b.jsx)(`div`,{className:`interaction-hint`,children:`SPACE + DRAG PAN · WHEEL ZOOM · SHIFT BOX SELECT · DELETE REMOVE · R RESET`})]})]}),(0,b.jsxs)(`aside`,{className:`inspector`,"aria-label":`Inspector`,children:[(0,b.jsxs)(`div`,{className:`pane-heading`,children:[(0,b.jsx)(`span`,{children:`INSPECTOR`}),(0,b.jsxs)(`button`,{className:`teaching-toggle`,type:`button`,"aria-pressed":j,title:`Toggle contextual cards and response architecture overlays`,onClick:rt,children:[`LEARN `,j?`ON`:`OFF`]})]}),f?(0,b.jsxs)(`div`,{className:`inspector-content`,children:[(0,b.jsx)(`div`,{className:`selection-kicker`,children:`SELECTED BLOCK`}),(0,b.jsx)(`h2`,{children:f.data.type===`macro`?f.data.userName:f.data.label}),(0,b.jsx)(`code`,{children:f.id}),f.data.presentation===`gravity`&&ke?(0,b.jsx)(bm,{value:f.data.parameters.find(e=>e.id===`value`)?.value??0,destinationCount:ke.destinations.length,showMeasuredReference:D===`gravity-diffusion`,onBegin:()=>Je(f.id,`value`,f.data.parameters.find(e=>e.id===`value`)?.value??0),onValue:e=>Be(f.id,`value`,e),onCommit:Xe,onFocus:Me}):null,Se?(0,b.jsx)(gm,{inspection:Se,activeIndex:we,onActiveIndex:re}):null,(0,b.jsxs)(`dl`,{className:`property-list`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`TYPE`}),(0,b.jsx)(`dd`,{children:f.data.type})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`ROLE`}),(0,b.jsx)(`dd`,{children:f.data.role})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`PORTS`}),(0,b.jsxs)(`dd`,{children:[f.data.ports.length,` mono`]})]})]}),f.data.type===`pitch-shift`?(0,b.jsx)(Yf,{parameters:f.data.parameters,reducedMotion:se,sampleRate:e.sampleRate>0?e.sampleRate:48e3}):null,f.data.type===`macro`?(0,b.jsxs)(`label`,{className:`macro-name-field`,children:[(0,b.jsx)(`span`,{children:`MACRO NAME`}),(0,b.jsx)(`input`,{"aria-label":`Macro name`,maxLength:64,value:f.data.userName??``,onFocus:()=>Je(f.id,`name`,0),onChange:e=>He(f.id,e.target.value),onBlur:()=>{(f.data.userName??``).trim()||He(f.id,`Macro`),Xe()}})]}):null,ke?(0,b.jsxs)(`section`,{className:`macro-destinations`,"aria-label":`Reachable mapped parameters`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:`REACHABLE MAPPINGS`}),(0,b.jsx)(`strong`,{children:ke.destinations.length})]}),ke.destinations.length?(0,b.jsx)(`ul`,{children:ke.destinations.map(e=>(0,b.jsxs)(`li`,{children:[(0,b.jsxs)(`code`,{children:[e.nodeId,`.`,e.parameterId]}),(0,b.jsxs)(`span`,{children:[e.minimum.toFixed(2),` … `,e.maximum.toFixed(2),` `,e.unit]})]},`${e.nodeId}.${e.parameterId}`))}):(0,b.jsx)(`p`,{children:`Connect the explicit output through Curve Mapper blocks to parameter sockets.`})]}):null,Oe?(0,b.jsxs)(`section`,{className:`control-range-preview`,"aria-label":`Predicted control output range`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:`PREDICTED OUTPUT`}),(0,b.jsxs)(`strong`,{children:[Oe.minimum.toFixed(2),` … `,Oe.maximum.toFixed(2)]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`i`,{style:{left:`${(Oe.minimum+1)*50}%`}}),(0,b.jsx)(`i`,{style:{left:`${(Oe.maximum+1)*50}%`}})]}),(0,b.jsx)(`p`,{children:`CURVE → SCALE → OFFSET → CLAMP · visible before connection.`})]}):null,(0,b.jsx)(`h3`,{children:`PARAMETERS`}),f.data.parameters.length?f.data.parameters.filter(e=>f.data.presentation!==`gravity`||e.id!==`value`).map(e=>{let t=mm(e.unit);return(0,b.jsxs)(`div`,{className:`parameter-card`,children:[(0,b.jsx)(`span`,{children:e.id.toUpperCase()}),(0,b.jsxs)(`label`,{className:`parameter-value`,children:[(0,b.jsx)(`span`,{className:`sr-only`,children:`${f.data.label} ${e.id} numeric value`}),t?(0,b.jsx)(`select`,{"aria-label":`${f.data.label} ${e.id}`,value:e.value,onFocus:()=>Je(f.id,e.id,e.value),onChange:t=>Ye(f.id,e.id,Number(t.target.value)),onBlur:Xe,children:t.map(e=>(0,b.jsx)(`option`,{value:e.value,children:e.label},e.value))}):(0,b.jsx)(`input`,{className:`parameter-number`,type:`number`,min:e.minimum,max:e.maximum,step:e.step,value:e.value,onFocus:()=>Je(f.id,e.id,e.value),onChange:t=>Ye(f.id,e.id,Number(t.target.value)),onKeyDown:e=>{e.key===`Enter`&&Xe()},onBlur:Xe}),(0,b.jsx)(`strong`,{children:e.unit===`milliseconds`?`ms`:e.unit===`hertz`?`Hz`:e.unit===`semitones`?`st`:``})]}),(0,b.jsx)(`small`,{children:e.unit}),t?null:(0,b.jsx)(`input`,{"aria-label":`${f.data.label} ${e.id}`,type:`range`,min:e.minimum,max:e.maximum,step:e.step,value:e.value,onPointerDown:()=>Je(f.id,e.id,e.value),onChange:t=>Ye(f.id,e.id,Number(t.target.value)),onPointerUp:Xe,onKeyDown:t=>{y.current||Je(f.id,e.id,e.value),t.key===`Enter`&&Xe()},onBlur:Xe}),e.modulation?(0,b.jsxs)(`section`,{className:`modulation-mapping`,"aria-label":`${f.data.label} ${e.id} modulation mapping`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:`CONTROL SOCKET`}),(0,b.jsx)(`code`,{children:e.modulation.portId})]}),(0,b.jsx)(`div`,{className:`mapping-formula`,children:`effective = clamp(base + amount × control)`}),(0,b.jsxs)(`label`,{children:[(0,b.jsx)(`span`,{children:`POLARITY`}),(0,b.jsxs)(`select`,{value:e.modulation.polarity,onFocus:()=>Je(f.id,`${e.id} modulation`,e.value),onChange:t=>Ve(f.id,e.id,{polarity:t.target.value}),onBlur:Xe,children:[(0,b.jsx)(`option`,{value:`bipolar`,children:`BIPOLAR −1…+1`}),(0,b.jsx)(`option`,{value:`unipolar`,children:`UNIPOLAR 0…1`})]})]}),(0,b.jsxs)(`label`,{children:[(0,b.jsx)(`span`,{children:`AMOUNT`}),(0,b.jsx)(`input`,{type:`number`,step:e.step,value:e.modulation.amount,onFocus:()=>Je(f.id,`${e.id} modulation`,e.value),onChange:t=>Ve(f.id,e.id,{amount:Number(t.target.value)}),onBlur:Xe})]}),(0,b.jsxs)(`div`,{className:`mapping-clamp`,children:[(0,b.jsxs)(`label`,{children:[(0,b.jsx)(`span`,{children:`CLAMP MIN`}),(0,b.jsx)(`input`,{type:`number`,min:e.minimum,max:e.modulation.clampMaximum,step:e.step,value:e.modulation.clampMinimum,onFocus:()=>Je(f.id,`${e.id} modulation`,e.value),onChange:t=>Ve(f.id,e.id,{clampMinimum:Number(t.target.value)}),onBlur:Xe})]}),(0,b.jsxs)(`label`,{children:[(0,b.jsx)(`span`,{children:`CLAMP MAX`}),(0,b.jsx)(`input`,{type:`number`,min:e.modulation.clampMinimum,max:e.maximum,step:e.step,value:e.modulation.clampMaximum,onFocus:()=>Je(f.id,`${e.id} modulation`,e.value),onChange:t=>Ve(f.id,e.id,{clampMaximum:Number(t.target.value)}),onBlur:Xe})]})]}),(0,b.jsx)(`footer`,{children:e.id===`delay`&&(f.data.type===`delay`||f.data.type===`allpass`)?`1 kHz control ticks / linear audio-rate ramp / fractional linear delay tap. Moving time intentionally produces Doppler and pitch effects; control sources are limited to 100 Hz.`:e.id===`coefficient`&&f.data.type===`allpass`?`1 kHz control ticks / linear audio-rate ramp / coefficient hard-limited to -0.95 through +0.95.`:`1 kHz control ticks / linear interpolation to audio rate`})]}):null]},e.id)}):(0,b.jsx)(`p`,{className:`empty-parameters`,children:`No editable parameters.`}),(0,b.jsxs)(`div`,{className:`history-actions`,children:[(0,b.jsx)(`button`,{type:`button`,disabled:!F.undo.length,onClick:Ie,children:`UNDO`}),(0,b.jsx)(`button`,{type:`button`,disabled:!F.redo.length,onClick:Le,children:`REDO`})]}),(0,b.jsx)(`div`,{className:`selection-note`,children:f.data.type===`macro`?`Macro value changes use a fixed 20 ms runtime ramp and do not compile topology. Default and detent edits republish the visible graph.`:f.data.runtimeBound?`Live value from native DSP runtime contract v${e.contractVersion}.`:`Constructed graph block. Audible edits compile off-thread and crossfade into the live plugin at an audio-block boundary.`}),nt?(0,b.jsx)(hm,{topic:fp(f.id),onDismiss:()=>N($e),onResearch:()=>P(!0)}):null]},f.id):m?(0,b.jsxs)(`div`,{className:`inspector-content`,children:[(0,b.jsx)(`div`,{className:`selection-kicker`,children:`SELECTED CABLE`}),(0,b.jsx)(`h2`,{children:m.data?.signal===`control`?`Control connection`:`Audio connection`}),(0,b.jsx)(`code`,{children:m.id}),Se?(0,b.jsx)(gm,{inspection:Se,activeIndex:we,onActiveIndex:re}):null,(0,b.jsxs)(`dl`,{className:`property-list`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`FROM`}),(0,b.jsx)(`dd`,{children:m.source})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`TO`}),(0,b.jsx)(`dd`,{children:m.target})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`SIGNAL`}),(0,b.jsx)(`dd`,{children:m.data?.signal===`control`?`CONTROL / DASHED`:`AUDIO / SOLID`})]})]})]}):(0,b.jsxs)(`div`,{className:`inspector-empty`,children:[(0,b.jsx)(`div`,{className:`empty-crosshair`,"aria-hidden":`true`,children:`+`}),(0,b.jsx)(`h2`,{children:`Nothing selected`}),(0,b.jsx)(`p`,{children:`Select a block or cable to inspect its identity, ports, and saved parameter values.`}),(0,b.jsx)(`kbd`,{children:`TAB`}),(0,b.jsx)(`span`,{children:`focus graph elements`}),(0,b.jsx)(`kbd`,{children:`ENTER`}),(0,b.jsx)(`span`,{children:`select focused item`}),(0,b.jsx)(`kbd`,{children:`⌘/CTRL C`}),(0,b.jsx)(`span`,{children:`copy selected non-I/O blocks`}),(0,b.jsx)(`kbd`,{children:`⌘/CTRL V`}),(0,b.jsx)(`span`,{children:`paste with new block and cable IDs`}),(0,b.jsx)(`kbd`,{children:`DELETE`}),(0,b.jsx)(`span`,{children:`remove selected blocks or cables`}),nt?(0,b.jsx)(hm,{topic:fp(),onDismiss:()=>N($e),onResearch:()=>P(!0)}):null]})]})]}),te?(0,b.jsx)(`div`,{className:`research-backdrop`,role:`presentation`,onMouseDown:()=>P(!1),children:(0,b.jsxs)(`section`,{className:`research-reader`,role:`dialog`,"aria-modal":`true`,"aria-label":`Keith Barr architecture research`,onMouseDown:e=>e.stopPropagation(),children:[(0,b.jsxs)(`header`,{children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`OFFLINE RESEARCH / DOCUMENTED SOURCES`}),(0,b.jsx)(`h2`,{children:`Keith Barr reverb architectures`})]}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Close architecture research`,onClick:()=>P(!1),children:`CLOSE ×`})]}),(0,b.jsx)(`pre`,{children:up})]})}):null]})}function Sm(){let[e,t]=(0,_.useState)(null),[n,r]=(0,_.useState)(``);return(0,_.useEffect)(()=>{let e=new AbortController;return fetch(new URL(`./runtime-snapshot.json`,window.location.href),{signal:e.signal,cache:`no-store`}).then(e=>{if(!e.ok)throw Error(`Native runtime returned HTTP ${e.status}`);return e.json()}).then(e=>t(rf(e))).catch(t=>{e.signal.aborted||r(t instanceof Error?t.message:`Unknown runtime binding failure`)}),()=>e.abort()},[]),n?(0,b.jsxs)(`main`,{className:`binding-state binding-error`,children:[(0,b.jsx)(`strong`,{children:`RUNTIME BINDING FAILED`}),(0,b.jsx)(`span`,{children:n})]}):e?(0,b.jsx)(pd,{children:(0,b.jsx)(xm,{snapshot:e})}):(0,b.jsx)(`main`,{className:`binding-state`,children:(0,b.jsx)(`strong`,{children:`BINDING NATIVE RUNTIME…`})})}(0,v.createRoot)(document.getElementById(`root`)).render((0,b.jsx)(_.StrictMode,{children:(0,b.jsx)(Sm,{})}));
+`)]]);function pm(e){let t=lm(e),n=fm.get(t),r=n.matchedEnvelope.map(([e,t])=>`${(e*100).toFixed(2)},${(38-Math.max(0,Math.min(1,t))*32).toFixed(2)}`),i=Object.entries(n.controls).map(([e,t])=>`${e} ${t>=0?`+`:``}${t.toFixed(2)}`).join(`, `);return{state:t,label:`MEASURED ${t} REFERENCE`,path:`M ${r.join(` L `)}`,peakMilliseconds:n.matched.timeToPeakMs,earlyLateEnergyRatioDb:n.matched.earlyLateEnergyRatioDb,controlsDescription:i,description:`Checked ${t.toLowerCase()} impulse fixture: peak ${n.matched.timeToPeakMs.toFixed(1)} milliseconds, early/late ratio ${n.matched.earlyLateEnergyRatioDb.toFixed(1)} decibels. Reference evidence, not the current live capture.`}}var mm={title:`PARALLEL SHIMMER`,method:`ONE PITCH PASS`,normal:`tank → 600.01 ms alignment → level`,octave:`high-pass → pitch +12 st → damping → diffusion`,contrast:`Both paths recombine after the tank. Unlike classic feedback shimmer, the octave path cannot return through Pitch Shift—so it adds a stable halo, not a +24 / +36 octave staircase.`};function hm(e){return e?e===`parallel-wet-sum`||e===`wet-balance`||e.endsWith(`-extraction`)||e===`output`?`recombine`:e.startsWith(`normal-`)?`normal`:e.startsWith(`shimmer-`)?`octave`:e.startsWith(`tank-`)||e===`reverb-decay`||e===`feedback-delay`?`tank`:`other`:`other`}var gm=[{group:`I/O`,items:hf.filter(e=>e.role===`io`)},{group:`SIGNAL`,items:hf.filter(e=>e.role!==`io`&&e.role!==`control`)},{group:`CONTROL`,items:hf.filter(e=>e.role===`control`)}],_m=e=>e===`boolean`?[{value:0,label:`OFF`},{value:1,label:`ON`}]:e===`curve-family`?[{value:0,label:`LINEAR`},{value:1,label:`POWER`},{value:2,label:`EXPONENTIAL`}]:e===`waveform`?[{value:0,label:`SINE`},{value:1,label:`TRIANGLE`}]:e===`run-mode`?[{value:0,label:`FREE RUN`},{value:1,label:`RESTART ON TRANSPORT`}]:e===`polarity`?[{value:0,label:`UNIPOLAR 0…1`},{value:1,label:`BIPOLAR −1…+1`}]:e===`direction`?[{value:0,label:`FORWARD GRAINS`},{value:1,label:`REVERSE INSIDE EACH GRAIN`}]:null;function vm({topic:e,onDismiss:t,onResearch:n}){return(0,b.jsxs)(`section`,{className:`teaching-card`,"aria-label":`Contextual explanation`,children:[(0,b.jsxs)(`div`,{className:`teaching-title`,children:[(0,b.jsx)(`span`,{children:`LEARN / CONTEXT`}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Dismiss explanation`,onClick:t,children:`×`})]}),(0,b.jsx)(`h3`,{children:e.title}),(0,b.jsx)(`h4`,{children:`DOCUMENTED BARR / MIDIVERB`}),(0,b.jsx)(`p`,{children:e.documented}),(0,b.jsx)(`h4`,{children:`THIS RECONSTRUCTION`}),(0,b.jsx)(`p`,{children:e.reconstruction}),(0,b.jsx)(`h4`,{children:`LISTEN / NOTICE`}),(0,b.jsx)(`p`,{children:e.takeaway}),(0,b.jsx)(`button`,{className:`research-link`,type:`button`,onClick:n,children:`READ OFFLINE ARCHITECTURE RESEARCH`})]})}function ym({selectedNodeId:e}){let t=hm(e);return(0,b.jsxs)(`section`,{className:`parallel-shimmer-teaching`,"aria-label":`Safe Parallel Shimmer signal paths`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:mm.title}),(0,b.jsx)(`strong`,{children:mm.method})]}),(0,b.jsxs)(`div`,{className:t===`normal`?`is-active`:``,children:[(0,b.jsx)(`b`,{children:`NORMAL`}),(0,b.jsx)(`span`,{children:mm.normal})]}),(0,b.jsxs)(`div`,{className:t===`octave`?`is-active`:``,children:[(0,b.jsx)(`b`,{children:`OCTAVE +12`}),(0,b.jsx)(`span`,{children:mm.octave})]}),(0,b.jsx)(`p`,{children:mm.contrast})]})}function bm({inspection:e,activeIndex:t,onActiveIndex:n}){let r=e.loops[t];return r?(0,b.jsxs)(`section`,{className:`loop-inspector`,"aria-label":`Feedback loop inspection`,children:[(0,b.jsxs)(`div`,{className:`loop-heading`,children:[(0,b.jsx)(`span`,{children:`FEEDBACK LOOP`}),(0,b.jsxs)(`strong`,{children:[t+1,` / `,e.loops.length]})]}),e.loops.length>1?(0,b.jsxs)(`div`,{className:`loop-navigation`,children:[(0,b.jsx)(`button`,{type:`button`,"aria-label":`Previous feedback loop`,onClick:()=>n((t+e.loops.length-1)%e.loops.length),children:`PREV`}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Next feedback loop`,onClick:()=>n((t+1)%e.loops.length),children:`NEXT`})]}):null,(0,b.jsxs)(`dl`,{className:`loop-facts`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`NOMINAL DELAY`}),(0,b.jsxs)(`dd`,{children:[r.nominalDelayMilliseconds.toFixed(2),` ms`]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`BLOCKS`}),(0,b.jsx)(`dd`,{children:r.nodeIds.length})]})]}),(0,b.jsx)(`h3`,{children:`CONSTITUENT BLOCKS`}),(0,b.jsx)(`code`,{className:`loop-path`,children:[...r.nodeIds,r.nodeIds[0]].join(` → `)}),(0,b.jsx)(`h3`,{children:`POLARITY / GAIN`}),r.gainElements.length?(0,b.jsx)(`ul`,{children:r.gainElements.map(e=>(0,b.jsxs)(`li`,{children:[(0,b.jsx)(`code`,{children:e.nodeId}),(0,b.jsxs)(`span`,{children:[e.parameter,` `,e.value.toLocaleString()]})]},`${e.nodeId}.${e.parameter}`))}):(0,b.jsx)(`p`,{children:`None in this loop.`}),(0,b.jsx)(`h3`,{children:`FILTERS`}),r.filters.length?(0,b.jsx)(`ul`,{children:r.filters.map(e=>(0,b.jsxs)(`li`,{children:[(0,b.jsx)(`code`,{children:e.nodeId}),(0,b.jsxs)(`span`,{children:[e.value.toLocaleString(),` Hz`]})]},`${e.nodeId}.${e.parameter}`))}):(0,b.jsx)(`p`,{children:`None in this loop.`}),e.truncated?(0,b.jsx)(`p`,{className:`loop-truncated`,children:`Additional loops omitted at the bounded inspection limit.`}):null]}):(0,b.jsxs)(`section`,{className:`loop-inspector loop-empty`,"aria-label":`Feedback loop inspection`,children:[(0,b.jsxs)(`div`,{className:`loop-heading`,children:[(0,b.jsx)(`span`,{children:`FEEDBACK LOOPS`}),(0,b.jsx)(`strong`,{children:`NONE`})]}),(0,b.jsx)(`p`,{children:`No directed feedback loop contains this selection.`})]})}function xm({sampleRate:e,onCapture:t}){let[n,r]=(0,_.useState)(2e3),[i,a]=(0,_.useState)(-80),[o,s]=(0,_.useState)(!0),[c,l]=(0,_.useState)(null),[u,d]=(0,_.useState)(null),[f,p]=(0,_.useState)(``),m=(0,_.useCallback)(async()=>{p(``),d(null);try{let e=await np(`startImpulseCapture`,n,i,o);if(e===void 0){p(`NATIVE AUDIO REQUIRED FOR CAPTURE`);return}l(hp(e))}catch(e){p(e instanceof Error?e.message:`Capture could not start`)}},[n,o,i]);(0,_.useEffect)(()=>{if(c?.state!==`armed`&&c?.state!==`capturing`)return;let e=window.setInterval(()=>{np(`getImpulseCaptureStatus`).then(n=>{let r=hp(n);if(l(r),r.state===`complete`)return window.clearInterval(e),np(`getImpulseCapture`).then(e=>{let n=gp(e);d(n),t(n)})}).catch(e=>p(e instanceof Error?e.message:`Capture status failed`))},100);return()=>window.clearInterval(e)},[t,c?.state]);let h=c?.state===`armed`||c?.state===`capturing`;return(0,b.jsxs)(`section`,{className:`measurement-bar ${h?`is-capturing`:``}`,"aria-label":`Impulse response capture`,children:[(0,b.jsxs)(`div`,{className:`measurement-title`,children:[(0,b.jsx)(`span`,{children:`MEASURE`}),(0,b.jsx)(`strong`,{children:`IMPULSE RESPONSE`})]}),(0,b.jsxs)(`label`,{children:[`MAX LENGTH `,(0,b.jsxs)(`select`,{"aria-label":`Capture maximum length`,value:n,disabled:h,onChange:e=>r(Number(e.target.value)),children:[(0,b.jsx)(`option`,{value:500,children:`500 ms`}),(0,b.jsx)(`option`,{value:2e3,children:`2,000 ms`}),(0,b.jsx)(`option`,{value:5e3,children:`5,000 ms`}),(0,b.jsx)(`option`,{value:1e4,children:`10,000 ms`})]})]}),(0,b.jsxs)(`label`,{children:[`STOP BELOW `,(0,b.jsxs)(`select`,{"aria-label":`Capture stop threshold`,value:i,disabled:h,onChange:e=>a(Number(e.target.value)),children:[(0,b.jsx)(`option`,{value:-60,children:`-60 dBFS`}),(0,b.jsx)(`option`,{value:-80,children:`-80 dBFS`}),(0,b.jsx)(`option`,{value:-100,children:`-100 dBFS`}),(0,b.jsx)(`option`,{value:-120,children:`-120 dBFS`})]})]}),(0,b.jsxs)(`label`,{className:`measurement-check`,children:[(0,b.jsx)(`input`,{type:`checkbox`,checked:o,disabled:h,onChange:e=>s(e.target.checked)}),` MUTE LIVE INPUT`]}),(0,b.jsx)(`button`,{type:`button`,disabled:h||e<=0,onClick:()=>void m(),children:h?`CAPTURING…`:`CAPTURE IMPULSE`}),(0,b.jsx)(`div`,{className:`measurement-readout`,role:`status`,children:f||(e<=0?`WAITING FOR AUDIO DEVICE`:u?`${u.frameCount.toLocaleString()} FRAMES / ${(u.frameCount/u.sampleRate*1e3).toFixed(1)} ms / STOP: ${u.stopReason===`threshold`?`${u.stopThresholdDb} dBFS`:`MAX LENGTH`}`:h&&c?`${c.capturedMilliseconds.toFixed(1)} / ${c.maximumLengthMilliseconds.toFixed(0)} ms`:`0.1 PEAK / READY`)})]})}function Sm({capture:e,patchId:t,gateTeaching:n,teachingEnabled:r,onClose:i}){let a=(0,_.useMemo)(()=>bp(e),[e]),o=t===`level-gated-room`?null:a.rt60Seconds,s=t===`level-gated-room`?`abrupt-cutoff`:a.rt60Refusal,c=(0,_.useMemo)(()=>r?nm(e,t,n):null,[e,n,t,r]),[l,u]=(0,_.useState)(1),[d,f]=(0,_.useState)(0),p=_p(e.frameCount,l,d),m=vp(e.left,p,450),h=vp(e.right,p,450),g=yp(a.decayDb,p,450),v=e=>70+900*(e-p.start)/Math.max(1,p.end-p.start-1),y=Math.max(a.peakLeft,a.peakRight,1e-9),x=(e,t)=>e.map(e=>`M${v(e.frame).toFixed(1)},${(t-34*e.maximum/y).toFixed(1)}L${v(e.frame).toFixed(1)},${(t-34*e.minimum/y).toFixed(1)}`).join(``),S=g.map((e,t)=>`${t?`L`:`M`}${v(e.frame).toFixed(1)},${(228+Math.min(90,Math.max(0,-e.decibels))).toFixed(1)}`).join(``),C=c?.regions.map(e=>({...e,startFrame:Math.max(p.start,e.startFrame),endFrame:Math.min(p.end-1,e.endFrame)})).filter(e=>e.endFrame>e.startFrame)??[],w=c?.markers.filter(e=>e.frame>=p.start&&e.frame<p.end)??[],T=p.start/e.sampleRate*1e3,E=p.end/e.sampleRate*1e3,D=e=>u(Math.max(1,Math.min(256,e)));return(0,b.jsxs)(`section`,{className:`response-viewer`,"aria-label":`Stereo impulse response viewer`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsxs)(`div`,{children:[(0,b.jsxs)(`span`,{children:[`CAPTURE #`,e.generation,` / STEREO RESPONSE`]}),(0,b.jsx)(`h2`,{children:`Impulse and energy decay`})]}),(0,b.jsx)(`button`,{type:`button`,onClick:i,children:`CLOSE ×`})]}),(0,b.jsxs)(`div`,{className:`response-metrics`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`WINDOW`}),(0,b.jsxs)(`strong`,{children:[T.toFixed(2),`–`,E.toFixed(2),` ms`]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`PEAK L / R`}),(0,b.jsxs)(`strong`,{children:[a.peakLeft.toFixed(4),` / `,a.peakRight.toFixed(4)]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`ONSET`}),(0,b.jsx)(`strong`,{children:a.onsetFrame===null?`NONE`:`${(a.onsetFrame/e.sampleRate*1e3).toFixed(2)} ms`})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`RT60 / T30 FIT`}),(0,b.jsx)(`strong`,{children:o===null?t===`level-gated-room`?`NOT MEANINGFUL`:`NOT ESTIMATED`:`${o.toFixed(3)} s`})]})]}),(0,b.jsxs)(`div`,{className:`response-navigation`,children:[(0,b.jsx)(`button`,{type:`button`,onClick:()=>{D(16),f(0)},children:`EARLY / 16×`}),(0,b.jsx)(`button`,{type:`button`,disabled:l>=256,onClick:()=>D(l*2),children:`ZOOM IN`}),(0,b.jsx)(`button`,{type:`button`,disabled:l<=1,onClick:()=>D(l/2),children:`ZOOM OUT`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>{D(1),f(0)},children:`FULL TAIL`}),(0,b.jsxs)(`label`,{children:[`PAN `,(0,b.jsx)(`input`,{"aria-label":`Pan response window`,type:`range`,min:`0`,max:`1`,step:`0.001`,value:d,disabled:l===1,onChange:e=>f(Number(e.target.value))})]}),(0,b.jsxs)(`output`,{children:[l.toFixed(0),`×`]})]}),(0,b.jsxs)(`div`,{className:`response-legend`,"aria-label":`Channel line styles`,children:[(0,b.jsxs)(`span`,{children:[(0,b.jsx)(`i`,{className:`legend-left`}),`L / SOLID / UPPER`]}),(0,b.jsxs)(`span`,{children:[(0,b.jsx)(`i`,{className:`legend-right`}),`R / DASHED / LOWER`]}),(0,b.jsxs)(`span`,{children:[(0,b.jsx)(`i`,{className:`legend-decay`}),`ENERGY DECAY / SCHROEDER`]})]}),(0,b.jsxs)(`svg`,{className:`response-chart`,viewBox:`0 0 1000 330`,role:`img`,"aria-label":`Left solid upper waveform, right dashed lower waveform, and combined energy decay from ${T.toFixed(2)} to ${E.toFixed(2)} milliseconds${c?`, with ${c.regions.map(e=>e.label).join(`, `)} regions`:``}`,onWheel:e=>{e.preventDefault(),D(e.deltaY<0?l*2:l/2)},children:[(0,b.jsxs)(`g`,{className:`chart-grid`,children:[(0,b.jsx)(`path`,{d:`M70 75H970M70 160H970M70 228H970M70 263H970M70 298H970M70 318H970`}),(0,b.jsx)(`text`,{x:`12`,y:`79`,children:`L`}),(0,b.jsx)(`text`,{x:`12`,y:`164`,children:`R`}),(0,b.jsx)(`text`,{x:`12`,y:`232`,children:`0 dB`}),(0,b.jsx)(`text`,{x:`12`,y:`267`,children:`-35`}),(0,b.jsx)(`text`,{x:`12`,y:`322`,children:`-90`})]}),c?(0,b.jsxs)(`g`,{className:`architecture-overlay`,"aria-label":c.title,children:[C.map(e=>(0,b.jsxs)(`g`,{className:`overlay-${e.tone}`,children:[(0,b.jsx)(`rect`,{x:v(e.startFrame),y:`203`,width:Math.max(2,v(e.endFrame)-v(e.startFrame)),height:`115`}),(0,b.jsx)(`text`,{x:v(e.startFrame)+5,y:`219`,children:e.label})]},`${e.label}-${e.startFrame}`)),w.map(e=>(0,b.jsxs)(`g`,{className:`overlay-marker overlay-${e.tone}`,children:[(0,b.jsx)(`path`,{d:`M${v(e.frame).toFixed(1)} 42V318`}),(0,b.jsx)(`text`,{x:Math.min(905,v(e.frame)+5),y:`52`,children:e.label})]},`${e.label}-${e.frame}`))]}):null,(0,b.jsx)(`path`,{className:`wave-left`,d:x(m,75)}),(0,b.jsx)(`path`,{className:`wave-right`,d:x(h,160)}),(0,b.jsx)(`path`,{className:`decay-line`,d:S}),(0,b.jsx)(`path`,{className:`fit-band`,d:`M70 233H970M70 263H970`}),(0,b.jsxs)(`text`,{className:`axis-label`,x:`70`,y:`328`,children:[T.toFixed(2),` ms`]}),(0,b.jsxs)(`text`,{className:`axis-label axis-end`,x:`970`,y:`328`,children:[E.toFixed(2),` ms`]})]}),c?(0,b.jsxs)(`section`,{className:`architecture-explanation`,"aria-label":`Architecture explanation`,children:[(0,b.jsx)(`strong`,{children:c.title}),(0,b.jsx)(`span`,{children:c.explanation})]}):null,s?(0,b.jsxs)(`div`,{className:`rt60-refusal`,role:`note`,children:[(0,b.jsx)(`strong`,{children:`RT60 withheld`}),(0,b.jsx)(`span`,{children:xp(s)})]}):(0,b.jsxs)(`div`,{className:`rt60-method`,children:[(0,b.jsx)(`strong`,{children:`T30 estimate`}),(0,b.jsx)(`span`,{children:`Linear fit from -5 to -35 dB, extrapolated to -60 dB.`})]})]})}function Cm({diagnostics:e,runawayLoop:t,canUndo:n,onUndo:r,onRecover:i,onClose:a}){return(0,b.jsxs)(`aside`,{className:`diagnostics-panel ${e?.mute.safetyLatched?`has-safety-latch`:``}`,"aria-label":`Runtime resource and safety diagnostics`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`RUNTIME DIAGNOSTICS`}),(0,b.jsx)(`h2`,{children:`Resources and safety`})]}),(0,b.jsx)(`button`,{type:`button`,onClick:a,children:`CLOSE ×`})]}),e?(0,b.jsxs)(b.Fragment,{children:[(0,b.jsxs)(`div`,{className:`mute-diagnostic ${e.mute.active?`is-muted`:``}`,role:e.mute.safetyLatched?`alert`:`status`,children:[(0,b.jsx)(`strong`,{children:e.mute.safetyLatched?`SAFETY MUTE LATCHED`:e.mute.manual?`MANUAL MUTE ACTIVE`:`AUDIO SAFETY READY`}),(0,b.jsx)(`span`,{children:e.mute.safetyLatched?`Editing and Undo remain available. Reduce gain or undo the risky edit, then recover explicitly.`:`No numerical safety latch is active.`})]}),(0,b.jsxs)(`div`,{className:`diagnostic-grid`,children:[(0,b.jsxs)(`section`,{children:[(0,b.jsx)(`span`,{children:`ESTIMATE / STATIC`}),(0,b.jsxs)(`strong`,{children:[e.workloadEstimate.scalarOperationsPerSample,` ops/sample`]}),(0,b.jsxs)(`small`,{children:[(e.workloadEstimate.scalarOperationsPerSecond/1e6).toFixed(2),` M scalar ops/s`]})]}),(0,b.jsxs)(`section`,{children:[(0,b.jsx)(`span`,{children:`LIVE / MEASURED`}),(0,b.jsxs)(`strong`,{children:[e.liveCpu.loadPercent.toFixed(2),`% CPU`]}),(0,b.jsxs)(`small`,{children:[e.liveCpu.peakLoadPercent.toFixed(2),`% peak · `,e.liveCpu.processedBlocks.toLocaleString(),` blocks`]})]}),(0,b.jsxs)(`section`,{children:[(0,b.jsx)(`span`,{children:`MEMORY / PREPARED`}),(0,b.jsx)(`strong`,{children:Fp(e.delayMemory.bytes)}),(0,b.jsxs)(`small`,{children:[e.delayMemory.lineCount,` delay-bearing lines`]})]}),(0,b.jsxs)(`section`,{children:[(0,b.jsx)(`span`,{children:`CLIPPING / MEASURED`}),(0,b.jsxs)(`strong`,{children:[e.clipping.samples.toLocaleString(),` samples`]}),(0,b.jsxs)(`small`,{children:[e.clipping.blocks.toLocaleString(),` affected blocks`]})]})]}),(0,b.jsxs)(`dl`,{className:`revision-diagnostic`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`ACTIVE GRAPH REVISION`}),(0,b.jsxs)(`dd`,{children:[`#`,e.topologyPublication.activeRevision||e.activeGraphRevision]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`PENDING / FAILED`}),(0,b.jsxs)(`dd`,{children:[e.topologyPublication.pendingRevision?`#${e.topologyPublication.pendingRevision}`:`—`,` / `,e.topologyPublication.failedRevision?`#${e.topologyPublication.failedRevision}`:`—`]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`TOPOLOGY CROSSFADE`}),(0,b.jsx)(`dd`,{children:e.topologyPublication.crossfadeTotalSamples?`${e.topologyPublication.crossfadePositionSamples}/${e.topologyPublication.crossfadeTotalSamples} samples`:`IDLE`})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`LAST CROSSFADE`}),(0,b.jsx)(`dd`,{children:e.topologyPublication.completedCrossfades?`#${e.topologyPublication.lastCrossfadeFromRevision} → #${e.topologyPublication.lastCrossfadeToRevision}`:`—`})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`SUPERSEDED / RECLAIMED`}),(0,b.jsxs)(`dd`,{children:[e.topologyPublication.supersededRequests,` / `,e.topologyPublication.reclaimedRuntimes]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`SUCCESSFUL RECOVERIES`}),(0,b.jsx)(`dd`,{children:e.recoveryCount})]})]}),e.topologyPublication.failure?(0,b.jsxs)(`p`,{className:`topology-failure`,children:[`REVISION #`,e.topologyPublication.failedRevision,`: `,e.topologyPublication.failure]}):null,e.lastSafetyEvent?(0,b.jsxs)(`section`,{className:`safety-event`,children:[(0,b.jsxs)(`span`,{children:[`LAST SAFETY EVENT #`,e.lastSafetyEvent.generation]}),(0,b.jsxs)(`strong`,{children:[e.lastSafetyEvent.kind.toUpperCase(),` / `,e.lastSafetyEvent.channel.toUpperCase()]}),(0,b.jsxs)(`p`,{children:[`Sample `,e.lastSafetyEvent.sampleIndex.toLocaleString(),` of graph revision `,(0,b.jsxs)(`b`,{children:[`#`,e.lastSafetyEvent.graphRevision]}),`. This identity remains fixed when later edits change the active revision.`]})]}):(0,b.jsx)(`p`,{className:`no-safety-event`,children:`No NaN, infinity, or runaway event recorded.`}),e.mute.safetyLatched?t?.loops[0]?(0,b.jsxs)(`section`,{className:`runaway-loop-event`,children:[(0,b.jsx)(`span`,{children:`LIKELY FEEDBACK LOOP / HEURISTIC`}),(0,b.jsxs)(`strong`,{children:[t.loops[0].nominalDelayMilliseconds.toFixed(2),` ms · `,t.loops[0].nodeIds.length,` blocks`]}),(0,b.jsx)(`code`,{children:[...t.loops[0].nodeIds,t.loops[0].nodeIds[0]].join(` → `)}),(0,b.jsx)(`p`,{children:`Marked red on the graph. Ranking uses visible loop gain and nominal delay; it is guidance, not a stability proof.`})]}):(0,b.jsx)(`p`,{className:`no-safety-event`,children:`No explicit delayed feedback loop could be identified for this event.`}):null,(0,b.jsxs)(`div`,{className:`diagnostic-actions`,children:[(0,b.jsx)(`button`,{type:`button`,disabled:!n,onClick:r,children:`UNDO LAST EDIT`}),(0,b.jsx)(`button`,{type:`button`,disabled:!e.mute.safetyLatched,onClick:i,children:`RECOVER AUDIO`})]})]}):(0,b.jsx)(`p`,{className:`diagnostics-waiting`,children:`Waiting for a coherent native snapshot…`})]})}function wm({value:e,destinationCount:t,showMeasuredReference:n,onBegin:r,onValue:i,onCommit:a,onFocus:o}){let s=(0,_.useMemo)(()=>um(e),[e]),c=(0,_.useMemo)(()=>n?pm(e):null,[n,e]);return(0,b.jsxs)(`section`,{className:`gravity-presentation`,"aria-label":`Gravity macro control`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:`GRAVITY`}),(0,b.jsx)(`strong`,{children:s.state})]}),(0,b.jsxs)(`div`,{className:`gravity-scale`,"aria-hidden":`true`,children:[(0,b.jsx)(`span`,{children:`INVERSE`}),(0,b.jsx)(`span`,{children:`BLOOM`}),(0,b.jsx)(`span`,{children:`FORWARD`})]}),(0,b.jsx)(`input`,{className:`gravity-slider`,"aria-label":`Gravity bipolar control`,type:`range`,min:-1,max:1,step:.001,value:e,onPointerDown:r,onChange:e=>i(Number(e.target.value)),onPointerUp:a,onKeyDown:e=>{r(),e.key===`Enter`&&a()},onBlur:a}),(0,b.jsxs)(`label`,{className:`gravity-exact-value`,children:[(0,b.jsx)(`span`,{children:`EXACT VALUE`}),(0,b.jsx)(`input`,{"aria-label":`Gravity exact numeric value`,type:`number`,min:-1,max:1,step:.001,value:e,onFocus:r,onChange:e=>i(Number(e.target.value)),onKeyDown:e=>{e.key===`Enter`&&a()},onBlur:a})]}),(0,b.jsxs)(`figure`,{className:`gravity-envelope`,children:[(0,b.jsxs)(`figcaption`,{children:[(0,b.jsx)(`span`,{children:`DESIGN PREDICTION`}),(0,b.jsx)(`strong`,{children:`NOT MEASURED AUDIO`})]}),(0,b.jsxs)(`svg`,{viewBox:`0 0 100 42`,role:`img`,"aria-label":s.description,preserveAspectRatio:`none`,children:[(0,b.jsx)(`line`,{x1:s.peakPosition*100,x2:s.peakPosition*100,y1:`4`,y2:`40`}),(0,b.jsx)(`path`,{d:s.path}),c?(0,b.jsx)(`path`,{className:`gravity-measured-envelope`,d:c.path}):null]}),(0,b.jsx)(`p`,{children:`Shape guide from the Gravity coordinate. Capture an impulse to inspect actual response.`}),c?(0,b.jsxs)(`aside`,{className:`gravity-reference-comparison`,"aria-label":c.description,children:[(0,b.jsx)(`strong`,{children:c.label}),(0,b.jsxs)(`span`,{children:[`PEAK `,c.peakMilliseconds.toFixed(1),` ms · EARLY/LATE `,c.earlyLateEnergyRatioDb.toFixed(1),` dB`]}),(0,b.jsxs)(`p`,{children:[`Checked fixture (`,c.controlsDescription,`). Reference evidence—not the current capture. Any disagreement with the prediction is shown, not corrected.`]})]}):null]}),(0,b.jsxs)(`button`,{type:`button`,className:`gravity-focus`,onClick:o,children:[`EXPAND / FOCUS `,t,` MAPPINGS`]})]})}function Tm({snapshot:e}){let{fitView:t,setViewport:n,screenToFlowPosition:r}=hl(),i=(0,_.useMemo)(()=>e.restoredPatch?lp(JSON.stringify(e.restoredPatch),e):null,[e]),a=(0,_.useMemo)(()=>i??{...af(e),viewport:{x:0,y:0,zoom:1}},[i,e]),[o,s,c]=vd(a.nodes),[l,u,d]=yd(a.edges),[f,p]=(0,_.useState)(null),[m,h]=(0,_.useState)(null),[g,v]=(0,_.useState)(a.viewport),y=(0,_.useRef)(null),x=(0,_.useRef)(null),S=(0,_.useRef)(null),C=(0,_.useRef)(0),w=(0,_.useRef)(null),[T,E]=(0,_.useState)(null),[D,O]=(0,_.useState)(i?`custom`:`barr-reference`),[k,A]=(0,_.useState)(`causal-reverse-envelope`),[j,M]=(0,_.useState)(()=>{try{return window.localStorage.getItem(`reverb-playground-teaching`)!==`off`}catch{return!0}}),[ee,N]=(0,_.useState)(null),[te,P]=(0,_.useState)(!1),[F,I]=(0,_.useState)(()=>Tf(a)),[ne,L]=(0,_.useState)(null),[R,z]=(0,_.useState)(null),[B,re]=(0,_.useState)(0),[ie,ae]=(0,_.useState)(null),oe=(0,_.useCallback)(e=>{let t=(e,t,n)=>o.find(t=>t.data.type===e)?.data.parameters.find(e=>e.id===t)?.value??n;ae({capture:e,patchId:D,gateTeaching:{detectorReleaseMilliseconds:t(`envelope-follower`,`release`,20),holdMilliseconds:t(`hold-gate`,`hold`,120),releaseMilliseconds:t(`hold-gate`,`release`,8)}})},[D,o]),[se,ce]=(0,_.useState)(()=>window.matchMedia(`(prefers-reduced-motion: reduce)`).matches),[le,ue]=(0,_.useState)(()=>!window.matchMedia(`(prefers-reduced-motion: reduce)`).matches),[de,fe]=(0,_.useState)({}),[pe,me]=(0,_.useState)(!1),[he,ge]=(0,_.useState)(null),[_e,ve]=(0,_.useState)(()=>performance.now()/1e3),ye=(0,_.useMemo)(()=>Ip(o,l),[l,o]),be=(0,_.useMemo)(()=>cp(o,l,g),[l,o,g]),xe=D===`custom`?null:Zp(D),Se=(0,_.useMemo)(()=>f?zf(o,l,{nodeId:f.id}):m?zf(o,l,{edgeId:m.id}):null,[l,o,m,f]),Ce=(0,_.useMemo)(()=>he?.mute.safetyLatched?Vf(o,l):null,[he?.mute.safetyLatched,l,o]),we=Se?.loops.length?B%Se.loops.length:0,Te=(0,_.useMemo)(()=>Ff(o,l,Se,we),[l,Se,o,we]),Ee=(0,_.useMemo)(()=>If(Te.nodes,Te.edges,Ce),[Te,Ce]),De=(0,_.useMemo)(()=>kp(Ee.nodes,Ee.edges,de),[de,Ee]),Oe=(0,_.useMemo)(()=>{if(f?.data.type!==`control-map`)return null;let e=(e,t)=>f.data.parameters.find(t=>t.id===e)?.value??t,t=e(`curve-family`,0);return Hp(t>=1.5?`exponential`:t>=.5?`power`:`linear`,e(`curve-amount`,0),e(`exponent`,1),e(`scale`,1),e(`offset`,0),e(`polarity`,1)>=.5?`bipolar`:`unipolar`,e(`clamp-min`,-1),e(`clamp-max`,1))},[f]),ke=(0,_.useMemo)(()=>f?.data.type===`macro`?om(f.id,o,l):null,[l,o,f]),Ae=(0,_.useMemo)(()=>sm(De.nodes,De.edges,ke),[De,ke]),je=(0,_.useMemo)(()=>Up(Ae.nodes,Ae.edges,_e),[_e,Ae]),Me=(0,_.useCallback)(()=>{if(!ke)return;let e=new Set(dm(ke));t({nodes:o.filter(t=>e.has(t.id)),padding:.22,duration:se?0:350,maxZoom:1.1})},[t,o,se,ke]);(0,_.useEffect)(()=>{if(se||!o.some(e=>e.data.role===`control`))return;let e=window.setInterval(()=>ve(performance.now()/1e3),33);return()=>window.clearInterval(e)},[o,se]),(0,_.useEffect)(()=>{let e=window.matchMedia(`(prefers-reduced-motion: reduce)`),t=()=>{ce(e.matches),e.matches&&ue(!1)};return e.addEventListener(`change`,t),()=>e.removeEventListener(`change`,t)},[]),(0,_.useEffect)(()=>{let e=!1,t=window.setTimeout(async()=>{try{let t=Lp(await np(`publishGraph`,cp(o,l,g)));e||L(t.accepted?{kind:`ok`,message:`GRAPH REVISION #${t.revision} QUEUED FOR AUDITION`}:{kind:`error`,message:t.error})}catch(t){e||L({kind:`error`,message:t instanceof Error?t.message:`Graph publication failed`})}},35);return()=>{e=!0,window.clearTimeout(t)}},[ye]),(0,_.useEffect)(()=>{let e=!1,t=window.setTimeout(async()=>{try{let t=await np(`storePatchState`,be);if(t!==void 0){let n=rm(t);!e&&!n.accepted&&L({kind:`error`,message:n.error||`Host state rejected`})}}catch(t){e||L({kind:`error`,message:t instanceof Error?t.message:`Host state failed`})}},120);return()=>{e=!0,window.clearTimeout(t)}},[be]),(0,_.useEffect)(()=>{if(!Dp(le,se)){fe({}),np(`setEnergyTelemetryEnabled`,!1).catch(()=>void 0);return}let e=!1,t=!1,n=performance.now(),r=-1,i=n;np(`setEnergyTelemetryEnabled`,!0).catch(()=>void 0);let a=async()=>{if(!t){t=!0;try{let t=Cp(await np(`getEnergyTelemetry`)),a=performance.now();t.generation===r?a-i>100&&(t={...t,nodes:t.nodes.map(e=>({...e,rms:0}))}):(r=t.generation,i=a),e||fe(e=>Tp(e,t,a-n)),n=a}catch{}finally{t=!1}}};a();let o=window.setInterval(()=>void a(),33);return()=>{e=!0,window.clearInterval(o),np(`setEnergyTelemetryEnabled`,!1).catch(()=>void 0)}},[le,se]),(0,_.useEffect)(()=>{let e=!1,t=!1,n=async()=>{if(!t){t=!0;try{let t=Pp(await np(`getRuntimeDiagnostics`));e||(ge(t),t.topologyPublication.failedRevision>0&&t.topologyPublication.failedRevision===t.topologyPublication.requestedRevision&&t.topologyPublication.failure&&L({kind:`error`,message:`REVISION #${t.topologyPublication.failedRevision} REJECTED: ${t.topologyPublication.failure}`}),t.mute.safetyLatched&&me(!0))}catch{}finally{t=!1}}};n();let r=window.setInterval(()=>void n(),250);return()=>{e=!0,window.clearInterval(r)}},[]);let V=(0,_.useCallback)(e=>{s(e.nodes),u(e.edges),p(null),h(null)},[u,s]),Ne=(0,_.useCallback)(e=>{for(let t of e.nodes)for(let e of t.data.parameters)if(t.data.runtimeBound||t.data.type===`macro`&&e.id===`value`)try{np(`setRuntimeParameter`,t.id,e.id,e.value).catch(()=>void 0)}catch{}},[]),Pe=(0,_.useCallback)(e=>{if((e===`stereo-input`||e===`stereo-output`)&&o.some(t=>t.data.type===e)){L({kind:`error`,message:`Exactly one ${e===`stereo-input`?`Stereo Input`:`Stereo Output`} is required and already exists.`});return}let t={nodes:o,edges:l},n=o.filter(e=>!e.data.runtimeBound).length,i=r({x:window.innerWidth*.5,y:window.innerHeight*.5}),a=vf(e,_f(e,o),{x:i.x-190+n%3*190,y:i.y-100+Math.floor(n/3)*130}),s={nodes:[...o.map(e=>({...e,selected:!1})),{...a,selected:!0}],edges:l};V(s),p(a),I(e=>Ef(e,`Create ${a.data.label}`,t,s)),L({kind:`ok`,message:`CREATED ${a.id} / DRAFT GRAPH`})},[V,l,o,r]),Fe=(0,_.useCallback)(()=>{let e=o.find(e=>e.selected&&(e.data.type===`stereo-input`||e.data.type===`stereo-output`));if(e){L({kind:`error`,message:`${e.data.label} is required and cannot be deleted.`});return}let t={nodes:o,edges:l},n=sf(o,l);(n.nodes.length!==o.length||n.edges.length!==l.length)&&(V(n),I(e=>Ef(e,`Delete selection`,t,n)),L({kind:`ok`,message:`DELETED SELECTION + INCIDENT CABLES / UNDO AVAILABLE`}))},[V,l,o]),Ie=(0,_.useCallback)(()=>{let e=Df(F);e.edit&&(V(e.edit.before),Ne(e.edit.before),I(e.history),L({kind:`ok`,message:`UNDID ${e.edit.label.toUpperCase()}`}))},[V,F,Ne]),Le=(0,_.useCallback)(()=>{let e=Of(F);e.edit&&(V(e.edit.after),Ne(e.edit.after),I(e.history),L({kind:`ok`,message:`REDID ${e.edit.label.toUpperCase()}`}))},[V,F,Ne]),Re=(0,_.useCallback)(e=>{let t={nodes:o,edges:l},n=Uf(o,l,e);if(n.kind===`invalid`){L({kind:`error`,message:n.message});return}if(n.kind===`occupied`){z(e),L({kind:`error`,message:`INPUT OCCUPIED / REPLACE ITS CABLE OR INSERT +`});return}let r=Kf(t,e);V(r),I(e=>Ef(e,`Create cable`,t,r)),L({kind:`ok`,message:`CONNECTED ${n.signal.toUpperCase()} CABLE`})},[V,l,o]),ze=(0,_.useCallback)(e=>{let t=R;if(z(null),!t||e===`cancel`){L(null);return}let n=Uf(o,l,t);if(e===`sum`&&(n.kind!==`occupied`||n.signal!==`audio`)){L({kind:`error`,message:`CONTROL INPUTS CANNOT INSERT AN AUDIO SUM`});return}let r={nodes:o,edges:l},i=e===`replace`?Kf(r,t,!0):qf(r,t);V(i),I(t=>Ef(t,e===`replace`?`Replace cable`:`Insert +`,r,i)),L({kind:`ok`,message:e===`replace`?`REPLACED OCCUPIED INPUT CABLE`:`INSERTED + AND REWIRED BOTH SOURCES`})},[V,l,o,R]),Be=(0,_.useCallback)((e,t,n)=>{let r=o.find(t=>t.id===e),i=r?.data.type===`macro`&&r.data.parameters.find(e=>e.id===`center-detent`)?.value===1,a=r?.data.type===`macro`&&t===`value`&&i&&Math.abs(n)<=.02?0:n,c=n=>n.id===e?{...n,data:{...n.data,parameters:n.data.parameters.map(e=>e.id===t?{...e,value:a}:e)}}:n;if(s(e=>e.map(c)),p(e=>e?c(e):null),r?.data.runtimeBound||r?.data.type===`macro`&&t===`value`)try{np(`setRuntimeParameter`,e,t,a).catch(()=>void 0)}catch{}},[o,s]),Ve=(0,_.useCallback)((e,t,n)=>{let r=r=>r.id===e?{...r,data:{...r.data,parameters:r.data.parameters.map(e=>e.id!==t||!e.modulation?e:{...e,modulation:{...e.modulation,...n}})}}:r;s(e=>e.map(r)),p(e=>e?r(e):null)},[s]),He=(0,_.useCallback)((e,t)=>{let n=t.slice(0,64),r=t=>t.id===e?{...t,data:{...t.data,userName:n}}:t;s(e=>e.map(r)),p(e=>e?r(e):null)},[s]),Ue=(0,_.useCallback)(()=>{let n=D===`custom`?`barr-reference`:D,r=em(n,e),i={nodes:o,edges:l};V(r),Ne(r),I(e=>Ef(e,`Reset patch`,i,r)),z(null),O(n),requestAnimationFrame(()=>void t({padding:.16,minZoom:.25,maxZoom:1.1}))},[D,V,l,t,o,Ne,e]),We=(0,_.useCallback)(async r=>{try{let i=em(r,e);V(i),Ne(i),v(i.viewport),await n(i.viewport),I(Tf(i)),z(null),O(r),A(e=>Qp(r,e));let a=Zp(r);E({kind:`ok`,message:`LOADED FACTORY / ${a.label.toUpperCase()}`}),requestAnimationFrame(()=>void t({padding:.16,minZoom:.25,maxZoom:1.1}))}catch(e){E({kind:`error`,message:e instanceof Error?e.message:`Factory patch load failed`})}},[V,t,Ne,n,e]),Ge=(0,_.useCallback)(()=>{let e=jf({nodes:o,edges:l});if(!e){L({kind:`error`,message:`SELECT ONE OR MORE NON-I/O BLOCKS TO COPY`});return}S.current=e,C.current=0,navigator.clipboard?.writeText(JSON.stringify({format:`reverb-playground-subgraph-v1`,...e})).catch(()=>void 0),L({kind:`ok`,message:`COPIED ${e.nodes.length} BLOCK${e.nodes.length===1?``:`S`} + ${e.edges.length} INTERNAL CABLE${e.edges.length===1?``:`S`}`})},[l,o]),Ke=(0,_.useCallback)(()=>{if(!S.current){L({kind:`error`,message:`GRAPH CLIPBOARD IS EMPTY`});return}let e={nodes:o,edges:l},t=Nf(e,S.current,40*++C.current);V(t),I(n=>Ef(n,`Paste selection`,e,t)),L({kind:`ok`,message:`PASTED ${S.current.nodes.length} BLOCK${S.current.nodes.length===1?``:`S`} / NEW IDS ASSIGNED`})},[V,l,o]),qe=(0,_.useCallback)(({nodes:e,edges:t})=>{p(e[0]??null),h(t[0]??null),re(0)},[]);(0,_.useEffect)(()=>{let e=e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===`z`){e.preventDefault(),e.shiftKey?Le():Ie();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===`y`){e.preventDefault(),Le();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===`c`&&!(e.target instanceof HTMLInputElement)){e.preventDefault(),Ge();return}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()===`v`&&!(e.target instanceof HTMLInputElement)){e.preventDefault(),Ke();return}if((e.key===`Delete`||e.key===`Backspace`)&&!(e.target instanceof HTMLInputElement)){e.preventDefault(),Fe();return}e.key.toLowerCase()===`r`&&!(e.target instanceof HTMLInputElement)&&Ue()};return window.addEventListener(`keydown`,e),()=>window.removeEventListener(`keydown`,e)},[Ge,Ke,Le,Fe,Ue,Ie]);let Je=(0,_.useCallback)((e,t,n)=>{y.current={label:`Edit ${e}.${t}`,before:xf({nodes:o,edges:l})}},[l,o]),Ye=(0,_.useCallback)((e,t,n)=>{Be(e,t,n)},[Be]),Xe=(0,_.useCallback)(()=>{let e=y.current;y.current=null,e&&I(t=>Ef(t,e.label,e.before,{nodes:o,edges:l}))},[l,o]),Ze=(0,_.useCallback)(()=>{try{let t=cp(o,l,g);lp(t,e);let n=URL.createObjectURL(new Blob([t],{type:`application/json`})),r=document.createElement(`a`);r.href=n;let i=xe?.filename??`custom-patch.rvp.json`;r.download=i,document.body.appendChild(r),r.click(),r.remove(),window.setTimeout(()=>URL.revokeObjectURL(n),0),I(e=>kf(e,{nodes:o,edges:l})),E({kind:`ok`,message:`SAVED ${i.toUpperCase()} / SCHEMA V2`})}catch(e){E({kind:`error`,message:e instanceof Error?e.message:`Patch save failed`})}},[xe,l,o,e,g]),Qe=(0,_.useCallback)(async t=>{try{let r=lp(await t.text(),e);s(r.nodes),u(r.edges),v(r.viewport),await n(r.viewport);for(let e of r.nodes)for(let t of e.data.parameters)(e.data.runtimeBound||e.data.type===`macro`&&t.id===`value`)&&await np(`setRuntimeParameter`,e.id,t.id,t.value);p(null),h(null),I(Tf(r)),z(null),O(`custom`),E({kind:`ok`,message:`LOADED ${t.name.toUpperCase()} / SCHEMA V2`})}catch(e){E({kind:`error`,message:e instanceof Error?e.message:`Patch load failed`})}},[u,n,s,e]),$e=f?.id??`overview`,et=R?Uf(o,l,R):null,tt=et?.kind===`occupied`?et.signal:null,nt=j&&ee!==$e,rt=(0,_.useCallback)(()=>{M(e=>{let t=!e;try{window.localStorage.setItem(`reverb-playground-teaching`,t?`on`:`off`)}catch{}return t})},[]);return(0,b.jsxs)(`main`,{className:`editor-shell`,children:[(0,b.jsxs)(`header`,{className:`editor-header`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsxs)(`div`,{className:`eyebrow`,children:[`SCHEMATIC EDITOR / `,xe?.label.toUpperCase()??`CUSTOM PATCH`]}),(0,b.jsx)(`h1`,{children:`Patch architecture`}),e.productVersion&&e.buildCommit?(0,b.jsxs)(`span`,{className:`build-identity`,children:[`v`,e.productVersion,` / `,e.buildCommit]}):null]}),(0,b.jsxs)(`div`,{className:`header-runtime`,children:[(0,b.jsxs)(`label`,{className:`factory-picker`,children:[(0,b.jsx)(`span`,{children:`FACTORY PATCH`}),(0,b.jsxs)(`select`,{"aria-label":`Factory patch`,value:D,onChange:e=>{let t=e.target.value;t!==`custom`&&We(t)},children:[D===`custom`?(0,b.jsx)(`option`,{value:`custom`,children:`Custom / loaded file`}):null,Yp.map(e=>(0,b.jsx)(`option`,{value:e.id,children:e.label},e.id))]})]}),(0,b.jsxs)(`div`,{className:`comparison-switch`,role:`group`,"aria-label":`Compare Barr reference with selected design`,children:[(0,b.jsx)(`button`,{type:`button`,"aria-pressed":D===`barr-reference`,onClick:()=>void We(`barr-reference`),children:`A / BARR`}),(0,b.jsxs)(`button`,{type:`button`,"aria-pressed":D===k,onClick:()=>void We(k),children:[`B / `,$p(k)]})]}),(0,b.jsxs)(`button`,{className:`energy-toggle`,type:`button`,"aria-pressed":le,disabled:se,onClick:()=>ue(e=>!e),title:se?`Disabled by the operating-system reduced-motion preference`:`Toggle measured node and cable energy`,children:[`ENERGY `,se?`REDUCED`:le?`ON`:`OFF`]}),(0,b.jsx)(`button`,{className:`diagnostics-toggle`,type:`button`,"aria-expanded":pe,onClick:()=>me(e=>!e),children:`DIAGNOSTICS`}),(0,b.jsxs)(`div`,{className:`header-status`,"aria-label":`Audition status`,children:[(0,b.jsx)(`span`,{className:`status-dot`,"aria-hidden":`true`}),(0,b.jsx)(`span`,{children:he?.topologyPublication.crossfadeTotalSamples?`CROSSFADING #${he.topologyPublication.crossfadeFromRevision} → #${he.topologyPublication.activeRevision}`:he?.topologyPublication.pendingRevision?`COMPILING #${he.topologyPublication.pendingRevision}`:he?.topologyPublication.activeRevision?`GRAPH ACTIVE #${he.topologyPublication.activeRevision}`:`RUNTIME BOUND / ${e.sampleRate>0?`${(e.sampleRate/1e3).toFixed(1)} kHz`:`awaiting audio`}`})]})]})]}),(0,b.jsx)(xm,{sampleRate:e.sampleRate,onCapture:oe}),ie?(0,b.jsx)(Sm,{capture:ie.capture,patchId:ie.patchId,gateTeaching:ie.gateTeaching,teachingEnabled:j,onClose:()=>ae(null)},ie.capture.generation):null,pe?(0,b.jsx)(Cm,{diagnostics:he,runawayLoop:Ce,canUndo:F.undo.length>0,onUndo:Ie,onRecover:()=>{np(`resetSafety`).catch(()=>void 0)},onClose:()=>me(!1)}):null,(0,b.jsxs)(`section`,{className:`workspace`,children:[(0,b.jsxs)(`aside`,{className:`module-library`,"aria-label":`Module library`,children:[(0,b.jsxs)(`div`,{className:`pane-heading`,children:[(0,b.jsx)(`span`,{children:`MODULES`}),(0,b.jsx)(`span`,{className:`pane-count`,children:hf.length})]}),(0,b.jsx)(`p`,{className:`pane-help`,children:`Click a primitive to place it near the canvas center. Audio cables are mono.`}),gm.map(e=>(0,b.jsxs)(`section`,{className:`module-group`,children:[(0,b.jsx)(`h2`,{children:e.group}),e.items.map(e=>(0,b.jsxs)(`button`,{className:`module-item${e.role===`control`?` module-control`:``}`,type:`button`,onClick:()=>Pe(e.type),children:[(0,b.jsx)(`span`,{className:`module-glyph`,"aria-hidden":`true`}),(0,b.jsx)(`span`,{children:e.label})]},e.type))]},e.group)),(0,b.jsxs)(`div`,{className:`signal-legend`,"aria-label":`Cable styles`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{className:`legend-line audio-line`}),` AUDIO / SOLID`]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{className:`legend-line control-line`}),` CONTROL / DASHED`]})]})]}),(0,b.jsxs)(`section`,{className:`canvas-pane`,"aria-label":`Patch canvas`,children:[(0,b.jsxs)(`div`,{className:`canvas-toolbar`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`strong`,{children:xe?.graphName??`CUSTOM.graph`}),(0,b.jsxs)(`span`,{children:[o.length,` blocks / `,l.length,` cables`]})]}),(0,b.jsxs)(`div`,{className:`canvas-actions`,children:[(0,b.jsxs)(`span`,{children:[Math.round(g.zoom*100),`%`]}),(0,b.jsx)(`span`,{className:`clean-state ${Af(F,{nodes:o,edges:l})?`is-clean`:`is-dirty`}`,children:Af(F,{nodes:o,edges:l})?`SAVED`:`UNSAVED`}),(0,b.jsx)(`button`,{type:`button`,onClick:Ze,children:`SAVE PATCH`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>w.current?.click(),children:`LOAD PATCH`}),(0,b.jsx)(`button`,{type:`button`,disabled:!F.undo.length,onClick:Ie,children:`UNDO`}),(0,b.jsx)(`button`,{type:`button`,disabled:!F.redo.length,onClick:Le,children:`REDO`}),(0,b.jsx)(`button`,{type:`button`,onClick:Ge,children:`COPY`}),(0,b.jsx)(`button`,{type:`button`,disabled:!S.current,onClick:Ke,children:`PASTE`}),(0,b.jsx)(`button`,{type:`button`,onClick:Fe,children:`DELETE`}),(0,b.jsx)(`button`,{type:`button`,onClick:Ue,children:`RESET PATCH`}),(0,b.jsx)(`input`,{ref:w,className:`file-input`,"aria-label":`Load patch file`,type:`file`,accept:`.json,application/json`,onChange:e=>{let t=e.target.files?.[0];t&&Qe(t),e.target.value=``}})]})]}),T?(0,b.jsxs)(`div`,{className:`file-status file-status-${T.kind}`,role:T.kind===`error`?`alert`:`status`,children:[(0,b.jsx)(`span`,{children:T.message}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Dismiss file status`,onClick:()=>E(null),children:`×`})]}):null,ne?(0,b.jsxs)(`div`,{className:`file-status file-status-${ne.kind}`,role:ne.kind===`error`?`alert`:`status`,children:[(0,b.jsx)(`span`,{children:ne.message}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Dismiss graph status`,onClick:()=>L(null),children:`×`})]}):null,R?(0,b.jsxs)(`div`,{className:`connection-offer`,role:`dialog`,"aria-label":`Occupied input options`,children:[(0,b.jsx)(`strong`,{children:`INPUT ALREADY HAS A CABLE`}),(0,b.jsx)(`span`,{children:tt===`control`?`A parameter socket accepts one control cable. Replace it or cancel.`:`Replace it, or insert an explicit Sum (+) block to preserve both audio sources.`}),(0,b.jsxs)(`div`,{children:[tt===`audio`?(0,b.jsx)(`button`,{type:`button`,onClick:()=>ze(`sum`),children:`INSERT +`}):null,(0,b.jsx)(`button`,{type:`button`,onClick:()=>ze(`replace`),children:`REPLACE CABLE`}),(0,b.jsx)(`button`,{type:`button`,onClick:()=>ze(`cancel`),children:`CANCEL`})]})]}):null,(0,b.jsxs)(`div`,{className:`flow-wrap`,children:[(0,b.jsxs)(_d,{nodes:je.nodes,edges:je.edges,nodeTypes:{patchNode:Zf},onNodesChange:c,onEdgesChange:d,onNodeDragStart:()=>{x.current=xf({nodes:o,edges:l})},onNodeDragStop:(e,t,n)=>{let r=x.current;if(x.current=null,!r)return;let i=new Map(n.map(e=>[e.id,e.position]));i.set(t.id,t.position);let a={nodes:o.map(e=>i.has(e.id)?{...e,position:{...i.get(e.id)}}:e),edges:l};I(e=>Ef(e,`Move ${t.id}`,r,a))},onConnect:Re,isValidConnection:e=>Uf(o,l,{source:e.source,sourceHandle:e.sourceHandle??null,target:e.target,targetHandle:e.targetHandle??null}).kind!==`invalid`,defaultEdgeOptions:{interactionWidth:24},onSelectionChange:qe,onViewportChange:v,defaultViewport:a.viewport,fitView:!i,fitViewOptions:{padding:.16,minZoom:.58,maxZoom:1.1},minZoom:.2,maxZoom:1.8,deleteKeyCode:null,selectionKeyCode:`Shift`,multiSelectionKeyCode:`Shift`,panActivationKeyCode:`Space`,panOnDrag:[1,2],selectionOnDrag:!0,nodesFocusable:!0,edgesFocusable:!0,elevateEdgesOnSelect:!0,proOptions:{hideAttribution:!1},"aria-label":`${xe?.label??`Custom`} patch graph`,children:[(0,b.jsx)(Td,{color:`#34414a`,gap:22,size:1.2,variant:xd.Dots}),(0,b.jsx)(Pd,{position:`bottom-left`,showInteractive:!1}),(0,b.jsx)(Zd,{pannable:!0,zoomable:!0,position:`bottom-right`,nodeColor:e=>e.selected?`#f2b44e`:`#52616d`,maskColor:`rgba(9, 12, 15, 0.78)`})]}),(0,b.jsx)(`div`,{className:`interaction-hint`,children:`SPACE + DRAG PAN · WHEEL ZOOM · SHIFT BOX SELECT · DELETE REMOVE · R RESET`})]})]}),(0,b.jsxs)(`aside`,{className:`inspector`,"aria-label":`Inspector`,children:[(0,b.jsxs)(`div`,{className:`pane-heading`,children:[(0,b.jsx)(`span`,{children:`INSPECTOR`}),(0,b.jsxs)(`button`,{className:`teaching-toggle`,type:`button`,"aria-pressed":j,title:`Toggle contextual cards and response architecture overlays`,onClick:rt,children:[`LEARN `,j?`ON`:`OFF`]})]}),D===`safe-parallel-shimmer`&&j?(0,b.jsx)(ym,{selectedNodeId:f?.id}):null,f?(0,b.jsxs)(`div`,{className:`inspector-content`,children:[(0,b.jsx)(`div`,{className:`selection-kicker`,children:`SELECTED BLOCK`}),(0,b.jsx)(`h2`,{children:f.data.userName?.trim()||f.data.label}),(0,b.jsx)(`code`,{children:f.id}),f.data.presentation===`gravity`&&ke?(0,b.jsx)(wm,{value:f.data.parameters.find(e=>e.id===`value`)?.value??0,destinationCount:ke.destinations.length,showMeasuredReference:D===`gravity-diffusion`,onBegin:()=>Je(f.id,`value`,f.data.parameters.find(e=>e.id===`value`)?.value??0),onValue:e=>Be(f.id,`value`,e),onCommit:Xe,onFocus:Me}):null,Se?(0,b.jsx)(bm,{inspection:Se,activeIndex:we,onActiveIndex:re}):null,(0,b.jsxs)(`dl`,{className:`property-list`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`TYPE`}),(0,b.jsx)(`dd`,{children:f.data.type})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`ROLE`}),(0,b.jsx)(`dd`,{children:f.data.role})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`PORTS`}),(0,b.jsxs)(`dd`,{children:[f.data.ports.length,` mono`]})]})]}),f.data.type===`pitch-shift`?(0,b.jsx)(Yf,{parameters:f.data.parameters,reducedMotion:se,sampleRate:e.sampleRate>0?e.sampleRate:48e3}):null,f.data.type===`macro`?(0,b.jsxs)(`label`,{className:`macro-name-field`,children:[(0,b.jsx)(`span`,{children:`MACRO NAME`}),(0,b.jsx)(`input`,{"aria-label":`Macro name`,maxLength:64,value:f.data.userName??``,onFocus:()=>Je(f.id,`name`,0),onChange:e=>He(f.id,e.target.value),onBlur:()=>{(f.data.userName??``).trim()||He(f.id,`Macro`),Xe()}})]}):null,ke?(0,b.jsxs)(`section`,{className:`macro-destinations`,"aria-label":`Reachable mapped parameters`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:`REACHABLE MAPPINGS`}),(0,b.jsx)(`strong`,{children:ke.destinations.length})]}),ke.destinations.length?(0,b.jsx)(`ul`,{children:ke.destinations.map(e=>(0,b.jsxs)(`li`,{children:[(0,b.jsxs)(`code`,{children:[e.nodeId,`.`,e.parameterId]}),(0,b.jsxs)(`span`,{children:[e.minimum.toFixed(2),` … `,e.maximum.toFixed(2),` `,e.unit]})]},`${e.nodeId}.${e.parameterId}`))}):(0,b.jsx)(`p`,{children:`Connect the explicit output through Curve Mapper blocks to parameter sockets.`})]}):null,Oe?(0,b.jsxs)(`section`,{className:`control-range-preview`,"aria-label":`Predicted control output range`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:`PREDICTED OUTPUT`}),(0,b.jsxs)(`strong`,{children:[Oe.minimum.toFixed(2),` … `,Oe.maximum.toFixed(2)]})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`i`,{style:{left:`${(Oe.minimum+1)*50}%`}}),(0,b.jsx)(`i`,{style:{left:`${(Oe.maximum+1)*50}%`}})]}),(0,b.jsx)(`p`,{children:`CURVE → SCALE → OFFSET → CLAMP · visible before connection.`})]}):null,(0,b.jsx)(`h3`,{children:`PARAMETERS`}),f.data.parameters.length?f.data.parameters.filter(e=>f.data.presentation!==`gravity`||e.id!==`value`).map(e=>{let t=_m(e.unit);return(0,b.jsxs)(`div`,{className:`parameter-card`,children:[(0,b.jsx)(`span`,{children:e.id.toUpperCase()}),(0,b.jsxs)(`label`,{className:`parameter-value`,children:[(0,b.jsx)(`span`,{className:`sr-only`,children:`${f.data.label} ${e.id} numeric value`}),t?(0,b.jsx)(`select`,{"aria-label":`${f.data.label} ${e.id}`,value:e.value,onFocus:()=>Je(f.id,e.id,e.value),onChange:t=>Ye(f.id,e.id,Number(t.target.value)),onBlur:Xe,children:t.map(e=>(0,b.jsx)(`option`,{value:e.value,children:e.label},e.value))}):(0,b.jsx)(`input`,{className:`parameter-number`,type:`number`,min:e.minimum,max:e.maximum,step:e.step,value:e.value,onFocus:()=>Je(f.id,e.id,e.value),onChange:t=>Ye(f.id,e.id,Number(t.target.value)),onKeyDown:e=>{e.key===`Enter`&&Xe()},onBlur:Xe}),(0,b.jsx)(`strong`,{children:e.unit===`milliseconds`?`ms`:e.unit===`hertz`?`Hz`:e.unit===`semitones`?`st`:``})]}),(0,b.jsx)(`small`,{children:e.unit}),t?null:(0,b.jsx)(`input`,{"aria-label":`${f.data.label} ${e.id}`,type:`range`,min:e.minimum,max:e.maximum,step:e.step,value:e.value,onPointerDown:()=>Je(f.id,e.id,e.value),onChange:t=>Ye(f.id,e.id,Number(t.target.value)),onPointerUp:Xe,onKeyDown:t=>{y.current||Je(f.id,e.id,e.value),t.key===`Enter`&&Xe()},onBlur:Xe}),e.modulation?(0,b.jsxs)(`section`,{className:`modulation-mapping`,"aria-label":`${f.data.label} ${e.id} modulation mapping`,children:[(0,b.jsxs)(`header`,{children:[(0,b.jsx)(`span`,{children:`CONTROL SOCKET`}),(0,b.jsx)(`code`,{children:e.modulation.portId})]}),(0,b.jsx)(`div`,{className:`mapping-formula`,children:`effective = clamp(base + amount × control)`}),(0,b.jsxs)(`label`,{children:[(0,b.jsx)(`span`,{children:`POLARITY`}),(0,b.jsxs)(`select`,{value:e.modulation.polarity,onFocus:()=>Je(f.id,`${e.id} modulation`,e.value),onChange:t=>Ve(f.id,e.id,{polarity:t.target.value}),onBlur:Xe,children:[(0,b.jsx)(`option`,{value:`bipolar`,children:`BIPOLAR −1…+1`}),(0,b.jsx)(`option`,{value:`unipolar`,children:`UNIPOLAR 0…1`})]})]}),(0,b.jsxs)(`label`,{children:[(0,b.jsx)(`span`,{children:`AMOUNT`}),(0,b.jsx)(`input`,{type:`number`,step:e.step,value:e.modulation.amount,onFocus:()=>Je(f.id,`${e.id} modulation`,e.value),onChange:t=>Ve(f.id,e.id,{amount:Number(t.target.value)}),onBlur:Xe})]}),(0,b.jsxs)(`div`,{className:`mapping-clamp`,children:[(0,b.jsxs)(`label`,{children:[(0,b.jsx)(`span`,{children:`CLAMP MIN`}),(0,b.jsx)(`input`,{type:`number`,min:e.minimum,max:e.modulation.clampMaximum,step:e.step,value:e.modulation.clampMinimum,onFocus:()=>Je(f.id,`${e.id} modulation`,e.value),onChange:t=>Ve(f.id,e.id,{clampMinimum:Number(t.target.value)}),onBlur:Xe})]}),(0,b.jsxs)(`label`,{children:[(0,b.jsx)(`span`,{children:`CLAMP MAX`}),(0,b.jsx)(`input`,{type:`number`,min:e.modulation.clampMinimum,max:e.maximum,step:e.step,value:e.modulation.clampMaximum,onFocus:()=>Je(f.id,`${e.id} modulation`,e.value),onChange:t=>Ve(f.id,e.id,{clampMaximum:Number(t.target.value)}),onBlur:Xe})]})]}),(0,b.jsx)(`footer`,{children:e.id===`delay`&&(f.data.type===`delay`||f.data.type===`allpass`)?`1 kHz control ticks / linear audio-rate ramp / fractional linear delay tap. Moving time intentionally produces Doppler and pitch effects; control sources are limited to 100 Hz.`:e.id===`coefficient`&&f.data.type===`allpass`?`1 kHz control ticks / linear audio-rate ramp / coefficient hard-limited to -0.95 through +0.95.`:`1 kHz control ticks / linear interpolation to audio rate`})]}):null]},e.id)}):(0,b.jsx)(`p`,{className:`empty-parameters`,children:`No editable parameters.`}),(0,b.jsxs)(`div`,{className:`history-actions`,children:[(0,b.jsx)(`button`,{type:`button`,disabled:!F.undo.length,onClick:Ie,children:`UNDO`}),(0,b.jsx)(`button`,{type:`button`,disabled:!F.redo.length,onClick:Le,children:`REDO`})]}),(0,b.jsx)(`div`,{className:`selection-note`,children:f.data.type===`macro`?`Macro value changes use a fixed 20 ms runtime ramp and do not compile topology. Default and detent edits republish the visible graph.`:f.data.runtimeBound?`Live value from native DSP runtime contract v${e.contractVersion}.`:`Constructed graph block. Audible edits compile off-thread and crossfade into the live plugin at an audio-block boundary.`}),nt?(0,b.jsx)(vm,{topic:fp(f.id),onDismiss:()=>N($e),onResearch:()=>P(!0)}):null]},f.id):m?(0,b.jsxs)(`div`,{className:`inspector-content`,children:[(0,b.jsx)(`div`,{className:`selection-kicker`,children:`SELECTED CABLE`}),(0,b.jsx)(`h2`,{children:m.data?.signal===`control`?`Control connection`:`Audio connection`}),(0,b.jsx)(`code`,{children:m.id}),Se?(0,b.jsx)(bm,{inspection:Se,activeIndex:we,onActiveIndex:re}):null,(0,b.jsxs)(`dl`,{className:`property-list`,children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`FROM`}),(0,b.jsx)(`dd`,{children:m.source})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`TO`}),(0,b.jsx)(`dd`,{children:m.target})]}),(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`dt`,{children:`SIGNAL`}),(0,b.jsx)(`dd`,{children:m.data?.signal===`control`?`CONTROL / DASHED`:`AUDIO / SOLID`})]})]})]}):(0,b.jsxs)(`div`,{className:`inspector-empty`,children:[(0,b.jsx)(`div`,{className:`empty-crosshair`,"aria-hidden":`true`,children:`+`}),(0,b.jsx)(`h2`,{children:`Nothing selected`}),(0,b.jsx)(`p`,{children:`Select a block or cable to inspect its identity, ports, and saved parameter values.`}),(0,b.jsx)(`kbd`,{children:`TAB`}),(0,b.jsx)(`span`,{children:`focus graph elements`}),(0,b.jsx)(`kbd`,{children:`ENTER`}),(0,b.jsx)(`span`,{children:`select focused item`}),(0,b.jsx)(`kbd`,{children:`⌘/CTRL C`}),(0,b.jsx)(`span`,{children:`copy selected non-I/O blocks`}),(0,b.jsx)(`kbd`,{children:`⌘/CTRL V`}),(0,b.jsx)(`span`,{children:`paste with new block and cable IDs`}),(0,b.jsx)(`kbd`,{children:`DELETE`}),(0,b.jsx)(`span`,{children:`remove selected blocks or cables`}),nt?(0,b.jsx)(vm,{topic:fp(),onDismiss:()=>N($e),onResearch:()=>P(!0)}):null]})]})]}),te?(0,b.jsx)(`div`,{className:`research-backdrop`,role:`presentation`,onMouseDown:()=>P(!1),children:(0,b.jsxs)(`section`,{className:`research-reader`,role:`dialog`,"aria-modal":`true`,"aria-label":`Keith Barr architecture research`,onMouseDown:e=>e.stopPropagation(),children:[(0,b.jsxs)(`header`,{children:[(0,b.jsxs)(`div`,{children:[(0,b.jsx)(`span`,{children:`OFFLINE RESEARCH / DOCUMENTED SOURCES`}),(0,b.jsx)(`h2`,{children:`Keith Barr reverb architectures`})]}),(0,b.jsx)(`button`,{type:`button`,"aria-label":`Close architecture research`,onClick:()=>P(!1),children:`CLOSE ×`})]}),(0,b.jsx)(`pre`,{children:up})]})}):null]})}function Em(){let[e,t]=(0,_.useState)(null),[n,r]=(0,_.useState)(``);return(0,_.useEffect)(()=>{let e=new AbortController;return fetch(new URL(`./runtime-snapshot.json`,window.location.href),{signal:e.signal,cache:`no-store`}).then(e=>{if(!e.ok)throw Error(`Native runtime returned HTTP ${e.status}`);return e.json()}).then(e=>t(rf(e))).catch(t=>{e.signal.aborted||r(t instanceof Error?t.message:`Unknown runtime binding failure`)}),()=>e.abort()},[]),n?(0,b.jsxs)(`main`,{className:`binding-state binding-error`,children:[(0,b.jsx)(`strong`,{children:`RUNTIME BINDING FAILED`}),(0,b.jsx)(`span`,{children:n})]}):e?(0,b.jsx)(pd,{children:(0,b.jsx)(Tm,{snapshot:e})}):(0,b.jsx)(`main`,{className:`binding-state`,children:(0,b.jsx)(`strong`,{children:`BINDING NATIVE RUNTIME…`})})}(0,v.createRoot)(document.getElementById(`root`)).render((0,b.jsx)(_.StrictMode,{children:(0,b.jsx)(Em,{})}));

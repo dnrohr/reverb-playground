@@ -6,10 +6,16 @@
 #include <reverb/graph/PatchJson.h>
 #include <reverb/graph/SafeParallelShimmerGraph.h>
 
+#include <nlohmann/json.hpp>
+
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <filesystem>
+#include <fstream>
+#include <iterator>
+#include <numbers>
 #include <random>
 #include <ranges>
 #include <set>
@@ -68,6 +74,35 @@ bool hasCable(const GraphDocument& graph, const std::string_view from, const std
     return std::ranges::any_of(graph.connections, [&](const auto& connection) {
         return connection.from.nodeId == from && connection.to.nodeId == to;
     });
+}
+
+double tonePower(const std::span<const float> samples, const double sampleRate, const double frequency)
+{
+    auto real = 0.0;
+    auto imaginary = 0.0;
+    const auto step = 2.0 * std::numbers::pi * frequency / sampleRate;
+    for (std::size_t frame = 0; frame < samples.size(); ++frame) {
+        const auto window = 0.5 - 0.5 * std::cos(2.0 * std::numbers::pi
+            * static_cast<double>(frame) / static_cast<double>(samples.size() - 1));
+        const auto phase = step * static_cast<double>(frame);
+        real += static_cast<double>(samples[frame]) * window * std::cos(phase);
+        imaginary -= static_cast<double>(samples[frame]) * window * std::sin(phase);
+    }
+    return real * real + imaginary * imaginary;
+}
+
+double bandPeakPower(
+    const std::span<const float> samples, const double sampleRate,
+    const double centerFrequency, const double relativeHalfWidth = 0.025)
+{
+    auto peak = 0.0;
+    constexpr auto steps = 50;
+    for (auto index = 0; index <= steps; ++index) {
+        const auto position = -1.0 + 2.0 * static_cast<double>(index) / steps;
+        peak = std::max(peak, tonePower(samples, sampleRate,
+            centerFrequency * (1.0 + relativeHalfWidth * position)));
+    }
+    return peak;
 }
 
 } // namespace
@@ -198,4 +233,78 @@ TEST_CASE("Safe Parallel Shimmer renders finite bounded decorrelated stereo at q
         REQUIRE(energy > 0.0);
         REQUIRE(stereoDifference > energy * 0.001);
     }
+}
+
+TEST_CASE("Safe Parallel Shimmer produces one octave halo without a later octave staircase")
+{
+    constexpr auto sampleRate = 48'000.0;
+    constexpr std::size_t blockSize = 256;
+    constexpr auto seconds = 4.0;
+    constexpr auto sourceFrequency = 330.0;
+    constexpr auto haloFrequency = sourceFrequency * 2.0;
+    auto compiled = reverb::graph::compileFeedbackGraph(
+        reverb::graph::makeSafeParallelShimmerGraph(), sampleRate, blockSize);
+    REQUIRE(compiled.valid());
+    const auto frames = static_cast<std::size_t>(seconds * sampleRate);
+    std::vector<float> left(frames), right(frames), outputLeft(frames), outputRight(frames), mono(frames);
+    for (std::size_t frame = 0; frame < frames; ++frame) {
+        const auto sample = static_cast<float>(0.08 * std::sin(
+            2.0 * std::numbers::pi * sourceFrequency * static_cast<double>(frame) / sampleRate));
+        left[frame] = sample;
+        right[frame] = sample;
+    }
+    for (std::size_t start = 0; start < frames; start += blockSize) {
+        const auto count = std::min(blockSize, frames - start);
+        compiled.runtime->process(
+            std::span<const float>(left).subspan(start, count),
+            std::span<const float>(right).subspan(start, count),
+            std::span<float>(outputLeft).subspan(start, count),
+            std::span<float>(outputRight).subspan(start, count));
+    }
+    std::ranges::transform(outputLeft, outputRight, mono.begin(), [](const auto leftSample, const auto rightSample) {
+        return 0.5F * (leftSample + rightSample);
+    });
+
+    const auto inspectWindow = [&](const double startSeconds) {
+        const auto samples = std::span<const float>(mono).subspan(
+            static_cast<std::size_t>(startSeconds * sampleRate),
+            static_cast<std::size_t>(0.6 * sampleRate));
+        return std::array {
+            bandPeakPower(samples, sampleRate, sourceFrequency),
+            bandPeakPower(samples, sampleRate, haloFrequency),
+            bandPeakPower(samples, sampleRate, haloFrequency * 2.0),
+            bandPeakPower(samples, sampleRate, haloFrequency * 4.0),
+        };
+    };
+    const auto early = inspectWindow(1.2);
+    const auto late = inspectWindow(3.0);
+    CAPTURE(early, late);
+    REQUIRE(early[0] > 0.0);
+    REQUIRE(early[1] > early[0] * 0.0025);
+    REQUIRE(early[1] > early[2] * 20.0);
+    REQUIRE(early[1] > early[3] * 50.0);
+    REQUIRE(late[1] > late[0] * 0.0025);
+    REQUIRE(late[1] > late[2] * 20.0);
+    REQUIRE(late[1] > late[3] * 50.0);
+
+    std::ifstream artifactStream(std::filesystem::path { REVERB_MEASUREMENTS_DIR }
+        / "safe-parallel-shimmer-v1.json", std::ios::binary);
+    REQUIRE(artifactStream.good());
+    const auto artifact = nlohmann::json::parse(std::string {
+        std::istreambuf_iterator<char> { artifactStream }, std::istreambuf_iterator<char> {} });
+    REQUIRE(artifact.at("formatVersion") == 1);
+    REQUIRE(artifact.at("engineVersion") == "0.1");
+    REQUIRE(artifact.at("patchId") == "safe-parallel-shimmer");
+    REQUIRE(artifact.at("qualification").at("result") == "pass");
+    const auto decibels = [](const double numerator, const double denominator) {
+        return 10.0 * std::log10(numerator / denominator);
+    };
+    REQUIRE(decibels(early[1], early[0]) == Catch::Approx(
+        artifact.at("analysis").at("early").at("haloVsSourceDb").get<double>()).margin(0.01));
+    REQUIRE(decibels(early[2], early[1]) == Catch::Approx(
+        artifact.at("analysis").at("early").at("octave1320VsHaloDb").get<double>()).margin(0.01));
+    REQUIRE(decibels(late[1], late[0]) == Catch::Approx(
+        artifact.at("analysis").at("late").at("haloVsSourceDb").get<double>()).margin(0.01));
+    REQUIRE(decibels(late[2], late[1]) == Catch::Approx(
+        artifact.at("analysis").at("late").at("octave1320VsHaloDb").get<double>()).margin(0.01));
 }

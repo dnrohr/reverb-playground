@@ -1,6 +1,7 @@
 #include <reverb/graph/SafeParallelShimmerGraph.h>
 
 #include <algorithm>
+#include <array>
 #include <optional>
 #include <string>
 #include <utility>
@@ -59,9 +60,12 @@ Node pitchShift()
         audioIn(), controlIn("semitones-mod"), controlIn("grain-mod"),
         controlIn("overlap-mod"), audioOut(),
     }, {
-        { "semitones", safeParallelShimmerSemitones, "semitones" },
-        { "grain", 60.0, "milliseconds" },
-        { "overlap", 0.5, "normalized" },
+        { "semitones", safeParallelShimmerSemitones, "semitones", ParameterModulation {
+            "semitones-mod", 12.0, ModulationPolarity::bipolar, -24.0, 24.0 } },
+        { "grain", 60.0, "milliseconds", ParameterModulation {
+            "grain-mod", 20.0, ModulationPolarity::bipolar, 20.0, 120.0 } },
+        { "overlap", 0.5, "normalized", ParameterModulation {
+            "overlap-mod", 0.25, ModulationPolarity::bipolar, 0.1, 1.0 } },
         { "direction", 0.0, "direction" },
     } };
 }
@@ -102,6 +106,26 @@ GraphDocument makeSafeParallelShimmerGraph(const SafeParallelShimmerControls& re
         allpass("left-extraction", 11.9), allpass("right-extraction", 19.7),
         { "output", "stereo-output", { audioIn("in-l"), audioIn("in-r") }, {} },
     };
+    const std::array names {
+        std::pair { "input-mono-sum", "Mono input" },
+        std::pair { "tank-entry", "Reverb tank" },
+        std::pair { "tank-damping", "Tank damping" },
+        std::pair { "reverb-decay", "Reverb decay" },
+        std::pair { "normal-latency-alignment", "Normal / aligned" },
+        std::pair { "normal-level", "Normal level" },
+        std::pair { "shimmer-highpass-sum", "Shimmer high-pass" },
+        std::pair { "shimmer-pitch", "Octave / +12 st" },
+        std::pair { "shimmer-damping", "Shimmer damping" },
+        std::pair { "shimmer-level", "Shimmer level" },
+        std::pair { "parallel-wet-sum", "Parallel recombine" },
+        std::pair { "wet-balance", "Wet balance" },
+        std::pair { "left-extraction", "Left extraction" },
+        std::pair { "right-extraction", "Right extraction" },
+    };
+    for (const auto& [id, name] : names) {
+        const auto found = std::ranges::find(graph.nodes, std::string_view(id), &Node::id);
+        if (found != graph.nodes.end()) found->name = name;
+    }
 
     graph.connections = {
         cable("input-left-gain", "input", "out-l", "input-left-half", "in"),

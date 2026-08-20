@@ -1,0 +1,41 @@
+{
+  "formatVersion": 1,
+  "engineVersion": "0.1",
+  "patchId": "safe-parallel-shimmer",
+  "sampleRate": 48000,
+  "input": {
+    "kind": "stereo-sine",
+    "frequencyHertz": 330,
+    "amplitude": 0.08,
+    "durationSeconds": 4
+  },
+  "analysis": {
+    "windowSeconds": 0.6,
+    "relativeHalfWidth": 0.025,
+    "early": {
+      "startSeconds": 1.2,
+      "source330Power": 7186.450710603537,
+      "halo660Power": 28.736491500053,
+      "octave1320Power": 0.000275211929,
+      "octave2640Power": 0.000023828365,
+      "haloVsSourceDb": -23.980807,
+      "octave1320VsHaloDb": -50.187665,
+      "octave2640VsHaloDb": -60.813395
+    },
+    "late": {
+      "startSeconds": 3,
+      "source330Power": 6753.702529513556,
+      "halo660Power": 25.455248518452,
+      "octave1320Power": 0.000074269804,
+      "octave2640Power": 0.00000266363,
+      "haloVsSourceDb": -24.237646,
+      "octave1320VsHaloDb": -55.349651,
+      "octave2640VsHaloDb": -69.803034
+    }
+  },
+  "qualification": {
+    "minimumHaloVsSourceDb": -26,
+    "maximumHigherOctaveVsHaloDb": -13,
+    "result": "pass"
+  }
+}

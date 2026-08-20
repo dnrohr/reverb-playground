@@ -6,8 +6,9 @@ import reverseEnvelopePatch from '../../factory-patches/causal-reverse-envelope.
 import levelGatedPatch from '../../factory-patches/level-gated-room.rvp.json?raw';
 import cosmicReversePatch from '../../factory-patches/modulated-cosmic-reverse.rvp.json?raw';
 import gravityDiffusionPatch from '../../factory-patches/gravity-diffusion.rvp.json?raw';
+import safeParallelShimmerPatch from '../../factory-patches/safe-parallel-shimmer.rvp.json?raw';
 
-export type FactoryPatchId = 'barr-reference' | 'causal-reverse-envelope' | 'level-gated-room' | 'modulated-cosmic-reverse' | 'gravity-diffusion';
+export type FactoryPatchId = 'barr-reference' | 'causal-reverse-envelope' | 'level-gated-room' | 'modulated-cosmic-reverse' | 'gravity-diffusion' | 'safe-parallel-shimmer';
 export type ComparisonPatchId = Exclude<FactoryPatchId, 'barr-reference'>;
 
 export interface FactoryPatchDescription {
@@ -60,6 +61,13 @@ export const factoryPatches: readonly FactoryPatchDescription[] = [
     filename: 'gravity-diffusion.rvp.json',
     summary: 'Eight-stage causal inverse, bloom, and forward diffusion instrument',
   },
+  {
+    id: 'safe-parallel-shimmer',
+    label: 'Safe Parallel Shimmer',
+    graphName: 'SAFE-PARALLEL-SHIMMER.graph',
+    filename: 'safe-parallel-shimmer.rvp.json',
+    summary: 'One non-recirculating +12-semitone halo beside an aligned normal tail',
+  },
 ] as const;
 
 const rawPatches: Partial<Record<FactoryPatchId, string>> = {
@@ -67,6 +75,7 @@ const rawPatches: Partial<Record<FactoryPatchId, string>> = {
   'level-gated-room': levelGatedPatch,
   'modulated-cosmic-reverse': cosmicReversePatch,
   'gravity-diffusion': gravityDiffusionPatch,
+  'safe-parallel-shimmer': safeParallelShimmerPatch,
 };
 
 export function factoryPatchDescription(id: FactoryPatchId): FactoryPatchDescription {
@@ -83,6 +92,7 @@ export function comparisonPatchLabel(id: ComparisonPatchId): string {
     case 'level-gated-room': return 'GATED';
     case 'modulated-cosmic-reverse': return 'COSMIC REV';
     case 'gravity-diffusion': return 'GRAVITY';
+    case 'safe-parallel-shimmer': return 'PAR SHIMMER';
   }
 }
 

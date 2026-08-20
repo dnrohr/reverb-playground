@@ -40,6 +40,7 @@ import { decorateMacroReachability, inspectMacroReachability } from './macroInsp
 import { gravityFocusNodeIds, predictGravityEnvelope } from './gravityPresentation';
 import { gravityMeasuredReference } from './gravityReference';
 import { PitchShiftVisualization } from './PitchShiftVisualization';
+import { parallelShimmerBranch, parallelShimmerTeaching } from './parallelShimmerTeaching';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -75,6 +76,22 @@ function TeachingCard({ topic, onDismiss, onResearch }: {
       <h4>THIS RECONSTRUCTION</h4><p>{topic.reconstruction}</p>
       <h4>LISTEN / NOTICE</h4><p>{topic.takeaway}</p>
       <button className="research-link" type="button" onClick={onResearch}>READ OFFLINE ARCHITECTURE RESEARCH</button>
+    </section>
+  );
+}
+
+function ParallelShimmerTeaching({ selectedNodeId }: { selectedNodeId?: string }) {
+  const branch = parallelShimmerBranch(selectedNodeId);
+  return (
+    <section className="parallel-shimmer-teaching" aria-label="Safe Parallel Shimmer signal paths">
+      <header><span>{parallelShimmerTeaching.title}</span><strong>{parallelShimmerTeaching.method}</strong></header>
+      <div className={branch === 'normal' ? 'is-active' : ''}>
+        <b>NORMAL</b><span>{parallelShimmerTeaching.normal}</span>
+      </div>
+      <div className={branch === 'octave' ? 'is-active' : ''}>
+        <b>OCTAVE +12</b><span>{parallelShimmerTeaching.octave}</span>
+      </div>
+      <p>{parallelShimmerTeaching.contrast}</p>
     </section>
   );
 }
@@ -920,10 +937,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
         <aside className="inspector" aria-label="Inspector">
           <div className="pane-heading"><span>INSPECTOR</span><button className="teaching-toggle" type="button" aria-pressed={teachingEnabled} title="Toggle contextual cards and response architecture overlays" onClick={toggleTeaching}>LEARN {teachingEnabled ? 'ON' : 'OFF'}</button></div>
+          {activePatchId === 'safe-parallel-shimmer' && teachingEnabled ? <ParallelShimmerTeaching selectedNodeId={selectedNode?.id} /> : null}
           {selectedNode ? (
             <div className="inspector-content" key={selectedNode.id}>
               <div className="selection-kicker">SELECTED BLOCK</div>
-              <h2>{selectedNode.data.type === 'macro' ? selectedNode.data.userName : selectedNode.data.label}</h2>
+              <h2>{selectedNode.data.userName?.trim() || selectedNode.data.label}</h2>
               <code>{selectedNode.id}</code>
               {selectedNode.data.presentation === 'gravity' && selectedMacroInspection ? <GravityPresentation
                 value={selectedNode.data.parameters.find((parameter) => parameter.id === 'value')?.value ?? 0}

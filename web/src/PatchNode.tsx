@@ -22,7 +22,7 @@ export function PatchNode({ data, selected }: NodeProps & { data: PatchNodeData 
         />
       ))}
       <div className="node-kicker">{data.role}</div>
-      <h3>{data.type === 'macro' ? data.userName : data.label}</h3>
+      <h3>{data.userName?.trim() || data.label}</h3>
       <div className="node-type">{data.type}</div>
       {data.type === 'envelope-follower' ? <div className="signal-operation">AUDIO → ENVELOPE 0…1</div> : null}
       {data.type === 'hold-gate' ? <div className="signal-operation">AUDIO × CONTROL GATE</div> : null}

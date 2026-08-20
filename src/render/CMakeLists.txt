@@ -43,3 +43,11 @@ target_link_libraries(reverb_pitch_shift_validation_cli
     PRIVATE
         reverb_project_options
         reverb_render)
+
+add_executable(reverb_factory_patch_cli
+    Source/FactoryPatchCli.cpp)
+
+target_link_libraries(reverb_factory_patch_cli
+    PRIVATE
+        reverb_project_options
+        reverb_graph)

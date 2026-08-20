@@ -872,3 +872,27 @@ Results:
   records signal flow, responsibility boundaries, non-recirculation proof,
   alias-filtering limitation, latency, memory, normalization, and M11.2 scope.
   UI unchanged; no screenshot or video was required for this architecture task.
+
+## M11.2 verification
+
+- Safe Parallel Shimmer is the sixth complete catalog family. Its 28-node,
+  32-cable schema-v2 factory is exported directly from the checked M11.1 native
+  builder and admitted by exact SHA-256; no hidden processor or private state is
+  introduced.
+- The factory menu, Barr/design A/B selection, schema save/load, Shimmer Level
+  Undo/Redo, and complete plugin-host restoration retain the graph, layout,
+  names, mappings, and an edited value before and after 96 kHz preparation.
+- A deterministic 330 Hz fixture measures a persistent 660 Hz halo at early and
+  late windows. The 1320 and 2640 Hz bands remain at least 50 dB below the halo,
+  proving that later frames do not form a cumulative octave staircase. Checked
+  values live in `artifacts/measurements/safe-parallel-shimmer-v1.json`.
+- Factory impulse and bounded-noise renders are finite and below full scale at
+  44.1, 48, and 96 kHz. Unequal output Allpasses retain stereo difference.
+- The inspector calls the design **Parallel Shimmer / One Pitch Pass**, names
+  both branches, and explicitly contrasts its post-tank octave halo with classic
+  feedback shimmer. [Factory and teaching documentation](safe-parallel-shimmer-factory-and-teaching.md)
+  records generation, claims, measurements, editing behavior, and evidence.
+- Reviewed screenshots and the selection/edit/measurement/save/reload recording
+  are stored under `artifacts/ui/m11-2-safe-parallel-shimmer/`. The recording's
+  deterministic browser-only capture fixture was removed before verification;
+  native render and capture tests remain authoritative.

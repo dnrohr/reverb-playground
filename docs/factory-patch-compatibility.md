@@ -3,7 +3,7 @@
 Factory patches are versioned product assets, not informal examples. The
 authoritative shipped set is
 [`factory-patches/catalog.json`](../factory-patches/catalog.json). Catalog
-version 1 contains exactly three complete families:
+version 1 contains exactly six complete families:
 
 | Factory ID | Family | Document source | Schema | Engine |
 |---|---|---|---:|---:|
@@ -11,16 +11,19 @@ version 1 contains exactly three complete families:
 | `causal-reverse-envelope` | Reverse-style | Checked-in generated JSON | 2 | 0.1 |
 | `level-gated-room` | Gated | Checked-in generated JSON | 2 | 0.1 |
 | `modulated-cosmic-reverse` | Modulated reverse-style | Checked-in generated JSON | 2 | 0.1 |
+| `gravity-diffusion` | Gravity Diffusion | Native-builder generated JSON | 2 | 0.1 |
+| `safe-parallel-shimmer` | Parallel shimmer | Native-builder generated JSON | 2 | 0.1 |
 
 The Barr graph is generated from the same native definitions that execute it,
-so it cannot drift from a duplicated JSON asset. The catalog points to those
-versioned definitions. The other two graphs are deterministic output from
-`scripts/generate_factory_patches.mjs`; `--check` compares every byte in CI.
+so it cannot drift from a duplicated JSON asset. Gravity Diffusion and Safe
+Parallel Shimmer are exported from their native graph builders and admitted by
+exact SHA-256. The reverse/gated graphs and catalog are deterministic output
+from `scripts/generate_factory_patches.mjs`; `--check` compares every byte in CI.
 
 Each catalog entry declares `status: complete`, its family, document kind/path,
 schema and engine versions, SPDX license expression and license path, plus a
 provenance kind, source path, and description. Tests require every referenced
-path to exist. All three are project-authored AGPL-3.0-only work and contain no
+path to exist. All six are project-authored AGPL-3.0-only work and contain no
 ROM-derived data, imported presets, or captured impulse response.
 
 ## Admission rule
@@ -36,7 +39,7 @@ A factory family may enter the catalog only when all of the following are true:
 5. Audible family claims have deterministic measurement fixtures.
 6. Schema/engine compatibility, license, and provenance are declared.
 
-Short-room/baseline and Bloom-like designs remain outside the catalog because
+Short-room/baseline and cumulative feedback-shimmer designs remain outside the catalog because
 their complete product topologies and acceptance fixtures have not been
 approved. Absence is deliberate: the roadmap does not permit a family name to
 stand in for unfinished behavior.
@@ -64,7 +67,8 @@ Native tests derive their patch loop from the catalog and require every entry
 to load, graph-validate, compile, render finite audio, serialize at its declared
 versions, and round-trip. The same loop applies bounded stereo noise at each
 supported sample rate. Browser tests independently require the catalog IDs to
-match the factory menu, validate every metadata field, parse both checked-in
-documents through the editor contract, and exercise v1-to-v2 migration.
+match the factory menu, validate every metadata field, parse every checked-in
+document through the editor contract, and exercise v1-to-v2 migration.
 
-UI unchanged; this milestone changes asset guarantees and test coverage only.
+Safe Parallel Shimmer adds saved descriptive names to ordinary blocks; names
+remain optional schema-v2 presentation metadata and never change DSP identity.
