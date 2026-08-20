@@ -7,7 +7,8 @@ add_library(reverb_graph STATIC
     Source/GravityDiffusionGraph.cpp
     Source/HostPatchState.cpp
     Source/PatchJson.cpp
-    Source/RuntimeSnapshot.cpp)
+    Source/RuntimeSnapshot.cpp
+    Source/SafeParallelShimmerGraph.cpp)
 
 target_include_directories(reverb_graph
     PUBLIC

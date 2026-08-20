@@ -850,3 +850,25 @@ Results:
   and therefore gates later shimmer work on explicit band-limiting.
 - UI unchanged; no new screenshot or video was required. M10.3 retains the
   current block, inspector, continuous-edit, and grain-motion evidence.
+
+## M11.1 verification
+
+- Safe Parallel Shimmer is authored by `makeSafeParallelShimmerGraph` as 28
+  ordinary public nodes and 32 mono audio cables. There is no hidden shimmer
+  processor or factory-only block.
+- The only feedback component is the delayed, damped ordinary tank. Structural
+  reachability tests prove that neither Pitch Shift nor Shimmer Level can reach
+  the tank entry, so repeated +12-semitone accumulation is absent by design.
+- Reverb Decay, Shimmer Level, post-shift Shimmer Damping, and final Wet Balance
+  are independent named nodes with separate bounded parameters. The octave
+  branch also exposes its `x - Low-pass(x)` pre-filter and two Allpasses.
+- A 600.01 ms normal-path Delay aligns within two samples of Pitch Shift's fixed
+  latency at 44.1, 48, 96, and 192 kHz. Maximum-rate preparation uses twelve
+  planned delay-bearing processors and less than 4 MiB of the 64 MiB budget.
+- Qualified-rate two-second impulse-plus-noise renders are finite, below full
+  scale, non-silent, and stereo-different through unequal 11.9/19.7 ms output
+  Allpasses. Exact schema-v2 JSON round-trip is covered.
+- [Safe Parallel Shimmer topology design](safe-parallel-shimmer-design.md)
+  records signal flow, responsibility boundaries, non-recirculation proof,
+  alias-filtering limitation, latency, memory, normalization, and M11.2 scope.
+  UI unchanged; no screenshot or video was required for this architecture task.
