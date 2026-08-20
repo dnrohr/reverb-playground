@@ -15,6 +15,13 @@ program ROM, captured impulse response, or recorded audio.
   builder. Its 58 visible nodes expose the eight-stage tank, normalized Gravity
   weighting, complementary Macros, independent LFO motion, and delayed damped
   return; it is not a proprietary-algorithm reconstruction.
+- `safe-parallel-shimmer.rvp.json` adds one non-recirculating aligned octave
+  layer; `split-feedback-shimmer.rvp.json` exposes separately bounded normal
+  and shifted returns.
+- `reverse-cosmic-shimmer.rvp.json` combines visible causal-rise taps, paired
+  causal reverse grains, dark normal/shifted returns, independent LFO motion,
+  and unequal stereo extraction. It is exported from the native builder and is
+  project-authored behavioral synthesis, not a proprietary reconstruction.
 
 `catalog.json` is the authoritative shipped set. Every entry declares its
 completed family, document kind/path, schema and engine versions, SPDX license
@@ -31,6 +38,15 @@ Gravity's native document is exported first and then admitted by exact hash:
 
 ```powershell
 .\scripts\generate_gravity_factory_patch.ps1
+node scripts/generate_factory_patches.mjs
+```
+
+The native shimmer builders use the same export-and-hash gate:
+
+```powershell
+.\scripts\generate_safe_parallel_shimmer_factory.ps1
+.\scripts\generate_split_feedback_shimmer_factory.ps1
+.\scripts\generate_reverse_cosmic_shimmer_factory.ps1
 node scripts/generate_factory_patches.mjs
 ```
 

@@ -37,7 +37,7 @@ describe('factory patches', () => {
     };
     expect(catalog.catalogVersion).toBe(1);
     expect(catalog.patches.map((patch) => patch.id)).toEqual(factoryPatches.map((patch) => patch.id));
-    expect(catalog.patches.map((patch) => patch.family)).toEqual(['barr-reference', 'reverse-style', 'gated', 'modulated-reverse-style', 'gravity-diffusion', 'parallel-shimmer', 'feedback-shimmer']);
+    expect(catalog.patches.map((patch) => patch.family)).toEqual(['barr-reference', 'reverse-style', 'gated', 'modulated-reverse-style', 'gravity-diffusion', 'parallel-shimmer', 'feedback-shimmer', 'reverse-cosmic-shimmer']);
     for (const patch of catalog.patches) {
       expect(patch.status).toBe('complete');
       expect(['native-runtime', 'checked-in-json']).toContain(patch.document.kind);
@@ -53,11 +53,11 @@ describe('factory patches', () => {
 
   it('offers all complete reference, reverse, gated, and modulated-space designs', () => {
     expect(factoryPatches.map((patch) => patch.id)).toEqual([
-      'barr-reference', 'causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse', 'gravity-diffusion', 'safe-parallel-shimmer', 'split-feedback-shimmer',
+      'barr-reference', 'causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse', 'gravity-diffusion', 'safe-parallel-shimmer', 'split-feedback-shimmer', 'reverse-cosmic-shimmer',
     ]);
   });
 
-  it.each(['causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse', 'gravity-diffusion', 'safe-parallel-shimmer', 'split-feedback-shimmer'] as const)(
+  it.each(['causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse', 'gravity-diffusion', 'safe-parallel-shimmer', 'split-feedback-shimmer', 'reverse-cosmic-shimmer'] as const)(
     'loads %s using only visible editable primitives and round trips schema v2',
     (id) => {
       const loaded = loadFactoryPatch(id, reference);
@@ -173,6 +173,23 @@ describe('factory patches', () => {
     expect(writePatchJson(restored.nodes, restored.edges, restored.viewport)).toBe(saved);
   });
 
+  it('ships and round trips the paired reverse-grain phase and a continuous feedback edit', () => {
+    const original = loadFactoryPatch('reverse-cosmic-shimmer', reference);
+    expect(original.nodes).toHaveLength(45);
+    expect(original.edges).toHaveLength(57);
+    expect(original.nodes.find((node) => node.id === 'reverse-pitch-left')?.data.parameters.find((parameter) => parameter.id === 'direction')?.value).toBe(1);
+    expect(original.nodes.find((node) => node.id === 'reverse-pitch-right')?.data.parameters.find((parameter) => parameter.id === 'phase')?.value).toBe(0.373);
+    const edited = structuredClone(original);
+    edited.nodes.find((node) => node.id === 'normal-feedback')!
+      .data.parameters.find((parameter) => parameter.id === 'gain')!.value = 0.41;
+    const history = commitGraphEdit(emptyGraphHistory(original), 'Edit normal feedback', original, edited);
+    const redone = redoGraphEdit(undoGraphEdit(history).history);
+    const saved = writePatchJson(redone.edit!.after.nodes, redone.edit!.after.edges, original.viewport);
+    const restored = parsePatchJson(saved, reference);
+    expect(restored.nodes.find((node) => node.id === 'normal-feedback')?.data.parameters[0].value).toBe(0.41);
+    expect(writePatchJson(restored.nodes, restored.edges, restored.viewport)).toBe(saved);
+  });
+
   it('remembers the selected design while A is the Barr reference', () => {
     expect(comparisonPatchAfterSelection('level-gated-room', 'causal-reverse-envelope')).toBe('level-gated-room');
     expect(comparisonPatchAfterSelection('barr-reference', 'level-gated-room')).toBe('level-gated-room');
@@ -187,5 +204,8 @@ describe('factory patches', () => {
     expect(comparisonPatchAfterSelection('split-feedback-shimmer', 'safe-parallel-shimmer')).toBe('split-feedback-shimmer');
     expect(comparisonPatchAfterSelection('barr-reference', 'split-feedback-shimmer')).toBe('split-feedback-shimmer');
     expect(comparisonPatchLabel('split-feedback-shimmer')).toBe('FB SHIMMER');
+    expect(comparisonPatchAfterSelection('reverse-cosmic-shimmer', 'split-feedback-shimmer')).toBe('reverse-cosmic-shimmer');
+    expect(comparisonPatchAfterSelection('barr-reference', 'reverse-cosmic-shimmer')).toBe('reverse-cosmic-shimmer');
+    expect(comparisonPatchLabel('reverse-cosmic-shimmer')).toBe('REV COSMIC');
   });
 });

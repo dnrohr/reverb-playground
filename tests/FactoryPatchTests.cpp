@@ -4,6 +4,7 @@
 #include <reverb/graph/AcyclicRuntime.h>
 #include <reverb/graph/BarrReferenceGraph.h>
 #include <reverb/graph/PatchJson.h>
+#include <reverb/graph/ReverseCosmicShimmerGraph.h>
 #include <reverb/graph/SafeParallelShimmerGraph.h>
 #include <reverb/graph/SplitFeedbackShimmerGraph.h>
 #include <reverb/render/EnvelopeMeasurements.h>
@@ -100,12 +101,12 @@ TEST_CASE("Factory catalog declares the complete licensed and traceable shipped 
 {
     const auto catalog = loadFactoryCatalog();
     REQUIRE(catalog.at("catalogVersion") == 1);
-    REQUIRE(catalog.at("patches").size() == 7);
+    REQUIRE(catalog.at("patches").size() == 8);
     const std::set<std::string> expectedIds {
-        "barr-reference", "causal-reverse-envelope", "level-gated-room", "modulated-cosmic-reverse", "gravity-diffusion", "safe-parallel-shimmer", "split-feedback-shimmer",
+        "barr-reference", "causal-reverse-envelope", "level-gated-room", "modulated-cosmic-reverse", "gravity-diffusion", "safe-parallel-shimmer", "split-feedback-shimmer", "reverse-cosmic-shimmer",
     };
     const std::set<std::string> expectedFamilies {
-        "barr-reference", "reverse-style", "gated", "modulated-reverse-style", "gravity-diffusion", "parallel-shimmer", "feedback-shimmer",
+        "barr-reference", "reverse-style", "gated", "modulated-reverse-style", "gravity-diffusion", "parallel-shimmer", "feedback-shimmer", "reverse-cosmic-shimmer",
     };
     std::set<std::string> ids;
     std::set<std::string> families;
@@ -174,6 +175,17 @@ TEST_CASE("Split Feedback Shimmer factory exactly matches its public native buil
         std::filesystem::path { REVERB_FACTORY_PATCH_DIR } / "split-feedback-shimmer.rvp.json"));
     REQUIRE(checked.nodes.size() == 25);
     REQUIRE(checked.connections.size() == 29);
+}
+
+TEST_CASE("Reverse Cosmic Shimmer factory exactly matches its public native builder")
+{
+    const auto checked = loadFactory("reverse-cosmic-shimmer.rvp.json");
+    const auto authored = reverb::graph::makeReverseCosmicShimmerGraph();
+    REQUIRE(checked == authored);
+    REQUIRE(reverb::graph::writePatchJson(checked) == readFile(
+        std::filesystem::path { REVERB_FACTORY_PATCH_DIR } / "reverse-cosmic-shimmer.rvp.json"));
+    REQUIRE(checked.nodes.size() == 45);
+    REQUIRE(checked.connections.size() == 57);
 }
 
 TEST_CASE("Gravity Diffusion factory is the complete editable measured graph")

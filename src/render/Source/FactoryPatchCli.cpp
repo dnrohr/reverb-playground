@@ -1,4 +1,5 @@
 #include <reverb/graph/PatchJson.h>
+#include <reverb/graph/ReverseCosmicShimmerGraph.h>
 #include <reverb/graph/SafeParallelShimmerGraph.h>
 #include <reverb/graph/SplitFeedbackShimmerGraph.h>
 
@@ -32,6 +33,9 @@ int main(const int argc, char** argv)
         } else if (patchId == "split-feedback-shimmer") {
             writeText(argv[3], reverb::graph::writePatchJson(
                 reverb::graph::makeSplitFeedbackShimmerGraph()));
+        } else if (patchId == "reverse-cosmic-shimmer") {
+            writeText(argv[3], reverb::graph::writePatchJson(
+                reverb::graph::makeReverseCosmicShimmerGraph()));
         } else {
             throw std::invalid_argument("unknown factory patch id '" + std::string(patchId) + "'");
         }

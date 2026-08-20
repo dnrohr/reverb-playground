@@ -4,6 +4,7 @@ add_library(reverb_render STATIC
     Source/OfflineRenderer.cpp
     Source/PitchShiftValidation.cpp
     Source/ResponseMeasurements.cpp
+    Source/ReverseCosmicShimmerValidation.cpp
     Source/SplitFeedbackShimmerValidation.cpp
     Source/WavWriter.cpp)
 
@@ -57,6 +58,14 @@ add_executable(reverb_split_feedback_shimmer_validation_cli
     Source/SplitFeedbackShimmerValidationCli.cpp)
 
 target_link_libraries(reverb_split_feedback_shimmer_validation_cli
+    PRIVATE
+        reverb_project_options
+        reverb_render)
+
+add_executable(reverb_reverse_cosmic_shimmer_validation_cli
+    Source/ReverseCosmicShimmerValidationCli.cpp)
+
+target_link_libraries(reverb_reverse_cosmic_shimmer_validation_cli
     PRIVATE
         reverb_project_options
         reverb_render)

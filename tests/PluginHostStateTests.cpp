@@ -42,10 +42,10 @@ TEST_CASE("Standalone and hosted editors begin from a stable preferred content s
     using reverb::ui::EditorSize;
     using reverb::ui::preferredEditorSize;
     REQUIRE(preferredEditorSize(false, 3840, 2160) == EditorSize { 1280, 800 });
-    REQUIRE(preferredEditorSize(true, 1536, 960) == EditorSize { 1280, 800 });
-    REQUIRE(preferredEditorSize(true, 1920, 1080) == EditorSize { 1280, 800 });
-    REQUIRE(preferredEditorSize(true, 600, 300) == EditorSize { 1280, 800 });
-    REQUIRE(preferredEditorSize(true, 0, 0) == EditorSize { 1280, 800 });
+    REQUIRE(preferredEditorSize(true, 1536, 960) == EditorSize { 1200, 720 });
+    REQUIRE(preferredEditorSize(true, 1920, 1080) == EditorSize { 1200, 720 });
+    REQUIRE(preferredEditorSize(true, 600, 300) == EditorSize { 1200, 720 });
+    REQUIRE(preferredEditorSize(true, 0, 0) == EditorSize { 1200, 720 });
 }
 
 TEST_CASE("Plugin host state round-trips the complete graph before audio preparation")
@@ -235,6 +235,34 @@ TEST_CASE("Plugin host state restores the complete Split Feedback Shimmer factor
     REQUIRE(beforePreparation.at("semantic").at("nodes").size() == 25);
     REQUIRE(beforePreparation.at("semantic").at("connections").size() == 29);
     REQUIRE(beforePreparation.at("layout").at("nodes").size() == 25);
+    REQUIRE(beforePreparation == shimmer);
+
+    restored.prepareToPlay(96'000.0, 1'024);
+    REQUIRE(nlohmann::json::parse(restored.runtimeSnapshotJson().toStdString())
+        .at("restoredPatch") == beforePreparation);
+}
+
+TEST_CASE("Plugin host state restores Reverse Cosmic Shimmer and its reverse-grain phase")
+{
+    auto shimmer = nlohmann::json::parse(factoryPatch("reverse-cosmic-shimmer.rvp.json"));
+    for (auto& node : shimmer.at("semantic").at("nodes")) {
+        if (node.at("id") != "reverse-pitch-right") continue;
+        for (auto& parameter : node.at("parameters")) {
+            if (parameter.at("id") == "phase") parameter["value"] = 0.417;
+        }
+    }
+
+    ReverbPlaygroundProcessor source;
+    REQUIRE(nlohmann::json::parse(source.storePatchStateJson(shimmer.dump()).toStdString()).at("accepted") == true);
+    juce::MemoryBlock state;
+    source.getStateInformation(state);
+
+    ReverbPlaygroundProcessor restored;
+    restored.setStateInformation(state.getData(), static_cast<int>(state.getSize()));
+    const auto beforePreparation = nlohmann::json::parse(restored.runtimeSnapshotJson().toStdString()).at("restoredPatch");
+    REQUIRE(beforePreparation.at("semantic").at("nodes").size() == 45);
+    REQUIRE(beforePreparation.at("semantic").at("connections").size() == 57);
+    REQUIRE(beforePreparation.at("layout").at("nodes").size() == 45);
     REQUIRE(beforePreparation == shimmer);
 
     restored.prepareToPlay(96'000.0, 1'024);

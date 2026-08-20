@@ -7,10 +7,11 @@ stereo extraction. It contains no proprietary product identity, imported
 impulse response, hidden processor, lookahead, random state, or factory-only
 signal path.
 
-This task creates the native graph builder and executable behavioral contract.
-It does not add the factory-menu entry or teaching presentation; M13.3 owns
-tuning, checked audio/measurement artifacts, UI evidence, persistence coverage,
-and distribution validation.
+M13.2 created the native graph builder and executable behavioral contract.
+M13.3 publishes the same tuned graph through the factory menu with checked
+audio/measurement artifacts, teaching presentation, persistence coverage, and
+distribution validation. See the
+[factory and validation record](reverse-cosmic-shimmer-validation.md).
 
 ## Signal flow
 
@@ -50,8 +51,9 @@ immediate pitched echo or pre-input event.
 A deterministic 48 kHz 400 Hz burst test compares three 300 ms windows. The
 800 Hz octave component at 1.00 seconds must exceed its 0.30-second early value
 by at least 4:1 and remain at least 1.5 times that early value at 1.65 seconds.
-This establishes delayed, sustained harmonic evolution. M13.3 will replace
-these architecture thresholds with checked spectra and audio fixtures.
+This establishes delayed, sustained harmonic evolution. The M13.3 checked
+chord fixtures additionally measure more than 23 dB growth in octave-to-
+fundamental balance between early and late windows at all qualified rates.
 
 The multirate impulse/noise fixture compares 0.20...0.45 seconds with
 0.65...1.10 seconds. Late stereo energy must exceed early energy by at least
@@ -89,11 +91,12 @@ and two different moving Allpasses on the right. Independent low-rate sine and
 triangle LFOs avoid lockstep motion while remaining visible control sources.
 
 The qualified-rate fixture requires absolute late stereo correlation below
-`0.98`: related, but measurably non-identical. It also requires mono-summed
+`0.98`: related, but measurably non-identical. Tuned measured correlations are
+`0.171`, `0.191`, and `0.476` at 44.1, 48, and 96 kHz. It also requires mono-summed
 energy to remain between `0.20` and `1.80` of the normalized stereo-energy
 reference, preventing decorrelation from being purchased with severe
-cancellation. M13.3 will record exact correlation and mono-compatibility values
-for tuned settings.
+cancellation. Tuned normalized mono-energy values are `0.586`, `0.595`, and
+`0.738`, respectively.
 
 ## Separately editable responsibilities
 

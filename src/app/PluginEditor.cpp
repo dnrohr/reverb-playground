@@ -61,15 +61,6 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
         standalone, 0, 0);
     setSize(initial.width, initial.height);
 
-    if (standalone) {
-        juce::MessageManager::callAsync(
-            [safeEditor = juce::Component::SafePointer<ReverbPlaygroundEditor>(this)] {
-                if (safeEditor == nullptr)
-                    return;
-                if (auto* window = safeEditor->findParentComponentOfClass<juce::ResizableWindow>())
-                    window->setFullScreen(true);
-            });
-    }
 }
 
 void ReverbPlaygroundEditor::resized()

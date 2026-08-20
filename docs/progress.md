@@ -66,6 +66,7 @@ Last updated: 2026-08-20
 | M12.3 Ship the Split-Feedback Shimmer factory patch | Complete | Editable 25-block factory; normal/shifted/shared focus; measured circulation teaching; exact persistence/host restore; screenshots/video |
 | M13.1 Add reverse-grain mode and stereo decorrelation | Complete | Explicit deterministic phase; causal reverse grains; near-zero paired correlation; transient-envelope report; compatibility; screenshots/video |
 | M13.2 Construct the cosmic shimmer topology | Complete | 45 public blocks; three-tap causal rise; dual dark reverse-octave returns; independent motion; bounded compatible stereo; multirate tests |
+| M13.3 Tune and publish Reverse Cosmic Shimmer | Complete | Eight-family catalog; nine multirate audio fixtures; causal rise/octave/stereo/decay report; four-way comparison; teaching; persistence/host restore; screenshots/video |
 
 ## M0.2 verification
 
@@ -1021,3 +1022,38 @@ Results:
   records the complete flow, causal boundary, feedback/filter rationale,
   stereo/mono contract, editable responsibilities, and M13.3 boundary.
   No editor surface or factory entry changes in M13.2, so no UI capture is due.
+
+## M13.3 verification
+
+- The native Reverse Cosmic Shimmer builder is exported byte-for-byte to the
+  authoritative eight-family factory catalog. Native and browser tests require
+  the checked graph to equal the 45-block/57-cable builder and round-trip schema
+  v2 exactly.
+- Nine checked stereo WAV fixtures cover impulse, three-note chord, and bounded
+  noise at 44.1, 48, and 96 kHz. First wet output is about 261 ms and the peak
+  about 721 ms; late-rise energy is about +6.3 dB, octave-to-fundamental balance
+  grows 23.49–24.28 dB, and final energy falls 34.43–37.57 dB from the mid-tail
+  window. All renders are finite and below full scale.
+- Bounded-noise stereo correlation is 0.171–0.476 and normalized mono energy is
+  0.586–0.738 across qualified rates. Exact PCM16 hashes and generated report
+  equality gate intentional behavior changes.
+- The editor teaching view distinguishes causal buffered reverse grains from
+  true sample-order reversed audio and labels the topology project-authored
+  behavioral synthesis. Focus buttons trace the rise, reverse-grain, dark
+  return, and modulation/output paths.
+- A persistent four-way strip compares Barr Reference, Modulated Cosmic
+  Reverse, Split-Feedback Shimmer, and Reverse Cosmic Shimmer; the existing A/B
+  state still remembers the selected non-Barr design.
+- Browser persistence tests preserve a continuous normal-feedback edit through
+  undo/redo and exact save/reload. JUCE state tests restore all 45 blocks, 57
+  cables, layout, and a non-default reverse-grain phase before and after 96 kHz
+  preparation.
+- Reviewed visual evidence is under
+  [`artifacts/ui/m13-3-reverse-cosmic-shimmer/`](../artifacts/ui/m13-3-reverse-cosmic-shimmer/):
+  the fitted graph, reverse-pitch/loop inspector, and a workflow recording of
+  selection, modulation, continuous editing, save, and comparison reload. A
+  DPI-aware packaged-standalone capture verifies both sidebars remain reachable
+  and the editor fills its 1200×720 content area at 125% Windows scaling.
+- [Factory and validation documentation](reverse-cosmic-shimmer-validation.md)
+  records measurements, fixtures, semantics, regeneration, persistence, and
+  the division between visual and authoritative native evidence.

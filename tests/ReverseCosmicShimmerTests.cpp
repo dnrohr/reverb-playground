@@ -1,14 +1,20 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <reverb/dsp/PitchShiftContract.h>
 #include <reverb/graph/AcyclicRuntime.h>
 #include <reverb/graph/PatchJson.h>
 #include <reverb/graph/ReverseCosmicShimmerGraph.h>
+#include <reverb/render/ReverseCosmicShimmerValidation.h>
+
+#include <nlohmann/json.hpp>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <filesystem>
+#include <fstream>
 #include <random>
 #include <ranges>
 #include <numbers>
@@ -255,4 +261,44 @@ TEST_CASE("Reverse Cosmic Shimmer delays and sustains octave evolution")
     CAPTURE(early, late, sustained);
     REQUIRE(late > early * 4.0);
     REQUIRE(sustained > early * 1.5);
+}
+
+TEST_CASE("Reverse Cosmic Shimmer checked fixtures prove the publish contract")
+{
+    const auto report = reverb::render::measureReverseCosmicShimmerValidation();
+    REQUIRE(report.rates.size() == reverb::dsp::pitch_shift::qualificationSampleRates.size());
+    for (std::size_t index = 0; index < report.rates.size(); ++index) {
+        const auto& rate = report.rates[index];
+        CAPTURE(rate.sampleRate, rate.onsetMilliseconds, rate.peakTimeMilliseconds,
+            rate.finalToMidDecayDb, rate.octaveGrowthDb, rate.stereoCorrelation,
+            rate.monoCompatibility, rate.impulsePeak, rate.chordPeak, rate.noisePeak);
+        REQUIRE(rate.sampleRate == reverb::dsp::pitch_shift::qualificationSampleRates[index]);
+        REQUIRE(rate.causal);
+        REQUIRE(rate.onsetMilliseconds >= 250.0);
+        REQUIRE(rate.onsetMilliseconds <= 275.0);
+        REQUIRE(rate.peakTimeMilliseconds > rate.onsetMilliseconds + 300.0);
+        REQUIRE(rate.lateImpulseEnergy > rate.earlyImpulseEnergy * 3.5);
+        REQUIRE(rate.finalToMidDecayDb < -30.0);
+        REQUIRE(rate.octaveGrowthDb > 20.0);
+        REQUIRE(rate.lateChordOctaveDbfs > -90.0);
+        REQUIRE(std::abs(rate.stereoCorrelation) < 0.80);
+        REQUIRE(rate.monoCompatibility > 0.50);
+        REQUIRE(rate.monoCompatibility < 0.80);
+        REQUIRE(rate.finite);
+        REQUIRE(rate.impulsePeak > 0.0);
+        REQUIRE(rate.chordPeak > 0.0);
+        REQUIRE(rate.noisePeak > 0.0);
+        REQUIRE(rate.impulsePeak < 1.0);
+        REQUIRE(rate.chordPeak < 1.0);
+        REQUIRE(rate.noisePeak < 1.0);
+    }
+
+    std::ifstream artifactStream(std::filesystem::path { REVERB_MEASUREMENTS_DIR }
+        / "reverse-cosmic-shimmer-v1.json", std::ios::binary);
+    REQUIRE(artifactStream.good());
+    const auto artifact = nlohmann::json::parse(std::string {
+        std::istreambuf_iterator<char> { artifactStream }, std::istreambuf_iterator<char> {} });
+    const auto generated = nlohmann::json::parse(
+        reverb::render::writeReverseCosmicShimmerValidationJson(report));
+    REQUIRE(generated == artifact);
 }

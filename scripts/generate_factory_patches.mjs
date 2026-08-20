@@ -295,6 +295,23 @@ const catalog = {
         description: 'Generated from the project-authored public-primitives split-feedback octave topology; not a reconstruction of a proprietary shimmer algorithm.',
       },
     },
+    {
+      id: 'reverse-cosmic-shimmer',
+      family: 'reverse-cosmic-shimmer',
+      status: 'complete',
+      document: {
+        kind: 'checked-in-json',
+        path: 'factory-patches/reverse-cosmic-shimmer.rvp.json',
+        schemaVersion: 2,
+        engineVersion: '0.1',
+      },
+      license: { expression: 'AGPL-3.0-only', file: 'LICENSE' },
+      provenance: {
+        kind: 'project-authored-generated',
+        source: 'src/graph/Source/ReverseCosmicShimmerGraph.cpp',
+        description: 'Generated from the project-authored public-primitives causal-rise and dual reverse-grain topology; behavioral synthesis, not a reconstruction of a proprietary algorithm or preset.',
+      },
+    },
   ],
 };
 
@@ -333,3 +350,9 @@ const splitShimmerFactoryBytes = await readFile(splitShimmerFactoryPath);
 const splitShimmerFactoryHash = createHash('sha256').update(splitShimmerFactoryBytes).digest('hex');
 if (splitShimmerFactoryHash !== '4aea9287200d5c585d0e0a982e3bc7114b2bbc8b43e1fabd7bfafd66dbddd9ff')
   throw new Error('split-feedback-shimmer.rvp.json is stale; run .\\scripts\\generate_split_feedback_shimmer_factory.ps1 -Configuration Release');
+
+const reverseCosmicFactoryPath = resolve(outputDirectory, 'reverse-cosmic-shimmer.rvp.json');
+const reverseCosmicFactoryBytes = await readFile(reverseCosmicFactoryPath);
+const reverseCosmicFactoryHash = createHash('sha256').update(reverseCosmicFactoryBytes).digest('hex');
+if (reverseCosmicFactoryHash !== '07c1e4376a9f6e2b61cb7369799457c8e6b5f56be4d172dca5637ba198724e04')
+  throw new Error('reverse-cosmic-shimmer.rvp.json is stale; run .\\scripts\\generate_reverse_cosmic_shimmer_factory.ps1 -Configuration Release');

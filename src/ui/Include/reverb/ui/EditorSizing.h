@@ -12,10 +12,11 @@ struct EditorSize {
 };
 
 inline EditorSize preferredEditorSize(
-    const bool, const int, const int)
+    const bool standalone, const int, const int)
 {
     constexpr EditorSize hostedPreferred { 1280, 800 };
-    return hostedPreferred;
+    constexpr EditorSize standalonePreferred { 1200, 720 };
+    return standalone ? standalonePreferred : hostedPreferred;
 }
 
 } // namespace reverb::ui

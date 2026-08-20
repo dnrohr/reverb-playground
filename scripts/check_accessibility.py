@@ -76,10 +76,13 @@ def check_contract(styles: str, app: str, editor_shell: str, plugin_editor: str)
     for token in (
         "preferredEditorSize(",
         "juce::StandalonePluginHolder::getInstance() != nullptr",
-        "window->setFullScreen(true)",
+        "setSize(initial.width, initial.height);",
     ):
         if token not in plugin_editor:
-            failures.append(f"PluginEditor.cpp: missing work-area sizing contract {token!r}")
+            failures.append(f"PluginEditor.cpp: missing bounded initial sizing contract {token!r}")
+    for token in ("max-width: 100vw", "grid-template-columns: minmax(0, 1fr)"):
+        if token not in styles:
+            failures.append(f"styles.css: missing viewport clamp contract {token!r}")
     return failures
 
 

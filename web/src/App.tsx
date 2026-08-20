@@ -42,6 +42,7 @@ import { gravityMeasuredReference } from './gravityReference';
 import { PitchShiftVisualization } from './PitchShiftVisualization';
 import { parallelShimmerBranch, parallelShimmerTeaching } from './parallelShimmerTeaching';
 import { decorateSplitShimmerFocus, splitFeedbackShimmerTeaching, splitShimmerLoopKind, type SplitShimmerLoopFocus } from './splitFeedbackShimmerTeaching';
+import { decorateReverseCosmicFocus, reverseCosmicShimmerTeaching, type ReverseCosmicFocus } from './reverseCosmicShimmerTeaching';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -115,6 +116,25 @@ function SplitFeedbackShimmerTeaching({ focus, onFocus }: {
       </li>)}</ol>
       <p>{splitFeedbackShimmerTeaching.evidence}</p>
       <small>{splitFeedbackShimmerTeaching.boundary}</small>
+    </section>
+  );
+}
+
+function ReverseCosmicShimmerTeaching({ focus, onFocus }: {
+  focus: ReverseCosmicFocus; onFocus: (focus: ReverseCosmicFocus) => void;
+}) {
+  return (
+    <section className="reverse-cosmic-teaching" aria-label="Reverse Cosmic Shimmer signal-path teaching">
+      <header><span>{reverseCosmicShimmerTeaching.title}</span><strong>{reverseCosmicShimmerTeaching.method}</strong></header>
+      <div className="reverse-cosmic-focus" role="group" aria-label="Highlight Reverse Cosmic Shimmer path">
+        {(['rise', 'grains', 'feedback', 'motion'] as const).map((id) => <button type="button" key={id}
+          className={focus === id ? 'is-active' : ''} aria-pressed={focus === id} onClick={() => onFocus(id)}>
+          {id === 'rise' ? 'CAUSAL RISE' : id === 'grains' ? 'REVERSE GRAINS' : id === 'feedback' ? 'DARK RETURNS' : 'STEREO MOTION'}
+        </button>)}
+      </div>
+      <p className="reverse-cosmic-path-copy">{reverseCosmicShimmerTeaching[focus]}</p>
+      <p>{reverseCosmicShimmerTeaching.evidence}</p>
+      <small>{reverseCosmicShimmerTeaching.boundary}</small>
     </section>
   );
 }
@@ -363,6 +383,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [pendingConnection, setPendingConnection] = useState<Connection | null>(null);
   const [activeLoopIndex, setActiveLoopIndex] = useState(0);
   const [splitLoopFocus, setSplitLoopFocus] = useState<SplitShimmerLoopFocus>('shifted');
+  const [reverseCosmicFocus, setReverseCosmicFocus] = useState<ReverseCosmicFocus>('grains');
   const [responseCapture, setResponseCapture] = useState<{
     capture: ImpulseCaptureResult;
     patchId: TeachingPatchId;
@@ -404,7 +425,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     ? decorateSplitShimmerFocus(loopDecoratedGraph.nodes, loopDecoratedGraph.edges, splitLoopFocus)
     : loopDecoratedGraph,
   [activePatchId, loopDecoratedGraph, splitLoopFocus, teachingEnabled]);
-  const safetyDecoratedGraph = useMemo(() => decorateRunawayFeedbackLoop(splitFocusedGraph.nodes, splitFocusedGraph.edges, runawayLoopInspection), [runawayLoopInspection, splitFocusedGraph]);
+  const reverseCosmicFocusedGraph = useMemo(() => activePatchId === 'reverse-cosmic-shimmer' && teachingEnabled
+    ? decorateReverseCosmicFocus(splitFocusedGraph.nodes, splitFocusedGraph.edges, reverseCosmicFocus)
+    : splitFocusedGraph,
+  [activePatchId, reverseCosmicFocus, splitFocusedGraph, teachingEnabled]);
+  const safetyDecoratedGraph = useMemo(() => decorateRunawayFeedbackLoop(reverseCosmicFocusedGraph.nodes, reverseCosmicFocusedGraph.edges, runawayLoopInspection), [reverseCosmicFocusedGraph, runawayLoopInspection]);
   const energyDecoratedGraph = useMemo(() => decorateEnergy(safetyDecoratedGraph.nodes, safetyDecoratedGraph.edges, energyLevels), [energyLevels, safetyDecoratedGraph]);
   const selectedMappingRange = useMemo(() => {
     if (selectedNode?.data.type !== 'control-map') return null;
@@ -657,6 +682,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       setPendingConnection(null);
       setActivePatchId(id);
       if (id === 'split-feedback-shimmer') setSplitLoopFocus('shifted');
+      if (id === 'reverse-cosmic-shimmer') setReverseCosmicFocus('grains');
       setComparisonPatchId((current) => comparisonPatchAfterSelection(id, current));
       const description = factoryPatchDescription(id);
       setFileStatus({ kind: 'ok', message: `LOADED FACTORY / ${description.label.toUpperCase()}` });
@@ -808,6 +834,15 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
             <button type="button" aria-pressed={activePatchId === comparisonPatchId} onClick={() => void selectFactoryPatch(comparisonPatchId)}>
               B / {comparisonPatchLabel(comparisonPatchId)}
             </button>
+          </div>
+          <div className="comparison-switch comparison-four" role="group" aria-label="Compare cosmic and shimmer designs">
+            {([
+              ['barr-reference', 'BARR'],
+              ['modulated-cosmic-reverse', 'COSMIC REV'],
+              ['split-feedback-shimmer', 'FB SHIMMER'],
+              ['reverse-cosmic-shimmer', 'REV COSMIC'],
+            ] as const).map(([id, label]) => <button type="button" key={id} aria-pressed={activePatchId === id}
+              onClick={() => void selectFactoryPatch(id)}>{label}</button>)}
           </div>
           <button className="energy-toggle" type="button" aria-pressed={energyEnabled} disabled={reducedMotion} onClick={() => setEnergyEnabled((value) => !value)} title={reducedMotion ? 'Disabled by the operating-system reduced-motion preference' : 'Toggle measured node and cable energy'}>
             ENERGY {reducedMotion ? 'REDUCED' : energyEnabled ? 'ON' : 'OFF'}
@@ -969,6 +1004,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           <div className="pane-heading"><span>INSPECTOR</span><button className="teaching-toggle" type="button" aria-pressed={teachingEnabled} title="Toggle contextual cards and response architecture overlays" onClick={toggleTeaching}>LEARN {teachingEnabled ? 'ON' : 'OFF'}</button></div>
           {activePatchId === 'safe-parallel-shimmer' && teachingEnabled ? <ParallelShimmerTeaching selectedNodeId={selectedNode?.id} /> : null}
           {activePatchId === 'split-feedback-shimmer' && teachingEnabled ? <SplitFeedbackShimmerTeaching focus={splitLoopFocus} onFocus={setSplitLoopFocus} /> : null}
+          {activePatchId === 'reverse-cosmic-shimmer' && teachingEnabled ? <ReverseCosmicShimmerTeaching focus={reverseCosmicFocus} onFocus={setReverseCosmicFocus} /> : null}
           {selectedNode ? (
             <div className="inspector-content" key={selectedNode.id}>
               <div className="selection-kicker">SELECTED BLOCK</div>

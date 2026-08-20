@@ -8,8 +8,9 @@ import cosmicReversePatch from '../../factory-patches/modulated-cosmic-reverse.r
 import gravityDiffusionPatch from '../../factory-patches/gravity-diffusion.rvp.json?raw';
 import safeParallelShimmerPatch from '../../factory-patches/safe-parallel-shimmer.rvp.json?raw';
 import splitFeedbackShimmerPatch from '../../factory-patches/split-feedback-shimmer.rvp.json?raw';
+import reverseCosmicShimmerPatch from '../../factory-patches/reverse-cosmic-shimmer.rvp.json?raw';
 
-export type FactoryPatchId = 'barr-reference' | 'causal-reverse-envelope' | 'level-gated-room' | 'modulated-cosmic-reverse' | 'gravity-diffusion' | 'safe-parallel-shimmer' | 'split-feedback-shimmer';
+export type FactoryPatchId = 'barr-reference' | 'causal-reverse-envelope' | 'level-gated-room' | 'modulated-cosmic-reverse' | 'gravity-diffusion' | 'safe-parallel-shimmer' | 'split-feedback-shimmer' | 'reverse-cosmic-shimmer';
 export type ComparisonPatchId = Exclude<FactoryPatchId, 'barr-reference'>;
 
 export interface FactoryPatchDescription {
@@ -76,6 +77,13 @@ export const factoryPatches: readonly FactoryPatchDescription[] = [
     filename: 'split-feedback-shimmer.rvp.json',
     summary: 'Independent normal and +12-semitone returns build a bounded octave staircase',
   },
+  {
+    id: 'reverse-cosmic-shimmer',
+    label: 'Reverse Cosmic Shimmer',
+    graphName: 'REVERSE-COSMIC-SHIMMER.graph',
+    filename: 'reverse-cosmic-shimmer.rvp.json',
+    summary: 'Causal rise enters dark normal and paired reverse-octave feedback paths',
+  },
 ] as const;
 
 const rawPatches: Partial<Record<FactoryPatchId, string>> = {
@@ -85,6 +93,7 @@ const rawPatches: Partial<Record<FactoryPatchId, string>> = {
   'gravity-diffusion': gravityDiffusionPatch,
   'safe-parallel-shimmer': safeParallelShimmerPatch,
   'split-feedback-shimmer': splitFeedbackShimmerPatch,
+  'reverse-cosmic-shimmer': reverseCosmicShimmerPatch,
 };
 
 export function factoryPatchDescription(id: FactoryPatchId): FactoryPatchDescription {
@@ -103,6 +112,7 @@ export function comparisonPatchLabel(id: ComparisonPatchId): string {
     case 'gravity-diffusion': return 'GRAVITY';
     case 'safe-parallel-shimmer': return 'PAR SHIMMER';
     case 'split-feedback-shimmer': return 'FB SHIMMER';
+    case 'reverse-cosmic-shimmer': return 'REV COSMIC';
   }
 }
 

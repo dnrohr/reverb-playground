@@ -70,3 +70,9 @@ add_test(
     NAME "Split Feedback Shimmer validation CLI writes measurements"
     COMMAND reverb_split_feedback_shimmer_validation_cli
         --output ${CMAKE_CURRENT_BINARY_DIR}/split-feedback-shimmer-validation-smoke.json)
+
+add_test(
+    NAME "Reverse Cosmic Shimmer validation CLI writes fixtures"
+    COMMAND reverb_reverse_cosmic_shimmer_validation_cli
+        --output-directory ${CMAKE_CURRENT_BINARY_DIR}/reverse-cosmic-shimmer-validation-smoke
+        --report ${CMAKE_CURRENT_BINARY_DIR}/reverse-cosmic-shimmer-validation-smoke.json)
