@@ -50,7 +50,10 @@ inline constexpr double maximumEqualPowerOutputMagnitude = 1.414'214;
 [[nodiscard]] inline std::size_t preparedStorageSamples(const double sampleRate) noexcept
 {
     const auto latency = reportedLatencySamples(sampleRate);
-    return latency == 0 ? 0 : latency + 2;
+    if (latency == 0) return 0;
+    const auto excursion = static_cast<std::size_t>(std::ceil(
+        maximumReadExcursionMilliseconds() * sampleRate / 1'000.0));
+    return latency + excursion + 2;
 }
 
 [[nodiscard]] inline std::size_t preparedStorageBytes(const double sampleRate) noexcept

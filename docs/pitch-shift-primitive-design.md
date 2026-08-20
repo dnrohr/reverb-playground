@@ -6,8 +6,9 @@ is one **mono input to one mono output** dual-read-head granular processor. It
 does not conceal a reverb, stereoizer, feedback path, dry mix, or factory-only
 behavior. A stereo construction uses two visible blocks and two mono cables.
 
-This document is a design contract for M10.2-M10.4. It does not claim that the
-DSP or editor block exists yet.
+This document is the contract for M10.2-M10.4. M10.2 implements the prepared
+mono DSP as `reverb::dsp::PitchShift`; graph/runtime/editor exposure remains
+deferred to M10.3.
 
 ## Parameters and units
 
@@ -64,27 +65,31 @@ For sample rate `Fs`, the mono block reports:
 
 ```text
 latencySamples = ceil(0.600 * Fs) + 2
-ringSamples    = latencySamples + 2
+excursionSamples = ceil(0.600 * Fs)
+ringSamples    = latencySamples + excursionSamples + 2
 ringBytes      = ringSamples * sizeof(float)
 ```
 
+The reported latency is the newest legal read. A head then moves up to 600 ms
+farther into history, so the ring must cover both quantities; the original
+M10.1 draft counted only one and was corrected during M10.2 implementation.
 The four total guard samples cover the linear interpolator at both ends of the
-oldest legal read. The input ring is shared by both heads and by old/new head
-state during parameter crossfades; a parameter transition does not allocate or
+legal range. The input ring is shared by both heads and by old/new head state
+during parameter crossfades; a parameter transition does not allocate or
 double the audio history.
 
 | Rate | Reported latency | Ring allocation |
 |---:|---:|---:|
-| 44.1 kHz | `26,462 samples` | `26,464 samples / 105,856 bytes` |
-| 48 kHz | `28,802 samples` | `28,804 samples / 115,216 bytes` |
-| 96 kHz | `57,602 samples` | `57,604 samples / 230,416 bytes` |
-| 192 kHz maximum | `115,202 samples` | `115,204 samples / 460,816 bytes` |
+| 44.1 kHz | `26,462 samples` | `52,924 samples / 211,696 bytes` |
+| 48 kHz | `28,802 samples` | `57,604 samples / 230,416 bytes` |
+| 96 kHz | `57,602 samples` | `115,204 samples / 460,816 bytes` |
+| 192 kHz maximum | `115,202 samples` | `230,404 samples / 921,616 bytes` |
 
 Preparation accepts finite rates from 22.05 through 192 kHz. The qualified
 audio fixtures are 44.1, 48, and 96 kHz. An unsupported rate or an allocation
 that would exceed the graph budget fails before publication and leaves the
 last valid runtime audible. During the existing two-runtime topology crossfade,
-one maximum-rate Pitch Shift contributes at most `921,632` ring bytes across
+one maximum-rate Pitch Shift contributes at most `1,843,232` ring bytes across
 both runtimes.
 
 Pitch Shift latency participates in graph latency analysis. Parallel dry or
@@ -167,9 +172,40 @@ M10.4 must exercise forward and reverse grains in a delayed feedback harness
 with silence, impulse, bounded noise, continuous edits, and every qualified
 sample rate before a shimmer factory patch can ship.
 
+## M10.2 implementation
+
+`PitchShift::prepare` either owns the exact ring allocation or accepts an
+exactly sized caller-owned span. Both paths reject non-finite or unsupported
+sample rates and mismatched storage before processing. `process`, `reset`,
+`setParameters`, and `settleParameters` are `noexcept` and do not allocate,
+resize, lock, log, or discover topology.
+
+The two heads are one half-cycle apart. Each head follows the specified delay
+slope, uses linear interpolation, and reaches zero window contribution when its
+read ramp wraps. The overlap control narrows or widens a sine/cosine
+equal-power handoff around the two crossover points. A fixed `1/sqrt(2)`
+headroom factor keeps simultaneous coherent heads and old/new state transitions
+inside the documented output ceiling without a signal-dependent normalizer.
+
+The prepared implementation now has executable checks for:
+
+- `+12` and `-12 st` octave identity using a phase-coherent 400 Hz fixture at
+  44.1, 48, and 96 kHz;
+- exact silence, bounded alternating input, every parameter endpoint, both
+  directions, and caller-owned canaries around the prepared ring;
+- no impulse output before reported latency;
+- bit-identical reset/re-render behavior and a complete forward/downward to
+  reverse/upward parameter transition;
+- an adjacent-sample ceiling below `0.25` across grain handoffs and the
+  documented 20 ms transition.
+
+The phase-coherent tone is intentionally a narrow M10.2 identity fixture.
+M10.4 still owns broad tone/chord spectra, sideband and alias-energy reporting,
+CPU measurements, and delayed-feedback safety evidence.
+
 ## Deferred implementation details
 
-M10.1 does not choose a visual animation style, tune a shimmer sound, or claim
-measured CPU/aliasing performance. M10.2 implements the prepared mono DSP;
-M10.3 adds schema/runtime/editor integration and honest visualization; M10.4
-records spectral, latency, CPU, storage, aliasing, and feedback-safety evidence.
+M10.1-M10.2 do not choose a visual animation style, tune a shimmer sound, or
+claim measured CPU/aliasing performance. M10.3 adds schema/runtime/editor
+integration and honest visualization; M10.4 records broad spectral, latency,
+CPU, storage, aliasing, and feedback-safety evidence.

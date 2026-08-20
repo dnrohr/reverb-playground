@@ -25,7 +25,7 @@ TEST_CASE("Pitch shift fixed latency and storage cover the worst reverse grain")
     using namespace reverb::dsp::pitch_shift;
     REQUIRE(maximumReadExcursionMilliseconds() == Catch::Approx(600.0));
     const std::array expectedLatency { 26'462ULL, 28'802ULL, 57'602ULL };
-    const std::array expectedStorage { 26'464ULL, 28'804ULL, 57'604ULL };
+    const std::array expectedStorage { 52'924ULL, 57'604ULL, 115'204ULL };
     for (std::size_t index = 0; index < qualificationSampleRates.size(); ++index) {
         CAPTURE(qualificationSampleRates[index]);
         REQUIRE(reportedLatencySamples(qualificationSampleRates[index]) == expectedLatency[index]);
@@ -33,8 +33,8 @@ TEST_CASE("Pitch shift fixed latency and storage cover the worst reverse grain")
         REQUIRE(preparedStorageBytes(qualificationSampleRates[index]) == expectedStorage[index] * sizeof(float));
     }
     REQUIRE(reportedLatencySamples(maximumPreparationSampleRate) == 115'202);
-    REQUIRE(preparedStorageSamples(maximumPreparationSampleRate) == 115'204);
-    REQUIRE(preparedStorageBytes(maximumPreparationSampleRate) == 460'816);
+    REQUIRE(preparedStorageSamples(maximumPreparationSampleRate) == 230'404);
+    REQUIRE(preparedStorageBytes(maximumPreparationSampleRate) == 921'616);
     REQUIRE(preparedStorageSamples(0.0) == 0);
     REQUIRE(preparedStorageSamples(std::nan("")) == 0);
 }

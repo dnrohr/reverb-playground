@@ -11,6 +11,7 @@ add_library(reverb_dsp STATIC
     Source/LiveReferenceHarness.cpp
     Source/NumericalSafetyGuard.cpp
     Source/OnePoleLowPass.cpp
+    Source/PitchShift.cpp
     Source/RuntimeDiagnostics.cpp
     Source/Sum.cpp)
 

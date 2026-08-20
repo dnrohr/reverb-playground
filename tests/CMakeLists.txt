@@ -20,6 +20,7 @@ add_executable(reverb_tests
     RuntimeSnapshotTests.cpp
     NumericalSafetyGuardTests.cpp
     PitchShiftContractTests.cpp
+    PitchShiftTests.cpp
     GraphDocumentTests.cpp
     HostPatchStateTests.cpp
     PluginHostStateTests.cpp)
