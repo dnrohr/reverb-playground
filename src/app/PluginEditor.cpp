@@ -77,6 +77,18 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
           [&processor] { return processor.audioFileTransportJson(); },
           [&processor](const bool processed) { processor.setProcessedAudition(processed); },
           [&processor] { return processor.isProcessedAudition(); },
+          [&processor](const juce::File& destination, const int mode, const bool overwriteConfirmed) {
+              std::string error;
+              static_cast<void>(processor.startProcessedFileExport(
+                  destination,
+                  mode == 0 ? reverb::render::FileExportMode::wetOnly
+                            : reverb::render::FileExportMode::auditionMix,
+                  overwriteConfirmed,
+                  error));
+              return juce::String::fromUTF8(error.data(), static_cast<int>(error.size()));
+          },
+          [&processor] { processor.cancelProcessedFileExport(); },
+          [&processor] { return processor.processedFileExportJson(); },
       })
 {
     addAndMakeVisible(shell_);

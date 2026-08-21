@@ -70,7 +70,7 @@ Last updated: 2026-08-21
 | M14.1 Specify source, transport, and real-time boundaries | Complete | Three-mode source router; mono/stereo policy; prepared worker/ring ownership; deterministic transport/resampling/underrun/device/topology rules; patch/VST3 privacy boundary |
 | M14.2 Implement the prepared audio-file source | Complete | WAV/AIFF/FLAC worker-owned read-ahead transport with deterministic looping/resampling, bounded callback reads, underrun diagnostics, graph routing, and safety tests |
 | M14.3 Add the standalone audition deck | Complete | Standalone-only load/drop deck, stereo waveform, transport/loop controls, 10 ms exclusive source switching, processed/dry comparison, accessibility, and UI evidence |
-| M14.4 Add deterministic processed-file export | Planned | Wet/mix WAV export through the offline graph runtime with bounded tails, cancellation, and atomic output |
+| M14.4 Add deterministic processed-file export | Complete | Worker-owned Wet Only/Audition Mix PCM24 export with 48 kHz resampling, bounded tail, progress/cancel, safety failure, and atomic output |
 | M14.5 Validate and package the audition workflow | Planned | Representative content matrix, restart/recovery, VST3 compatibility, documentation, package, and CI evidence |
 
 ## M0.2 verification
@@ -1129,3 +1129,29 @@ Results:
   loaded and looping screenshots plus a workflow video. The inspected 1200×720
   content fills the DPI-aware standalone window with both editor sidebars
   reachable.
+
+## M14.4 verification
+
+- The standalone exports the loaded source through a fresh authoritative graph
+  runtime in fixed 256-frame blocks. Wet Only writes graph output; Audition Mix
+  writes a documented 50/50 dry/processed blend, and both capture Master
+  Audition Gain when the job begins.
+- Output is deterministic stereo 24-bit PCM WAV at 48 kHz. A checked 44.1 kHz
+  source proves prepared conversion, stereo metadata, full-file loop-disabled
+  rendering, and byte-identical repeated Wet Only files; Audition Mix is proven
+  distinct.
+- Tail rendering observes at least two seconds, then requires 500 continuous
+  milliseconds below -80 dBFS, with a default hard ten-second ceiling. Tests
+  prove the declared lower/upper tail frame bounds.
+- Export owns its worker, reports atomic progress, supports cancellation, and
+  writes a sibling partial file. Cancellation, invalid destinations, compile or
+  write failure, and non-finite/unsafe output publish no partial destination.
+  Existing files remain unchanged without confirmation; confirmed replacement
+  happens only after the temporary WAV is complete.
+- Processor integration tests prove the current graph/source can export and that
+  destination, progress, and job state never enter patch or VST3 host state.
+  The renderer does not use the live ring, device, or callback.
+- [Processed-file export documentation](processed-file-export.md) records mode,
+  format, resampling, tail, safety, cancellation, and publication semantics.
+  Reviewed standalone evidence is
+  [`artifacts/ui/m14-4-processed-export/01-export-ready.png`](../artifacts/ui/m14-4-processed-export/01-export-ready.png).

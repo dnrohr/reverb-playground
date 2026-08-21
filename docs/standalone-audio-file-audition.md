@@ -53,8 +53,13 @@ session-only standalone data. They are not stored in patches, clipboard/history,
 factory files, or VST3 state. Restarting the standalone intentionally starts in
 Live Input without reopening a local path.
 
-## Current boundary
+## Processed export
 
-M14.3 is an audition surface, not a file renderer. M14.4 adds deterministic
-processed WAV export. Reverse playback and arbitrary source reversal are not
-part of the transport; reverse-style factory graphs remain causal buffered DSP.
+Choose **Wet Only** or **Audition Mix**, then use **Export WAV…**. The standalone
+writes deterministic 48 kHz stereo 24-bit PCM through a temporary file, shows
+progress, and offers cancellation. Audition Mix is a 50/50 dry/processed blend;
+Wet Only contains only graph output. See [Processed-file export](processed-file-export.md)
+for tail, safety, overwrite, and failure behavior.
+
+Reverse playback and arbitrary source reversal are not part of the transport;
+reverse-style factory graphs remain causal buffered DSP.

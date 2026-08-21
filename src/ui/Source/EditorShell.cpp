@@ -62,9 +62,10 @@ EditorShell::EditorShell(Callbacks callbacks)
     gain_.onValueChange = [this] { callbacks_.setMasterGain(static_cast<float>(gain_.getValue())); };
     muteButton_.setToggleState(callbacks_.emergencyMuted(), juce::dontSendNotification);
 
-    const std::array<juce::Component*, 11> auditionComponents {
+    const std::array<juce::Component*, 14> auditionComponents {
         &liveSourceButton_, &fileSourceButton_, &fileButton_, &filePlayButton_, &fileStopButton_,
         &impulseSourceButton_, &loopButton_, &processedButton_, &fileLabel_, &transportLabel_, &seek_,
+        &exportMode_, &exportButton_, &exportProgressBar_,
     };
     for (auto* component : auditionComponents) {
         addAndMakeVisible(component);
@@ -107,6 +108,18 @@ EditorShell::EditorShell(Callbacks callbacks)
     processedButton_.onClick = [this] {
         callbacks_.setProcessedAudition(processedButton_.getToggleState());
         processedButton_.setButtonText(processedButton_.getToggleState() ? "PROCESSED" : "DRY BYPASS");
+    };
+    exportMode_.addItem("WET ONLY", 1);
+    exportMode_.addItem("AUDITION MIX", 2);
+    exportMode_.setSelectedId(1, juce::dontSendNotification);
+    exportMode_.setTitle("Processed-file export mode");
+    exportButton_.setColour(juce::TextButton::buttonColourId, amber.darker(0.55F));
+    exportButton_.onClick = [this] {
+        const auto status = juce::JSON::parse(callbacks_.processedFileExportJson());
+        if (status.getProperty("state", "").toString() == "rendering")
+            callbacks_.cancelProcessedFileExport();
+        else
+            chooseExportFile();
     };
     seek_.setSliderStyle(juce::Slider::LinearHorizontal);
     seek_.setTitle("Audio-file position");
@@ -289,6 +302,10 @@ void EditorShell::resized()
         fileStopButton_.setBounds(sourceRow.removeFromLeft(65));
         loopButton_.setBounds(sourceRow.removeFromLeft(65));
         processedButton_.setBounds(sourceRow.removeFromLeft(110));
+        sourceRow.removeFromLeft(8);
+        exportMode_.setBounds(sourceRow.removeFromLeft(125));
+        sourceRow.removeFromLeft(8);
+        exportButton_.setBounds(sourceRow.removeFromLeft(115));
         auto waveformRow = controls.removeFromTop(46);
         waveformBounds_ = waveformRow.removeFromLeft(
             std::max(240, static_cast<int>(std::round(waveformRow.getWidth() * 0.68))));
@@ -298,7 +315,10 @@ void EditorShell::resized()
         auto transportRow = controls.removeFromTop(20);
         seek_.setBounds(transportRow.removeFromLeft(
             std::max(240, static_cast<int>(std::round(transportRow.getWidth() * 0.68)))));
-        loopRange_.setBounds(transportRow.reduced(8, 0));
+        auto exportRow = transportRow.reduced(8, 0);
+        loopRange_.setBounds(exportRow.removeFromLeft(static_cast<int>(exportRow.getWidth() * 0.58)));
+        exportRow.removeFromLeft(8);
+        exportProgressBar_.setBounds(exportRow);
     } else {
         waveformBounds_ = {};
     }
@@ -316,6 +336,28 @@ void EditorShell::chooseAudioFile()
             const auto file = chooser.getResult();
             if (file.existsAsFile()) loadAudioFile(file);
             fileChooser_.reset();
+        });
+}
+
+void EditorShell::chooseExportFile()
+{
+    if (fileFrameCount_ <= 0) return;
+    exportChooser_ = std::make_unique<juce::FileChooser>(
+        "Export processed audio", juce::File {}, "*.wav");
+    exportChooser_->launchAsync(juce::FileBrowserComponent::saveMode
+            | juce::FileBrowserComponent::canSelectFiles
+            | juce::FileBrowserComponent::warnAboutOverwriting,
+        [this](const juce::FileChooser& chooser) {
+            auto destination = chooser.getResult();
+            if (destination != juce::File {}) {
+                if (destination.getFileExtension().toLowerCase() != ".wav")
+                    destination = destination.withFileExtension(".wav");
+                const auto overwriteConfirmed = destination.existsAsFile();
+                const auto error = callbacks_.startProcessedFileExport(
+                    destination, exportMode_.getSelectedId() - 1, overwriteConfirmed);
+                if (error.isNotEmpty()) status_.setText(error, juce::dontSendNotification);
+            }
+            exportChooser_.reset();
         });
 }
 
@@ -409,6 +451,21 @@ void EditorShell::updateTransport()
         juce::dontSendNotification);
     processedButton_.setToggleState(callbacks_.isProcessedAudition(), juce::dontSendNotification);
     processedButton_.setButtonText(processedButton_.getToggleState() ? "PROCESSED" : "DRY BYPASS");
+    const auto exportStatus = juce::JSON::parse(callbacks_.processedFileExportJson());
+    const auto exportState = exportStatus.getProperty("state", "idle").toString();
+    exportProgress_ = static_cast<double>(exportStatus.getProperty("progress", 0.0));
+    exportButton_.setButtonText(exportState == "rendering" ? "CANCEL EXPORT" : "EXPORT WAV...");
+    exportMode_.setEnabled(exportState != "rendering");
+    if (exportState == "failed")
+        status_.setText(exportStatus.getProperty("error", "Export failed").toString(), juce::dontSendNotification);
+    else if (exportState == "complete")
+        exportProgressBar_.setTextToDisplay("EXPORTED "
+            + exportStatus.getProperty("destinationName", "").toString());
+    else if (exportState == "cancelled")
+        exportProgressBar_.setTextToDisplay("EXPORT CANCELLED");
+    else
+        exportProgressBar_.setTextToDisplay(exportState == "rendering"
+            ? "EXPORT " + juce::String(exportProgress_ * 100.0, 0) + "%" : "EXPORT READY");
     repaint(waveformBounds_);
 }
 

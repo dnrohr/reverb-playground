@@ -564,8 +564,10 @@ juce::String ReverbPlaygroundProcessor::audioFileTransportJson() const
 bool ReverbPlaygroundProcessor::loadAudioFile(const juce::File& file, std::string& error)
 {
     const auto loaded = audioFileSource_.loadFile(file, error);
-    if (loaded)
+    if (loaded) {
+        loadedAudioFile_ = file;
         auditionSourceMode_.store(reverb::audio::AuditionSourceMode::audioFile, std::memory_order_release);
+    }
     return loaded;
 }
 
@@ -630,6 +632,51 @@ bool ReverbPlaygroundProcessor::setAudioFileLoop(
     std::string& error)
 {
     return audioFileSource_.setLoop(enabled, startSourceFrame, endSourceFrame, error);
+}
+
+bool ReverbPlaygroundProcessor::startProcessedFileExport(
+    const juce::File& destination,
+    const reverb::render::FileExportMode mode,
+    const bool overwriteConfirmed,
+    std::string& error)
+{
+    const auto patch = hostPatchState_.document().value_or(reverb::graph::makeBarrReferenceGraph());
+    return fileExporter_.start({
+        .source = loadedAudioFile_,
+        .destination = destination,
+        .patch = patch,
+        .mode = mode,
+        .outputSampleRate = 48'000.0,
+        .auditionGain = static_cast<double>(masterGain()),
+        .maximumTailSeconds = 10.0,
+        .silenceThresholdDb = -80.0,
+        .overwriteConfirmed = overwriteConfirmed,
+    }, error);
+}
+
+void ReverbPlaygroundProcessor::cancelProcessedFileExport() noexcept
+{
+    fileExporter_.cancel();
+}
+
+juce::String ReverbPlaygroundProcessor::processedFileExportJson() const
+{
+    const auto snapshot = fileExporter_.snapshot();
+    const nlohmann::ordered_json json {
+        { "formatVersion", 1 },
+        { "state", reverb::render::fileExportStateName(snapshot.state) },
+        { "progress", snapshot.progress },
+        { "generation", snapshot.generation },
+        { "renderedFrames", snapshot.renderedFrames },
+        { "sourceFrames", snapshot.sourceFrames },
+        { "tailFrames", snapshot.tailFrames },
+        { "destinationName", snapshot.destinationName },
+        { "error", snapshot.error },
+        { "sampleRate", 48'000 },
+        { "bitsPerSample", 24 },
+    };
+    const auto text = json.dump();
+    return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
 }
 
 juce::String ReverbPlaygroundProcessor::publishGraphJson(const juce::String& patchJson)

@@ -16,6 +16,7 @@ add_executable(reverb_tests
     LiveReferenceHarnessTests.cpp
     OfflineRendererTests.cpp
     PreparedAudioFileSourceTests.cpp
+    ProcessedFileExporterTests.cpp
     ResponseMeasurementsTests.cpp
     RuntimeDiagnosticsTests.cpp
     RuntimeSnapshotTests.cpp

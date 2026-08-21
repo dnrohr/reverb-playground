@@ -7,6 +7,7 @@
 #include <reverb/dsp/NumericalSafetyGuard.h>
 #include <reverb/graph/AcyclicRuntime.h>
 #include <reverb/graph/HostPatchState.h>
+#include <reverb/render/ProcessedFileExporter.h>
 
 #include <atomic>
 #include <vector>
@@ -67,9 +68,15 @@ public:
     void stopAudioFile();
     bool seekAudioFile(std::int64_t sourceFrame, std::string& error);
     bool setAudioFileLoop(bool enabled, std::int64_t startSourceFrame, std::int64_t endSourceFrame, std::string& error);
+    bool startProcessedFileExport(const juce::File& destination, reverb::render::FileExportMode mode,
+        bool overwriteConfirmed, std::string& error);
+    void cancelProcessedFileExport() noexcept;
+    [[nodiscard]] juce::String processedFileExportJson() const;
 
 private:
     reverb::audio::PreparedAudioFileSource audioFileSource_;
+    reverb::render::ProcessedFileExporter fileExporter_;
+    juce::File loadedAudioFile_;
     reverb::dsp::LiveReferenceHarness harness_;
     reverb::graph::AcyclicRuntimeHost graphHost_;
     reverb::graph::HostPatchState hostPatchState_;

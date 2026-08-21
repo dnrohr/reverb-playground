@@ -32,6 +32,7 @@ target_link_libraries(ReverbPlayground
         reverb_audio
         reverb_dsp
         reverb_graph
+        reverb_render
         reverb_ui
         juce::juce_audio_utils
     PUBLIC

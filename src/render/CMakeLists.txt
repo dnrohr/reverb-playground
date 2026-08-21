@@ -3,6 +3,7 @@ add_library(reverb_render STATIC
     Source/GravityReference.cpp
     Source/OfflineRenderer.cpp
     Source/PitchShiftValidation.cpp
+    Source/ProcessedFileExporter.cpp
     Source/ResponseMeasurements.cpp
     Source/ReverseCosmicShimmerValidation.cpp
     Source/SplitFeedbackShimmerValidation.cpp
@@ -17,6 +18,7 @@ target_link_libraries(reverb_render
         reverb_project_options
         reverb_dsp
         reverb_graph
+        juce::juce_audio_formats
         nlohmann_json::nlohmann_json)
 
 set_target_properties(reverb_render PROPERTIES

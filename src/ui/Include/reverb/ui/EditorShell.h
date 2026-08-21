@@ -42,6 +42,9 @@ public:
         std::function<juce::String()> audioFileTransportJson;
         std::function<void(bool)> setProcessedAudition;
         std::function<bool()> isProcessedAudition;
+        std::function<juce::String(const juce::File&, int, bool)> startProcessedFileExport;
+        std::function<void()> cancelProcessedFileExport;
+        std::function<juce::String()> processedFileExportJson;
     };
 
     explicit EditorShell(Callbacks callbacks);
@@ -60,6 +63,7 @@ private:
     void loadAudioFile(const juce::File& file);
     void seekFromWaveform(float x);
     void updateTransport();
+    void chooseExportFile();
 
     Callbacks callbacks_;
     juce::Label status_;
@@ -77,14 +81,19 @@ private:
     juce::TextButton impulseSourceButton_ { "TEST IMPULSE" };
     juce::ToggleButton loopButton_ { "LOOP" };
     juce::ToggleButton processedButton_ { "PROCESSED" };
+    juce::ComboBox exportMode_;
+    juce::TextButton exportButton_ { "EXPORT WAV..." };
     juce::Label fileLabel_;
     juce::Label transportLabel_;
     juce::Slider seek_;
     juce::Slider loopRange_;
+    double exportProgress_ {};
+    juce::ProgressBar exportProgressBar_ { exportProgress_ };
     juce::AudioFormatManager formatManager_;
     juce::AudioThumbnailCache thumbnailCache_ { 5 };
     juce::AudioThumbnail thumbnail_ { 512, formatManager_, thumbnailCache_ };
     std::unique_ptr<juce::FileChooser> fileChooser_;
+    std::unique_ptr<juce::FileChooser> exportChooser_;
     std::unique_ptr<juce::WebBrowserComponent> browser_;
     juce::Rectangle<int> waveformBounds_;
     std::int64_t fileFrameCount_ {};

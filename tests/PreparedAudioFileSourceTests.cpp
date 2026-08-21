@@ -7,11 +7,13 @@
 #include <nlohmann/json.hpp>
 
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <memory>
 #include <limits>
 #include <span>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -389,4 +391,36 @@ TEST_CASE("Audition source switching is ten-millisecond click-safe and dry bypas
     processor.processBlock(buffer, midi);
     REQUIRE(buffer.getMagnitude(0, 0, buffer.getNumSamples()) == 0.0F);
     REQUIRE(processor.auditionSourceMode() == reverb::audio::AuditionSourceMode::testImpulse);
+}
+
+TEST_CASE("Plugin exports the loaded source without persisting export state")
+{
+    juce::WavAudioFormat wav;
+    AudioFixture fixture(wav, ".wav", 2, 44'100.0, 4'410, 24);
+    const auto destination = juce::File::getSpecialLocation(juce::File::tempDirectory)
+                                 .getNonexistentChildFile("reverb-plugin-export-" + juce::Uuid().toString(), ".wav", false);
+    ReverbPlaygroundProcessor processor;
+    processor.prepareToPlay(48'000.0, 128);
+    std::string error;
+    REQUIRE(processor.loadAudioFile(fixture.file(), error));
+    REQUIRE(processor.startProcessedFileExport(
+        destination, reverb::render::FileExportMode::wetOnly, false, error));
+
+    nlohmann::json status;
+    for (auto attempt = 0; attempt < 1'000; ++attempt) {
+        status = nlohmann::json::parse(processor.processedFileExportJson().toStdString());
+        if (status.at("state") != "rendering") break;
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    }
+    REQUIRE(status.at("state") == "complete");
+    REQUIRE(status.at("sampleRate") == 48'000);
+    REQUIRE(status.at("bitsPerSample") == 24);
+    REQUIRE(destination.existsAsFile());
+
+    juce::MemoryBlock state;
+    processor.getStateInformation(state);
+    const auto restored = juce::ValueTree::readFromData(state.getData(), state.getSize());
+    REQUIRE_FALSE(restored.toXmlString().contains(destination.getFullPathName()));
+    REQUIRE_FALSE(restored.hasProperty("fileExport"));
+    static_cast<void>(destination.deleteFile());
 }
