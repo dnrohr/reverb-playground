@@ -28,6 +28,7 @@ UI tasks require a current screenshot. Interactive, animated, audio-reactive, or
 | M11. Safe Parallel Shimmer | A non-recirculating octave branch adds a stable controllable halo | Build and audition a parallel +12-semitone reverb without cumulative pitch rise |
 | M12. Split-Feedback Shimmer | Independent normal and shifted feedback paths create controllable harmonic ascent | Hear successive octave energy build while both feedback paths remain visible and bounded |
 | M13. Reverse Cosmic Shimmer | Reverse grains, causal rise, modulation, and stereo diffusion form the flagship evolving shimmer | Audition and inspect a swelling, harmonically rising, darkened stereo space |
+| M14. Audio-file audition and export | The standalone app can play source material through any graph and render the result without requiring a DAW | Drop in a file, loop a passage, compare reverbs continuously, and export the processed result |
 
 ---
 
@@ -966,6 +967,78 @@ Acceptance criteria:
 Milestone exit criteria:
 
 - An external user can load a swelling, modulated, harmonically ascending stereo reverb; trace every causal, reverse-grain, feedback, damping, and modulation path; modify it safely; and reopen the same sound in supported formats.
+
+---
+
+## M14. Audio-file audition and export
+
+Goal: let a user evaluate and teach reverb designs with familiar source material in the standalone application, while retaining the VST3 as the production integration path and reusing the exact graph runtime for offline export.
+
+M14 is intentionally a compact audition deck, not a DAW. Recording, playlists, multitrack routing, time stretching, tempo synchronization, and destructive waveform editing are outside this milestone.
+
+### M14.1 Specify source, transport, and real-time boundaries
+
+Define how live input, a loaded audio file, and the existing test impulse feed the same stereo graph input without changing graph semantics or weakening the audio-thread contract.
+
+Acceptance criteria:
+
+- The design defines mutually exclusive Live Input, Audio File, and Test Impulse source modes and shows their relationship to graph input, audition gain, safety mute, inspection, and device output.
+- Mono files feed both graph input channels, stereo files preserve left/right identity, and files with more than two channels are rejected with an actionable explanation rather than silently downmixed.
+- Decode, disk access, waveform analysis, path handling, and buffer preparation are assigned outside the audio callback; the callback performs only bounded reads from prepared storage.
+- Sample-rate conversion, end-of-file behavior, looping, seeking, underflow, device-rate changes, and topology changes during playback have explicit deterministic policies.
+- File and transport state remain outside the patch schema; no audio content is embedded in patch or host state, and missing/moved files cannot invalidate a graph.
+
+### M14.2 Implement the prepared audio-file source
+
+Add a bounded stereo transport that streams supported files into the existing live graph runtime.
+
+Acceptance criteria:
+
+- WAV, AIFF, and FLAC files at representative integer and floating-point formats load through JUCE format readers, with clear unsupported/corrupt-file diagnostics.
+- Play, pause, stop, seek, and sample-bounded looping are deterministic across host block partitions and supported device sample rates.
+- Read-ahead and resampling are prepared off the audio thread; processing performs no allocation, blocking, locking, logging, decoding, filesystem access, or unbounded work.
+- Buffer underrun emits silence for the unavailable frames, increments a visible diagnostic, and cannot repeat stale samples or destabilize feedback processing.
+- Automated fixtures cover mono/stereo policy, resampling, start/end/loop boundaries, rapid transport edits, device-rate changes, reset, underrun, and numerical safety.
+
+### M14.3 Add the standalone audition deck
+
+Expose source selection and a deliberately small file transport without crowding the schematic editor.
+
+Acceptance criteria:
+
+- The standalone accepts file-picker and drag-and-drop loading and exposes file identity, duration, play/pause, stop, seek, loop enable/range, and an unclipped stereo waveform overview.
+- Live Input, Audio File, and Test Impulse are visibly distinct; switching sources is click-safe and never mixes an unexpected live input into file audition.
+- Dry bypass and processed audition are explicit, level changes remain bounded by Master Audition Gain and Emergency Mute, and file playback participates in existing energy, response, and safety diagnostics.
+- Factory/topology changes, continuous parameter edits, A/B comparison, and save/reload remain responsive while the file transport continues or stops according to the documented policy.
+- Keyboard access, contrast, non-color cues, reduced motion, and 100/125/150% Windows scaling pass; screenshots show loaded/looping states and a video demonstrates load, seek, loop, patch comparison, editing, and emergency mute.
+
+### M14.4 Add deterministic processed-file export
+
+Render a loaded source through the current graph to a new audio file without routing through a DAW or the physical audio device.
+
+Acceptance criteria:
+
+- Export offers explicit Wet Only and Audition Mix modes, preserves stereo output, and writes a documented WAV format without overwriting an existing file unless the user confirms.
+- Rendering uses the authoritative offline graph runtime and matches equivalent real-time block processing within a declared numerical tolerance.
+- Tail policy is explicit and bounded by user maximum length plus a silence threshold; delayed onset is not mistaken for completion, and runaway/non-finite output fails safely without publishing a partial destination file.
+- Work runs off the audio callback, reports progress, supports cancellation, and uses a temporary destination plus atomic finalization where the platform permits.
+- Deterministic fixtures cover source sample-rate conversion, loop-disabled full-file rendering, tail capture, cancellation, invalid destinations, safety failure, and repeated export hashes or sample comparisons.
+
+### M14.5 Validate and package the audition workflow
+
+Qualify the complete standalone workflow while proving that plugin input and project compatibility remain unchanged.
+
+Acceptance criteria:
+
+- Representative speech/percussion, sustained chord, and full-mix fixtures run through Barr, reverse, Gravity, parallel shimmer, split-feedback shimmer, and Reverse Cosmic Shimmer without crashes, data loss, dangerous output, or unbounded resource use.
+- Standalone restart, audio-device changes, missing/moved source files, graph save/reload, and processed export have documented and tested recovery behavior.
+- VST3 continues to consume host-provided stereo input without exposing standalone-only file transport or changing released patch/host-state compatibility.
+- User documentation explains when to use standalone file audition, offline export, live input, or the VST3 in a DAW and states supported formats and limitations.
+- Current screenshots/video, Windows package identity, local verification, and clean `main` CI pass before completion.
+
+Milestone exit criteria:
+
+- A user can open the standalone, load familiar mono or stereo source material, audition and compare any visible reverb graph safely, loop a useful passage, inspect behavior while editing, and export a deterministic processed stereo file without needing a DAW.
 
 ---
 

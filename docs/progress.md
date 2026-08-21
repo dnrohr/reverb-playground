@@ -1,6 +1,6 @@
 # Roadmap progress
 
-Last updated: 2026-08-20
+Last updated: 2026-08-21
 
 | Task | Status | Evidence |
 |---|---|---|
@@ -67,6 +67,11 @@ Last updated: 2026-08-20
 | M13.1 Add reverse-grain mode and stereo decorrelation | Complete | Explicit deterministic phase; causal reverse grains; near-zero paired correlation; transient-envelope report; compatibility; screenshots/video |
 | M13.2 Construct the cosmic shimmer topology | Complete | 45 public blocks; three-tap causal rise; dual dark reverse-octave returns; independent motion; bounded compatible stereo; multirate tests |
 | M13.3 Tune and publish Reverse Cosmic Shimmer | Complete | Eight-family catalog; nine multirate audio fixtures; causal rise/octave/stereo/decay report; four-way comparison; teaching; persistence/host restore; screenshots/video |
+| M14.1 Specify source, transport, and real-time boundaries | Planned | Source arbitration, channel policy, transport/resampling behavior, and audio-thread ownership contract |
+| M14.2 Implement the prepared audio-file source | Planned | WAV/AIFF/FLAC read-ahead transport with deterministic looping, resampling, underrun handling, and safety tests |
+| M14.3 Add the standalone audition deck | Planned | Drag/drop player, waveform/loop controls, safe source switching, accessibility, and UI evidence |
+| M14.4 Add deterministic processed-file export | Planned | Wet/mix WAV export through the offline graph runtime with bounded tails, cancellation, and atomic output |
+| M14.5 Validate and package the audition workflow | Planned | Representative content matrix, restart/recovery, VST3 compatibility, documentation, package, and CI evidence |
 
 ## M0.2 verification
 
