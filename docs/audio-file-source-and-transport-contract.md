@@ -194,3 +194,25 @@ The prepared source implementation must prove:
   or unbounded work; and
 - graph/persistence compatibility: the same patch and VST3 state bytes remain
   valid without any transport fields.
+
+## M14.2 implementation
+
+`reverb_audio` now owns `PreparedAudioFileSource`, a standalone-only stereo
+transport. A worker thread owns the JUCE format reader and resampler and fills
+a fixed two-second ring. At the maximum supported 192 kHz rate the ring and
+scratch storage remain below the declared 8 MiB ceiling. The callback-facing
+`process` operation is `noexcept` and is limited to zero-fill, bounded ring
+copies, atomic cursor publication, and atomic underrun diagnostics.
+
+The implementation accepts WAV, AIFF, and FLAC through JUCE readers, duplicates
+mono exactly, preserves stereo, rejects channel counts above two, and retains
+the previous valid generation after a failed load. Loop points and cursors use
+source frames. A five-millisecond equal-power splice joins loop boundaries;
+resampling happens before publication into the output-rate ring.
+
+The processor routes the selected file through the same graph, telemetry,
+master-gain, numerical-guard, and emergency-mute path as live input. Stop and
+seek request a graph signal-state reset without clearing the safety latch.
+File identity, path, source selection, cursor, and transport state remain absent
+from patch JSON and VST3 state. M14.3 owns source-switch crossfades and all
+visible transport/waveform controls.

@@ -68,7 +68,7 @@ Last updated: 2026-08-21
 | M13.2 Construct the cosmic shimmer topology | Complete | 45 public blocks; three-tap causal rise; dual dark reverse-octave returns; independent motion; bounded compatible stereo; multirate tests |
 | M13.3 Tune and publish Reverse Cosmic Shimmer | Complete | Eight-family catalog; nine multirate audio fixtures; causal rise/octave/stereo/decay report; four-way comparison; teaching; persistence/host restore; screenshots/video |
 | M14.1 Specify source, transport, and real-time boundaries | Complete | Three-mode source router; mono/stereo policy; prepared worker/ring ownership; deterministic transport/resampling/underrun/device/topology rules; patch/VST3 privacy boundary |
-| M14.2 Implement the prepared audio-file source | Planned | WAV/AIFF/FLAC read-ahead transport with deterministic looping, resampling, underrun handling, and safety tests |
+| M14.2 Implement the prepared audio-file source | Complete | WAV/AIFF/FLAC worker-owned read-ahead transport with deterministic looping/resampling, bounded callback reads, underrun diagnostics, graph routing, and safety tests |
 | M14.3 Add the standalone audition deck | Planned | Drag/drop player, waveform/loop controls, safe source switching, accessibility, and UI evidence |
 | M14.4 Add deterministic processed-file export | Planned | Wet/mix WAV export through the offline graph runtime with bounded tails, cancellation, and atomic output |
 | M14.5 Validate and package the audition workflow | Planned | Representative content matrix, restart/recovery, VST3 compatibility, documentation, package, and CI evidence |
@@ -1082,3 +1082,26 @@ Results:
 - File bytes, path, cursor, loop, waveform, source mode, and transport state are
   excluded from patch JSON, graph history, factory data, and VST3 host state.
   M14.1 changes no schema, DSP, runtime, UI, or package artifact.
+
+## M14.2 verification
+
+- `PreparedAudioFileSource` accepts integer and floating-point WAV, AIFF, and
+  FLAC fixtures; duplicates mono, preserves stereo, rejects more than two
+  channels, diagnoses corrupt input, and retains the last valid generation on
+  a failed replacement.
+- A worker-owned JUCE reader/resampler fills a fixed two-second stereo ring.
+  The `noexcept` callback operation performs bounded prepared reads and atomic
+  accounting only; the maximum prepared allocation is explicitly capped at
+  8 MiB.
+- Native tests prove identical 44.1-to-48 kHz output under 64-frame and mixed
+  17/111/29-frame partitions, source-frame seek/loop behavior, EOF tail,
+  pause/stop/reset, 96 kHz device reprepare, and 100 rapid transport edits.
+- Forced starvation emits only zeros, leaves the source cursor in place, and
+  advances monotonic event/frame counters. Non-finite decoded samples are
+  contained, while unsafe finite program levels still reach and trip the
+  existing processor numerical-safety latch.
+- Processor tests prove file audio reaches the authoritative graph and that
+  local file paths, source mode, and transport data do not enter patch or host
+  state. Stop/seek reset graph signal history without clearing the safety latch.
+- This task adds no visible controls; M14.3 owns the audition deck, click-safe
+  source switching, waveform, and UI evidence, so no screenshot or video is due.

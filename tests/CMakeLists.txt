@@ -15,6 +15,7 @@ add_executable(reverb_tests
     ImpulseCaptureTests.cpp
     LiveReferenceHarnessTests.cpp
     OfflineRendererTests.cpp
+    PreparedAudioFileSourceTests.cpp
     ResponseMeasurementsTests.cpp
     RuntimeDiagnosticsTests.cpp
     RuntimeSnapshotTests.cpp
@@ -32,6 +33,7 @@ add_executable(reverb_tests
 target_link_libraries(reverb_tests
     PRIVATE
         reverb_project_options
+        reverb_audio
         reverb_dsp
         reverb_graph
         reverb_render

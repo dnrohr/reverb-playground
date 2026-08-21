@@ -23,6 +23,7 @@ void ReverbPlaygroundProcessor::prepareToPlay(
 {
     harness_.prepare(sampleRate);
     const auto maximumBlockSize = static_cast<std::size_t>(std::max(1, maximumExpectedSamplesPerBlock));
+    audioFileSource_.prepare(sampleRate, maximumBlockSize);
     graphInputLeft_.assign(maximumBlockSize, 0.0F);
     graphInputRight_.assign(maximumBlockSize, 0.0F);
     graphLeftGuard_.prepare(sampleRate);
@@ -61,10 +62,32 @@ void ReverbPlaygroundProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
     }
 
     const auto sampleCount = static_cast<std::size_t>(buffer.getNumSamples());
-    const std::span<const float> inputLeft { buffer.getReadPointer(0), sampleCount };
-    const std::span<const float> inputRight { buffer.getReadPointer(1), sampleCount };
+    const std::span<const float> deviceInputLeft { buffer.getReadPointer(0), sampleCount };
+    const std::span<const float> deviceInputRight { buffer.getReadPointer(1), sampleCount };
     const std::span<float> outputLeft { buffer.getWritePointer(0), sampleCount };
     const std::span<float> outputRight { buffer.getWritePointer(1), sampleCount };
+    auto inputLeft = deviceInputLeft;
+    auto inputRight = deviceInputRight;
+    const auto sourceMode = auditionSourceMode_.load(std::memory_order_acquire);
+    if (sourceMode != reverb::audio::AuditionSourceMode::liveInput
+        && sampleCount <= graphInputLeft_.size()) {
+        const auto routedLeft = std::span<float>(graphInputLeft_).first(sampleCount);
+        const auto routedRight = std::span<float>(graphInputRight_).first(sampleCount);
+        if (sourceMode == reverb::audio::AuditionSourceMode::audioFile)
+            audioFileSource_.process(routedLeft, routedRight);
+        else {
+            std::ranges::fill(routedLeft, 0.0F);
+            std::ranges::fill(routedRight, 0.0F);
+        }
+        inputLeft = routedLeft;
+        inputRight = routedRight;
+    }
+    if (transportGraphResetPending_.exchange(false, std::memory_order_acq_rel)) {
+        harness_.resetSignalState();
+        graphHost_.resetActiveRuntimes();
+        graphLeftGuard_.reset();
+        graphRightGuard_.reset();
+    }
     if (!graphAudioEnabled_.load(std::memory_order_acquire) || !graphHost_.hasRuntime()) {
         harness_.process(inputLeft, inputRight, outputLeft, outputRight);
         return;
@@ -201,8 +224,10 @@ void ReverbPlaygroundProcessor::setStateInformation(const void* data, const int 
     }
 }
 
-void ReverbPlaygroundProcessor::triggerImpulse() noexcept
+void ReverbPlaygroundProcessor::triggerImpulse()
 {
+    auditionSourceMode_.store(reverb::audio::AuditionSourceMode::testImpulse, std::memory_order_release);
+    audioFileSource_.pause();
     harness_.triggerImpulse();
     graphImpulsePending_.store(true, std::memory_order_release);
 }
@@ -431,6 +456,88 @@ juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
     };
     const auto text = json.dump();
     return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
+}
+
+juce::String ReverbPlaygroundProcessor::audioFileTransportJson() const
+{
+    const auto snapshot = audioFileSource_.snapshot();
+    const nlohmann::ordered_json json {
+        { "formatVersion", 1 },
+        { "sourceMode", reverb::audio::auditionSourceModeName(auditionSourceMode()) },
+        { "state", reverb::audio::transportStateName(snapshot.state) },
+        { "fileName", snapshot.fileName },
+        { "format", snapshot.format },
+        { "error", snapshot.error },
+        { "sourceSampleRate", snapshot.sourceSampleRate },
+        { "outputSampleRate", snapshot.outputSampleRate },
+        { "frameCount", snapshot.frameCount },
+        { "cursorSourceFrame", snapshot.cursorSourceFrame },
+        { "channels", snapshot.channels },
+        { "generation", snapshot.generation },
+        { "loop", {
+            { "enabled", snapshot.loopEnabled },
+            { "startSourceFrame", snapshot.loopStartSourceFrame },
+            { "endSourceFrame", snapshot.loopEndSourceFrame },
+        } },
+        { "underrunEvents", snapshot.underrunEvents },
+        { "underrunFrames", snapshot.underrunFrames },
+        { "sanitizedSourceSamples", snapshot.sanitizedSourceSamples },
+        { "ringCapacityFrames", snapshot.ringCapacityFrames },
+        { "preparedBytes", snapshot.preparedBytes },
+        { "prepared", snapshot.prepared },
+    };
+    const auto text = json.dump();
+    return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
+}
+
+bool ReverbPlaygroundProcessor::loadAudioFile(const juce::File& file, std::string& error)
+{
+    const auto loaded = audioFileSource_.loadFile(file, error);
+    if (loaded)
+        auditionSourceMode_.store(reverb::audio::AuditionSourceMode::audioFile, std::memory_order_release);
+    return loaded;
+}
+
+void ReverbPlaygroundProcessor::setAuditionSourceMode(
+    const reverb::audio::AuditionSourceMode mode) noexcept
+{
+    auditionSourceMode_.store(mode, std::memory_order_release);
+}
+
+reverb::audio::AuditionSourceMode ReverbPlaygroundProcessor::auditionSourceMode() const noexcept
+{
+    return auditionSourceMode_.load(std::memory_order_acquire);
+}
+
+void ReverbPlaygroundProcessor::playAudioFile()
+{
+    audioFileSource_.play();
+    auditionSourceMode_.store(reverb::audio::AuditionSourceMode::audioFile, std::memory_order_release);
+}
+
+void ReverbPlaygroundProcessor::pauseAudioFile() { audioFileSource_.pause(); }
+void ReverbPlaygroundProcessor::stopAudioFile()
+{
+    audioFileSource_.stop();
+    transportGraphResetPending_.store(true, std::memory_order_release);
+}
+
+bool ReverbPlaygroundProcessor::seekAudioFile(
+    const std::int64_t sourceFrame, std::string& error)
+{
+    const auto accepted = audioFileSource_.seek(sourceFrame, error);
+    if (accepted)
+        transportGraphResetPending_.store(true, std::memory_order_release);
+    return accepted;
+}
+
+bool ReverbPlaygroundProcessor::setAudioFileLoop(
+    const bool enabled,
+    const std::int64_t startSourceFrame,
+    const std::int64_t endSourceFrame,
+    std::string& error)
+{
+    return audioFileSource_.setLoop(enabled, startSourceFrame, endSourceFrame, error);
 }
 
 juce::String ReverbPlaygroundProcessor::publishGraphJson(const juce::String& patchJson)

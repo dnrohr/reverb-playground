@@ -2,6 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
+#include <reverb/audio/PreparedAudioFileSource.h>
 #include <reverb/dsp/LiveReferenceHarness.h>
 #include <reverb/dsp/NumericalSafetyGuard.h>
 #include <reverb/graph/AcyclicRuntime.h>
@@ -37,7 +38,7 @@ public:
     void getStateInformation(juce::MemoryBlock& destinationData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
-    void triggerImpulse() noexcept;
+    void triggerImpulse();
     void setMasterGain(float linearGain) noexcept;
     void setEmergencyMuted(bool muted) noexcept;
     void requestSafetyReset() noexcept;
@@ -50,13 +51,23 @@ public:
     [[nodiscard]] juce::String impulseCaptureJson() const;
     [[nodiscard]] juce::String energyTelemetryJson() const;
     [[nodiscard]] juce::String runtimeDiagnosticsJson() const;
+    [[nodiscard]] juce::String audioFileTransportJson() const;
     [[nodiscard]] juce::String publishGraphJson(const juce::String& patchJson);
     [[nodiscard]] juce::String storePatchStateJson(const juce::String& patchJson);
     juce::String startImpulseCapture(double lengthMilliseconds, double stopThresholdDb, bool muteLiveInput);
     bool setEnergyTelemetryEnabled(bool enabled) noexcept;
     double setRuntimeParameter(const juce::String& nodeId, const juce::String& parameterId, double value) noexcept;
+    bool loadAudioFile(const juce::File& file, std::string& error);
+    void setAuditionSourceMode(reverb::audio::AuditionSourceMode mode) noexcept;
+    [[nodiscard]] reverb::audio::AuditionSourceMode auditionSourceMode() const noexcept;
+    void playAudioFile();
+    void pauseAudioFile();
+    void stopAudioFile();
+    bool seekAudioFile(std::int64_t sourceFrame, std::string& error);
+    bool setAudioFileLoop(bool enabled, std::int64_t startSourceFrame, std::int64_t endSourceFrame, std::string& error);
 
 private:
+    reverb::audio::PreparedAudioFileSource audioFileSource_;
     reverb::dsp::LiveReferenceHarness harness_;
     reverb::graph::AcyclicRuntimeHost graphHost_;
     reverb::graph::HostPatchState hostPatchState_;
@@ -72,8 +83,12 @@ private:
     std::atomic<bool> graphImpulsePending_ {};
     std::atomic<bool> graphSafetyResetPending_ {};
     std::atomic<bool> graphSafetyLatched_ {};
+    std::atomic<bool> transportGraphResetPending_ {};
     std::atomic<bool> graphCaptureMode_ {};
     std::atomic<double> captureLengthMilliseconds_ { 2'000.0 };
     std::atomic<double> captureStopThresholdDb_ { -80.0 };
     std::atomic<bool> captureMutesLiveInput_ { true };
+    std::atomic<reverb::audio::AuditionSourceMode> auditionSourceMode_ {
+        reverb::audio::AuditionSourceMode::liveInput
+    };
 };

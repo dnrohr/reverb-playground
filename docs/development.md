@@ -117,6 +117,7 @@ the VST3.
 
 | Path | Responsibility |
 |---|---|
+| `src/audio/` | Prepared standalone audio-file decoding, resampling, read-ahead, and transport |
 | `src/dsp/` | Framework-light, real-time-safe DSP primitives |
 | `src/graph/` | Semantic graph model, validation, compilation, and serialization |
 | `src/render/` | Headless rendering, deterministic analysis, WAV output, and renderer CLI |

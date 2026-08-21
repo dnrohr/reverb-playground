@@ -32,11 +32,16 @@ void LiveReferenceHarness::prepare(const double sampleRate)
 
 void LiveReferenceHarness::reset() noexcept
 {
+    resetSignalState();
+    if (safetyLatched_.exchange(false, std::memory_order_acq_rel))
+        diagnostics_.recordRecovery();
+}
+
+void LiveReferenceHarness::resetSignalState() noexcept
+{
     reference_.reset();
     leftGuard_.reset();
     rightGuard_.reset();
-    if (safetyLatched_.exchange(false, std::memory_order_acq_rel))
-        diagnostics_.recordRecovery();
 }
 
 void LiveReferenceHarness::process(

@@ -78,6 +78,7 @@ else()
 endif()
 
 add_subdirectory(src/dsp)
+add_subdirectory(src/audio)
 add_subdirectory(src/graph)
 add_subdirectory(src/render)
 add_subdirectory(src/ui)

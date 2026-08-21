@@ -17,6 +17,7 @@ public:
     LiveReferenceHarness();
     void prepare(double sampleRate);
     void reset() noexcept;
+    void resetSignalState() noexcept;
     void process(
         std::span<const float> inputLeft,
         std::span<const float> inputRight,

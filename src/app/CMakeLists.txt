@@ -29,6 +29,7 @@ target_compile_definitions(ReverbPlayground
 target_link_libraries(ReverbPlayground
     PRIVATE
         reverb_project_options
+        reverb_audio
         reverb_dsp
         reverb_graph
         reverb_ui
