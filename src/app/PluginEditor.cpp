@@ -51,6 +51,32 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
           [&processor] { return processor.runtimeDiagnosticsJson(); },
           [&processor](const auto& patchJson) { return processor.publishGraphJson(patchJson); },
           [&processor](const auto& patchJson) { return processor.storePatchStateJson(patchJson); },
+          juce::StandalonePluginHolder::getInstance() != nullptr,
+          [&processor](const juce::File& file) {
+              std::string error;
+              static_cast<void>(processor.loadAudioFile(file, error));
+              return juce::String::fromUTF8(error.data(), static_cast<int>(error.size()));
+          },
+          [&processor](const int mode) {
+              processor.setAuditionSourceMode(static_cast<reverb::audio::AuditionSourceMode>(
+                  juce::jlimit(0, 2, mode)));
+          },
+          [&processor] { processor.playAudioFile(); },
+          [&processor] { processor.pauseAudioFile(); },
+          [&processor] { processor.stopAudioFile(); },
+          [&processor](const std::int64_t frame) {
+              std::string error;
+              static_cast<void>(processor.seekAudioFile(frame, error));
+              return juce::String::fromUTF8(error.data(), static_cast<int>(error.size()));
+          },
+          [&processor](const bool enabled, const std::int64_t start, const std::int64_t end) {
+              std::string error;
+              static_cast<void>(processor.setAudioFileLoop(enabled, start, end, error));
+              return juce::String::fromUTF8(error.data(), static_cast<int>(error.size()));
+          },
+          [&processor] { return processor.audioFileTransportJson(); },
+          [&processor](const bool processed) { processor.setProcessedAudition(processed); },
+          [&processor] { return processor.isProcessedAudition(); },
       })
 {
     addAndMakeVisible(shell_);

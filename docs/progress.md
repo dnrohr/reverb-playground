@@ -69,7 +69,7 @@ Last updated: 2026-08-21
 | M13.3 Tune and publish Reverse Cosmic Shimmer | Complete | Eight-family catalog; nine multirate audio fixtures; causal rise/octave/stereo/decay report; four-way comparison; teaching; persistence/host restore; screenshots/video |
 | M14.1 Specify source, transport, and real-time boundaries | Complete | Three-mode source router; mono/stereo policy; prepared worker/ring ownership; deterministic transport/resampling/underrun/device/topology rules; patch/VST3 privacy boundary |
 | M14.2 Implement the prepared audio-file source | Complete | WAV/AIFF/FLAC worker-owned read-ahead transport with deterministic looping/resampling, bounded callback reads, underrun diagnostics, graph routing, and safety tests |
-| M14.3 Add the standalone audition deck | Planned | Drag/drop player, waveform/loop controls, safe source switching, accessibility, and UI evidence |
+| M14.3 Add the standalone audition deck | Complete | Standalone-only load/drop deck, stereo waveform, transport/loop controls, 10 ms exclusive source switching, processed/dry comparison, accessibility, and UI evidence |
 | M14.4 Add deterministic processed-file export | Planned | Wet/mix WAV export through the offline graph runtime with bounded tails, cancellation, and atomic output |
 | M14.5 Validate and package the audition workflow | Planned | Representative content matrix, restart/recovery, VST3 compatibility, documentation, package, and CI evidence |
 
@@ -1105,3 +1105,27 @@ Results:
   state. Stop/seek reset graph signal history without clearing the safety latch.
 - This task adds no visible controls; M14.3 owns the audition deck, click-safe
   source switching, waveform, and UI evidence, so no screenshot or video is due.
+
+## M14.3 verification
+
+- The standalone header now exposes mutually exclusive Live Input, Audio File,
+  and Test Impulse sources plus file picker/drop loading, play/pause, stop,
+  waveform seek, source-frame loop range, transport time/state, and underrun
+  diagnostics. The deck is not constructed for hosted VST3 editors.
+- The waveform uses JUCE's background thumbnail reader and retains both channel
+  extrema. Audio decoding/resampling/read-ahead remains worker-owned; the
+  waveform and file picker never enter the callback.
+- Source changes use a tested 10 ms equal-power ramp. Leaving Audio File pauses
+  after the ramp, and Test Impulse is emitted only after its transition reaches
+  silence. Live input is never summed into the file route.
+- Processed and Dry Bypass are explicit. Both remain behind Master Audition
+  Gain, Emergency Mute, and numerical safety; file playback continues through
+  the existing graph telemetry, response, topology-edit, and A/B systems.
+- Native tests cover the transition duration, discontinuity bound, file pause,
+  dry identity, and impulse isolation. The complete Release verification suite
+  and accessibility/scaling gates remain required before publication.
+- Reviewed standalone evidence is stored under
+  [`artifacts/ui/m14-3-standalone-audition/`](../artifacts/ui/m14-3-standalone-audition/):
+  loaded and looping screenshots plus a workflow video. The inspected 1200×720
+  content fills the DPI-aware standalone window with both editor sidebars
+  reachable.

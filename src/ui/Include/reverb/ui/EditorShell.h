@@ -1,12 +1,15 @@
 #pragma once
 
+#include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_gui_extra/juce_gui_extra.h>
 
 #include <functional>
 
 namespace reverb::ui {
 
-class EditorShell final : public juce::Component, private juce::Timer {
+class EditorShell final : public juce::Component,
+                          public juce::FileDragAndDropTarget,
+                          private juce::Timer {
 public:
     struct Callbacks final {
         std::function<void()> triggerImpulse;
@@ -28,16 +31,35 @@ public:
         std::function<juce::String()> runtimeDiagnosticsJson;
         std::function<juce::String(const juce::String&)> publishGraphJson;
         std::function<juce::String(const juce::String&)> storePatchStateJson;
+        bool standaloneAuditionAvailable {};
+        std::function<juce::String(const juce::File&)> loadAudioFile;
+        std::function<void(int)> setAuditionSourceMode;
+        std::function<void()> playAudioFile;
+        std::function<void()> pauseAudioFile;
+        std::function<void()> stopAudioFile;
+        std::function<juce::String(std::int64_t)> seekAudioFile;
+        std::function<juce::String(bool, std::int64_t, std::int64_t)> setAudioFileLoop;
+        std::function<juce::String()> audioFileTransportJson;
+        std::function<void(bool)> setProcessedAudition;
+        std::function<bool()> isProcessedAudition;
     };
 
     explicit EditorShell(Callbacks callbacks);
 
     void paint(juce::Graphics& graphics) override;
     void resized() override;
+    void mouseDown(const juce::MouseEvent& event) override;
+    void mouseDrag(const juce::MouseEvent& event) override;
+    bool isInterestedInFileDrag(const juce::StringArray& files) override;
+    void filesDropped(const juce::StringArray& files, int x, int y) override;
 
 private:
     void timerCallback() override;
     std::optional<juce::WebBrowserComponent::Resource> getWebResource(const juce::String& path) const;
+    void chooseAudioFile();
+    void loadAudioFile(const juce::File& file);
+    void seekFromWaveform(float x);
+    void updateTransport();
 
     Callbacks callbacks_;
     juce::Label status_;
@@ -47,7 +69,29 @@ private:
     juce::TextButton muteButton_ { "EMERGENCY MUTE" };
     juce::TextButton resetButton_ { "RESET SAFETY" };
     juce::Slider gain_;
+    juce::TextButton liveSourceButton_ { "LIVE INPUT" };
+    juce::TextButton fileSourceButton_ { "AUDIO FILE" };
+    juce::TextButton fileButton_ { "LOAD FILE..." };
+    juce::TextButton filePlayButton_ { "PLAY" };
+    juce::TextButton fileStopButton_ { "STOP" };
+    juce::TextButton impulseSourceButton_ { "TEST IMPULSE" };
+    juce::ToggleButton loopButton_ { "LOOP" };
+    juce::ToggleButton processedButton_ { "PROCESSED" };
+    juce::Label fileLabel_;
+    juce::Label transportLabel_;
+    juce::Slider seek_;
+    juce::Slider loopRange_;
+    juce::AudioFormatManager formatManager_;
+    juce::AudioThumbnailCache thumbnailCache_ { 5 };
+    juce::AudioThumbnail thumbnail_ { 512, formatManager_, thumbnailCache_ };
+    std::unique_ptr<juce::FileChooser> fileChooser_;
     std::unique_ptr<juce::WebBrowserComponent> browser_;
+    juce::Rectangle<int> waveformBounds_;
+    std::int64_t fileFrameCount_ {};
+    std::int64_t fileCursorFrame_ {};
+    double fileSampleRate_ {};
+    bool filePlaying_ {};
+    bool updatingTransportControls_ {};
     int impulseFlashTicks_ {};
 };
 

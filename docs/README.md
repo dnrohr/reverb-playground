@@ -32,6 +32,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Response measurements](response-measurements.md) - onset, length, peaks, stereo difference, Schroeder decay, RT60 estimation, and refusal rules.
 - [Audible reference harness](audible-reference-harness.md) - standalone/plugin audition controls, device behavior, live safety, and UI evidence.
 - [Audio-file source and transport contract](audio-file-source-and-transport-contract.md) - standalone source arbitration, channel/resampling policy, prepared read-ahead ownership, deterministic transport, underrun behavior, and persistence boundaries.
+- [Standalone audio-file audition](standalone-audio-file-audition.md) - load/drop workflow, waveform transport, source selection, loop editing, dry comparison, safety, and privacy.
 - [Schematic editor interactions](schematic-editor-interactions.md) - three-pane layout, pointer and keyboard controls, signal semantics, and scaling contract.
 - [Runtime graph binding](runtime-graph-binding.md) - native snapshot contract, identity validation, live inspector values, and processing boundaries.
 - [Editable node creation](editable-node-creation.md) - primitive defaults, stable IDs, required I/O, structural undo, and draft/runtime boundaries.

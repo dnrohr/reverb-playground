@@ -67,6 +67,7 @@ public:
     bool loadFile(const juce::File& file, std::string& error);
     void play();
     void pause();
+    [[nodiscard]] bool pauseFromAudioThread() noexcept;
     void stop();
     bool seek(std::int64_t sourceFrame, std::string& error);
     bool setLoop(

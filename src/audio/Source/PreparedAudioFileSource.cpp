@@ -338,6 +338,7 @@ struct PreparedAudioFileSource::Impl final {
     std::atomic<bool> reconfiguring {};
     std::atomic<bool> processing {};
     std::atomic<bool> prepared {};
+    std::atomic<bool> priming {};
     std::atomic<AudioFileTransportState> state { AudioFileTransportState::empty };
     std::atomic<std::uint64_t> readPosition {};
     std::atomic<std::uint64_t> writePosition {};
@@ -467,11 +468,14 @@ void PreparedAudioFileSource::play()
             || cursor >= impl_->frameCount)
             cursor = impl_->loopEnabled ? impl_->loopStart : 0;
         impl_->rebuildPipelineLocked(cursor);
+        impl_->priming.store(true, std::memory_order_release);
         impl_->state.store(AudioFileTransportState::playing, std::memory_order_release);
         canPlay = true;
     });
-    if (canPlay)
+    if (canPlay) {
         impl_->prefill();
+        impl_->priming.store(false, std::memory_order_release);
+    }
 }
 
 void PreparedAudioFileSource::pause()
@@ -483,6 +487,13 @@ void PreparedAudioFileSource::pause()
         impl_->rebuildPipelineLocked(cursor);
         impl_->state.store(AudioFileTransportState::paused, std::memory_order_release);
     });
+}
+
+bool PreparedAudioFileSource::pauseFromAudioThread() noexcept
+{
+    auto expected = AudioFileTransportState::playing;
+    return impl_->state.compare_exchange_strong(
+        expected, AudioFileTransportState::paused, std::memory_order_acq_rel);
 }
 
 void PreparedAudioFileSource::stop()
@@ -532,6 +543,8 @@ bool PreparedAudioFileSource::setLoop(
     }
     const auto cursor = impl_->cursorSourceFrame.load(std::memory_order_acquire);
     const auto wasPlaying = impl_->state.load(std::memory_order_acquire) == AudioFileTransportState::playing;
+    if (wasPlaying)
+        impl_->priming.store(true, std::memory_order_release);
     impl_->reconfigure([&] {
         impl_->loopEnabled = enabled;
         impl_->loopStart = enabled ? startSourceFrame : 0;
@@ -544,8 +557,10 @@ bool PreparedAudioFileSource::setLoop(
             wasPlaying ? AudioFileTransportState::playing : AudioFileTransportState::paused,
             std::memory_order_release);
     });
-    if (wasPlaying)
+    if (wasPlaying) {
         impl_->prefill();
+        impl_->priming.store(false, std::memory_order_release);
+    }
     return true;
 }
 
@@ -568,7 +583,8 @@ void PreparedAudioFileSource::process(
     auto read = impl_->readPosition.load(std::memory_order_relaxed);
     const auto write = impl_->writePosition.load(std::memory_order_acquire);
     auto rendered = std::size_t {};
-    if (impl_->state.load(std::memory_order_acquire) == AudioFileTransportState::playing) {
+    if (impl_->state.load(std::memory_order_acquire) == AudioFileTransportState::playing
+        && !impl_->priming.load(std::memory_order_acquire)) {
         const auto available = static_cast<std::size_t>(std::min<std::uint64_t>(write - read, frameCount));
         for (; rendered < available; ++rendered) {
             const auto ringIndex = static_cast<std::size_t>(read % impl_->ringCapacity);

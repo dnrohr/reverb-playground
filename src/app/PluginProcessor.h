@@ -38,7 +38,7 @@ public:
     void getStateInformation(juce::MemoryBlock& destinationData) override;
     void setStateInformation(const void* data, int sizeInBytes) override;
 
-    void triggerImpulse();
+    void triggerImpulse() noexcept;
     void setMasterGain(float linearGain) noexcept;
     void setEmergencyMuted(bool muted) noexcept;
     void requestSafetyReset() noexcept;
@@ -58,8 +58,10 @@ public:
     bool setEnergyTelemetryEnabled(bool enabled) noexcept;
     double setRuntimeParameter(const juce::String& nodeId, const juce::String& parameterId, double value) noexcept;
     bool loadAudioFile(const juce::File& file, std::string& error);
-    void setAuditionSourceMode(reverb::audio::AuditionSourceMode mode) noexcept;
+    void setAuditionSourceMode(reverb::audio::AuditionSourceMode mode);
     [[nodiscard]] reverb::audio::AuditionSourceMode auditionSourceMode() const noexcept;
+    void setProcessedAudition(bool processed) noexcept;
+    [[nodiscard]] bool isProcessedAudition() const noexcept;
     void playAudioFile();
     void pauseAudioFile();
     void stopAudioFile();
@@ -77,6 +79,8 @@ private:
     reverb::dsp::RuntimeDiagnostics graphDiagnostics_;
     std::vector<float> graphInputLeft_;
     std::vector<float> graphInputRight_;
+    std::vector<float> previousSourceLeft_;
+    std::vector<float> previousSourceRight_;
     std::atomic<double> graphSampleRate_ {};
     std::atomic<std::size_t> graphMaximumBlockSize_ {};
     std::atomic<bool> graphAudioEnabled_ {};
@@ -84,6 +88,9 @@ private:
     std::atomic<bool> graphSafetyResetPending_ {};
     std::atomic<bool> graphSafetyLatched_ {};
     std::atomic<bool> transportGraphResetPending_ {};
+    std::atomic<bool> impulseRequested_ {};
+    std::atomic<bool> resumeFileOnReturn_ {};
+    std::atomic<bool> processedAudition_ { true };
     std::atomic<bool> graphCaptureMode_ {};
     std::atomic<double> captureLengthMilliseconds_ { 2'000.0 };
     std::atomic<double> captureStopThresholdDb_ { -80.0 };
@@ -91,4 +98,12 @@ private:
     std::atomic<reverb::audio::AuditionSourceMode> auditionSourceMode_ {
         reverb::audio::AuditionSourceMode::liveInput
     };
+    reverb::audio::AuditionSourceMode activeAuditionSourceMode_ {
+        reverb::audio::AuditionSourceMode::liveInput
+    };
+    reverb::audio::AuditionSourceMode transitionFromSourceMode_ {
+        reverb::audio::AuditionSourceMode::liveInput
+    };
+    std::size_t sourceTransitionFramesRemaining_ {};
+    std::size_t sourceTransitionFramesTotal_ {};
 };

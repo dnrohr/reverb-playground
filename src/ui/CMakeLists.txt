@@ -29,6 +29,7 @@ target_link_libraries(reverb_ui
         reverb_graph
         reverb_editor_assets
         $<$<PLATFORM_ID:Windows>:juce::juce_webview2>
+        juce::juce_audio_utils
         juce::juce_gui_extra)
 
 set_target_properties(reverb_ui PROPERTIES

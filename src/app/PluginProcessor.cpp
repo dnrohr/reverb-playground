@@ -26,6 +26,12 @@ void ReverbPlaygroundProcessor::prepareToPlay(
     audioFileSource_.prepare(sampleRate, maximumBlockSize);
     graphInputLeft_.assign(maximumBlockSize, 0.0F);
     graphInputRight_.assign(maximumBlockSize, 0.0F);
+    previousSourceLeft_.assign(maximumBlockSize, 0.0F);
+    previousSourceRight_.assign(maximumBlockSize, 0.0F);
+    activeAuditionSourceMode_ = auditionSourceMode_.load(std::memory_order_acquire);
+    transitionFromSourceMode_ = activeAuditionSourceMode_;
+    sourceTransitionFramesRemaining_ = 0;
+    sourceTransitionFramesTotal_ = static_cast<std::size_t>(std::max(1.0, std::round(sampleRate * 0.010)));
     graphLeftGuard_.prepare(sampleRate);
     graphRightGuard_.prepare(sampleRate);
     graphCapture_.prepare(sampleRate);
@@ -66,27 +72,94 @@ void ReverbPlaygroundProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
     const std::span<const float> deviceInputRight { buffer.getReadPointer(1), sampleCount };
     const std::span<float> outputLeft { buffer.getWritePointer(0), sampleCount };
     const std::span<float> outputRight { buffer.getWritePointer(1), sampleCount };
-    auto inputLeft = deviceInputLeft;
-    auto inputRight = deviceInputRight;
-    const auto sourceMode = auditionSourceMode_.load(std::memory_order_acquire);
-    if (sourceMode != reverb::audio::AuditionSourceMode::liveInput
-        && sampleCount <= graphInputLeft_.size()) {
-        const auto routedLeft = std::span<float>(graphInputLeft_).first(sampleCount);
-        const auto routedRight = std::span<float>(graphInputRight_).first(sampleCount);
-        if (sourceMode == reverb::audio::AuditionSourceMode::audioFile)
-            audioFileSource_.process(routedLeft, routedRight);
-        else {
-            std::ranges::fill(routedLeft, 0.0F);
-            std::ranges::fill(routedRight, 0.0F);
+    if (sampleCount > graphInputLeft_.size()) {
+        buffer.clear();
+        return;
+    }
+    const auto routedLeft = std::span<float>(graphInputLeft_).first(sampleCount);
+    const auto routedRight = std::span<float>(graphInputRight_).first(sampleCount);
+    const auto previousLeft = std::span<float>(previousSourceLeft_).first(sampleCount);
+    const auto previousRight = std::span<float>(previousSourceRight_).first(sampleCount);
+    const auto renderSource = [&](const reverb::audio::AuditionSourceMode mode,
+                                  const std::span<float> left,
+                                  const std::span<float> right) {
+        if (mode == reverb::audio::AuditionSourceMode::liveInput) {
+            std::ranges::copy(deviceInputLeft, left.begin());
+            std::ranges::copy(deviceInputRight, right.begin());
+        } else if (mode == reverb::audio::AuditionSourceMode::audioFile) {
+            audioFileSource_.process(left, right);
+        } else {
+            std::ranges::fill(left, 0.0F);
+            std::ranges::fill(right, 0.0F);
         }
-        inputLeft = routedLeft;
-        inputRight = routedRight;
+    };
+
+    const auto desiredSourceMode = auditionSourceMode_.load(std::memory_order_acquire);
+    if (desiredSourceMode != activeAuditionSourceMode_ && sourceTransitionFramesRemaining_ == 0) {
+        transitionFromSourceMode_ = activeAuditionSourceMode_;
+        sourceTransitionFramesRemaining_ = sourceTransitionFramesTotal_;
+    }
+    if (sourceTransitionFramesRemaining_ > 0) {
+        renderSource(transitionFromSourceMode_, previousLeft, previousRight);
+        renderSource(desiredSourceMode, routedLeft, routedRight);
+        for (std::size_t index = 0; index < sampleCount; ++index) {
+            const auto elapsed = sourceTransitionFramesTotal_ - sourceTransitionFramesRemaining_;
+            const auto phase = std::min(1.0, static_cast<double>(elapsed + index + 1)
+                / static_cast<double>(sourceTransitionFramesTotal_));
+            const auto oldGain = static_cast<float>(std::cos(phase * juce::MathConstants<double>::halfPi));
+            const auto newGain = static_cast<float>(std::sin(phase * juce::MathConstants<double>::halfPi));
+            routedLeft[index] = previousLeft[index] * oldGain + routedLeft[index] * newGain;
+            routedRight[index] = previousRight[index] * oldGain + routedRight[index] * newGain;
+        }
+        if (sampleCount >= sourceTransitionFramesRemaining_) {
+            if (transitionFromSourceMode_ == reverb::audio::AuditionSourceMode::audioFile
+                && desiredSourceMode != reverb::audio::AuditionSourceMode::audioFile
+                && audioFileSource_.pauseFromAudioThread())
+                resumeFileOnReturn_.store(true, std::memory_order_release);
+            activeAuditionSourceMode_ = desiredSourceMode;
+            sourceTransitionFramesRemaining_ = 0;
+        } else {
+            sourceTransitionFramesRemaining_ -= sampleCount;
+        }
+    } else {
+        renderSource(activeAuditionSourceMode_, routedLeft, routedRight);
+    }
+    const std::span<const float> inputLeft = routedLeft;
+    const std::span<const float> inputRight = routedRight;
+    if (activeAuditionSourceMode_ == reverb::audio::AuditionSourceMode::testImpulse
+        && sourceTransitionFramesRemaining_ == 0
+        && impulseRequested_.exchange(false, std::memory_order_acq_rel)) {
+        harness_.triggerImpulse();
+        graphImpulsePending_.store(true, std::memory_order_release);
     }
     if (transportGraphResetPending_.exchange(false, std::memory_order_acq_rel)) {
         harness_.resetSignalState();
         graphHost_.resetActiveRuntimes();
         graphLeftGuard_.reset();
         graphRightGuard_.reset();
+    }
+    if (!processedAudition_.load(std::memory_order_acquire)) {
+        if (graphSafetyLatched_.load(std::memory_order_acquire) || harness_.isSafetyLatched()) {
+            buffer.clear();
+            return;
+        }
+        std::ranges::copy(inputLeft, outputLeft.begin());
+        std::ranges::copy(inputRight, outputRight.begin());
+        if (harness_.isEmergencyMuted()) {
+            buffer.clear();
+            return;
+        }
+        const auto gain = harness_.masterGain();
+        for (auto& sample : outputLeft) sample *= gain;
+        for (auto& sample : outputRight) sample *= gain;
+        const auto leftStatus = graphLeftGuard_.inspectAndMute(outputLeft);
+        const auto rightStatus = graphRightGuard_.inspectAndMute(outputRight);
+        if (leftStatus.violation != reverb::dsp::SafetyViolation::none
+            || rightStatus.violation != reverb::dsp::SafetyViolation::none) {
+            graphSafetyLatched_.store(true, std::memory_order_release);
+            buffer.clear();
+        }
+        return;
     }
     if (!graphAudioEnabled_.load(std::memory_order_acquire) || !graphHost_.hasRuntime()) {
         harness_.process(inputLeft, inputRight, outputLeft, outputRight);
@@ -224,12 +297,10 @@ void ReverbPlaygroundProcessor::setStateInformation(const void* data, const int 
     }
 }
 
-void ReverbPlaygroundProcessor::triggerImpulse()
+void ReverbPlaygroundProcessor::triggerImpulse() noexcept
 {
     auditionSourceMode_.store(reverb::audio::AuditionSourceMode::testImpulse, std::memory_order_release);
-    audioFileSource_.pause();
-    harness_.triggerImpulse();
-    graphImpulsePending_.store(true, std::memory_order_release);
+    impulseRequested_.store(true, std::memory_order_release);
 }
 void ReverbPlaygroundProcessor::setMasterGain(const float value) noexcept { harness_.setMasterGain(value); }
 void ReverbPlaygroundProcessor::setEmergencyMuted(const bool muted) noexcept { harness_.setEmergencyMuted(muted); }
@@ -499,9 +570,22 @@ bool ReverbPlaygroundProcessor::loadAudioFile(const juce::File& file, std::strin
 }
 
 void ReverbPlaygroundProcessor::setAuditionSourceMode(
-    const reverb::audio::AuditionSourceMode mode) noexcept
+    const reverb::audio::AuditionSourceMode mode)
 {
+    if (mode == reverb::audio::AuditionSourceMode::audioFile
+        && resumeFileOnReturn_.exchange(false, std::memory_order_acq_rel))
+        audioFileSource_.play();
     auditionSourceMode_.store(mode, std::memory_order_release);
+}
+
+void ReverbPlaygroundProcessor::setProcessedAudition(const bool processed) noexcept
+{
+    processedAudition_.store(processed, std::memory_order_release);
+}
+
+bool ReverbPlaygroundProcessor::isProcessedAudition() const noexcept
+{
+    return processedAudition_.load(std::memory_order_acquire);
 }
 
 reverb::audio::AuditionSourceMode ReverbPlaygroundProcessor::auditionSourceMode() const noexcept
@@ -511,13 +595,19 @@ reverb::audio::AuditionSourceMode ReverbPlaygroundProcessor::auditionSourceMode(
 
 void ReverbPlaygroundProcessor::playAudioFile()
 {
+    resumeFileOnReturn_.store(false, std::memory_order_release);
     audioFileSource_.play();
     auditionSourceMode_.store(reverb::audio::AuditionSourceMode::audioFile, std::memory_order_release);
 }
 
-void ReverbPlaygroundProcessor::pauseAudioFile() { audioFileSource_.pause(); }
+void ReverbPlaygroundProcessor::pauseAudioFile()
+{
+    resumeFileOnReturn_.store(false, std::memory_order_release);
+    audioFileSource_.pause();
+}
 void ReverbPlaygroundProcessor::stopAudioFile()
 {
+    resumeFileOnReturn_.store(false, std::memory_order_release);
     audioFileSource_.stop();
     transportGraphResetPending_.store(true, std::memory_order_release);
 }
@@ -526,8 +616,10 @@ bool ReverbPlaygroundProcessor::seekAudioFile(
     const std::int64_t sourceFrame, std::string& error)
 {
     const auto accepted = audioFileSource_.seek(sourceFrame, error);
-    if (accepted)
+    if (accepted) {
+        resumeFileOnReturn_.store(false, std::memory_order_release);
         transportGraphResetPending_.store(true, std::memory_order_release);
+    }
     return accepted;
 }
 

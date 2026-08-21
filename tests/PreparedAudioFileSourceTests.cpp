@@ -3,6 +3,7 @@
 #include <reverb/audio/PreparedAudioFileSource.h>
 
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
 #include <nlohmann/json.hpp>
 
 #include <array>
@@ -326,4 +327,66 @@ TEST_CASE("Audio-file input remains behind the plugin numerical safety latch")
     REQUIRE(processor.isSafetyLatched());
     REQUIRE(buffer.getMagnitude(0, 0, buffer.getNumSamples()) == 0.0F);
     REQUIRE(buffer.getMagnitude(1, 0, buffer.getNumSamples()) == 0.0F);
+}
+
+TEST_CASE("Audition source switching is ten-millisecond click-safe and dry bypass is explicit")
+{
+    juce::WavAudioFormat wav;
+    AudioFixture fixture(wav, ".wav", 2, 48'000.0, 12'000, 16);
+    ReverbPlaygroundProcessor processor;
+    processor.prepareToPlay(48'000.0, 120);
+    processor.setMasterGain(1.0F);
+    processor.setProcessedAudition(false);
+    REQUIRE_FALSE(processor.isProcessedAudition());
+    std::string error;
+    REQUIRE(processor.loadAudioFile(fixture.file(), error));
+    processor.playAudioFile();
+
+    juce::AudioBuffer<float> buffer(2, 120);
+    juce::MidiBuffer midi;
+    for (auto block = 0; block < 5; ++block) {
+        buffer.clear();
+        processor.processBlock(buffer, midi);
+    }
+
+    processor.setAuditionSourceMode(reverb::audio::AuditionSourceMode::liveInput);
+    auto previous = 0.0F;
+    auto maximumStep = 0.0F;
+    auto havePrevious = false;
+    for (auto block = 0; block < 4; ++block) {
+        buffer.clear();
+        for (auto channel = 0; channel < 2; ++channel)
+            for (auto frame = 0; frame < buffer.getNumSamples(); ++frame)
+                buffer.setSample(channel, frame, 0.25F);
+        processor.processBlock(buffer, midi);
+        for (auto frame = 0; frame < buffer.getNumSamples(); ++frame) {
+            if (havePrevious)
+                maximumStep = std::max(maximumStep, std::abs(buffer.getSample(0, frame) - previous));
+            previous = buffer.getSample(0, frame);
+            havePrevious = true;
+        }
+    }
+    REQUIRE(maximumStep < 0.26F);
+    REQUIRE(buffer.getSample(0, 119) == Catch::Approx(0.25F).margin(1.0e-6F));
+    REQUIRE(nlohmann::json::parse(processor.audioFileTransportJson().toStdString()).at("state") == "paused");
+
+    processor.setAuditionSourceMode(reverb::audio::AuditionSourceMode::audioFile);
+    for (auto block = 0; block < 5; ++block) {
+        buffer.clear();
+        processor.processBlock(buffer, midi);
+    }
+    REQUIRE(nlohmann::json::parse(processor.audioFileTransportJson().toStdString()).at("state") == "playing");
+
+    processor.triggerImpulse();
+    for (auto block = 0; block < 4; ++block) {
+        buffer.clear();
+        for (auto channel = 0; channel < 2; ++channel)
+            for (auto frame = 0; frame < buffer.getNumSamples(); ++frame)
+                buffer.setSample(channel, frame, 0.25F);
+        processor.processBlock(buffer, midi);
+    }
+    buffer.clear();
+    processor.processBlock(buffer, midi);
+    REQUIRE(buffer.getMagnitude(0, 0, buffer.getNumSamples()) == 0.0F);
+    REQUIRE(processor.auditionSourceMode() == reverb::audio::AuditionSourceMode::testImpulse);
 }
