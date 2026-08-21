@@ -14,6 +14,7 @@ MODULE_REFERENCE = ROOT / "docs/module-and-visualization-reference.md"
 DEVELOPMENT_GUIDE = ROOT / "docs/development.md"
 TUTORIAL = ROOT / "docs/getting-started-barr-tutorial.md"
 GRAVITY_CONTRACT = ROOT / "docs/gravity-behavior-and-measurements.md"
+AUDIO_FILE_CONTRACT = ROOT / "docs/audio-file-source-and-transport-contract.md"
 
 REQUIRED_GRAVITY_PHRASES = (
     "`-1.0...+1.0`",
@@ -28,6 +29,19 @@ REQUIRED_GRAVITY_PHRASES = (
     "Forward decay",
     "must never emit wet energy before its input arrives",
     "original project work",
+)
+
+REQUIRED_AUDIO_FILE_PHRASES = (
+    "Live Input",
+    "Audio File",
+    "Test Impulse",
+    "one-channel input is copied to both graph input channels",
+    "more than two channels is rejected",
+    "fixed-capacity stereo ring",
+    "callback never allocates",
+    "End of file",
+    "Underrun",
+    "VST3 host state",
 )
 
 REQUIRED_VISUALIZATIONS = (
@@ -68,6 +82,7 @@ def check_contract(
     development: str,
     tutorial: str,
     gravity: str,
+    audio_file: str,
 ) -> list[str]:
     failures: list[str] = []
     modules = shipped_module_types(module_source)
@@ -103,6 +118,11 @@ def check_contract(
             failures.append(
                 f"docs/gravity-behavior-and-measurements.md: missing contract phrase {phrase!r}"
             )
+    for phrase in REQUIRED_AUDIO_FILE_PHRASES:
+        if phrase not in audio_file:
+            failures.append(
+                f"docs/audio-file-source-and-transport-contract.md: missing contract phrase {phrase!r}"
+            )
     return failures
 
 
@@ -113,6 +133,7 @@ def main() -> int:
         DEVELOPMENT_GUIDE.read_text(encoding="utf-8"),
         TUTORIAL.read_text(encoding="utf-8"),
         GRAVITY_CONTRACT.read_text(encoding="utf-8"),
+        AUDIO_FILE_CONTRACT.read_text(encoding="utf-8"),
     )
     if failures:
         print("Documentation contract checks failed:", file=sys.stderr)

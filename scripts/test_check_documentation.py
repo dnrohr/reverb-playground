@@ -18,34 +18,47 @@ class DocumentationContractTests(unittest.TestCase):
             ("Barr Reference", "Trigger Impulse", "Capture impulse", "Diagnostics", "Save Patch", "Load Patch")
         )
         gravity = "\n".join(check_documentation.REQUIRED_GRAVITY_PHRASES)
-        return module_source, reference, development, tutorial, gravity
+        audio_file = "\n".join(check_documentation.REQUIRED_AUDIO_FILE_PHRASES)
+        return module_source, reference, development, tutorial, gravity, audio_file
 
     def test_accepts_complete_contract(self):
         self.assertEqual(check_documentation.check_contract(*self.valid_inputs()), [])
 
     def test_reports_new_undocumented_module(self):
-        source, reference, development, tutorial, gravity = self.valid_inputs()
+        source, reference, development, tutorial, gravity, audio_file = self.valid_inputs()
         source += "\n{ type: 'new-module', label: 'New', role: 'io', ports: [], parameters: [] },"
-        failures = check_documentation.check_contract(source, reference, development, tutorial, gravity)
+        failures = check_documentation.check_contract(
+            source, reference, development, tutorial, gravity, audio_file
+        )
         self.assertTrue(any("new-module" in failure for failure in failures))
 
     def test_reports_missing_visualization_command_and_tutorial_action(self):
-        source, reference, development, tutorial, gravity = self.valid_inputs()
+        source, reference, development, tutorial, gravity, audio_file = self.valid_inputs()
         reference = reference.replace("<!-- visualization: diagnostics -->", "")
         development = development.replace("pnpm --dir web test", "")
         tutorial = tutorial.replace("Save Patch", "")
-        failures = check_documentation.check_contract(source, reference, development, tutorial, gravity)
+        failures = check_documentation.check_contract(
+            source, reference, development, tutorial, gravity, audio_file
+        )
         self.assertTrue(any("diagnostics" in failure for failure in failures))
         self.assertTrue(any("pnpm --dir web test" in failure for failure in failures))
         self.assertTrue(any("Save Patch" in failure for failure in failures))
 
     def test_reports_incomplete_gravity_contract(self):
-        source, reference, development, tutorial, gravity = self.valid_inputs()
+        source, reference, development, tutorial, gravity, audio_file = self.valid_inputs()
         gravity = gravity.replace("timeToPeakMs", "")
         failures = check_documentation.check_contract(
-            source, reference, development, tutorial, gravity
+            source, reference, development, tutorial, gravity, audio_file
         )
         self.assertTrue(any("timeToPeakMs" in failure for failure in failures))
+
+    def test_reports_incomplete_audio_file_contract(self):
+        source, reference, development, tutorial, gravity, audio_file = self.valid_inputs()
+        audio_file = audio_file.replace("fixed-capacity stereo ring", "")
+        failures = check_documentation.check_contract(
+            source, reference, development, tutorial, gravity, audio_file
+        )
+        self.assertTrue(any("fixed-capacity stereo ring" in failure for failure in failures))
 
 
 if __name__ == "__main__":

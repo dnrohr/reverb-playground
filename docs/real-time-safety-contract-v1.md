@@ -54,3 +54,10 @@ The fixed Barr runtime implements the first parameter path as 14 always-lock-fre
 - Impulse-response recording uses storage allocated during prepare. The audio callback only writes into a bounded slot and atomically publishes completion; copying and JSON serialization occur on the message thread.
 
 This document is the normative foundation contract. Implementation-specific thresholds may become patch-independent engine settings, but may not exceed a safe finite range or disable non-finite detection.
+
+The M14 standalone file player is additionally governed by the
+[audio-file source and transport contract](audio-file-source-and-transport-contract.md).
+Decoded/read-ahead audio is prepared by a worker and published through bounded
+storage; the callback-side source router inherits every prohibition in this
+contract. File transport does not create an exception for filesystem access,
+decoding, allocation, locks, logging, or worker lifetime on the audio thread.
