@@ -71,7 +71,7 @@ Last updated: 2026-08-21
 | M14.2 Implement the prepared audio-file source | Complete | WAV/AIFF/FLAC worker-owned read-ahead transport with deterministic looping/resampling, bounded callback reads, underrun diagnostics, graph routing, and safety tests |
 | M14.3 Add the standalone audition deck | Complete | Standalone-only load/drop deck, stereo waveform, transport/loop controls, 10 ms exclusive source switching, processed/dry comparison, accessibility, and UI evidence |
 | M14.4 Add deterministic processed-file export | Complete | Worker-owned Wet Only/Audition Mix PCM24 export with 48 kHz resampling, bounded tail, progress/cancel, safety failure, and atomic output |
-| M14.5 Validate and package the audition workflow | Planned | Representative content matrix, restart/recovery, VST3 compatibility, documentation, package, and CI evidence |
+| M14.5 Validate and package the audition workflow | In progress | Eighteen-case representative content matrix, restart/recovery and VST3 contract, workflow guide, current evidence, package identity, and clean CI |
 
 ## M0.2 verification
 

@@ -1,5 +1,6 @@
 add_executable(reverb_tests
     AcyclicRuntimeTests.cpp
+    AudioFileWorkflowQualificationTests.cpp
     BarrReferenceTests.cpp
     ControlRateTests.cpp
     ControlModulationTests.cpp

@@ -424,3 +424,40 @@ TEST_CASE("Plugin exports the loaded source without persisting export state")
     REQUIRE_FALSE(restored.hasProperty("fileExport"));
     static_cast<void>(destination.deleteFile());
 }
+
+TEST_CASE("Standalone transport survives graph state reload but not processor restart")
+{
+    juce::WavAudioFormat wav;
+    AudioFixture fixture(wav, ".wav", 2, 48'000.0, 24'000, 24);
+    juce::MemoryBlock savedState;
+    std::int64_t cursorBeforeReload = 0;
+    {
+        ReverbPlaygroundProcessor processor;
+        processor.prepareToPlay(48'000.0, 128);
+        std::string error;
+        REQUIRE(processor.loadAudioFile(fixture.file(), error));
+        processor.playAudioFile();
+        juce::AudioBuffer<float> buffer(2, 128);
+        juce::MidiBuffer midi;
+        for (auto block = 0; block < 5; ++block) {
+            buffer.clear();
+            processor.processBlock(buffer, midi);
+        }
+        auto before = nlohmann::json::parse(processor.audioFileTransportJson().toStdString());
+        cursorBeforeReload = before.at("cursorSourceFrame");
+        REQUIRE(cursorBeforeReload > 0);
+        processor.getStateInformation(savedState);
+        processor.setStateInformation(savedState.getData(), static_cast<int>(savedState.getSize()));
+        const auto after = nlohmann::json::parse(processor.audioFileTransportJson().toStdString());
+        REQUIRE(after.at("state") == "playing");
+        REQUIRE(after.at("cursorSourceFrame").get<std::int64_t>() >= cursorBeforeReload);
+    }
+
+    ReverbPlaygroundProcessor restarted;
+    restarted.prepareToPlay(48'000.0, 128);
+    restarted.setStateInformation(savedState.getData(), static_cast<int>(savedState.getSize()));
+    const auto cleanTransport = nlohmann::json::parse(restarted.audioFileTransportJson().toStdString());
+    REQUIRE(cleanTransport.at("sourceMode") == "live-input");
+    REQUIRE(cleanTransport.at("state") == "empty");
+    REQUIRE(cleanTransport.at("fileName") == "");
+}
