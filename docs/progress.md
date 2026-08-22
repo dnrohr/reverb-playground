@@ -1,6 +1,6 @@
 # Roadmap progress
 
-Last updated: 2026-08-21
+Last updated: 2026-08-22
 
 | Task | Status | Evidence |
 |---|---|---|
@@ -71,7 +71,7 @@ Last updated: 2026-08-21
 | M14.2 Implement the prepared audio-file source | Complete | WAV/AIFF/FLAC worker-owned read-ahead transport with deterministic looping/resampling, bounded callback reads, underrun diagnostics, graph routing, and safety tests |
 | M14.3 Add the standalone audition deck | Complete | Standalone-only load/drop deck, stereo waveform, transport/loop controls, 10 ms exclusive source switching, processed/dry comparison, accessibility, and UI evidence |
 | M14.4 Add deterministic processed-file export | Complete | Worker-owned Wet Only/Audition Mix PCM24 export with 48 kHz resampling, bounded tail, progress/cancel, safety failure, and atomic output |
-| M14.5 Validate and package the audition workflow | In progress | Eighteen-case representative content matrix, restart/recovery and VST3 contract, workflow guide, current evidence, package identity, and clean CI |
+| M14.5 Validate and package the audition workflow | Complete | Eighteen-case representative content matrix, restart/recovery and VST3 contract, workflow guide, current evidence, exact-commit Windows package, and clean CI |
 
 ## M0.2 verification
 
@@ -1155,3 +1155,33 @@ Results:
   format, resampling, tail, safety, cancellation, and publication semantics.
   Reviewed standalone evidence is
   [`artifacts/ui/m14-4-processed-export/01-export-ready.png`](../artifacts/ui/m14-4-processed-export/01-export-ready.png).
+
+## M14.5 verification
+
+- Deterministic one-second speech/percussion, sustained-chord, and full-mix
+  stereo fixtures run through Barr, Modulated Cosmic Reverse, Gravity, Safe
+  Parallel Shimmer, Split-Feedback Shimmer, and Reverse Cosmic Shimmer. All 18
+  exports complete at stereo 48 kHz with bounded one-to-1.5-second output,
+  finite samples, and the renderer's existing unsafe-output containment.
+- Transport tests prove that a graph-state reload in the same standalone keeps
+  the local file session and cursor, while a processor restart restores neither
+  a local path nor file mode. Device-rate recovery, missing/corrupt replacement,
+  underrun silence, graph-load failure, export failure, and source relocation
+  behavior are covered by executable tests or the documented recovery contract.
+- Plugin construction remains host-input-only: the audition deck is created
+  only for the standalone holder, and file path, source mode, transport cursor,
+  export destination, and job state remain absent from patch JSON and VST3 host
+  state. Released graph-schema and host-state compatibility are unchanged.
+- [Audio workflow guide](audio-workflow-guide.md) explains standalone audition,
+  offline export, live input, Test Impulse, and VST3 use, including supported
+  formats, recovery steps, safety behavior, and current limitations.
+- Current interaction evidence remains under
+  [`artifacts/ui/m14-3-standalone-audition/`](../artifacts/ui/m14-3-standalone-audition/)
+  and [`artifacts/ui/m14-4-processed-export/`](../artifacts/ui/m14-4-processed-export/).
+  The packaged standalone was separately launched at 125% Windows scaling and
+  inspected at a 1502x935 outer window: the editor fills the client area, both
+  sidebars are reachable, and the complete audition/export deck is visible.
+- The Release verification gate passes all 180 native/web tests. Windows
+  packaging produces `ReverbPlayground-0.1.0-windows-x64.zip`, validates its
+  version, commit identity, contents, and SHA-256, and includes both the
+  standalone application and VST3 bundle.
