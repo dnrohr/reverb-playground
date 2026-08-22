@@ -2,6 +2,12 @@
 
 Status: implemented in M14.3.
 
+The current standalone presents the transport as a
+[compact audition drawer](compact-audition-drawer.md). Source, load,
+Play/Pause, file/transport summary, export, and drawer toggle remain visible;
+waveform, loop, comparison, and detailed export controls can be hidden to give
+the schematic editor more room.
+
 The standalone can audition a local WAV, AIFF, or FLAC through the current
 schematic without a DAW. The VST3 retains its host-input workflow and does not
 show these controls.

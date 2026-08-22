@@ -1185,3 +1185,22 @@ Results:
   packaging produces `ReverbPlayground-0.1.0-windows-x64.zip`, validates its
   version, commit identity, contents, and SHA-256, and includes both the
   standalone application and VST3 bundle.
+
+## Post-M14 compact audition drawer verification
+
+- The standalone audition area defaults to a single compact strip, reclaiming
+  96 logical vertical pixels for the schematic. Loading a file opens the detail
+  drawer; manually closing it preserves transport, source, loop, comparison,
+  and export state.
+- Source selection is one accessible combo. The always-visible strip retains
+  Load, Play/Pause, file/transport/underrun summary, Export/Cancel, and the
+  drawer toggle. Waveform seek, Stop, loop editing, Processed/Dry, export mode,
+  and progress live in the drawer.
+- Layout tests cover both states at 640, 720, 899, 900, 1200, 1536, and 1920
+  logical pixels across empty, loaded, playing, looping, and exporting
+  combinations. Every calculated control rectangle is bounded and
+  non-overlapping, including the responsive global audio/safety rows.
+- Rebuilt Release standalone evidence at 125% Windows scaling is stored in
+  [`artifacts/ui/compact-audition-drawer/`](../artifacts/ui/compact-audition-drawer/):
+  the default collapsed view, the open drawer at the 640x400 minimum, and an
+  open/resize/close workflow video.

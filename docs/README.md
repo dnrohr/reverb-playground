@@ -35,6 +35,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Standalone audio-file audition](standalone-audio-file-audition.md) - load/drop workflow, waveform transport, source selection, loop editing, dry comparison, safety, and privacy.
 - [Processed-file export](processed-file-export.md) - Wet Only/Audition Mix semantics, PCM24 format, resampling, bounded tails, cancellation, safety, and atomic publication.
 - [Audio workflow guide](audio-workflow-guide.md) - when to use file audition, live input, Test Impulse, offline export, or the VST3, plus recovery behavior and limitations.
+- [Compact audition drawer](compact-audition-drawer.md) - responsive collapsed/open transport layout, minimum-width guarantees, and current UI evidence.
 - [Schematic editor interactions](schematic-editor-interactions.md) - three-pane layout, pointer and keyboard controls, signal semantics, and scaling contract.
 - [Runtime graph binding](runtime-graph-binding.md) - native snapshot contract, identity validation, live inspector values, and processing boundaries.
 - [Editable node creation](editable-node-creation.md) - primitive defaults, stable IDs, required I/O, structural undo, and draft/runtime boundaries.

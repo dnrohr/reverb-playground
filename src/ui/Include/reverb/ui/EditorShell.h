@@ -64,6 +64,7 @@ private:
     void seekFromWaveform(float x);
     void updateTransport();
     void chooseExportFile();
+    void setAuditionDrawerExpanded(bool expanded);
 
     Callbacks callbacks_;
     juce::Label status_;
@@ -73,12 +74,11 @@ private:
     juce::TextButton muteButton_ { "EMERGENCY MUTE" };
     juce::TextButton resetButton_ { "RESET SAFETY" };
     juce::Slider gain_;
-    juce::TextButton liveSourceButton_ { "LIVE INPUT" };
-    juce::TextButton fileSourceButton_ { "AUDIO FILE" };
+    juce::ComboBox sourceMode_;
     juce::TextButton fileButton_ { "LOAD FILE..." };
     juce::TextButton filePlayButton_ { "PLAY" };
     juce::TextButton fileStopButton_ { "STOP" };
-    juce::TextButton impulseSourceButton_ { "TEST IMPULSE" };
+    juce::TextButton drawerButton_ { "+" };
     juce::ToggleButton loopButton_ { "LOOP" };
     juce::ToggleButton processedButton_ { "PROCESSED" };
     juce::ComboBox exportMode_;
@@ -101,6 +101,7 @@ private:
     double fileSampleRate_ {};
     bool filePlaying_ {};
     bool updatingTransportControls_ {};
+    bool auditionDrawerExpanded_ {};
     int impulseFlashTicks_ {};
 };
 

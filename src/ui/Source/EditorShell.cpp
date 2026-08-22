@@ -1,4 +1,5 @@
 #include <reverb/ui/EditorShell.h>
+#include <reverb/ui/AuditionDeckLayout.h>
 #include <BinaryData.h>
 
 #include <array>
@@ -63,39 +64,42 @@ EditorShell::EditorShell(Callbacks callbacks)
     muteButton_.setToggleState(callbacks_.emergencyMuted(), juce::dontSendNotification);
 
     const std::array<juce::Component*, 14> auditionComponents {
-        &liveSourceButton_, &fileSourceButton_, &fileButton_, &filePlayButton_, &fileStopButton_,
-        &impulseSourceButton_, &loopButton_, &processedButton_, &fileLabel_, &transportLabel_, &seek_,
-        &exportMode_, &exportButton_, &exportProgressBar_,
+        &sourceMode_, &fileButton_, &filePlayButton_, &fileStopButton_, &drawerButton_,
+        &loopButton_, &processedButton_, &fileLabel_, &transportLabel_, &seek_, &exportMode_,
+        &exportButton_, &exportProgressBar_, &loopRange_,
     };
     for (auto* component : auditionComponents) {
         addAndMakeVisible(component);
         component->setVisible(callbacks_.standaloneAuditionAvailable);
     }
-    addAndMakeVisible(loopRange_);
-    loopRange_.setVisible(callbacks_.standaloneAuditionAvailable);
     fileLabel_.setText("DROP WAV, AIFF, OR FLAC HERE", juce::dontSendNotification);
     fileLabel_.setJustificationType(juce::Justification::centredLeft);
     transportLabel_.setJustificationType(juce::Justification::centredRight);
     styleLabel(fileLabel_, text, 12.0F, juce::Font::bold);
     styleLabel(transportLabel_, mutedText, 11.0F, juce::Font::plain);
-    for (auto* button : { &liveSourceButton_, &fileSourceButton_, &fileButton_, &filePlayButton_,
-             &fileStopButton_, &impulseSourceButton_ }) {
+    for (auto* button : { &fileButton_, &filePlayButton_, &fileStopButton_, &drawerButton_ }) {
         button->setColour(juce::TextButton::buttonColourId, panel.brighter(0.08F));
         button->setColour(juce::TextButton::buttonOnColourId, cyan.darker(0.35F));
     }
-    liveSourceButton_.setClickingTogglesState(false);
-    fileSourceButton_.setClickingTogglesState(false);
-    liveSourceButton_.onClick = [this] { callbacks_.setAuditionSourceMode(0); };
-    fileSourceButton_.onClick = [this] { callbacks_.setAuditionSourceMode(1); };
-    impulseSourceButton_.onClick = [this] {
-        callbacks_.setAuditionSourceMode(2);
-        callbacks_.triggerImpulse();
+    sourceMode_.addItem("LIVE INPUT", 1);
+    sourceMode_.addItem("AUDIO FILE", 2);
+    sourceMode_.addItem("TEST IMPULSE", 3);
+    sourceMode_.setSelectedId(1, juce::dontSendNotification);
+    sourceMode_.setTitle("Audition source");
+    sourceMode_.onChange = [this] {
+        if (updatingTransportControls_) return;
+        const auto mode = juce::jlimit(0, 2, sourceMode_.getSelectedId() - 1);
+        callbacks_.setAuditionSourceMode(mode);
+        if (mode == 2) callbacks_.triggerImpulse();
     };
     fileButton_.onClick = [this] { chooseAudioFile(); };
     filePlayButton_.onClick = [this] {
         if (filePlaying_) callbacks_.pauseAudioFile(); else callbacks_.playAudioFile();
     };
     fileStopButton_.onClick = [this] { callbacks_.stopAudioFile(); };
+    drawerButton_.setTitle("Audio-file details");
+    drawerButton_.setDescription("Show or hide waveform, looping, comparison, and export details");
+    drawerButton_.onClick = [this] { setAuditionDrawerExpanded(!auditionDrawerExpanded_); };
     loopButton_.onClick = [this] {
         if (updatingTransportControls_ || fileFrameCount_ <= 0) return;
         const auto start = static_cast<std::int64_t>(std::llround(loopRange_.getMinValue() * fileFrameCount_));
@@ -152,6 +156,8 @@ EditorShell::EditorShell(Callbacks callbacks)
     muteButton_.setColour(juce::TextButton::buttonOnColourId, danger);
     resetButton_.setColour(juce::TextButton::buttonColourId, amber.darker(0.55F));
     deviceButton_.setColour(juce::TextButton::buttonColourId, panel.brighter(0.08F));
+
+    setAuditionDrawerExpanded(false);
 
     auto options = juce::WebBrowserComponent::Options {}
         .withBackend(juce::WebBrowserComponent::Options::Backend::webview2)
@@ -220,7 +226,9 @@ EditorShell::EditorShell(Callbacks callbacks)
 void EditorShell::paint(juce::Graphics& graphics)
 {
     graphics.fillAll(background);
-    const auto headerHeight = callbacks_.standaloneAuditionAvailable ? 210.0F : 88.0F;
+    const auto headerHeight = callbacks_.standaloneAuditionAvailable
+        ? static_cast<float>(calculateAuditionDeckLayout(getWidth(), auditionDrawerExpanded_).headerHeight)
+        : 88.0F;
     auto controls = getLocalBounds().toFloat().removeFromTop(headerHeight);
     graphics.setColour(panel);
     graphics.fillRect(controls);
@@ -276,52 +284,61 @@ std::optional<juce::WebBrowserComponent::Resource> EditorShell::getWebResource(c
 void EditorShell::resized()
 {
     auto bounds = getLocalBounds();
-    const auto headerHeight = callbacks_.standaloneAuditionAvailable ? 210 : 88;
-    auto controls = bounds.removeFromTop(headerHeight).reduced(14, 10);
-    auto topRow = controls.removeFromTop(31);
-    status_.setBounds(topRow.removeFromLeft(300));
-    deviceButton_.setBounds(topRow.removeFromLeft(145));
-    topRow.removeFromLeft(8);
-    impulseButton_.setBounds(topRow.removeFromLeft(145));
-    topRow.removeFromLeft(8);
-    muteButton_.setBounds(topRow.removeFromLeft(145));
-    topRow.removeFromLeft(8);
-    resetButton_.setBounds(topRow.removeFromLeft(125));
-    auto gainRow = controls.removeFromTop(34);
-    gainLabel_.setBounds(gainRow.removeFromLeft(190));
-    gain_.setBounds(gainRow.removeFromLeft(340));
+    const auto deck = calculateAuditionDeckLayout(getWidth(), auditionDrawerExpanded_);
+    const auto headerHeight = callbacks_.standaloneAuditionAvailable ? deck.headerHeight : 88;
+    constexpr int inset = 14;
+    const auto contentWidth = juce::jmax(0, getWidth() - inset * 2);
+    if (getWidth() < 900) {
+        status_.setBounds(inset, 10, contentWidth, 25);
+        auto actions = juce::Rectangle<int> { inset, 39, contentWidth, 28 };
+        constexpr int actionGap = 6;
+        const auto actionWidth = juce::jmax(0, (actions.getWidth() - actionGap * 3) / 4);
+        deviceButton_.setBounds(actions.removeFromLeft(actionWidth)); actions.removeFromLeft(actionGap);
+        impulseButton_.setBounds(actions.removeFromLeft(actionWidth)); actions.removeFromLeft(actionGap);
+        muteButton_.setBounds(actions.removeFromLeft(actionWidth)); actions.removeFromLeft(actionGap);
+        resetButton_.setBounds(actions);
+        auto gainRow = juce::Rectangle<int> { inset, 70, contentWidth, 27 };
+        gainLabel_.setBounds(gainRow.removeFromLeft(154));
+        gain_.setBounds(gainRow);
+    } else {
+        auto topRow = juce::Rectangle<int> { inset, 10, contentWidth, 31 };
+        constexpr int actionWidth = 132;
+        constexpr int resetWidth = 116;
+        constexpr int actionGap = 7;
+        const auto actionsWidth = actionWidth * 3 + resetWidth + actionGap * 3;
+        status_.setBounds(topRow.removeFromLeft(juce::jmax(180, topRow.getWidth() - actionsWidth)));
+        deviceButton_.setBounds(topRow.removeFromLeft(actionWidth)); topRow.removeFromLeft(actionGap);
+        impulseButton_.setBounds(topRow.removeFromLeft(actionWidth)); topRow.removeFromLeft(actionGap);
+        muteButton_.setBounds(topRow.removeFromLeft(actionWidth)); topRow.removeFromLeft(actionGap);
+        resetButton_.setBounds(topRow.removeFromLeft(resetWidth));
+        auto gainRow = juce::Rectangle<int> { inset, 43, contentWidth, 32 };
+        gainLabel_.setBounds(gainRow.removeFromLeft(190));
+        gain_.setBounds(gainRow.removeFromLeft(juce::jmin(440, gainRow.getWidth())));
+    }
     if (callbacks_.standaloneAuditionAvailable) {
-        auto sourceRow = controls.removeFromTop(30);
-        liveSourceButton_.setBounds(sourceRow.removeFromLeft(105));
-        fileSourceButton_.setBounds(sourceRow.removeFromLeft(105));
-        impulseSourceButton_.setBounds(sourceRow.removeFromLeft(115));
-        sourceRow.removeFromLeft(8);
-        fileButton_.setBounds(sourceRow.removeFromLeft(110));
-        sourceRow.removeFromLeft(8);
-        filePlayButton_.setBounds(sourceRow.removeFromLeft(70));
-        fileStopButton_.setBounds(sourceRow.removeFromLeft(65));
-        loopButton_.setBounds(sourceRow.removeFromLeft(65));
-        processedButton_.setBounds(sourceRow.removeFromLeft(110));
-        sourceRow.removeFromLeft(8);
-        exportMode_.setBounds(sourceRow.removeFromLeft(125));
-        sourceRow.removeFromLeft(8);
-        exportButton_.setBounds(sourceRow.removeFromLeft(115));
-        auto waveformRow = controls.removeFromTop(46);
-        waveformBounds_ = waveformRow.removeFromLeft(
-            std::max(240, static_cast<int>(std::round(waveformRow.getWidth() * 0.68))));
-        auto details = waveformRow.reduced(8, 0);
-        fileLabel_.setBounds(details.removeFromTop(22));
-        transportLabel_.setBounds(details);
-        auto transportRow = controls.removeFromTop(20);
-        seek_.setBounds(transportRow.removeFromLeft(
-            std::max(240, static_cast<int>(std::round(transportRow.getWidth() * 0.68)))));
-        auto exportRow = transportRow.reduced(8, 0);
-        loopRange_.setBounds(exportRow.removeFromLeft(static_cast<int>(exportRow.getWidth() * 0.58)));
-        exportRow.removeFromLeft(8);
-        exportProgressBar_.setBounds(exportRow);
+        const auto convert = [](const LayoutRect& item) {
+            return juce::Rectangle<int> { item.x, item.y, item.width, item.height };
+        };
+        sourceMode_.setBounds(convert(deck.sourceMode));
+        fileButton_.setBounds(convert(deck.loadFile));
+        filePlayButton_.setBounds(convert(deck.playPause));
+        auto summary = convert(deck.summary);
+        fileLabel_.setBounds(summary.removeFromLeft(static_cast<int>(summary.getWidth() * 0.48)));
+        transportLabel_.setBounds(summary);
+        exportButton_.setBounds(convert(deck.exportWav));
+        drawerButton_.setBounds(convert(deck.drawerToggle));
+        waveformBounds_ = convert(deck.waveform);
+        fileStopButton_.setBounds(convert(deck.stop));
+        loopButton_.setBounds(convert(deck.loop));
+        processedButton_.setBounds(convert(deck.processed));
+        exportMode_.setBounds(convert(deck.exportMode));
+        exportProgressBar_.setBounds(convert(deck.exportProgress));
+        seek_.setBounds(convert(deck.seek));
+        loopRange_.setBounds(convert(deck.loopRange));
     } else {
         waveformBounds_ = {};
     }
+    bounds.removeFromTop(headerHeight);
     if (browser_ != nullptr)
         browser_->setBounds(bounds);
 }
@@ -371,6 +388,23 @@ void EditorShell::loadAudioFile(const juce::File& file)
     thumbnail_.setSource(new juce::FileInputSource(file));
     fileLabel_.setText(file.getFileName(), juce::dontSendNotification);
     callbacks_.playAudioFile();
+    setAuditionDrawerExpanded(true);
+    repaint();
+}
+
+void EditorShell::setAuditionDrawerExpanded(const bool expanded)
+{
+    auditionDrawerExpanded_ = callbacks_.standaloneAuditionAvailable && expanded;
+    drawerButton_.setButtonText(auditionDrawerExpanded_ ? juce::String::fromUTF8("\xe2\x88\x92") : "+");
+    drawerButton_.setTooltip(auditionDrawerExpanded_ ? "Hide audio-file details" : "Show audio-file details");
+    const std::array<juce::Component*, 7> drawerComponents {
+        &fileStopButton_, &loopButton_, &processedButton_, &exportMode_,
+        &exportProgressBar_, &seek_, &loopRange_,
+    };
+    for (auto* component : drawerComponents)
+        component->setVisible(auditionDrawerExpanded_);
+    waveformBounds_ = {};
+    resized();
     repaint();
 }
 
@@ -423,11 +457,10 @@ void EditorShell::updateTransport()
     filePlayButton_.setButtonText(filePlaying_ ? "PAUSE" : "PLAY");
     filePlayButton_.setEnabled(fileFrameCount_ > 0);
     fileStopButton_.setEnabled(fileFrameCount_ > 0);
-    fileSourceButton_.setEnabled(fileFrameCount_ > 0);
-    liveSourceButton_.setToggleState(sourceMode == "live-input", juce::dontSendNotification);
-    fileSourceButton_.setToggleState(sourceMode == "audio-file", juce::dontSendNotification);
-    impulseSourceButton_.setToggleState(sourceMode == "test-impulse", juce::dontSendNotification);
     updatingTransportControls_ = true;
+    sourceMode_.setItemEnabled(2, fileFrameCount_ > 0);
+    sourceMode_.setSelectedId(sourceMode == "audio-file" ? 2 : sourceMode == "test-impulse" ? 3 : 1,
+        juce::dontSendNotification);
     const auto cursorProportion = fileFrameCount_ > 0
         ? static_cast<double>(fileCursorFrame_) / static_cast<double>(fileFrameCount_) : 0.0;
     if (!seek_.isMouseButtonDown()) seek_.setValue(cursorProportion, juce::dontSendNotification);
@@ -455,6 +488,7 @@ void EditorShell::updateTransport()
     const auto exportState = exportStatus.getProperty("state", "idle").toString();
     exportProgress_ = static_cast<double>(exportStatus.getProperty("progress", 0.0));
     exportButton_.setButtonText(exportState == "rendering" ? "CANCEL EXPORT" : "EXPORT WAV...");
+    exportButton_.setEnabled(fileFrameCount_ > 0 || exportState == "rendering");
     exportMode_.setEnabled(exportState != "rendering");
     if (exportState == "failed")
         status_.setText(exportStatus.getProperty("error", "Export failed").toString(), juce::dontSendNotification);
