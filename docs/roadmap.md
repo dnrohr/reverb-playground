@@ -1042,6 +1042,52 @@ Milestone exit criteria:
 
 ---
 
+## M15. Fast and resilient standalone startup
+
+Goal: make the standalone acknowledge a launch immediately even when Windows audio discovery is slow, while preserving the released editor, device controls, saved state, and VST3 behavior.
+
+M15 changes only the standalone host boundary. It does not move audio work onto the UI thread, change the graph runtime, or alter the plugin wrapper.
+
+### M15.1 Establish a measured startup contract
+
+Measure process launch, first visible shell, audio connection, and editor readiness separately instead of treating startup as one opaque duration.
+
+Acceptance criteria:
+
+- The baseline records at least three launches and identifies whether time is spent in processor construction, WebView/editor creation, or audio-device initialization.
+- The product contract requires a visible, correctly scaled native shell within one second on the reference Windows machine.
+- The shell explicitly says that audio is connecting; it never implies that the editor or audio device is ready early.
+- Editor readiness remains independently measurable and a slow or missing endpoint cannot leave the user staring at no window.
+
+### M15.2 Decouple the visible shell from audio discovery
+
+Replace JUCE's stock standalone application ordering with a project-owned wrapper that shows the shell first and prepares the existing plugin holder away from the message thread.
+
+Acceptance criteria:
+
+- Windows device discovery, saved-device recovery, processor state restoration, and audio start complete before the unchanged editor receives the holder.
+- Window creation, editor creation, accessibility state, and the final handoff occur on the message thread.
+- Closing during startup joins the worker and cannot access a destroyed application, holder, settings object, or window.
+- Startup phases advance monotonically, terminate in Ready or Failed, and have automated transition tests.
+- The VST3 continues to use its host-provided audio path and receives no standalone startup UI.
+
+### M15.3 Qualify and document startup recovery
+
+Verify the startup path with saved settings, fresh settings, a slow device scan, normal shutdown, and the existing Release suite.
+
+Acceptance criteria:
+
+- Five warm Release launches meet the one-second shell target and report both shell and editor timings.
+- Current screenshots show the connecting shell and the ready editor at Windows display scaling; neither is blank, clipped, or DPI virtualized.
+- The complete Release verification gate and standalone/VST3 builds pass without changing patch or host-state compatibility.
+- Developer documentation records ownership, shutdown behavior, measurement method, current results, and the remaining limitation that audio readiness still depends on the operating system and driver.
+
+Milestone exit criteria:
+
+- Launching the standalone produces honest visual feedback in under one second on the reference system, the UI remains responsive while Windows audio connects, and the existing schematic replaces the shell automatically when the device path is ready.
+
+---
+
 ## Recommended first execution sequence
 
 1. M0.1 - select the stack and primary targets.

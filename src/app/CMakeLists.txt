@@ -15,7 +15,9 @@ target_sources(ReverbPlayground
         PluginEditor.cpp
         PluginEditor.h
         PluginProcessor.cpp
-        PluginProcessor.h)
+        PluginProcessor.h
+        StandaloneApp.cpp
+        StartupProgress.h)
 
 target_compile_definitions(ReverbPlayground
     PUBLIC
@@ -24,6 +26,7 @@ target_compile_definitions(ReverbPlayground
         JUCE_WEB_BROWSER=1
         JUCE_USE_WIN_WEBVIEW2=1
         JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1
+        JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1
         JUCE_USE_CURL=0)
 
 target_link_libraries(ReverbPlayground
