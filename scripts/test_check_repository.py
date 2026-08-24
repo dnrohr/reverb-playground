@@ -15,6 +15,7 @@ class ProvenancePolicyTests(unittest.TestCase):
             "artifacts/audio/m6/example.json",
             "artifacts/ui/m6/example.png",
             "artifacts/ui/m6/example.jpg",
+            "artifacts/ui/m6/example.gif",
             "artifacts/ui/m6/example.mp4",
             "factory-patches/example.rvp.json",
             "schemas/example.json",

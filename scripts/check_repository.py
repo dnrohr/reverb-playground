@@ -43,7 +43,7 @@ PROHIBITED_ROOTS = (
 BINARY_ASSET_SUFFIXES = {".gif", ".ico", ".jpeg", ".jpg", ".mp3", ".mp4", ".otf", ".pdf", ".png", ".ttf", ".wav", ".webp", ".woff", ".woff2", ".zip"}
 DOCUMENTED_ASSET_RULES = (
     re.compile(r"^artifacts/audio/.+\.(json|wav)$", re.IGNORECASE),
-    re.compile(r"^artifacts/ui/.+\.(jpe?g|mp4|png)$", re.IGNORECASE),
+    re.compile(r"^artifacts/ui/.+\.(gif|jpe?g|mp4|png)$", re.IGNORECASE),
     re.compile(r"^factory-patches/[^/]+\.rvp\.json$", re.IGNORECASE),
     re.compile(r"^factory-patches/catalog\.json$", re.IGNORECASE),
     re.compile(r"^schemas/[^/]+\.json$", re.IGNORECASE),
