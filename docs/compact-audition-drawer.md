@@ -23,6 +23,13 @@ Processed/Dry Bypass, export mode, and export progress. The source selector
 replaces three permanent source buttons without changing the mutually exclusive
 Live Input, Audio File, and Test Impulse behavior.
 
+The loaded waveform keeps the complete file visible in subdued slate. The
+current range is redrawn in bright cyan, providing a stronger luminance and hue
+boundary than the previous single-color waveform. Enabling Loop changes that
+same selected range to the deck's existing amber, while the unselected waveform
+remains slate. The spatial range and Loop toggle continue to provide non-color
+cues.
+
 ## Responsive contract
 
 The native layout is calculated from the current editor width rather than a
@@ -46,6 +53,8 @@ chrome and preserves compact-strip geometry.
   [`artifacts/ui/compact-audition-drawer/02-expanded-minimum.png`](../artifacts/ui/compact-audition-drawer/02-expanded-minimum.png)
 - Open/resize/close workflow:
   [`artifacts/ui/compact-audition-drawer/drawer-resize-workflow.mp4`](../artifacts/ui/compact-audition-drawer/drawer-resize-workflow.mp4)
+- Current active-loop waveform treatment:
+  [`artifacts/ui/startup-waveform-polish/03-active-loop-amber.png`](../artifacts/ui/startup-waveform-polish/03-active-loop-amber.png)
 
 The screenshots were captured from the rebuilt Release standalone. Both drawer
 states fill the native window without audition controls extending past its

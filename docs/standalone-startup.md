@@ -38,6 +38,13 @@ Startup phases are monotonic: Showing Shell, Connecting Audio, Opening Editor,
 then Ready. An unfinished phase may instead enter Failed. The shell exposes the
 current state using text and a progress line, so status does not depend on color.
 
+The progress line is deliberately a presentation timer rather than invented
+device telemetry. It advances linearly from empty to full over eight seconds,
+shows `Loading...` before the eight-second boundary, and shows `Welcome!` at and
+after that boundary. The editor still replaces the shell as soon as the actual
+audio holder is ready; the bar does not delay audio or claim to measure driver
+progress.
+
 ## Shutdown and failure behavior
 
 Closing the shell requests ordinary application shutdown. Shutdown marks the
@@ -85,3 +92,8 @@ Reviewed evidence is in
 PNG files show the connecting and ready states at 125% Windows scaling, and
 [`startup-to-editor.mp4`](../artifacts/ui/m15-fast-startup/startup-to-editor.mp4)
 shows the automatic handoff without a blocked or blank window.
+
+The timed presentation refinement is shown at
+[`artifacts/ui/startup-waveform-polish/`](../artifacts/ui/startup-waveform-polish/):
+the four-second and post-eight-second screenshots prove the two labels and bar
+positions, while `loading-to-welcome.mp4` shows the continuous transition.

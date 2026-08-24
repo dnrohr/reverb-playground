@@ -1,6 +1,6 @@
 # Roadmap progress
 
-Last updated: 2026-08-22
+Last updated: 2026-08-24
 
 | Task | Status | Evidence |
 |---|---|---|
@@ -75,6 +75,7 @@ Last updated: 2026-08-22
 | M15.1 Establish a measured startup contract | Complete | 8.16-9.97 s stock-wrapper baseline; separate shell/audio/editor phases; one-second visible-shell contract |
 | M15.2 Decouple the visible shell from audio discovery | Complete | Project-owned standalone app; immediate accessible shell; worker-owned JUCE holder preparation; message-thread editor handoff; monotonic phase tests |
 | M15.3 Qualify and document startup recovery | Complete | Five launches: shell mean 0.393 s/max 0.411 s, editor mean 8.321 s; inspected 125%-scale screenshots/video; 185 Release tests; standalone/VST3 builds; clean local gate |
+| Post-M15 startup and waveform polish | Complete | Eight-second timed Loading/Welcome presentation; slate/cyan waveform selection with amber active-loop state; deterministic palette/timing tests; refreshed UI evidence |
 
 ## M0.2 verification
 

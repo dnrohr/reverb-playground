@@ -24,3 +24,20 @@ TEST_CASE("Standalone startup can fail from an unfinished phase")
     REQUIRE(progress.advanceTo(StartupPhase::failed));
     REQUIRE_FALSE(progress.advanceTo(StartupPhase::openingEditor));
 }
+
+TEST_CASE("Standalone loading presentation fills over eight seconds then welcomes")
+{
+    const auto before = reverb::app::startupPresentation(-1.0);
+    const auto middle = reverb::app::startupPresentation(4.0);
+    const auto boundary = reverb::app::startupPresentation(8.0);
+    const auto after = reverb::app::startupPresentation(12.0);
+
+    REQUIRE(before.progress == 0.0);
+    REQUIRE_FALSE(before.welcomed);
+    REQUIRE(middle.progress == 0.5);
+    REQUIRE_FALSE(middle.welcomed);
+    REQUIRE(boundary.progress == 1.0);
+    REQUIRE(boundary.welcomed);
+    REQUIRE(after.progress == 1.0);
+    REQUIRE(after.welcomed);
+}

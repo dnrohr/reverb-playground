@@ -39,6 +39,7 @@ private:
     public:
         explicit Content(reverb::app::StartupProgress& progress)
             : progress_(progress)
+            , startedAtMilliseconds_(juce::Time::getMillisecondCounterHiRes())
         {
             setAccessible(true);
             setTitle("Reverb Playground startup status");
@@ -62,44 +63,37 @@ private:
             area.removeFromTop(12);
             graphics.setColour(juce::Colour(0xffaab6bc));
             graphics.setFont(juce::FontOptions(15.0f));
-            graphics.drawFittedText(statusText(), area.removeFromTop(48), juce::Justification::topLeft, 2);
+            const auto presentation = currentPresentation();
+            graphics.drawFittedText(statusText(presentation),
+                area.removeFromTop(48), juce::Justification::topLeft, 2);
 
             area.removeFromTop(16);
             auto track = area.removeFromTop(3).withWidth(420);
             graphics.setColour(juce::Colour(0xff263239));
             graphics.fillRect(track);
             graphics.setColour(juce::Colour(0xff55c7b0));
-            graphics.fillRect(track.withWidth(static_cast<int>(track.getWidth() * progressFraction())));
+            graphics.fillRect(track.withWidth(static_cast<int>(
+                std::round(track.getWidth() * presentation.progress))));
         }
 
     private:
-        [[nodiscard]] juce::String statusText() const
+        [[nodiscard]] juce::String statusText(
+            const reverb::app::StartupPresentation presentation) const
         {
-            using reverb::app::StartupPhase;
-            switch (progress_.phase()) {
-                case StartupPhase::showingShell: return "Preparing the application shell...";
-                case StartupPhase::connectingAudio: return "Connecting Windows audio in the background...";
-                case StartupPhase::openingEditor: return "Audio connected. Building the visual workspace...";
-                case StartupPhase::ready: return "Ready";
-                case StartupPhase::failed: return "Audio could not start. Close and reopen to try again.";
+            if (progress_.phase() == reverb::app::StartupPhase::failed) {
+                return "Audio could not start. Close and reopen to try again.";
             }
-            return {};
+            return presentation.welcomed ? "Welcome!" : "Loading...";
         }
 
-        [[nodiscard]] float progressFraction() const noexcept
+        [[nodiscard]] reverb::app::StartupPresentation currentPresentation() const noexcept
         {
-            using reverb::app::StartupPhase;
-            switch (progress_.phase()) {
-                case StartupPhase::showingShell: return 0.12f;
-                case StartupPhase::connectingAudio: return 0.48f;
-                case StartupPhase::openingEditor: return 0.84f;
-                case StartupPhase::ready: return 1.0f;
-                case StartupPhase::failed: return 1.0f;
-            }
-            return 0.0f;
+            return reverb::app::startupPresentation(
+                (juce::Time::getMillisecondCounterHiRes() - startedAtMilliseconds_) / 1000.0);
         }
 
         reverb::app::StartupProgress& progress_;
+        double startedAtMilliseconds_ {};
     };
 
     void timerCallback() override

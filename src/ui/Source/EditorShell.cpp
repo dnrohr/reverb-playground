@@ -1,5 +1,6 @@
 #include <reverb/ui/EditorShell.h>
 #include <reverb/ui/AuditionDeckLayout.h>
+#include <reverb/ui/AuditionWaveformStyle.h>
 #include <BinaryData.h>
 
 #include <array>
@@ -238,16 +239,26 @@ void EditorShell::paint(juce::Graphics& graphics)
         graphics.setColour(background.brighter(0.08F));
         graphics.fillRoundedRectangle(waveformBounds_.toFloat(), 3.0F);
         if (thumbnail_.getTotalLength() > 0.0) {
-            if (loopButton_.getToggleState()) {
-                auto loopArea = waveformBounds_.toFloat();
-                loopArea.setLeft(loopArea.getX() + loopArea.getWidth() * static_cast<float>(loopRange_.getMinValue()));
-                loopArea.setRight(waveformBounds_.getX() + waveformBounds_.getWidth()
-                    * static_cast<float>(loopRange_.getMaxValue()));
-                graphics.setColour(cyan.withAlpha(0.12F));
-                graphics.fillRect(loopArea);
+            const auto colours = auditionWaveformColours(loopButton_.getToggleState());
+            auto selectedArea = waveformBounds_.toFloat();
+            selectedArea.setLeft(selectedArea.getX() + selectedArea.getWidth()
+                * static_cast<float>(loopRange_.getMinValue()));
+            selectedArea.setRight(waveformBounds_.getX() + waveformBounds_.getWidth()
+                * static_cast<float>(loopRange_.getMaxValue()));
+
+            graphics.setColour(juce::Colour(colours.selectionFill));
+            graphics.fillRect(selectedArea);
+            graphics.setColour(juce::Colour(colours.unselected));
+            thumbnail_.drawChannels(graphics, waveformBounds_.reduced(2),
+                0.0, thumbnail_.getTotalLength(), 0.9F);
+
+            {
+                const juce::Graphics::ScopedSaveState saveState(graphics);
+                graphics.reduceClipRegion(selectedArea.toNearestInt());
+                graphics.setColour(juce::Colour(colours.selected));
+                thumbnail_.drawChannels(graphics, waveformBounds_.reduced(2),
+                    0.0, thumbnail_.getTotalLength(), 0.9F);
             }
-            graphics.setColour(cyan.withAlpha(0.8F));
-            thumbnail_.drawChannels(graphics, waveformBounds_.reduced(2), 0.0, thumbnail_.getTotalLength(), 0.9F);
             const auto cursorX = waveformBounds_.getX()
                 + static_cast<int>(std::round(waveformBounds_.getWidth() * seek_.getValue()));
             graphics.setColour(amber);

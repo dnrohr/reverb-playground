@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <atomic>
 #include <cstdint>
 
@@ -12,6 +13,22 @@ enum class StartupPhase : std::uint8_t {
     ready,
     failed,
 };
+
+inline constexpr double startupPresentationSeconds = 8.0;
+
+struct StartupPresentation final {
+    double progress {};
+    bool welcomed {};
+};
+
+[[nodiscard]] constexpr StartupPresentation startupPresentation(const double elapsedSeconds) noexcept
+{
+    const auto elapsed = std::max(0.0, elapsedSeconds);
+    return {
+        std::clamp(elapsed / startupPresentationSeconds, 0.0, 1.0),
+        elapsed >= startupPresentationSeconds,
+    };
+}
 
 class StartupProgress final {
 public:
