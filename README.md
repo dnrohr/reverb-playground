@@ -4,6 +4,10 @@ Reverb Playground is a free, open-source visual reverb instrument for Windows. I
 
 The project began as a visible, playable reconstruction of a Keith Barr/Alesis MIDIVerb-I-style architecture and has grown into a focused environment for learning and designing algorithmic reverbs.
 
+![Reverse Cosmic Shimmer schematic workflow](artifacts/ui/m13-3-reverse-cosmic-shimmer/reverse-cosmic-workflow.gif)
+
+*Reverse Cosmic Shimmer: inspect the signal path, focus the feedback architecture, and edit the sound continuously.*
+
 ## Download
 
 For most people, the best choice is the current [Windows alpha release](https://github.com/dnrohr/reverb-playground/releases/tag/v0.1.0-alpha.1). Download `ReverbPlayground-0.1.0-windows-x64.zip`, extract the complete ZIP, and choose one of the included formats:

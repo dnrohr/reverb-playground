@@ -73,6 +73,7 @@ Reviewed evidence:
 - [Stereo-motion focus and LFO inspector](../artifacts/ui/m13-3-reverse-cosmic-shimmer/modulation-inspector.jpg)
 - [DPI-aware packaged standalone window inspection](../artifacts/ui/m13-3-reverse-cosmic-shimmer/standalone-window-fit-125-percent.png), showing the editor filling its 1200×720 content area with both sidebars reachable at 125% Windows scaling
 - [Selection, modulation, continuous feedback edit, save, and comparison video](../artifacts/ui/m13-3-reverse-cosmic-shimmer/reverse-cosmic-workflow.mp4)
+- [README-friendly looping GIF](../artifacts/ui/m13-3-reverse-cosmic-shimmer/reverse-cosmic-workflow.gif), derived from the workflow video at 960×540 and 10 frames per second
 - [Complete interaction demonstration](../artifacts/ui/m13-3-reverse-cosmic-shimmer/reverse-cosmic-complete-demo.mp4), combining the current factory workflow with the product's measured-response, numerical safety recovery, and valid/invalid save-reload workflows
 
 The UI recording is visual evidence. Deterministic native tests remain
