@@ -34,3 +34,49 @@ jobs:
       - name: Verify repository, build, and tests
         shell: pwsh
         run: ./scripts/verify.ps1 -Configuration Debug
+
+  windows-development-package:
+    name: Package current Windows build
+    if: github.event_name == 'push'
+    needs: windows
+    runs-on: windows-2022
+    timeout-minutes: 25
+
+    steps:
+      - name: Check out verified source
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.16.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Prepare embedded editor
+        shell: pwsh
+        run: |
+          pnpm --dir web install --frozen-lockfile
+          pnpm --dir web build
+
+      - name: Build deterministic Windows package
+        shell: pwsh
+        run: ./scripts/package_windows.ps1
+
+      - name: Upload development ZIP and standalone
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReverbPlayground-main-windows-x64-${{ github.sha }}
+          path: |
+            out/packages/ReverbPlayground-0.1.0-windows-x64.zip
+            out/packages/ReverbPlayground-0.1.0-windows-x64.zip.sha256
+            out/packages/ReverbPlayground-0.1.0-windows-x64/Standalone/Reverb Playground.exe
+          if-no-files-found: error
+          retention-days: 14

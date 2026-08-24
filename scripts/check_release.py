@@ -55,6 +55,14 @@ def check_contract(
     ):
         if link not in readme:
             failures.append(f"README.md: missing direct landing-page link {link!r}")
+    verify_workflow = read(ROOT / ".github/workflows/verify.yml")
+    for token in (
+        "windows-development-package:", "needs: windows", "package_windows.ps1",
+        "actions/upload-artifact@v4", "Standalone/Reverb Playground.exe",
+        "retention-days: 14",
+    ):
+        if token not in verify_workflow:
+            failures.append(f".github/workflows/verify.yml: missing development package token {token!r}")
     if not DEMO.is_file() or DEMO.stat().st_size < 100_000:
         failures.append("release demonstration video is missing or implausibly small")
     return failures

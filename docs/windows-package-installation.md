@@ -1,34 +1,59 @@
-# Windows package installation
+# Welcome to Reverb Playground
 
-Package: Reverb Playground 0.1.0 alpha for Windows 10/11 x64.
+This package contains Reverb Playground 0.1.0 alpha for 64-bit Windows 10 and 11. It includes a standalone application for immediate use and a VST3 effect for compatible DAWs.
 
-Open `build-info.json` to see the exact product version, source commit, build configuration, and formats. Verify the adjacent `.sha256` file before extracting when the package was downloaded separately.
+## The quickest start
 
-## Standalone
+1. Extract the complete ZIP to a folder you can write to, such as `Documents\Reverb Playground`. Do not run the application from inside the ZIP preview.
+2. Open `Standalone\Reverb Playground.exe`.
+3. Choose **Audio Device…** and select your stereo output.
+4. Begin at a conservative speaker or headphone level.
+5. Load an audio file or choose **Trigger Impulse**, then edit the visible reverb schematic.
 
-1. Extract the complete ZIP to a writable folder.
-2. Open `Standalone/Reverb Playground.exe`.
-3. If the editor reports that WebView2 is unavailable, install Microsoft's current Evergreen WebView2 Runtime and reopen the application.
-4. Choose **Audio Device…**, select a stereo output, and use **Trigger Impulse** at a conservative monitor level.
+The startup screen may remain visible for eight seconds while the editor opens. The standalone is portable: there is no installer and it does not place program files elsewhere. It does use the normal JUCE settings and WebView2 profile locations for your user account.
 
-The standalone is portable; it does not write program files outside its normal JUCE settings and WebView2 profile locations. Keep `LICENSE`, `THIRD_PARTY_NOTICES.md`, and `ASSET_PROVENANCE.md` with redistributed copies.
+## If Windows shows a warning
 
-## VST3
+The alpha is not yet code-signed, so Microsoft Defender SmartScreen may say that Windows protected your PC. Confirm that the ZIP came from the official Reverb Playground GitHub repository before choosing **More info** and **Run anyway**. Do not bypass a warning for a copy obtained elsewhere.
 
-Run `install-vst3.ps1` from PowerShell to install for the current user, or copy the complete `VST3/Reverb Playground.vst3` directory manually to one of:
+The download includes a `.sha256` file beside the ZIP. Advanced users can compare it in PowerShell:
 
-- `%LOCALAPPDATA%\Programs\Common\VST3` for the current user; or
-- `C:\Program Files\Common Files\VST3` for all users (administrator permission required).
+```powershell
+Get-FileHash .\ReverbPlayground-0.1.0-windows-x64.zip -Algorithm SHA256
+```
 
-Rescan VST3 effects in the host and insert **Reverb Playground** on a stereo track. The plug-in requires the Microsoft Evergreen WebView2 Runtime; Windows 10/11 installations commonly already have it, but the package deliberately does not redistribute that separately licensed runtime.
+The value should match the first value in `ReverbPlayground-0.1.0-windows-x64.zip.sha256`.
 
-## Removal
+## Using the standalone
 
-Delete the extracted standalone folder and remove `Reverb Playground.vst3` from the VST3 location used above. Existing DAW projects retain their saved state but will report a missing plug-in until it is reinstalled.
+The standalone is the easiest option for exploring factory topologies, learning from the visualizations, auditioning audio files, and exporting processed audio. No DAW is required.
 
-## First verification
+If the editor says WebView2 is unavailable, install Microsoft's current Evergreen WebView2 Runtime and reopen Reverb Playground. Windows 10 and 11 commonly already include it.
 
-The editor header shows `v0.1.0 / <commit>`. Compare that commit with `build-info.json`. Load **Causal Reverse Envelope**, move a block, close and reopen the editor, then save/reopen the host project. The same graph, parameters, cable layout, and viewport should return.
+## Installing the VST3 plug-in
 
-For the complete first-run journey, continue with
-[Getting started: hear and inspect the Barr reference](getting-started-barr-tutorial.md).
+The VST3 is for using Reverb Playground as a stereo effect inside a DAW.
+
+For a current-user installation, right-click `install-vst3.ps1`, choose **Run with PowerShell**, and follow the prompt. Alternatively, copy the complete `VST3\Reverb Playground.vst3` directory to:
+
+`%LOCALAPPDATA%\Programs\Common\VST3`
+
+For an all-users installation, copy it to `C:\Program Files\Common Files\VST3`; administrator permission is required. Rescan VST3 effects in your DAW, then insert **Reverb Playground** on a stereo track. The plug-in also requires the Evergreen WebView2 Runtime.
+
+## What the other files are
+
+- `build-info.json` records the exact version, source commit, build type, and included formats.
+- `LICENSE`, `THIRD_PARTY_NOTICES.md`, and `ASSET_PROVENANCE.md` describe licensing and provenance.
+- `install-vst3.ps1` performs a current-user VST3 installation.
+
+Keep these files with any redistributed copy of the application.
+
+## Removing Reverb Playground
+
+Delete the extracted package folder to remove the standalone. Remove `Reverb Playground.vst3` from the VST3 folder where you installed it to remove the plug-in. Existing DAW projects retain their saved state but report a missing plug-in until it is reinstalled.
+
+## Confirming the build
+
+The editor header shows `v0.1.0 / <commit>`. The commit should match `build-info.json`. This makes it possible to identify the exact development or release build when reporting a problem.
+
+For a guided first session, visit [Getting started: hear and inspect the Barr reference](https://github.com/dnrohr/reverb-playground/blob/main/docs/getting-started-barr-tutorial.md). Report issues through the official [GitHub Issues page](https://github.com/dnrohr/reverb-playground/issues) and include the displayed commit, Windows version, audio device or DAW, and steps to reproduce the problem.

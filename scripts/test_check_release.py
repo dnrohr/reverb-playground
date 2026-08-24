@@ -26,6 +26,16 @@ class ReleaseContractTests(unittest.TestCase):
         failures = check_release.check_contract(altered_read)
         self.assertTrue(any("Known alpha limitations" in failure for failure in failures))
 
+    def test_missing_development_package_is_reported(self):
+        def altered_read(path: Path) -> str:
+            text = path.read_text(encoding="utf-8")
+            if path == check_release.ROOT / ".github/workflows/verify.yml":
+                return text.replace("windows-development-package:", "windows-package-disabled:")
+            return text
+
+        failures = check_release.check_contract(altered_read)
+        self.assertTrue(any("windows-development-package:" in failure for failure in failures))
+
 
 if __name__ == "__main__":
     unittest.main()
