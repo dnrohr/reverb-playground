@@ -1098,7 +1098,7 @@ Goal: establish accurate, user-visible latency and performance contracts before 
 
 M16 distinguishes algorithmic latency, graph-publication delay, audio-callback load, and editor presentation cost. A perfect fifth remains an ordinary `+7`-semitone setting; it does not require a separate processor or quality mode because limiting the interval alone does not remove the core dual-grain work.
 
-### M16.1 Constrain Pitch Shift to one octave and migrate safely
+### M16.1 Constrain Pitch Shift to one octave and migrate safely — Complete
 
 Change the public Pitch Shift range from `-24...+24` to `-12...+12` semitones and derive storage/latency budgets from that supported range.
 

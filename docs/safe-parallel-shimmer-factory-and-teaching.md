@@ -34,7 +34,7 @@ catalog, so a native-builder change cannot silently leave stale shipped JSON.
 
 The inspector labels the design **Parallel Shimmer / One Pitch Pass** and shows:
 
-- **Normal:** tank -> 600.01 ms alignment -> level.
+- **Normal:** tank -> 360.01 ms alignment -> level.
 - **Octave +12:** subtractive high-pass -> Pitch Shift -> damping -> diffusion.
 - Both branches recombine after the tank, before Wet Balance and unequal stereo
   extraction.
@@ -55,8 +55,8 @@ seconds. Hann-windowed band searches inspect 0.6-second windows beginning at
 
 | Window | 660 Hz halo vs 330 Hz | 1320 Hz vs halo | 2640 Hz vs halo |
 |---|---:|---:|---:|
-| Early, 1.2 s | -23.98 dB | -50.19 dB | -60.81 dB |
-| Late, 3.0 s | -24.24 dB | -55.35 dB | -69.80 dB |
+| Early, 1.2 s | -24.46 dB | -50.91 dB | -65.07 dB |
+| Late, 3.0 s | -24.24 dB | -55.18 dB | -69.77 dB |
 
 The halo remains present in both windows. The next two octave bands remain at
 least 50 dB below it, which is much stronger than the -13 dB no-staircase gate.

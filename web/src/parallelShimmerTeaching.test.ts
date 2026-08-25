@@ -12,6 +12,7 @@ describe('Safe Parallel Shimmer teaching contract', () => {
   });
 
   it('identifies normal octave tank and recombination selections', () => {
+    expect(parallelShimmerTeaching.normal).toContain('360.01 ms alignment');
     expect(parallelShimmerBranch('normal-level')).toBe('normal');
     expect(parallelShimmerBranch('shimmer-pitch')).toBe('octave');
     expect(parallelShimmerBranch('reverb-decay')).toBe('tank');

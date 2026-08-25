@@ -30,11 +30,11 @@ tolerance is ±15 cents.
 | +12 target | 799.84 Hz / -0.35 cents | 800.00 Hz / 0.00 cents |
 | +12 level | -58.92 dBFS | -55.54 dBFS |
 | +24 target | 1600.32 Hz / +0.35 cents | 1600.00 Hz / 0.00 cents |
-| +24 level | -116.38 dBFS | -76.10 dBFS |
+| +24 level | -116.39 dBFS | -75.91 dBFS |
 
-The +24 component grows by 40.28 dB between the windows. In the late window it
+The +24 component grows by 40.48 dB between the windows. In the late window it
 is 20.56 dB below +12; the Safe Parallel Shimmer reference places the comparable
-+24 region 68.88 dB below +12. The 48.32 dB contrast is the checked distinction
++24 region 68.90 dB below +12. The 48.50 dB contrast is the checked distinction
 between cumulative recirculation and a one-pass parallel halo. No +36 or higher
 stage is required for task acceptance.
 
@@ -51,9 +51,9 @@ short low-feedback reference; it is not a claimed RT60 ratio.
 These figures describe the current dual-grain linear-interpolation quality, not
 an alias-free production shifter:
 
-- Strongest measured ±16.67 Hz forward-grain sideband: -67.18 dB relative to
+- Strongest measured ±16.67 Hz forward-grain sideband: -64.20 dB relative to
   the 800 Hz target.
-- A 7 kHz probe produces a folded 20 kHz component 32.49 dB below the first
+- A 7 kHz probe produces a folded 20 kHz component 32.17 dB below the first
   14 kHz octave component, even with the visible post-shift filter opened to
   9 kHz.
 - Closing post-shift damping from 9 kHz to 2 kHz reduces late +24 energy by

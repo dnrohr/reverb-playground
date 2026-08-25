@@ -509,7 +509,7 @@
         "parameters": [
           {
             "id": "delay",
-            "value": 600.01,
+            "value": 360.01,
             "unit": "milliseconds",
             "modulation": {
               "portId": "delay-mod",
@@ -690,8 +690,8 @@
               "portId": "semitones-mod",
               "amount": 12.0,
               "polarity": "bipolar",
-              "clampMinimum": -24.0,
-              "clampMaximum": 24.0
+              "clampMinimum": -12.0,
+              "clampMaximum": 12.0
             }
           },
           {

@@ -23,6 +23,7 @@ describe('editable module library', () => {
       ['semitones', 12, 'semitones'], ['grain', 60, 'milliseconds'], ['overlap', 0.5, 'normalized'],
       ['direction', 0, 'direction'], ['phase', 0, 'cycles'],
     ]);
+    expect(pitch.data.parameters[0]).toMatchObject({ minimum: -12, maximum: 12 });
     expect(pitch.data.parameters.find((parameter) => parameter.id === 'direction')?.modulation).toBeUndefined();
     expect(pitch.data.parameters.find((parameter) => parameter.id === 'phase')?.modulation).toBeUndefined();
   });

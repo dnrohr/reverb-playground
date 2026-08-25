@@ -57,6 +57,20 @@ describe('patch persistence', () => {
     expect(writePatchJson(loaded.nodes, loaded.edges, loaded.viewport)).toBe(written);
   });
 
+  it('migrates legacy Pitch Shift values into one octave with a visible warning', () => {
+    const flow = createFlowModel(reference);
+    flow.nodes.push(createModuleNode('stereo-input', 'stereo-input-1', { x: -200, y: 0 }), createModuleNode('pitch-shift', 'pitch-shift-1', { x: 0, y: 0 }), createModuleNode('stereo-output', 'stereo-output-1', { x: 200, y: 0 }));
+    const saved = JSON.parse(writePatchJson(flow.nodes, flow.edges, { x: 0, y: 0, zoom: 1 }));
+    const pitch = saved.semantic.nodes.find((node: { type: string }) => node.type === 'pitch-shift');
+    pitch.parameters[0].value = -24;
+    pitch.parameters[0].modulation.clampMinimum = -24;
+    pitch.parameters[0].modulation.clampMaximum = 24;
+    const loaded = parsePatchJson(JSON.stringify(saved), reference);
+    const migrated = loaded.nodes.find((node) => node.id === 'pitch-shift-1')!.data.parameters[0];
+    expect(migrated).toMatchObject({ value: -12, minimum: -12, maximum: 12, modulation: { clampMinimum: -12, clampMaximum: 12 } });
+    expect(loaded.warnings).toEqual([expect.stringMatching(/one-octave range/)]);
+  });
+
   it('rejects invalid and future documents before returning replacement state', () => {
     const flow = createFlowModel(reference);
     flow.nodes.push(createModuleNode('stereo-input', 'stereo-input-1', { x: -200, y: 0 }), createModuleNode('stereo-output', 'stereo-output-1', { x: 200, y: 0 }));

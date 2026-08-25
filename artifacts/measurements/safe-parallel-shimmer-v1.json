@@ -14,23 +14,23 @@
     "relativeHalfWidth": 0.025,
     "early": {
       "startSeconds": 1.2,
-      "source330Power": 7186.450710603537,
-      "halo660Power": 28.736491500053,
-      "octave1320Power": 0.000275211929,
-      "octave2640Power": 0.000023828365,
-      "haloVsSourceDb": -23.980807,
-      "octave1320VsHaloDb": -50.187665,
-      "octave2640VsHaloDb": -60.813395
+      "source330Power": 6728.253052230035,
+      "halo660Power": 24.109932444166017,
+      "octave1320Power": 0.00019559528021872,
+      "octave2640Power": 0.00000749853590056,
+      "haloVsSourceDb": -24.457063,
+      "octave1320VsHaloDb": -50.908376,
+      "octave2640VsHaloDb": -65.072195
     },
     "late": {
       "startSeconds": 3,
-      "source330Power": 6753.702529513556,
-      "halo660Power": 25.455248518452,
-      "octave1320Power": 0.000074269804,
-      "octave2640Power": 0.00000266363,
-      "haloVsSourceDb": -24.237646,
-      "octave1320VsHaloDb": -55.349651,
-      "octave2640VsHaloDb": -69.803034
+      "source330Power": 6735.361589884937,
+      "halo660Power": 25.383760191158117,
+      "octave1320Power": 0.00007707200552989,
+      "octave2640Power": 0.00000267614263368,
+      "haloVsSourceDb": -24.238050,
+      "octave1320VsHaloDb": -55.176593,
+      "octave2640VsHaloDb": -69.770467
     }
   },
   "qualification": {

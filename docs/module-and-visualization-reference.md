@@ -81,7 +81,7 @@ Nyquist, so unusual low sample rates remain finite.
 
 Mono dual-grain pitch processor with audio input/output plus `semitones-mod`,
 `grain-mod`, and `overlap-mod` control sockets. **Semitones** is
-`-24.00..+24.00 st`, step `0.01 st`, default `+12 st`; **Grain** is
+`-12.00..+12.00 st`, step `0.01 st`, default `+12 st`; `+7 st` selects a perfect fifth; **Grain** is
 `20.0..120.0 ms`, step `0.1 ms`, default `60 ms`; **Overlap** is normalized
 `0.10..1.00`, step `0.01`, default `0.50`. **Direction** selects forward grains
 or reverse playback inside each causal grain. **Phase** is

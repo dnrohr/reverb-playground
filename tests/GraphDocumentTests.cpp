@@ -129,6 +129,26 @@ TEST_CASE("Every released schema version migrates to deterministic schema v2")
     REQUIRE(reverb::graph::writePatchJson(versionTwo) == migrated);
 }
 
+TEST_CASE("Legacy schema-v2 Pitch Shift values migrate visibly into one octave")
+{
+    auto json = nlohmann::json::parse(readFixture("../../factory-patches/safe-parallel-shimmer.rvp.json"));
+    auto& nodes = json.at("semantic").at("nodes");
+    const auto pitch = std::ranges::find_if(nodes, [](const auto& node) { return node.at("type") == "pitch-shift"; });
+    REQUIRE(pitch != nodes.end());
+    auto& semitones = pitch->at("parameters").at(0);
+    semitones["value"] = 24.0;
+    semitones["modulation"]["clampMinimum"] = -24.0;
+    semitones["modulation"]["clampMaximum"] = 24.0;
+
+    const auto migrated = reverb::graph::parsePatchJson(json.dump());
+    const auto& migratedPitch = findNode(migrated, pitch->at("id").get<std::string>());
+    REQUIRE(migratedPitch.parameters.front().value == 12.0);
+    REQUIRE(migratedPitch.parameters.front().modulation->clampMinimum == -12.0);
+    REQUIRE(migratedPitch.parameters.front().modulation->clampMaximum == 12.0);
+    REQUIRE(migrated.migrationWarnings.size() == 1);
+    REQUIRE(migrated.migrationWarnings.front().find("one-octave range") != std::string::npos);
+}
+
 TEST_CASE("Validator rejects zero-delay cycles and accepts delayed feedback")
 {
     using namespace reverb::graph;

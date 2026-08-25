@@ -62,7 +62,7 @@ Last updated: 2026-08-25
 | M11.1 Design the parallel topology | Complete | 28 visible blocks; non-recirculating +12-semitone branch; independent controls; latency, memory, and normalization budgets |
 | M11.2 Ship and teach Safe Parallel Shimmer | Complete | Editable factory; +12 halo/no-staircase measurement; teaching view; exact persistence; screenshots/video; clean local and main CI |
 | M12.1 Implement independently bounded feedback paths | Complete | Separate normal/shifted gains and delayed returns; visible pre/post filters; 0.72 combined ceiling; invalid-publication and multirate safety tests |
-| M12.2 Prove cumulative harmonic ascent | Complete | Time-resolved +12/+24 fixture; 48.32 dB parallel contrast; independent feedback metrics; artifact/alias/damping/stereo disclosure; 54 finite crossfaded edits |
+| M12.2 Prove cumulative harmonic ascent | Complete | Time-resolved +12/+24 fixture; 48.50 dB parallel contrast; independent feedback metrics; artifact/alias/damping/stereo disclosure; 54 finite crossfaded edits |
 | M12.3 Ship the Split-Feedback Shimmer factory patch | Complete | Editable 25-block factory; normal/shifted/shared focus; measured circulation teaching; exact persistence/host restore; screenshots/video |
 | M13.1 Add reverse-grain mode and stereo decorrelation | Complete | Explicit deterministic phase; causal reverse grains; near-zero paired correlation; transient-envelope report; compatibility; screenshots/video |
 | M13.2 Construct the cosmic shimmer topology | Complete | 45 public blocks; three-tap causal rise; dual dark reverse-octave returns; independent motion; bounded compatible stereo; multirate tests |
@@ -76,7 +76,8 @@ Last updated: 2026-08-25
 | M15.2 Decouple the visible shell from audio discovery | Complete | Project-owned standalone app; immediate accessible shell; worker-owned JUCE holder preparation; message-thread editor handoff; monotonic phase tests |
 | M15.3 Qualify and document startup recovery | Complete | Five launches: shell mean 0.393 s/max 0.411 s, editor mean 8.321 s; inspected 125%-scale screenshots/video; 185 Release tests; standalone/VST3 builds; clean local gate |
 | Post-M15 startup and waveform polish | Complete | Eight-second timed Loading/Welcome presentation; slate/cyan waveform selection with amber active-loop state; deterministic palette/timing tests; refreshed UI evidence |
-| M16.1-M16.4 Latency truth and performance baselines | Planned | One-octave Pitch Shift contract; saved-state migration; graph/host latency; graph-specific diagnostics; representative baseline matrix |
+| M16.1 Constrain Pitch Shift to one octave and migrate safely | Complete | Unified -12...+12 DSP/graph/editor contract; +7 perfect fifth; deterministic schema-v2 clamp warning; exact 44.1/48/96/192 kHz latency and storage tests; factory qualification |
+| M16.2-M16.4 Latency truth and performance baselines | Planned | Graph/host latency; graph-specific diagnostics; representative baseline matrix |
 | M17.1-M17.4 Hybrid compiled graph execution | Planned | SCC-local sample processing; block regions; buffer liveness/reuse; safe kernel fusion/SIMD; measured equivalence and improvement |
 | M18.1-M18.4 Pitch/control optimization and specialization | Planned | Dual-grain hot-loop optimization; block control ramps; bounded quality modes; evidence-based AOT/JIT decision |
 
@@ -882,7 +883,7 @@ Results:
 - Reverb Decay, Shimmer Level, post-shift Shimmer Damping, and final Wet Balance
   are independent named nodes with separate bounded parameters. The octave
   branch also exposes its `x - Low-pass(x)` pre-filter and two Allpasses.
-- A 600.01 ms normal-path Delay aligns within two samples of Pitch Shift's fixed
+- A 360.01 ms normal-path Delay aligns within two samples of Pitch Shift's fixed
   latency at 44.1, 48, 96, and 192 kHz. Maximum-rate preparation uses twelve
   planned delay-bearing processors and less than 4 MiB of the 64 MiB budget.
 - Qualified-rate two-second impulse-plus-noise renders are finite, below full
@@ -944,14 +945,14 @@ Results:
 - The reproducible Release generator and checked
   `split-feedback-shimmer-v1.json` artifact measure 400 -> 800 -> 1600 Hz in
   early and late Hann windows. Late +12/+24 errors are exactly 0 cents within
-  the checked ±15-cent tolerance; +24 grows 40.28 dB between windows.
-- Late +24 is 48.32 dB stronger relative to +12 than in the one-pass Safe
+  the checked ±15-cent tolerance; +24 grows 40.48 dB between windows.
+- Late +24 is 48.50 dB stronger relative to +12 than in the one-pass Safe
   Parallel Shimmer reference, directly distinguishing cumulative feedback from
   a parallel octave layer without requiring a +36 stage.
 - Raising Shifted Feedback from 0.04 to 0.13 adds 20.48 dB of late +24 energy.
   With Shifted Feedback at zero, raising Normal Feedback from 0.18 to 0.56 adds
   95.76 dB of separately measured late impulse-tail energy.
-- The artifact discloses -67.18 dB forward-grain sidebands, -32.49 dB folded
+- The artifact discloses -64.20 dB forward-grain sidebands, -32.17 dB folded
   alias energy, -2.63 dB low-damping +24 loss, and 0.729 stereo correlation.
 - Eighteen five-parameter edits at each of 44.1, 48, and 96 kHz complete all 54
   fixed 10 ms crossfades with audible, finite output. Peak remains 0.01774 and

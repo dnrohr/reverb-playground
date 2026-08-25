@@ -46,7 +46,8 @@ describe('visible Pitch Shift block', () => {
     const markup = renderToStaticMarkup(<PitchShiftVisualization parameters={parameters} reducedMotion sampleRate={48_000} />);
     expect(markup).toContain('Illustrative dual grain phase, reverse');
     expect(markup).toContain('is-reduced');
-    expect(markup).toContain('28,802 samples');
+    expect(markup).toContain('17,282 samples');
+    expect(markup).toContain('360.04 ms');
     expect(markup).toContain('not measured audio or sample-accurate');
     expect(markup).toContain('not a fixed-Hz frequency shift or moving-Delay Doppler effect');
     expect(markup).toContain('not the whole reverb');

@@ -10,31 +10,32 @@ TEST_CASE("Pitch shift semitones map to the bounded musical ratio")
 {
     using Catch::Approx;
     using reverb::dsp::pitch_shift::ratioForSemitones;
-    REQUIRE(ratioForSemitones(-24.0) == Approx(0.25));
+    REQUIRE(ratioForSemitones(-24.0) == Approx(0.5));
     REQUIRE(ratioForSemitones(-12.0) == Approx(0.5));
     REQUIRE(ratioForSemitones(0.0) == Approx(1.0));
     REQUIRE(ratioForSemitones(12.0) == Approx(2.0));
-    REQUIRE(ratioForSemitones(24.0) == Approx(4.0));
-    REQUIRE(ratioForSemitones(-100.0) == Approx(0.25));
-    REQUIRE(ratioForSemitones(100.0) == Approx(4.0));
+    REQUIRE(ratioForSemitones(7.0) == Approx(std::pow(2.0, 7.0 / 12.0)));
+    REQUIRE(ratioForSemitones(24.0) == Approx(2.0));
+    REQUIRE(ratioForSemitones(-100.0) == Approx(0.5));
+    REQUIRE(ratioForSemitones(100.0) == Approx(2.0));
     REQUIRE(ratioForSemitones(std::nan("")) == Approx(2.0));
 }
 
 TEST_CASE("Pitch shift fixed latency and storage cover the worst reverse grain")
 {
     using namespace reverb::dsp::pitch_shift;
-    REQUIRE(maximumReadExcursionMilliseconds() == Catch::Approx(600.0));
-    const std::array expectedLatency { 26'462ULL, 28'802ULL, 57'602ULL };
-    const std::array expectedStorage { 52'924ULL, 57'604ULL, 115'204ULL };
+    REQUIRE(maximumReadExcursionMilliseconds() == Catch::Approx(360.0));
+    const std::array expectedLatency { 15'878ULL, 17'282ULL, 34'562ULL };
+    const std::array expectedStorage { 31'756ULL, 34'564ULL, 69'124ULL };
     for (std::size_t index = 0; index < qualificationSampleRates.size(); ++index) {
         CAPTURE(qualificationSampleRates[index]);
         REQUIRE(reportedLatencySamples(qualificationSampleRates[index]) == expectedLatency[index]);
         REQUIRE(preparedStorageSamples(qualificationSampleRates[index]) == expectedStorage[index]);
         REQUIRE(preparedStorageBytes(qualificationSampleRates[index]) == expectedStorage[index] * sizeof(float));
     }
-    REQUIRE(reportedLatencySamples(maximumPreparationSampleRate) == 115'202);
-    REQUIRE(preparedStorageSamples(maximumPreparationSampleRate) == 230'404);
-    REQUIRE(preparedStorageBytes(maximumPreparationSampleRate) == 921'616);
+    REQUIRE(reportedLatencySamples(maximumPreparationSampleRate) == 69'122);
+    REQUIRE(preparedStorageSamples(maximumPreparationSampleRate) == 138'244);
+    REQUIRE(preparedStorageBytes(maximumPreparationSampleRate) == 552'976);
     REQUIRE(preparedStorageSamples(0.0) == 0);
     REQUIRE(preparedStorageSamples(std::nan("")) == 0);
 }

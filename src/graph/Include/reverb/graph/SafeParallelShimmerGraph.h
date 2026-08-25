@@ -11,7 +11,7 @@ struct SafeParallelShimmerControls final {
     double wetBalance { 0.75 };
 };
 
-inline constexpr double safeParallelShimmerAlignmentMilliseconds = 600.01;
+inline constexpr double safeParallelShimmerAlignmentMilliseconds = 360.01;
 inline constexpr double safeParallelShimmerHighpassHertz = 250.0;
 inline constexpr double safeParallelShimmerSemitones = 12.0;
 

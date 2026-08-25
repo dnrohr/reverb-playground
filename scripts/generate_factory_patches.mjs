@@ -342,17 +342,17 @@ if (gravityFactoryHash !== '8e683dfb595c6f24ac5882e46e6d3fbffcb92790a5616f1bd2b3
 const shimmerFactoryPath = resolve(outputDirectory, 'safe-parallel-shimmer.rvp.json');
 const shimmerFactoryBytes = await readFile(shimmerFactoryPath);
 const shimmerFactoryHash = createHash('sha256').update(shimmerFactoryBytes).digest('hex');
-if (shimmerFactoryHash !== '2dacd5e59d3b72f1ac4203f42f85e3a2e3ed1e1cacd3253998b1cf8fd7cccb91')
+if (shimmerFactoryHash !== 'd35eebc8741a33fbf51a6c4492bd5dd615745cf0eeba84a6834351df07ac94d8')
   throw new Error('safe-parallel-shimmer.rvp.json is stale; run .\\scripts\\generate_safe_parallel_shimmer_factory.ps1 -Configuration Release');
 
 const splitShimmerFactoryPath = resolve(outputDirectory, 'split-feedback-shimmer.rvp.json');
 const splitShimmerFactoryBytes = await readFile(splitShimmerFactoryPath);
 const splitShimmerFactoryHash = createHash('sha256').update(splitShimmerFactoryBytes).digest('hex');
-if (splitShimmerFactoryHash !== '4aea9287200d5c585d0e0a982e3bc7114b2bbc8b43e1fabd7bfafd66dbddd9ff')
+if (splitShimmerFactoryHash !== 'e216b5a82fab8beeb93727e697c8e821136ac8d81a62763db89ab84ac4e08bc7')
   throw new Error('split-feedback-shimmer.rvp.json is stale; run .\\scripts\\generate_split_feedback_shimmer_factory.ps1 -Configuration Release');
 
 const reverseCosmicFactoryPath = resolve(outputDirectory, 'reverse-cosmic-shimmer.rvp.json');
 const reverseCosmicFactoryBytes = await readFile(reverseCosmicFactoryPath);
 const reverseCosmicFactoryHash = createHash('sha256').update(reverseCosmicFactoryBytes).digest('hex');
-if (reverseCosmicFactoryHash !== '07c1e4376a9f6e2b61cb7369799457c8e6b5f56be4d172dca5637ba198724e04')
+if (reverseCosmicFactoryHash !== '9c41eb44a31806995fa26b749a4a1fb2153143547037b8b638d53242ca453f5a')
   throw new Error('reverse-cosmic-shimmer.rvp.json is stale; run .\\scripts\\generate_reverse_cosmic_shimmer_factory.ps1 -Configuration Release');

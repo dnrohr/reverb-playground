@@ -9,8 +9,8 @@ namespace reverb::dsp::pitch_shift {
 
 enum class GrainDirection { forward, reverse };
 
-inline constexpr double minimumSemitones = -24.0;
-inline constexpr double maximumSemitones = 24.0;
+inline constexpr double minimumSemitones = -12.0;
+inline constexpr double maximumSemitones = 12.0;
 inline constexpr double defaultSemitones = 12.0;
 inline constexpr double minimumGrainMilliseconds = 20.0;
 inline constexpr double maximumGrainMilliseconds = 120.0;

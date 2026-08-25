@@ -14,7 +14,7 @@ the public graph, editor, persistence, and host-state paths.
 
 | Parameter | Unit and range | Default | Meaning |
 |---|---:|---:|---|
-| Semitones | `-24...+24 st` | `+12 st` | Musical transposition, clamped before conversion to ratio |
+| Semitones | `-12...+12 st` | `+12 st` | One octave down/up; `+7 st` is an ordinary perfect fifth |
 | Grain length | `20...120 ms` | `60 ms` | Duration of one read-head cycle and its splice opportunity |
 | Overlap | normalized `0.10...1.00` | `0.50` | Width of the equal-power handoff region as a fraction of a half-cycle |
 | Direction | `forward` / `reverse` | `forward` | Playback direction inside each grain |
@@ -23,11 +23,11 @@ the public graph, editor, persistence, and host-state paths.
 The exact musical ratio is
 
 ```text
-ratio = 2^(clamp(semitones, -24, +24) / 12)
+ratio = 2^(clamp(semitones, -12, +12) / 12)
 ```
 
-Therefore `-24`, `-12`, `0`, `+12`, and `+24` semitones mean ratios `0.25`,
-`0.5`, `1`, `2`, and `4`. A non-finite control value resolves to the `+12 st`
+Therefore `-12`, `0`, and `+12` semitones mean ratios `0.5`, `1`, and `2`.
+A perfect fifth is `+7` semitones and uses the same processor path. A non-finite control value resolves to the `+12 st`
 default before conversion. Semitone automation is smoothed in semitone/log-
 ratio space, not linear ratio space, so a midpoint remains perceptually midway.
 
@@ -118,7 +118,7 @@ logging, filesystem access, resizing, or topology discovery.
 ## Automation, reset, and modulation
 
 - Semitones ramp over 20 ms in semitone space. A mapped control socket may
-  target semitones only within `-24...+24`.
+  target semitones only within `-12...+12`.
 - Grain length and overlap changes create a 20 ms equal-power crossfade between
   old and new head states. Both states read the same prepared ring.
 - Direction is a discrete control. A forward/reverse change uses the same 20 ms
@@ -262,9 +262,9 @@ it is a comparative result, not a cross-machine guarantee.
 
 | Rate | Latency | Storage | CPU forward / reverse | Folded alias vs 400→800 Hz reference, forward / reverse |
 |---:|---:|---:|---:|---:|
-| 44.1 kHz | 26,462 / 600.05 ms | 211,696 bytes | 0.194% / 0.187% | -6.07 / -6.03 dB |
-| 48 kHz | 28,802 / 600.04 ms | 230,416 bytes | 0.220% / 0.226% | -0.001 / -0.001 dB |
-| 96 kHz | 57,602 / 600.02 ms | 460,816 bytes | 0.438% / 0.466% | -0.001 / -0.001 dB |
+| 44.1 kHz | 15,878 / 360.05 ms | 127,024 bytes | 0.203% / 0.322% | -6.07 / -6.03 dB |
+| 48 kHz | 17,282 / 360.04 ms | 138,256 bytes | 0.240% / 0.230% | -0.001 / -0.001 dB |
+| 96 kHz | 34,562 / 360.02 ms | 276,496 bytes | 0.480% / 0.470% | -0.001 / -0.001 dB |
 
 The alias fixture sends a sine at `0.35 × Fs` through `+12 st`: its desired
 `0.70 × Fs` result exceeds Nyquist and folds to `0.30 × Fs`. Linear

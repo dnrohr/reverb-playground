@@ -16,7 +16,7 @@ The tank is a visible delayed feedback loop:
 
 The damped tank output splits after the loop:
 
-- **Normal branch:** Delay 600.01 ms, then Gain 0.50.
+- **Normal branch:** Delay 360.01 ms, then Gain 0.50.
 - **Octave branch:** a public-block high-pass approximation
   `x + (-1 * Low-pass(x, 250 Hz))`, Pitch Shift +12 semitones with a 60 ms
   forward grain and 0.5 overlap, Low-pass 6 kHz, Allpasses 17.3 and 29.1 ms,
@@ -50,7 +50,7 @@ introduces a separately bounded shifted return for that different behavior.
 ## Latency, memory, and loudness budgets
 
 Pitch Shift reports `ceil(600 ms * sampleRate) + 2` samples. The normal branch's
-600.01 ms Delay differs by no more than two samples at 44.1, 48, 96, and 192 kHz;
+360.01 ms Delay differs by no more than two samples at 44.1, 48, 96, and 192 kHz;
 this avoids presenting the unshifted branch roughly 600 ms before its halo.
 
 Compilation at the maximum supported 192 kHz must remain below 4 MiB of prepared

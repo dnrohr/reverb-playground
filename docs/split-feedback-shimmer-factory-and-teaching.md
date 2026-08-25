@@ -55,8 +55,8 @@ The circulation ladder relates the visible graph to the checked 400 Hz probe:
 | First shifted pass | 800 Hz / +12 semitones |
 | Second shifted pass | 1600 Hz / +24 semitones |
 
-The late +24 component grows 40.28 dB from the 1.0-second window to the
-2.5-second window and is 48.32 dB stronger relative to +12 than the parallel
+The late +24 component grows 40.48 dB from the 1.0-second window to the
+2.5-second window and is 48.50 dB stronger relative to +12 than the parallel
 reference. These measurements establish repeated harmonic circulation in this
 project-authored topology. They do not reconstruct or identify any proprietary
 shimmer algorithm, and they do not imply that higher passes are audible.
@@ -70,8 +70,8 @@ leave the last valid runtime audible; the existing numerical guard, emergency
 mute, state reset, and recovery workflow remain authoritative.
 
 The checked qualification also records the current shifter limits: the
-strongest grain sideband is -67.18 dB relative to the first octave, a 7 kHz
-probe folds energy near 20 kHz at -32.49 dB, closing damping from 9 to 2 kHz
+strongest grain sideband is -64.20 dB relative to the first octave, a 7 kHz
+probe folds energy near 20 kHz at -32.17 dB, closing damping from 9 to 2 kHz
 reduces late +24 by 2.63 dB, and late stereo correlation is 0.729. Visible
 filtering reduces buildup but does not make the dual-grain linear-interpolation
 Pitch Shift alias-free. Full methods and exact values are in

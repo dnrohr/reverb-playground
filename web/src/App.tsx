@@ -788,7 +788,9 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       setGraphHistory(emptyGraphHistory(loaded));
       setPendingConnection(null);
       setActivePatchId('custom');
-      setFileStatus({ kind: 'ok', message: `LOADED ${file.name.toUpperCase()} / SCHEMA V2` });
+      setFileStatus({ kind: 'ok', message: loaded.warnings.length
+        ? `LOADED WITH MIGRATION / ${loaded.warnings.join(' ')}`
+        : `LOADED ${file.name.toUpperCase()} / SCHEMA V2` });
     } catch (reason) {
       setFileStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Patch load failed' });
     }

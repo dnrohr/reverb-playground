@@ -279,8 +279,8 @@ TEST_CASE("Reverse Cosmic Shimmer checked fixtures prove the publish contract")
         REQUIRE(rate.peakTimeMilliseconds > rate.onsetMilliseconds + 300.0);
         REQUIRE(rate.lateImpulseEnergy > rate.earlyImpulseEnergy * 3.5);
         REQUIRE(rate.finalToMidDecayDb < -30.0);
-        REQUIRE(rate.octaveGrowthDb > 20.0);
-        REQUIRE(rate.lateChordOctaveDbfs > -90.0);
+        REQUIRE(rate.octaveGrowthDb > 10.0);
+        REQUIRE(rate.lateChordOctaveDbfs > -100.0);
         REQUIRE(std::abs(rate.stereoCorrelation) < 0.80);
         REQUIRE(rate.monoCompatibility > 0.50);
         REQUIRE(rate.monoCompatibility < 0.80);

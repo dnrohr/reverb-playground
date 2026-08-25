@@ -15,7 +15,7 @@ export const splitFeedbackShimmerTeaching = {
     { pass: 'PASS 1', frequency: '800 Hz', note: '+12 region / late 0 cents' },
     { pass: 'PASS 2', frequency: '1600 Hz', note: '+24 region / late 0 cents' },
   ],
-  evidence: '+24 grows 40.28 dB from 1.0 s to 2.5 s; 48.32 dB stronger relative to +12 than the parallel reference.',
+  evidence: '+24 grows 40.48 dB from 1.0 s to 2.5 s; 48.50 dB stronger relative to +12 than the parallel reference.',
   boundary: 'Measured project-authored behavior, not a reconstruction of a proprietary shimmer algorithm. Higher passes are not required or implied.',
 } as const;
 

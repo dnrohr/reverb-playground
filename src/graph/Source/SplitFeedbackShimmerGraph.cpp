@@ -1,4 +1,5 @@
 #include <reverb/graph/SplitFeedbackShimmerGraph.h>
+#include <reverb/dsp/PitchShiftContract.h>
 
 #include <algorithm>
 #include <array>
@@ -67,7 +68,8 @@ Node pitchShift(const double semitones)
         controlIn("overlap-mod"), audioOut(),
     }, {
         { "semitones", semitones, "semitones", ParameterModulation {
-            "semitones-mod", 12.0, ModulationPolarity::bipolar, -24.0, 24.0 } },
+            "semitones-mod", 12.0, ModulationPolarity::bipolar,
+            reverb::dsp::pitch_shift::minimumSemitones, reverb::dsp::pitch_shift::maximumSemitones } },
         { "grain", 60.0, "milliseconds", ParameterModulation {
             "grain-mod", 20.0, ModulationPolarity::bipolar, 20.0, 120.0 } },
         { "overlap", 0.5, "normalized", ParameterModulation {

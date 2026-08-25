@@ -144,7 +144,7 @@ TEST_CASE("Plugin host state restores every visible Pitch Shift field after prep
             { "out", SignalType::audio, PortDirection::output },
         }, {
             { "semitones", 12.0, "semitones", ParameterModulation {
-                "semitones-mod", 3.0, ModulationPolarity::bipolar, -24.0, 24.0 } },
+                "semitones-mod", 3.0, ModulationPolarity::bipolar, -12.0, 12.0 } },
             { "grain", 84.5, "milliseconds", ParameterModulation {
                 "grain-mod", 14.0, ModulationPolarity::bipolar, 20.0, 120.0 } },
             { "overlap", 0.64, "normalized", ParameterModulation {

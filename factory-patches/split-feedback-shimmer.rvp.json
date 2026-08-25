@@ -619,8 +619,8 @@
               "portId": "semitones-mod",
               "amount": 12.0,
               "polarity": "bipolar",
-              "clampMinimum": -24.0,
-              "clampMaximum": 24.0
+              "clampMinimum": -12.0,
+              "clampMaximum": 12.0
             }
           },
           {

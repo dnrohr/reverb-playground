@@ -25,15 +25,21 @@ burst, and bounded-noise burst at every qualified rate. The complete report is
 
 | Rate | First wet | Peak | Late/early energy | Final/mid decay | Octave balance growth | L/R correlation | Mono energy |
 |---:|---:|---:|---:|---:|---:|---:|---:|
-| 44.1 kHz | 261.00 ms | 721.43 ms | +6.33 dB | -37.57 dB | +23.49 dB | 0.171 | 0.586 |
-| 48 kHz | 261.00 ms | 721.42 ms | +6.32 dB | -36.93 dB | +23.63 dB | 0.191 | 0.595 |
-| 96 kHz | 261.00 ms | 721.49 ms | +6.29 dB | -34.43 dB | +24.28 dB | 0.476 | 0.738 |
+| 44.1 kHz | 261.00 ms | 721.43 ms | +6.33 dB | -40.69 dB | +11.23 dB | 0.171 | 0.586 |
+| 48 kHz | 261.00 ms | 721.42 ms | +6.33 dB | -40.65 dB | +10.72 dB | 0.191 | 0.595 |
+| 96 kHz | 261.00 ms | 721.49 ms | +6.30 dB | -39.33 dB | +11.62 dB | 0.476 | 0.738 |
 
 “Octave balance growth” compares the +12-semitone chord-band level relative to
 the source-frequency band in 0.30–0.60 s and 1.30–1.70 s windows. It describes
 late harmonic evolution even while the overall tail decays. Correlation and
 mono-energy measurements use the bounded-noise response after 0.8 s. All nine
 renders are finite and below full scale.
+
+The one-octave M16.1 contract reduces Pitch Shift history from about 600 ms to
+360 ms. Shifted energy therefore enters the early comparison window sooner;
+the checked growth threshold is now +10 dB and the measured late octave bands
+remain between -97.76 and -96.93 dBFS. This is a timing recalibration, not a
+claim that the shifter performs less pitch work.
 
 Checked stereo fixtures:
 

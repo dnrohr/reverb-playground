@@ -3,7 +3,7 @@ export type ParallelShimmerBranch = 'tank' | 'normal' | 'octave' | 'recombine' |
 export const parallelShimmerTeaching = {
   title: 'PARALLEL SHIMMER',
   method: 'ONE PITCH PASS',
-  normal: 'tank → 600.01 ms alignment → level',
+  normal: 'tank → 360.01 ms alignment → level',
   octave: 'high-pass → pitch +12 st → damping → diffusion',
   contrast: 'Both paths recombine after the tank. Unlike classic feedback shimmer, the octave path cannot return through Pitch Shift—so it adds a stable halo, not a +24 / +36 octave staircase.',
 } as const;

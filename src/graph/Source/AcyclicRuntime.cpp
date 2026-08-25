@@ -165,7 +165,9 @@ void addNodeContractErrors(const Node& node, std::vector<std::string>& errors)
             errors.push_back("lowpass node '" + node.id + "' requires in, out, and cutoff");
     } else if (node.type == "pitch-shift") {
         if (!unary
-            || !parameterInRange(node, "semitones", "semitones", -24.0, 24.0)
+            || !parameterInRange(node, "semitones", "semitones",
+                reverb::dsp::pitch_shift::minimumSemitones,
+                reverb::dsp::pitch_shift::maximumSemitones)
             || !parameterInRange(node, "grain", "milliseconds", 20.0, 120.0)
             || !parameterInRange(node, "overlap", "normalized", 0.1, 1.0)
             || !parameterInRange(node, "direction", "direction", 0.0, 1.0)
@@ -622,6 +624,7 @@ AcyclicCompileResult compileAcyclicGraph(
     const bool allowFeedback)
 {
     AcyclicCompileResult result;
+    result.warnings = document.migrationWarnings;
     const auto compileStarted = std::chrono::steady_clock::now();
     const auto finish = [&]() {
         result.compileMicroseconds = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(

@@ -96,7 +96,7 @@ TEST_CASE("Host patch state round trips every visible Pitch Shift field")
             { "out", SignalType::audio, PortDirection::output },
         }, {
             { "semitones", -7.25, "semitones", ParameterModulation {
-                "semitones-mod", 5.5, ModulationPolarity::bipolar, -24.0, 24.0 } },
+                "semitones-mod", 5.5, ModulationPolarity::bipolar, -12.0, 12.0 } },
             { "grain", 93.4, "milliseconds", ParameterModulation {
                 "grain-mod", 20.0, ModulationPolarity::bipolar, 20.0, 120.0 } },
             { "overlap", 0.72, "normalized", ParameterModulation {

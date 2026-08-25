@@ -1,4 +1,5 @@
 #include <reverb/graph/PatchJson.h>
+#include <reverb/dsp/PitchShiftContract.h>
 
 #include <nlohmann/json.hpp>
 
@@ -164,6 +165,32 @@ void migrateVersionOneModulation(Node& node)
     }
 }
 
+void migrateLegacyPitchRange(Node& node, std::vector<std::string>& warnings)
+{
+    if (node.type != "pitch-shift") return;
+    const auto semitones = std::ranges::find(node.parameters, "semitones", &Parameter::id);
+    if (semitones == node.parameters.end()) return;
+    const auto bounded = std::clamp(semitones->value,
+        reverb::dsp::pitch_shift::minimumSemitones,
+        reverb::dsp::pitch_shift::maximumSemitones);
+    const auto original = semitones->value;
+    semitones->value = bounded;
+    auto changed = bounded != original;
+    if (semitones->modulation) {
+        const auto minimum = std::max(semitones->modulation->clampMinimum,
+            reverb::dsp::pitch_shift::minimumSemitones);
+        const auto maximum = std::min(semitones->modulation->clampMaximum,
+            reverb::dsp::pitch_shift::maximumSemitones);
+        changed = changed || minimum != semitones->modulation->clampMinimum
+            || maximum != semitones->modulation->clampMaximum;
+        semitones->modulation->clampMinimum = minimum;
+        semitones->modulation->clampMaximum = maximum;
+    }
+    if (changed)
+        warnings.push_back("migrated Pitch Shift '" + node.id + "' semitone value/mapping to "
+            + std::to_string(bounded) + " for the one-octave range");
+}
+
 } // namespace
 
 GraphDocument parsePatchJson(const std::string_view jsonText)
@@ -191,6 +218,7 @@ GraphDocument parsePatchJson(const std::string_view jsonText)
             node.parameters.push_back(parseParameter(parameterJson));
         if (version == 1)
             migrateVersionOneModulation(node);
+        migrateLegacyPitchRange(node, document.migrationWarnings);
         document.nodes.push_back(std::move(node));
     }
 

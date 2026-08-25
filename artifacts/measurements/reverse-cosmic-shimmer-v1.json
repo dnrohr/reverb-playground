@@ -48,35 +48,35 @@
       "onsetMilliseconds": 260.99773242630386,
       "peakTimeMilliseconds": 721.4285714285714,
       "earlyImpulseEnergy": 3.986677708540503e-05,
-      "lateImpulseEnergy": 0.00017115293553641864,
-      "lateToEarlyImpulseEnergyDb": 6.327732245601151,
-      "finalToMidDecayDb": -37.56696519146282,
+      "lateImpulseEnergy": 0.00017138404807283698,
+      "lateToEarlyImpulseEnergyDb": 6.3335926880817395,
+      "finalToMidDecayDb": -40.6855768320184,
       "earlyChordOctaveDbfs": -92.47321017066812,
-      "lateChordOctaveDbfs": -84.91249087235471,
+      "lateChordOctaveDbfs": -97.24573349009945,
       "earlyOctaveToFundamentalDb": -34.80279932077377,
-      "lateOctaveToFundamentalDb": -11.31150835098546,
-      "octaveGrowthDb": 23.491290969788313,
-      "stereoCorrelation": 0.17137619915133942,
-      "monoCompatibility": 0.5856880986871654,
+      "lateOctaveToFundamentalDb": -23.569735905411385,
+      "octaveGrowthDb": 11.233063415362388,
+      "stereoCorrelation": 0.17167079970855198,
+      "monoCompatibility": 0.5858353310033282,
       "peaks": {
         "impulse": 0.0021207635290920734,
-        "chord": 0.008938563987612724,
-        "boundedNoise": 0.006054714322090149
+        "chord": 0.008945610374212265,
+        "boundedNoise": 0.006026919931173325
       },
       "finite": true,
       "causal": true,
       "fixtures": {
         "impulse": {
           "file": "reverse-cosmic-shimmer-44k1-impulse.wav",
-          "pcm16Fnv1a": 16524846243800248559
+          "pcm16Fnv1a": 7968610654460115564
         },
         "chord": {
           "file": "reverse-cosmic-shimmer-44k1-chord.wav",
-          "pcm16Fnv1a": 6785083078861609665
+          "pcm16Fnv1a": 10440115180176814152
         },
         "boundedNoise": {
           "file": "reverse-cosmic-shimmer-44k1-noise.wav",
-          "pcm16Fnv1a": 5646311324293236470
+          "pcm16Fnv1a": 13382506876828343854
         }
       }
     },
@@ -86,35 +86,35 @@
       "onsetMilliseconds": 261.0,
       "peakTimeMilliseconds": 721.4166666666666,
       "earlyImpulseEnergy": 3.6823452718715505e-05,
-      "lateImpulseEnergy": 0.00015786451921107308,
-      "lateToEarlyImpulseEnergyDb": 6.321600239420143,
-      "finalToMidDecayDb": -36.9270741923501,
+      "lateImpulseEnergy": 0.00015805959013070106,
+      "lateToEarlyImpulseEnergyDb": 6.3269634410394975,
+      "finalToMidDecayDb": -40.652451897954975,
       "earlyChordOctaveDbfs": -92.4650944588032,
-      "lateChordOctaveDbfs": -84.75637143154366,
+      "lateChordOctaveDbfs": -97.75583671030344,
       "earlyOctaveToFundamentalDb": -34.79665830927146,
-      "lateOctaveToFundamentalDb": -11.164351088585391,
-      "octaveGrowthDb": 23.632307220686066,
-      "stereoCorrelation": 0.19070515633965304,
-      "monoCompatibility": 0.5953525752310508,
+      "lateOctaveToFundamentalDb": -24.07524393162938,
+      "octaveGrowthDb": 10.721414377642077,
+      "stereoCorrelation": 0.1891557360736805,
+      "monoCompatibility": 0.5945778603386048,
       "peaks": {
         "impulse": 0.001978307031095028,
-        "chord": 0.008907739073038101,
-        "boundedNoise": 0.0058318814262747765
+        "chord": 0.008939621970057487,
+        "boundedNoise": 0.005839962046593428
       },
       "finite": true,
       "causal": true,
       "fixtures": {
         "impulse": {
           "file": "reverse-cosmic-shimmer-48k-impulse.wav",
-          "pcm16Fnv1a": 3341498058133230801
+          "pcm16Fnv1a": 2411424745853295233
         },
         "chord": {
           "file": "reverse-cosmic-shimmer-48k-chord.wav",
-          "pcm16Fnv1a": 6296150627876457925
+          "pcm16Fnv1a": 10347390467074616515
         },
         "boundedNoise": {
           "file": "reverse-cosmic-shimmer-48k-noise.wav",
-          "pcm16Fnv1a": 11194132070087098183
+          "pcm16Fnv1a": 17884063934202016327
         }
       }
     },
@@ -124,35 +124,35 @@
       "onsetMilliseconds": 261.0,
       "peakTimeMilliseconds": 721.4895833333334,
       "earlyImpulseEnergy": 1.8822727131142715e-05,
-      "lateImpulseEnergy": 8.01880852560152e-05,
-      "lateToEarlyImpulseEnergyDb": 6.294272970331756,
-      "finalToMidDecayDb": -34.42980161673867,
+      "lateImpulseEnergy": 8.027122411175426e-05,
+      "lateToEarlyImpulseEnergyDb": 6.29877339472627,
+      "finalToMidDecayDb": -39.33049055844745,
       "earlyChordOctaveDbfs": -92.46011123437555,
-      "lateChordOctaveDbfs": -84.15162699625212,
+      "lateChordOctaveDbfs": -96.92537222107066,
       "earlyOctaveToFundamentalDb": -34.829880021902184,
-      "lateOctaveToFundamentalDb": -10.547053304133648,
-      "octaveGrowthDb": 24.282826717768536,
-      "stereoCorrelation": 0.4755375268262918,
-      "monoCompatibility": 0.7377687551651402,
+      "lateOctaveToFundamentalDb": -23.209419326307696,
+      "octaveGrowthDb": 11.620460695594488,
+      "stereoCorrelation": 0.4753135941976343,
+      "monoCompatibility": 0.7376567965901609,
       "peaks": {
         "impulse": 0.001243379432708025,
-        "chord": 0.008920365944504738,
-        "boundedNoise": 0.004399100784212351
+        "chord": 0.009031165391206741,
+        "boundedNoise": 0.004392092116177082
       },
       "finite": true,
       "causal": true,
       "fixtures": {
         "impulse": {
           "file": "reverse-cosmic-shimmer-96k-impulse.wav",
-          "pcm16Fnv1a": 2611297148918488447
+          "pcm16Fnv1a": 17378702973084563214
         },
         "chord": {
           "file": "reverse-cosmic-shimmer-96k-chord.wav",
-          "pcm16Fnv1a": 13183267487365184659
+          "pcm16Fnv1a": 8421203465703075721
         },
         "boundedNoise": {
           "file": "reverse-cosmic-shimmer-96k-noise.wav",
-          "pcm16Fnv1a": 14408328608936620550
+          "pcm16Fnv1a": 6799264815814601183
         }
       }
     }

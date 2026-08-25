@@ -107,6 +107,7 @@ public:
     std::vector<Node> nodes;
     std::vector<Connection> connections;
     Layout layout;
+    std::vector<std::string> migrationWarnings;
 
     friend bool operator==(const GraphDocument&, const GraphDocument&) = default;
 };

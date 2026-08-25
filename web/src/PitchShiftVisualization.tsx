@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { PatchParameter } from './graph';
+import { pitchShiftLatencySamples } from './pitchShiftContract';
 
 interface PitchShiftVisualizationProps {
   parameters: PatchParameter[];
@@ -17,7 +18,7 @@ export function PitchShiftVisualization({ parameters, reducedMotion, sampleRate 
   const overlap = value(parameters, 'overlap', 0.5);
   const reverse = value(parameters, 'direction', 0) >= 0.5;
   const phase = value(parameters, 'phase', 0);
-  const latencySamples = Math.ceil(0.6 * sampleRate) + 2;
+  const latencySamples = pitchShiftLatencySamples(sampleRate);
   const cycleSeconds = Math.max(0.65, grain / 55);
   const phaseB = (phase + 0.5) % 1;
   const style = {

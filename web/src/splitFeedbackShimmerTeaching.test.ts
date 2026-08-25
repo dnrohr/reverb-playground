@@ -8,7 +8,7 @@ describe('Split-Feedback Shimmer teaching contract', () => {
     expect(splitFeedbackShimmerTeaching.title).toBe('FEEDBACK SHIMMER');
     expect(splitFeedbackShimmerTeaching.method).toContain('REPEATED +12');
     expect(splitFeedbackShimmerTeaching.circulation.map((step) => step.frequency)).toEqual(['400 Hz', '800 Hz', '1600 Hz']);
-    expect(splitFeedbackShimmerTeaching.evidence).toContain('40.28 dB');
+    expect(splitFeedbackShimmerTeaching.evidence).toContain('40.48 dB');
     expect(splitFeedbackShimmerTeaching.evidence).toContain('parallel reference');
     expect(splitFeedbackShimmerTeaching.boundary).toMatch(/not a reconstruction of a proprietary/);
   });
