@@ -1,7 +1,7 @@
 # Visual Reverb Constructor / Inspector Roadmap
 
 Status: initial execution roadmap
-Date: 2026-08-08
+Date: 2026-08-25
 Product definition: [visual-reverb-constructor-spec.md](visual-reverb-constructor-spec.md)
 
 ## Delivery policy
@@ -29,6 +29,10 @@ UI tasks require a current screenshot. Interactive, animated, audio-reactive, or
 | M12. Split-Feedback Shimmer | Independent normal and shifted feedback paths create controllable harmonic ascent | Hear successive octave energy build while both feedback paths remain visible and bounded |
 | M13. Reverse Cosmic Shimmer | Reverse grains, causal rise, modulation, and stereo diffusion form the flagship evolving shimmer | Audition and inspect a swelling, harmonically rising, darkened stereo space |
 | M14. Audio-file audition and export | The standalone app can play source material through any graph and render the result without requiring a DAW | Drop in a file, loop a passage, compare reverbs continuously, and export the processed result |
+| M15. Fast and resilient standalone startup | The standalone acknowledges launch immediately while Windows audio connects | See a responsive shell within one second and reach the unchanged editor without blocking the UI |
+| M16. Latency truth and performance baselines | Pitch range, graph latency, compile time, and CPU cost are accurate and actionable | Compare factory graphs with honest latency/load diagnostics and compensated DAW playback |
+| M17. Hybrid compiled graph execution | Only causal recursive regions execute sample-by-sample; the remaining graph uses optimized block kernels | Run the flagship feedback graphs measurably faster without changing their audio or safety behavior |
+| M18. Pitch/control optimization and specialization | Pitch Shift, modulation delivery, and selected hot graph paths meet measured release budgets | Audition octave shimmer at lower latency/load and publish evidence for generic versus specialized execution |
 
 ---
 
@@ -1085,6 +1089,184 @@ Acceptance criteria:
 Milestone exit criteria:
 
 - Launching the standalone produces honest visual feedback in under one second on the reference system, the UI remains responsive while Windows audio connects, and the existing schematic replaces the shell automatically when the device path is ready.
+
+---
+
+## M16. Latency truth and performance baselines
+
+Goal: establish accurate, user-visible latency and performance contracts before changing the executor, while narrowing Pitch Shift to the musically useful one-octave range.
+
+M16 distinguishes algorithmic latency, graph-publication delay, audio-callback load, and editor presentation cost. A perfect fifth remains an ordinary `+7`-semitone setting; it does not require a separate processor or quality mode because limiting the interval alone does not remove the core dual-grain work.
+
+### M16.1 Constrain Pitch Shift to one octave and migrate safely
+
+Change the public Pitch Shift range from `-24...+24` to `-12...+12` semitones and derive storage/latency budgets from that supported range.
+
+Acceptance criteria:
+
+- Native DSP, graph validation, inspector metadata, schema fixtures, factory patches, teaching copy, and documentation expose the same `-12...+12` range.
+- `+7` semitones remains available as an ordinary perfect-fifth setting with the same quality and cost model as other values in range.
+- Existing saved patches or host states containing values outside the new range follow an explicit compatibility policy: deterministic clamp with a visible migration warning, or a schema migration that preserves the last valid graph; they never fail silently.
+- Latency and prepared-storage calculations use the new maximum ratio and checked tests prove the exact sample counts at 44.1, 48, 96, and 192 kHz.
+- All released shimmer/reverse factories remain within range, render finite, and preserve their expected octave measurements and save/restore behavior.
+
+### M16.2 Compile graph latency and report it to hosts
+
+Add a deterministic latency pass to the prepared graph compiler and connect the active result to JUCE host latency reporting.
+
+Acceptance criteria:
+
+- Every latency-bearing node reports an exact prepared sample delay; serial paths add, parallel joins expose their maximum and any uncompensated difference, and feedback cycles do not inflate latency recursively.
+- The standalone and VST3 show total active graph latency in samples and milliseconds, with per-path inspection sufficient to locate uncompensated branches.
+- The VST3 calls the host latency API only from a permitted non-audio thread and updates it when a newly prepared topology with different latency becomes active.
+- Dry/audition and parallel wet paths follow an explicit visible-compensation policy; no hidden delay makes the schematic disagree with audible routing.
+- Host tests verify latency reporting, state restoration, graph changes, bypass/dry alignment, and unchanged behavior in hosts that defer or ignore dynamic latency updates.
+
+### M16.3 Add graph-specific compile and workload diagnostics
+
+Replace the fixed Barr workload estimate in constructed-graph mode with information produced by the actual prepared plan.
+
+Acceptance criteria:
+
+- Diagnostics separately label validation/scheduling/preparation time, request-to-active time, aggregate measured callback load, prepared memory, node count, connection count, feedback regions, and topology-crossfade state.
+- Static workload estimates are derived from the active operation plan and processor modes rather than the fixed ten-node Barr constant.
+- Expensive block families and execution domains are identifiable through an offline/non-real-time profiler; production audio processing does not add per-node clocks, logging, allocation, or locks.
+- Compilation measurements preserve newest-request-wins behavior and identify superseded work without making stale results audible.
+- The UI explains the difference between estimated operations, measured callback load, algorithmic latency, and compile/publication delay.
+
+### M16.4 Establish the representative performance matrix
+
+Measure Barr Reference, Gravity Diffusion, Safe Parallel Shimmer, Split-Feedback Shimmer, and Reverse Cosmic Shimmer before executor optimization.
+
+Acceptance criteria:
+
+- Release builds are measured at 44.1, 48, and 96 kHz with representative 32/64/128/256/512-sample host blocks on at least the reference development machine.
+- Reports record median and high-percentile callback load, peak load, compile/request-to-active time, graph latency, memory, underruns, and topology-transition overhead.
+- Normal processing and the 10 ms two-runtime crossfade are reported separately.
+- Repeatable headless benchmarks use deterministic source material and publish machine/toolchain metadata without claiming cross-machine comparability where it is not valid.
+- Measured budgets and regression thresholds are documented for M17/M18; a graph that misses a release budget is identified rather than hidden behind an aggregate pass.
+
+Milestone exit criteria:
+
+- Users and developers can distinguish audible latency from CPU load and edit-publication delay, DAWs receive the active graph latency, and every flagship graph has a repeatable pre-optimization baseline.
+
+---
+
+## M17. Hybrid compiled graph execution
+
+Goal: preserve the visual graph's exact semantics while compiling it into mixed execution domains that avoid running an entire feedback graph one sample at a time.
+
+M17 extends the existing prepared execution plan; it does not introduce runtime JSON interpretation, executable-memory JIT code, or audio-thread compilation.
+
+### M17.1 Partition sample-wise and block-wise execution domains
+
+Use strongly connected components and causal control dependencies to isolate the regions that genuinely require per-sample evaluation.
+
+Acceptance criteria:
+
+- Delay-containing feedback SCCs use the required Delay-read/evaluate/Delay-write schedule while acyclic upstream and downstream regions process whole blocks.
+- Envelope Follower and Hold Gate force sample-wise ordering only across the dependent causal region, not unrelated branches or the entire graph.
+- Nested, shared, and multiple feedback loops compile deterministically; zero-delay algebraic loops retain their exact rejection diagnostics.
+- The schedule is fixed and fully prepared before publication, with no discovery, allocation, locking, or unbounded traversal in the audio callback.
+- Golden renders, host partition tests, modulation tests, safety recovery, and state restoration prove equivalence with the previous executor within documented floating-point tolerance.
+
+### M17.2 Add buffer liveness, reuse, and safe aliasing
+
+Compile buffer ownership from connection fan-out and last-use information instead of reserving and copying one full block buffer for every output.
+
+Acceptance criteria:
+
+- Single-consumer in-place-safe paths alias or reuse storage; branched, feedback, capture, and inspector-visible values retain independent storage where required.
+- A deterministic liveness plan reports logical signals, physical buffers, peak live buffers, bytes saved, and reasons that prevent aliasing.
+- Silence/input/output buffers, transition scratch, delay arenas, and telemetry snapshots cannot be accidentally overwritten.
+- Maximum-node and maximum-block fixtures demonstrate lower or equal prepared buffer memory and fewer copies without increasing delay storage.
+- Sanitizer/canary, repeated reset, rapid publication, and two-runtime crossfade tests detect lifetime or alias corruption.
+
+### M17.3 Fuse and specialize prepared block kernels
+
+Combine eligible linear operation chains and select typed processing kernels during compilation.
+
+Acceptance criteria:
+
+- The compiler can fuse documented safe patterns such as Gain/Sum/Low-pass routing without hiding a user-visible block or changing its inspectable identity.
+- Operation dispatch is selected before publication through typed records or prepared function targets; no string lookup or processor-type discovery occurs per sample.
+- Eligible gain, sum, copy, and mix kernels use proven block/SIMD paths where the platform supports them, with scalar reference fallbacks.
+- Modulated, feedback, nonlinear, tapped, branched, and telemetry-observed boundaries prevent unsafe fusion explicitly.
+- Exact/scalar-reference comparisons, denormal handling, clipping/safety behavior, and deterministic reload remain within documented tolerance.
+
+### M17.4 Qualify the hybrid executor
+
+Compare the new plan with the M16 baseline and gate it on both correctness and material benefit.
+
+Acceptance criteria:
+
+- Every released factory and representative user graph passes deterministic render, automation, feedback, safety, capture, export, and host-state suites.
+- Reverse Cosmic Shimmer and Split-Feedback Shimmer show a documented reduction in callback load or operation/copy count at 48 and 96 kHz; regressions require an explicit rationale.
+- Topology compile/request-to-active time, prepared memory, and 10 ms crossfade peaks remain within the M16 budgets.
+- Diagnostics expose block-wise/sample-wise region counts, reused buffers, and fused kernels without overstating measured CPU improvement.
+- Current visual evidence explains the optimized regions while preserving the visible schematic as the authoritative program.
+
+Milestone exit criteria:
+
+- Large feedback reverbs retain identical visible semantics and safe publication while unrelated portions no longer pay the global sample-wise execution cost.
+
+---
+
+## M18. Pitch/control optimization and specialization
+
+Goal: reduce the remaining hot-path cost and octave-shifter latency after the hybrid executor is measured, then decide whether any factory topology warrants a specialized native kernel.
+
+### M18.1 Optimize the dual-grain Pitch Shift inner loop
+
+Replace avoidable per-sample transcendental, wrapping, modulo, and parameter work with prepared state while retaining the public dual-grain behavior.
+
+Acceptance criteria:
+
+- Phase accumulators, window/coefficient preparation, and circular addressing remove avoidable per-sample `pow`, `sin`, `floor`, or general modulo operations where measurements prove equivalent bounded alternatives.
+- Static parameters use a fast steady-state path; semitone ramps and grain/direction transitions retain their 20 ms click-safe behavior.
+- Forward/reverse pitch accuracy, latency, transient shape, alias measurements, deterministic reset, stereo decorrelation, and feedback recovery remain within published tolerances.
+- Benchmarks report steady state, parameter transition, two Pitch Shift voices, and whole-topology crossfade separately at supported rates.
+- No optimization introduces allocation, locks, I/O, mutable lookup tables, or architecture-specific behavior without a scalar fallback.
+
+### M18.2 Compile control-rate ramps into block processors
+
+Deliver 1 kHz control results to audio processors without repeatedly invoking one-sample setters and one-sample span processing across the host block.
+
+Acceptance criteria:
+
+- The prepared plan emits bounded ramp segments or block parameter views for Gain, Delay, Allpass, Low-pass, and Pitch Shift.
+- Processors consume constant, ramped, and transition states through explicit kernels while preserving sample-accurate causal results at control-tick boundaries.
+- Static/unmodulated graphs pay no modulation-buffer or per-sample parameter-dispatch cost.
+- Macro smoothing, LFO restart/free-run, Curve Mapper behavior, automation, block-partition determinism, and save/restore remain unchanged.
+- M16 diagnostics show the reduction in setter calls, one-sample dispatches, and measured callback load for modulation-heavy Gravity and shimmer graphs.
+
+### M18.3 Add bounded quality modes
+
+Define quality choices only where they produce a measured latency/load benefit without making saved graphs ambiguous.
+
+Acceptance criteria:
+
+- Draft, Normal, or High policies specify Pitch Shift window/interpolation behavior, visualization/telemetry rate, and any permitted modulation-resolution differences independently.
+- The default preserves released sound closely; lower-cost modes disclose changed latency, bandwidth, aliasing, or motion resolution before selection.
+- Quality is stored/restored through an explicit product or graph policy and cannot change silently between standalone, VST3, offline export, and reopened projects.
+- A perfect fifth remains a normal semitone setting rather than a hidden cheap algorithm; any interval-dependent fast path must be measurement-equivalent and documented.
+- Automated measurements and listening fixtures compare cost and artifacts at each supported quality level.
+
+### M18.4 Decide factory specialization versus generic execution
+
+Use the completed measurements to determine whether selected factory graphs need ahead-of-time C++ kernels and whether native-code JIT compilation is justified.
+
+Acceptance criteria:
+
+- Barr's existing direct/reference path, the optimized generic executor, and any prototype specialized factory path are compared with the same audio and CPU fixtures.
+- A specialized factory remains semantically generated from or checked against its visible graph; hidden divergence fails identity/golden tests.
+- Runtime JIT is adopted only if measured benefit remains material after M17/M18.1-3 and its executable-memory, code-signing, crash, security, debugging, and host-compatibility costs are explicitly accepted.
+- If JIT is rejected, the decision records why prepared typed/fused kernels are sufficient and identifies no unsupported performance claim.
+- Final Release benchmarks, package/host validation, documentation, and clean `main` CI establish the supported graph-size/sample-rate/quality envelope.
+
+Milestone exit criteria:
+
+- Octave shimmer runs with honest reduced latency and measured lower cost, control-heavy graphs avoid unnecessary audio-rate dispatch, and the project has evidence for using generic, specialized, or JIT execution rather than relying on intuition.
 
 ---
 

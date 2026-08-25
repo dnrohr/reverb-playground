@@ -1,6 +1,6 @@
 # Roadmap progress
 
-Last updated: 2026-08-24
+Last updated: 2026-08-25
 
 | Task | Status | Evidence |
 |---|---|---|
@@ -76,6 +76,9 @@ Last updated: 2026-08-24
 | M15.2 Decouple the visible shell from audio discovery | Complete | Project-owned standalone app; immediate accessible shell; worker-owned JUCE holder preparation; message-thread editor handoff; monotonic phase tests |
 | M15.3 Qualify and document startup recovery | Complete | Five launches: shell mean 0.393 s/max 0.411 s, editor mean 8.321 s; inspected 125%-scale screenshots/video; 185 Release tests; standalone/VST3 builds; clean local gate |
 | Post-M15 startup and waveform polish | Complete | Eight-second timed Loading/Welcome presentation; slate/cyan waveform selection with amber active-loop state; deterministic palette/timing tests; refreshed UI evidence |
+| M16.1-M16.4 Latency truth and performance baselines | Planned | One-octave Pitch Shift contract; saved-state migration; graph/host latency; graph-specific diagnostics; representative baseline matrix |
+| M17.1-M17.4 Hybrid compiled graph execution | Planned | SCC-local sample processing; block regions; buffer liveness/reuse; safe kernel fusion/SIMD; measured equivalence and improvement |
+| M18.1-M18.4 Pitch/control optimization and specialization | Planned | Dual-grain hot-loop optimization; block control ramps; bounded quality modes; evidence-based AOT/JIT decision |
 
 ## M0.2 verification
 
