@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <array>
+#include <limits>
 #include <nlohmann/json.hpp>
 #include <stdexcept>
 
@@ -16,6 +17,12 @@ ReverbPlaygroundProcessor::ReverbPlaygroundProcessor()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true))
 {
+    startTimerHz(30);
+}
+
+ReverbPlaygroundProcessor::~ReverbPlaygroundProcessor()
+{
+    stopTimer();
 }
 
 void ReverbPlaygroundProcessor::prepareToPlay(
@@ -472,6 +479,18 @@ juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
         };
     }
     const auto sampleRate = activeSampleRate();
+    auto outputPaths = nlohmann::ordered_json::array();
+    for (const auto& path : topology.activeLatency.outputPaths)
+        outputPaths.push_back({
+            { "outputPort", path.outputPort }, { "samples", path.samples }, { "nodeIds", path.nodeIds },
+        });
+    auto parallelJoins = nlohmann::ordered_json::array();
+    for (const auto& join : topology.activeLatency.parallelJoins)
+        parallelJoins.push_back({
+            { "nodeId", join.nodeId }, { "minimumInputSamples", join.minimumInputSamples },
+            { "maximumInputSamples", join.maximumInputSamples },
+            { "uncompensatedSamples", join.uncompensatedSamples() },
+        });
     const nlohmann::ordered_json json {
         { "formatVersion", 1 },
         { "activeGraphRevision", graphMode
@@ -510,6 +529,16 @@ juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
             { "basis", "prepared-allocation" },
             { "lineCount", graphMode ? topology.activeDelayLineCount : snapshot.delayLineCount },
             { "bytes", graphMode ? topology.activeDelayMemoryBytes : snapshot.delayMemoryBytes },
+        } },
+        { "latency", {
+            { "basis", "compiled-active-graph" },
+            { "samples", graphMode ? topology.activeLatency.totalSamples : 0 },
+            { "milliseconds", graphMode && sampleRate > 0.0
+                ? topology.activeLatency.totalSamples * 1'000.0 / sampleRate : 0.0 },
+            { "hostReportedSamples", getLatencySamples() },
+            { "outputPaths", std::move(outputPaths) },
+            { "parallelJoins", std::move(parallelJoins) },
+            { "compensationPolicy", "No hidden graph compensation; parallel differences remain audible and visible. Dry bypass reports zero host latency." },
         } },
         { "clipping", {
             { "basis", "measured" },
@@ -583,6 +612,22 @@ void ReverbPlaygroundProcessor::setAuditionSourceMode(
 void ReverbPlaygroundProcessor::setProcessedAudition(const bool processed) noexcept
 {
     processedAudition_.store(processed, std::memory_order_release);
+}
+
+void ReverbPlaygroundProcessor::synchronizeHostLatencyForCurrentGraph()
+{
+    jassert(juce::MessageManager::getInstance()->isThisTheMessageThread());
+    const auto graphLatency = graphAudioEnabled_.load(std::memory_order_acquire)
+        && processedAudition_.load(std::memory_order_acquire)
+        ? graphHost_.activeLatencySamples() : 0;
+    const auto bounded = static_cast<int>(std::min<std::size_t>(
+        graphLatency, static_cast<std::size_t>(std::numeric_limits<int>::max())));
+    if (getLatencySamples() != bounded) setLatencySamples(bounded);
+}
+
+void ReverbPlaygroundProcessor::timerCallback()
+{
+    synchronizeHostLatencyForCurrentGraph();
 }
 
 bool ReverbPlaygroundProcessor::isProcessedAudition() const noexcept

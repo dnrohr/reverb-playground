@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <map>
 #include <mutex>
 #include <span>
 #include <string>
@@ -33,6 +34,28 @@ struct DelayMemoryPlan final {
     [[nodiscard]] bool withinBudget() const noexcept { return allocatedBytes <= budgetBytes; }
 };
 
+struct LatencyPath final {
+    std::string outputPort;
+    std::size_t samples {};
+    std::vector<std::string> nodeIds;
+};
+
+struct LatencyJoin final {
+    std::string nodeId;
+    std::size_t minimumInputSamples {};
+    std::size_t maximumInputSamples {};
+    [[nodiscard]] std::size_t uncompensatedSamples() const noexcept
+    {
+        return maximumInputSamples - minimumInputSamples;
+    }
+};
+
+struct GraphLatencyPlan final {
+    std::size_t totalSamples {};
+    std::vector<LatencyPath> outputPaths;
+    std::vector<LatencyJoin> parallelJoins;
+};
+
 class PreparedAcyclicRuntime final {
 public:
     ~PreparedAcyclicRuntime();
@@ -54,6 +77,7 @@ public:
     [[nodiscard]] std::size_t maximumBlockSize() const noexcept;
     [[nodiscard]] std::size_t preparedStorageBytes() const noexcept;
     [[nodiscard]] const DelayMemoryPlan& delayMemoryPlan() const noexcept;
+    [[nodiscard]] const GraphLatencyPlan& latencyPlan() const noexcept;
 
 private:
     struct Impl;
@@ -72,6 +96,7 @@ struct AcyclicCompileResult final {
     std::vector<std::vector<std::string>> offendingLoops;
     std::uint64_t compileMicroseconds {};
     DelayMemoryPlan delayMemory;
+    GraphLatencyPlan latency;
 
     [[nodiscard]] bool valid() const noexcept { return runtime != nullptr && errors.empty(); }
 };
@@ -81,6 +106,7 @@ struct AcyclicPublishResult final {
     std::vector<std::string> warnings;
     std::vector<std::string> errors;
     DelayMemoryPlan delayMemory;
+    GraphLatencyPlan latency;
     [[nodiscard]] bool valid() const noexcept { return errors.empty(); }
 };
 
@@ -100,6 +126,7 @@ struct TopologyPublicationSnapshot final {
     std::uint64_t lastCrossfadeToRevision {};
     std::size_t activeDelayLineCount {};
     std::size_t activeDelayMemoryBytes {};
+    GraphLatencyPlan activeLatency;
     std::string failure;
 };
 
@@ -146,6 +173,7 @@ public:
 
     [[nodiscard]] bool hasRuntime() const noexcept;
     [[nodiscard]] std::uint64_t activeRevision() const noexcept;
+    [[nodiscard]] std::size_t activeLatencySamples() const noexcept;
     [[nodiscard]] bool setMacroValue(std::string_view nodeId, double value) noexcept;
 
 private:
@@ -188,9 +216,12 @@ private:
     std::atomic<std::uint64_t> lastCrossfadeToRevision_ {};
     std::atomic<std::size_t> activeDelayLineCount_ {};
     std::atomic<std::size_t> activeDelayMemoryBytes_ {};
+    std::atomic<std::size_t> activeLatencySamples_ {};
     std::array<std::atomic<std::uint64_t>, maximumMacroControls> macroKeys_ {};
     std::array<std::atomic<double>, maximumMacroControls> macroValues_ {};
     mutable std::mutex failureMutex_;
+    mutable std::mutex latencyPlansMutex_;
+    std::map<std::uint64_t, GraphLatencyPlan> latencyPlans_;
     std::mutex pendingPublicationMutex_;
     std::string failure_;
 };

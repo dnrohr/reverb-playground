@@ -514,3 +514,77 @@ TEST_CASE("Acyclic compiler reserves delay-containing cycles for feedback compil
         "acyclic compiler rejected a directed cycle; feedback compilation is provided by M3.4",
     });
 }
+
+TEST_CASE("Compiled graph latency adds serial processors and exposes output paths")
+{
+    GraphDocument graph;
+    graph.nodes = {
+        stereoInput(),
+        { "delay", "delay", { inputPort(), outputPort() }, { { "delay", 10.0, "milliseconds" } } },
+        pitchShiftNode(),
+        stereoOutput(),
+    };
+    graph.connections = {
+        cable("input-delay", "input", "out-l", "delay", "in"),
+        cable("delay-pitch", "delay", "out", "pitch", "in"),
+        cable("pitch-left", "pitch", "out", "output", "in-l"),
+        cable("pitch-right", "pitch", "out", "output", "in-r"),
+    };
+    const auto compiled = compileAcyclicGraph(graph, 48'000.0, 64);
+    REQUIRE(compiled.valid());
+    REQUIRE(compiled.latency.totalSamples == 17'762);
+    REQUIRE(compiled.latency.outputPaths.size() == 2);
+    REQUIRE(compiled.latency.outputPaths[0].samples == 17'762);
+    REQUIRE(compiled.latency.outputPaths[0].nodeIds
+        == std::vector<std::string> { "input", "delay", "pitch", "output" });
+}
+
+TEST_CASE("Compiled graph latency reports parallel maxima and uncompensated differences")
+{
+    GraphDocument graph;
+    graph.nodes = {
+        stereoInput(),
+        { "short", "delay", { inputPort(), outputPort() }, { { "delay", 10.0, "milliseconds" } } },
+        { "long", "delay", { inputPort(), outputPort() }, { { "delay", 25.0, "milliseconds" } } },
+        { "join", "sum", { inputPort("in-a"), inputPort("in-b"), outputPort() }, {} },
+        stereoOutput(),
+    };
+    graph.connections = {
+        cable("input-short", "input", "out-l", "short", "in"),
+        cable("input-long", "input", "out-r", "long", "in"),
+        cable("short-join", "short", "out", "join", "in-a"),
+        cable("long-join", "long", "out", "join", "in-b"),
+        cable("join-left", "join", "out", "output", "in-l"),
+        cable("join-right", "join", "out", "output", "in-r"),
+    };
+    const auto compiled = compileAcyclicGraph(graph, 1'000.0, 64);
+    REQUIRE(compiled.valid());
+    REQUIRE(compiled.latency.totalSamples == 25);
+    const auto join = std::ranges::find(compiled.latency.parallelJoins, "join", &LatencyJoin::nodeId);
+    REQUIRE(join != compiled.latency.parallelJoins.end());
+    REQUIRE(join->minimumInputSamples == 10);
+    REQUIRE(join->maximumInputSamples == 25);
+    REQUIRE(join->uncompensatedSamples() == 15);
+}
+
+TEST_CASE("Compiled graph latency crosses a feedback Delay only once")
+{
+    GraphDocument graph;
+    graph.nodes = {
+        stereoInput(),
+        { "join", "sum", { inputPort("in-a"), inputPort("in-b"), outputPort() }, {} },
+        { "delay", "delay", { inputPort(), outputPort() }, { { "delay", 10.0, "milliseconds" } } },
+        stereoOutput(),
+    };
+    graph.connections = {
+        cable("input-join", "input", "out-l", "join", "in-a"),
+        cable("delay-return", "delay", "out", "join", "in-b"),
+        cable("join-delay", "join", "out", "delay", "in"),
+        cable("join-left", "join", "out", "output", "in-l"),
+        cable("join-right", "join", "out", "output", "in-r"),
+    };
+    const auto compiled = compileFeedbackGraph(graph, 1'000.0, 64);
+    REQUIRE(compiled.valid());
+    REQUIRE(compiled.latency.totalSamples == 10);
+    REQUIRE(compiled.latency.parallelJoins.front().uncompensatedSamples() == 10);
+}

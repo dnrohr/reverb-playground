@@ -6,6 +6,7 @@ const diagnostic = {
   workloadEstimate: { basis: 'static-estimate', scalarOperationsPerSample: 48, scalarOperationsPerSecond: 2_304_000 },
   liveCpu: { basis: 'measured', processedBlocks: 100, loadPercent: 1.2, peakLoadPercent: 2.5 },
   delayMemory: { basis: 'prepared-allocation', lineCount: 6, bytes: 46084 },
+  latency: { basis: 'compiled-active-graph', samples: 17282, milliseconds: 360.04, hostReportedSamples: 17282, outputPaths: [{ outputPort: 'in-l', samples: 17282, nodeIds: ['input', 'pitch', 'output'] }], parallelJoins: [{ nodeId: 'wet-sum', minimumInputSamples: 0, maximumInputSamples: 17282, uncompensatedSamples: 17282 }], compensationPolicy: 'No hidden graph compensation.' },
   clipping: { basis: 'measured', samples: 3, blocks: 1 },
   mute: { manual: false, safetyLatched: true, active: true }, safetyEventCoherent: true,
   lastSafetyEvent: { generation: 2, kind: 'runaway', channel: 'left', sampleIndex: 4, graphRevision: 6 }, recoveryCount: 1,
@@ -18,6 +19,8 @@ describe('runtime diagnostics contract', () => {
     expect(parsed.workloadEstimate.basis).toBe('static-estimate');
     expect(parsed.liveCpu.basis).toBe('measured');
     expect(parsed.delayMemory.basis).toBe('prepared-allocation');
+    expect(parsed.latency.outputPaths[0].nodeIds).toContain('pitch');
+    expect(parsed.latency.parallelJoins[0].uncompensatedSamples).toBe(17282);
     expect(parsed.lastSafetyEvent?.graphRevision).toBe(6);
     expect(parsed.activeGraphRevision).toBe(7);
     expect(parsed.topologyPublication.pendingRevision).toBe(9);

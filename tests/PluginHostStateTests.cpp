@@ -340,6 +340,97 @@ TEST_CASE("Plugin emergency mute and explicit recovery remain operational with P
     REQUIRE(buffer.getMagnitude(0, buffer.getNumSamples()) == 0.0F);
 }
 
+TEST_CASE("Plugin reports active compiled latency from the message thread and keeps dry bypass explicit")
+{
+    using namespace reverb::graph;
+    const auto audioInput = [](std::string id) { return Port { std::move(id), SignalType::audio, PortDirection::input }; };
+    const auto audioOutput = [](std::string id) { return Port { std::move(id), SignalType::audio, PortDirection::output }; };
+    GraphDocument graph;
+    graph.nodes = {
+        { "input", "stereo-input", { audioOutput("out-l"), audioOutput("out-r") }, {} },
+        { "delay", "delay", { audioInput("in"), audioOutput("out") }, { { "delay", 10.0, "milliseconds" } } },
+        { "pitch", "pitch-shift", {
+            audioInput("in"), { "semitones-mod", SignalType::control, PortDirection::input },
+            { "grain-mod", SignalType::control, PortDirection::input },
+            { "overlap-mod", SignalType::control, PortDirection::input }, audioOutput("out"),
+        }, {
+            { "semitones", 12.0, "semitones" }, { "grain", 60.0, "milliseconds" },
+            { "overlap", 0.5, "normalized" }, { "direction", 0.0, "direction" },
+        } },
+        { "output", "stereo-output", { audioInput("in-l"), audioInput("in-r") }, {} },
+    };
+    graph.connections = {
+        { "input-delay", { "input", "out-l" }, { "delay", "in" } },
+        { "delay-pitch", { "delay", "out" }, { "pitch", "in" } },
+        { "pitch-left", { "pitch", "out" }, { "output", "in-l" } },
+        { "pitch-right", { "pitch", "out" }, { "output", "in-r" } },
+    };
+
+    ReverbPlaygroundProcessor processor;
+    REQUIRE(nlohmann::json::parse(processor.storePatchStateJson(writePatchJson(graph)).toStdString()).at("accepted") == true);
+    processor.prepareToPlay(48'000.0, 64);
+    juce::AudioBuffer<float> buffer(2, 64);
+    juce::MidiBuffer midi;
+    for (auto attempt = 0; attempt < 2'000; ++attempt) {
+        buffer.clear();
+        processor.processBlock(buffer, midi);
+        if (nlohmann::json::parse(processor.runtimeDiagnosticsJson().toStdString())
+                .at("topologyPublication").at("activeRevision") == 1) break;
+        std::this_thread::yield();
+    }
+
+    // Hosts that defer a dynamic update do not affect audio or the compiled truth.
+    REQUIRE(processor.getLatencySamples() == 0);
+    auto diagnostics = nlohmann::json::parse(processor.runtimeDiagnosticsJson().toStdString());
+    REQUIRE(diagnostics.at("latency").at("samples") == 17'762);
+    REQUIRE(diagnostics.at("latency").at("hostReportedSamples") == 0);
+    processor.synchronizeHostLatencyForCurrentGraph();
+    REQUIRE(processor.getLatencySamples() == 17'762);
+
+    processor.setProcessedAudition(false);
+    processor.synchronizeHostLatencyForCurrentGraph();
+    REQUIRE(processor.getLatencySamples() == 0);
+    processor.setProcessedAudition(true);
+    processor.synchronizeHostLatencyForCurrentGraph();
+    REQUIRE(processor.getLatencySamples() == 17'762);
+
+    juce::MemoryBlock state;
+    processor.getStateInformation(state);
+    ReverbPlaygroundProcessor restored;
+    restored.setStateInformation(state.getData(), static_cast<int>(state.getSize()));
+    restored.prepareToPlay(48'000.0, 64);
+    for (auto attempt = 0; attempt < 2'000; ++attempt) {
+        buffer.clear();
+        restored.processBlock(buffer, midi);
+        if (nlohmann::json::parse(restored.runtimeDiagnosticsJson().toStdString())
+                .at("topologyPublication").at("activeRevision") == 1) break;
+        std::this_thread::yield();
+    }
+    restored.synchronizeHostLatencyForCurrentGraph();
+    REQUIRE(restored.getLatencySamples() == 17'762);
+
+    GraphDocument direct;
+    direct.nodes = {
+        { "input", "stereo-input", { audioOutput("out-l"), audioOutput("out-r") }, {} },
+        { "output", "stereo-output", { audioInput("in-l"), audioInput("in-r") }, {} },
+    };
+    direct.connections = {
+        { "left", { "input", "out-l" }, { "output", "in-l" } },
+        { "right", { "input", "out-r" }, { "output", "in-r" } },
+    };
+    REQUIRE(nlohmann::json::parse(processor.publishGraphJson(writePatchJson(direct)).toStdString()).at("accepted") == true);
+    for (auto attempt = 0; attempt < 2'000; ++attempt) {
+        buffer.clear();
+        processor.processBlock(buffer, midi);
+        if (nlohmann::json::parse(processor.runtimeDiagnosticsJson().toStdString())
+                .at("topologyPublication").at("activeRevision") == 2) break;
+        std::this_thread::yield();
+    }
+    REQUIRE(processor.getLatencySamples() == 17'762);
+    processor.synchronizeHostLatencyForCurrentGraph();
+    REQUIRE(processor.getLatencySamples() == 0);
+}
+
 TEST_CASE("Legacy host state without a graph restores safe audition controls")
 {
     juce::ValueTree legacy("ReverbPlayground");

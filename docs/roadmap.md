@@ -1110,7 +1110,7 @@ Acceptance criteria:
 - Latency and prepared-storage calculations use the new maximum ratio and checked tests prove the exact sample counts at 44.1, 48, 96, and 192 kHz.
 - All released shimmer/reverse factories remain within range, render finite, and preserve their expected octave measurements and save/restore behavior.
 
-### M16.2 Compile graph latency and report it to hosts
+### M16.2 Compile graph latency and report it to hosts — Complete
 
 Add a deterministic latency pass to the prepared graph compiler and connect the active result to JUCE host latency reporting.
 

@@ -240,7 +240,10 @@ holds both markers in a static separated state without removing any labels.
 <!-- visualization: diagnostics -->
 
 The panel labels operation count as a static estimate, callback load and
-clipping as live measurements, and delay memory as exact prepared bytes. Graph
+clipping as live measurements, and delay memory as exact prepared bytes. Its
+compiled-latency card shows active samples/milliseconds, both output paths, and
+the node identity and sample difference of every uncompensated parallel join;
+these are prepared graph facts rather than callback timing. Graph
 publication revisions distinguish compiling, active, failed, crossfading, and
 last transition. A safety event records immutable graph revision, channel, and
 sample identity. Recovery remains disabled until safety mute is active and
@@ -256,3 +259,5 @@ clears stored feedback state explicitly.
   pointer and keyboard controls.
 - [Control-rate graph semantics](control-rate-graph-semantics.md) defines the
   exact modulation formula and scheduling policy.
+- [Graph latency and host reporting](graph-latency-and-host-reporting.md)
+  defines compiled path rules, the no-hidden-compensation policy, and JUCE host updates.

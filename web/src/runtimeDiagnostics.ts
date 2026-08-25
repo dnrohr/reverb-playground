@@ -4,6 +4,12 @@ export interface RuntimeDiagnostics {
   workloadEstimate: { basis: 'static-estimate'; scalarOperationsPerSample: number; scalarOperationsPerSecond: number };
   liveCpu: { basis: 'measured'; processedBlocks: number; loadPercent: number; peakLoadPercent: number };
   delayMemory: { basis: 'prepared-allocation'; lineCount: number; bytes: number };
+  latency: {
+    basis: 'compiled-active-graph'; samples: number; milliseconds: number; hostReportedSamples: number;
+    outputPaths: { outputPort: string; samples: number; nodeIds: string[] }[];
+    parallelJoins: { nodeId: string; minimumInputSamples: number; maximumInputSamples: number; uncompensatedSamples: number }[];
+    compensationPolicy: string;
+  };
   clipping: { basis: 'measured'; samples: number; blocks: number };
   mute: { manual: boolean; safetyLatched: boolean; active: boolean };
   safetyEventCoherent: boolean;
@@ -36,6 +42,10 @@ const flag = (value: unknown, label: string) => {
   if (typeof value !== 'boolean') throw new Error(`${label} must be boolean`);
   return value;
 };
+const text = (value: unknown, label: string) => {
+  if (typeof value !== 'string') throw new Error(`${label} must be a string`);
+  return value;
+};
 
 export function parseRuntimeDiagnostics(value: unknown): RuntimeDiagnostics {
   const root = record(typeof value === 'string' ? JSON.parse(value) as unknown : value, 'runtime diagnostics');
@@ -43,10 +53,21 @@ export function parseRuntimeDiagnostics(value: unknown): RuntimeDiagnostics {
   const estimate = record(root.workloadEstimate, 'workload estimate');
   const cpu = record(root.liveCpu, 'live CPU');
   const memory = record(root.delayMemory, 'delay memory');
+  const latency = record(root.latency, 'latency');
   const clipping = record(root.clipping, 'clipping');
   const mute = record(root.mute, 'mute');
   const topology = record(root.topologyPublication, 'topology publication');
-  if (estimate.basis !== 'static-estimate' || cpu.basis !== 'measured' || memory.basis !== 'prepared-allocation' || clipping.basis !== 'measured') throw new Error('diagnostic bases are invalid');
+  if (estimate.basis !== 'static-estimate' || cpu.basis !== 'measured' || memory.basis !== 'prepared-allocation' || latency.basis !== 'compiled-active-graph' || clipping.basis !== 'measured') throw new Error('diagnostic bases are invalid');
+  if (!Array.isArray(latency.outputPaths) || !Array.isArray(latency.parallelJoins)) throw new Error('latency paths and joins must be arrays');
+  const outputPaths = latency.outputPaths.map((item, index) => {
+    const path = record(item, `latency output path ${index}`);
+    if (!Array.isArray(path.nodeIds) || !path.nodeIds.every((id) => typeof id === 'string')) throw new Error(`latency output path ${index} node IDs must be strings`);
+    return { outputPort: text(path.outputPort, 'latency output port'), samples: count(path.samples, 'latency output samples'), nodeIds: path.nodeIds as string[] };
+  });
+  const parallelJoins = latency.parallelJoins.map((item, index) => {
+    const join = record(item, `latency join ${index}`);
+    return { nodeId: text(join.nodeId, 'latency join node'), minimumInputSamples: count(join.minimumInputSamples, 'latency join minimum'), maximumInputSamples: count(join.maximumInputSamples, 'latency join maximum'), uncompensatedSamples: count(join.uncompensatedSamples, 'latency join difference') };
+  });
   const coherent = flag(root.safetyEventCoherent, 'safety event coherence');
   let event: RuntimeDiagnostics['lastSafetyEvent'] = null;
   if (root.lastSafetyEvent !== null) {
@@ -63,6 +84,7 @@ export function parseRuntimeDiagnostics(value: unknown): RuntimeDiagnostics {
     workloadEstimate: { basis: 'static-estimate', scalarOperationsPerSample: count(estimate.scalarOperationsPerSample, 'estimated operations/sample'), scalarOperationsPerSecond: finite(estimate.scalarOperationsPerSecond, 'estimated operations/second') },
     liveCpu: { basis: 'measured', processedBlocks: count(cpu.processedBlocks, 'processed blocks'), loadPercent: finite(cpu.loadPercent, 'live load'), peakLoadPercent: finite(cpu.peakLoadPercent, 'peak load') },
     delayMemory: { basis: 'prepared-allocation', lineCount: count(memory.lineCount, 'delay lines'), bytes: count(memory.bytes, 'delay bytes') },
+    latency: { basis: 'compiled-active-graph', samples: count(latency.samples, 'graph latency samples'), milliseconds: finite(latency.milliseconds, 'graph latency milliseconds'), hostReportedSamples: count(latency.hostReportedSamples, 'host latency samples'), outputPaths, parallelJoins, compensationPolicy: text(latency.compensationPolicy, 'latency compensation policy') },
     clipping: { basis: 'measured', samples: count(clipping.samples, 'clipped samples'), blocks: count(clipping.blocks, 'clipped blocks') },
     mute: parsedMute,
     safetyEventCoherent: coherent,

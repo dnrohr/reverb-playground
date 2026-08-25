@@ -77,7 +77,8 @@ Last updated: 2026-08-25
 | M15.3 Qualify and document startup recovery | Complete | Five launches: shell mean 0.393 s/max 0.411 s, editor mean 8.321 s; inspected 125%-scale screenshots/video; 185 Release tests; standalone/VST3 builds; clean local gate |
 | Post-M15 startup and waveform polish | Complete | Eight-second timed Loading/Welcome presentation; slate/cyan waveform selection with amber active-loop state; deterministic palette/timing tests; refreshed UI evidence |
 | M16.1 Constrain Pitch Shift to one octave and migrate safely | Complete | Unified -12...+12 DSP/graph/editor contract; +7 perfect fifth; deterministic schema-v2 clamp warning; exact 44.1/48/96/192 kHz latency and storage tests; factory qualification |
-| M16.2-M16.4 Latency truth and performance baselines | Planned | Graph/host latency; graph-specific diagnostics; representative baseline matrix |
+| M16.2 Compile graph latency and report it to hosts | Complete | Prepared causal paths add serial latency, expose parallel differences without hidden compensation, and publish active processed latency to JUCE hosts from the message thread. |
+| M16.3-M16.4 Diagnostics and performance baselines | Planned | Graph-specific diagnostics; representative baseline matrix |
 | M17.1-M17.4 Hybrid compiled graph execution | Planned | SCC-local sample processing; block regions; buffer liveness/reuse; safe kernel fusion/SIMD; measured equivalence and improvement |
 | M18.1-M18.4 Pitch/control optimization and specialization | Planned | Dual-grain hot-loop optimization; block control ramps; bounded quality modes; evidence-based AOT/JIT decision |
 

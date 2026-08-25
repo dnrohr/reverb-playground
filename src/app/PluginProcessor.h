@@ -12,9 +12,10 @@
 #include <atomic>
 #include <vector>
 
-class ReverbPlaygroundProcessor final : public juce::AudioProcessor {
+class ReverbPlaygroundProcessor final : public juce::AudioProcessor, private juce::Timer {
 public:
     ReverbPlaygroundProcessor();
+    ~ReverbPlaygroundProcessor() override;
 
     void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override;
     void releaseResources() override;
@@ -72,8 +73,11 @@ public:
         bool overwriteConfirmed, std::string& error);
     void cancelProcessedFileExport() noexcept;
     [[nodiscard]] juce::String processedFileExportJson() const;
+    // Message-thread synchronization point used by the timer and deterministic host tests.
+    void synchronizeHostLatencyForCurrentGraph();
 
 private:
+    void timerCallback() override;
     reverb::audio::PreparedAudioFileSource audioFileSource_;
     reverb::render::ProcessedFileExporter fileExporter_;
     juce::File loadedAudioFile_;

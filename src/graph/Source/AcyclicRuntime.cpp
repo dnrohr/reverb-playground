@@ -307,6 +307,7 @@ std::string loopMessage(const std::vector<std::string>& loop)
 struct PreparedAcyclicRuntime::Impl final {
     std::size_t maximumBlockSize {};
     DelayMemoryPlan delayMemory;
+    GraphLatencyPlan latency;
     std::vector<float> delayArena;
     bool feedbackMode {};
     bool sampleWiseMode {};
@@ -339,6 +340,7 @@ std::size_t PreparedAcyclicRuntime::preparedStorageBytes() const noexcept
         + implementation_->delayMemory.allocatedBytes;
 }
 const DelayMemoryPlan& PreparedAcyclicRuntime::delayMemoryPlan() const noexcept { return implementation_->delayMemory; }
+const GraphLatencyPlan& PreparedAcyclicRuntime::latencyPlan() const noexcept { return implementation_->latency; }
 
 void PreparedAcyclicRuntime::reset() noexcept
 {
@@ -800,6 +802,58 @@ AcyclicCompileResult compileAcyclicGraph(
 
     const auto inputId = std::ranges::find_if(document.nodes, [](const Node& node) { return node.type == "stereo-input"; })->id;
     const auto outputId = std::ranges::find_if(document.nodes, [](const Node& node) { return node.type == "stereo-output"; })->id;
+
+    struct PathState final {
+        std::size_t samples {};
+        std::vector<std::string> nodeIds;
+    };
+    std::unordered_map<std::string, PathState> latencyByNode;
+    for (const auto& id : result.schedule) {
+        const auto& node = *nodes.at(id);
+        std::vector<PathState> inputsForNode;
+        for (const auto& port : node.ports) {
+            if (port.direction != PortDirection::input || port.signal != SignalType::audio) continue;
+            const auto cable = incoming.find(portKey(id, port.id));
+            if (cable == incoming.end()) continue;
+            const auto source = latencyByNode.find(cable->second->from.nodeId);
+            if (source != latencyByNode.end()) inputsForNode.push_back(source->second);
+        }
+        PathState path;
+        if (!inputsForNode.empty()) {
+            const auto longest = std::ranges::max_element(inputsForNode, {}, &PathState::samples);
+            path = *longest;
+            if (inputsForNode.size() > 1) {
+                const auto [minimum, maximum] = std::ranges::minmax_element(
+                    inputsForNode, {}, &PathState::samples);
+                result.latency.parallelJoins.push_back({ id, minimum->samples, maximum->samples });
+            }
+        }
+        std::size_t nodeLatency = 0;
+        if (node.type == "delay") nodeLatency = delaySamplePlans.at(id).first;
+        else if (node.type == "pitch-shift")
+            nodeLatency = reverb::dsp::pitch_shift::reportedLatencySamples(sampleRate);
+        path.samples += nodeLatency;
+        if (nodeLatency > 0 || node.type == "stereo-input" || node.type == "stereo-output")
+            path.nodeIds.push_back(id);
+        latencyByNode[id] = std::move(path);
+    }
+    const auto outputNode = nodes.at(outputId);
+    for (const auto& port : outputNode->ports) {
+        if (port.direction != PortDirection::input || port.signal != SignalType::audio) continue;
+        LatencyPath path { .outputPort = port.id };
+        const auto cable = incoming.find(portKey(outputId, port.id));
+        if (cable != incoming.end()) {
+            if (const auto source = latencyByNode.find(cable->second->from.nodeId);
+                source != latencyByNode.end()) {
+                path.samples = source->second.samples;
+                path.nodeIds = source->second.nodeIds;
+            }
+        }
+        path.nodeIds.push_back(outputId);
+        result.latency.totalSamples = std::max(result.latency.totalSamples, path.samples);
+        result.latency.outputPaths.push_back(std::move(path));
+    }
+
     std::unordered_set<std::string> fromInput { inputId }, toOutput { outputId };
     std::vector<std::string> frontier { inputId };
     while (!frontier.empty()) { auto id = frontier.back(); frontier.pop_back(); for (const auto& next : adjacency[id]) if (fromInput.insert(next).second) frontier.push_back(next); }
@@ -818,6 +872,7 @@ AcyclicCompileResult compileAcyclicGraph(
         auto implementation = std::make_unique<PreparedAcyclicRuntime::Impl>();
         implementation->maximumBlockSize = maximumBlockSize; implementation->schedule = result.schedule;
         implementation->delayMemory = result.delayMemory;
+        implementation->latency = result.latency;
         implementation->controlQuantumSamples = controlPlan.quantumSamples == 0 ? 1 : controlPlan.quantumSamples;
         implementation->delayArena.assign(result.delayMemory.allocatedSamples, 0.0F);
         implementation->feedbackMode = allowFeedback && !result.feedbackComponents.empty();
@@ -1090,7 +1145,8 @@ AcyclicPublishResult AcyclicRuntimeHost::compileFeedbackAndPublish(
 AcyclicPublishResult AcyclicRuntimeHost::publishCompiled(
     AcyclicCompileResult result, const std::uint64_t revision, const double sampleRate)
 {
-    AcyclicPublishResult publication { result.schedule, result.warnings, result.errors, result.delayMemory };
+    AcyclicPublishResult publication {
+        result.schedule, result.warnings, result.errors, result.delayMemory, result.latency };
     completedCompilations_.fetch_add(1, std::memory_order_relaxed);
     if (!result.valid()) {
         failedRevision_.store(revision, std::memory_order_release);
@@ -1101,6 +1157,11 @@ AcyclicPublishResult AcyclicRuntimeHost::publishCompiled(
             failure_ += result.errors[index];
         }
         return publication;
+    }
+    {
+        std::scoped_lock lock(latencyPlansMutex_);
+        latencyPlans_[revision] = result.latency;
+        while (latencyPlans_.size() > 32) latencyPlans_.erase(latencyPlans_.begin());
     }
     publishPending(std::move(result.runtime), revision, sampleRate);
     return publication;
@@ -1150,6 +1211,11 @@ void AcyclicRuntimeHost::compilerLoop(const std::stop_token stopToken)
             }
         }
         if (result.valid()) {
+            {
+                std::scoped_lock lock(latencyPlansMutex_);
+                latencyPlans_[request->revision] = result.latency;
+                while (latencyPlans_.size() > 32) latencyPlans_.erase(latencyPlans_.begin());
+            }
             publishPending(std::move(result.runtime), request->revision, request->sampleRate);
         } else {
             failedRevision_.store(request->revision, std::memory_order_release);
@@ -1240,6 +1306,11 @@ TopologyPublicationSnapshot AcyclicRuntimeHost::publicationSnapshot() const
     snapshot.lastCrossfadeToRevision = lastCrossfadeToRevision_.load(std::memory_order_acquire);
     snapshot.activeDelayLineCount = activeDelayLineCount_.load(std::memory_order_acquire);
     snapshot.activeDelayMemoryBytes = activeDelayMemoryBytes_.load(std::memory_order_acquire);
+    {
+        std::scoped_lock lock(latencyPlansMutex_);
+        if (const auto found = latencyPlans_.find(snapshot.activeRevision); found != latencyPlans_.end())
+            snapshot.activeLatency = found->second;
+    }
     std::scoped_lock lock(failureMutex_);
     snapshot.failure = failure_;
     return snapshot;
@@ -1260,6 +1331,8 @@ void AcyclicRuntimeHost::process(
                 pending->runtime->delayMemoryPlan().lineCount, std::memory_order_release);
             activeDelayMemoryBytes_.store(
                 pending->runtime->delayMemoryPlan().allocatedBytes, std::memory_order_release);
+            activeLatencySamples_.store(
+                pending->runtime->latencyPlan().totalSamples, std::memory_order_release);
             if (pendingRuntime_.load(std::memory_order_acquire) == nullptr)
                 pendingRevision_.store(0, std::memory_order_release);
             if (active != nullptr) {
@@ -1326,6 +1399,11 @@ void AcyclicRuntimeHost::process(
         crossfadePositionSamples_.store(0, std::memory_order_release);
         crossfadeTotalSamples_.store(0, std::memory_order_release);
     }
+}
+
+std::size_t AcyclicRuntimeHost::activeLatencySamples() const noexcept
+{
+    return activeLatencySamples_.load(std::memory_order_acquire);
 }
 
 void AcyclicRuntimeHost::resetActiveRuntimes() noexcept
