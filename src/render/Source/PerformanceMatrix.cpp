@@ -164,6 +164,9 @@ PerformanceCaseResult measurePerformanceCase(const PerformanceCaseRequest& reque
     result.bufferBytesSaved = normalSnapshot.activePlanDiagnostics.bufferBytesSaved;
     result.inPlaceAliasCount = normalSnapshot.activePlanDiagnostics.inPlaceAliasCount;
     result.copiesAvoided = normalSnapshot.activePlanDiagnostics.copiesAvoided;
+    result.fusedKernelCount = normalSnapshot.activePlanDiagnostics.fusedKernelCount;
+    result.fusedNodeCount = normalSnapshot.activePlanDiagnostics.fusedNodeCount;
+    result.simdKernelCount = normalSnapshot.activePlanDiagnostics.simdKernelCount;
     result.estimatedOperationsPerSample = normalSnapshot.activePlanDiagnostics.estimatedScalarOperationsPerSample;
     result.executionDomain = normalSnapshot.activePlanDiagnostics.executionDomain;
     result.validationMicroseconds = normalSnapshot.activePlanDiagnostics.compileTiming.validationMicroseconds;
@@ -219,6 +222,9 @@ std::string performanceMatrixJson(
                 { "bufferBytesSaved", result.bufferBytesSaved },
                 { "inPlaceAliasCount", result.inPlaceAliasCount },
                 { "copiesAvoided", result.copiesAvoided },
+                { "fusedKernelCount", result.fusedKernelCount },
+                { "fusedNodeCount", result.fusedNodeCount },
+                { "simdKernelCount", result.simdKernelCount },
                 { "estimatedOperationsPerSample", result.estimatedOperationsPerSample },
                 { "executionDomain", result.executionDomain },
             } },

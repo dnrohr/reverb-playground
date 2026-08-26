@@ -2,6 +2,7 @@ add_library(reverb_dsp STATIC
     Source/Allpass.cpp
     Source/BarrReference.cpp
     Source/BarrReferenceRuntime.cpp
+    Source/BlockKernels.cpp
     Source/Delay.cpp
     Source/EnergyTelemetry.cpp
     Source/EnvelopeFollower.cpp

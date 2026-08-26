@@ -7,7 +7,7 @@ const diagnostic = {
   liveCpu: { basis: 'measured', processedBlocks: 100, loadPercent: 1.2, peakLoadPercent: 2.5 },
   delayMemory: { basis: 'prepared-allocation', lineCount: 6, bytes: 46084 },
   latency: { basis: 'compiled-active-graph', samples: 17282, milliseconds: 360.04, hostReportedSamples: 17282, outputPaths: [{ outputPort: 'in-l', samples: 17282, nodeIds: ['input', 'pitch', 'output'] }], parallelJoins: [{ nodeId: 'wet-sum', minimumInputSamples: 0, maximumInputSamples: 17282, uncompensatedSamples: 17282 }], compensationPolicy: 'No hidden graph compensation.' },
-  preparedGraph: { nodeCount: 12, connectionCount: 15, feedbackRegionCount: 1, blockWiseRegionCount: 2, sampleWiseRegionCount: 1, logicalAudioBufferCount: 14, logicalSignalCount: 16, elidedNonAudioBufferCount: 2, physicalAudioBufferCount: 9, peakLiveBufferCount: 8, bufferBytesSaved: 1280, inPlaceAliasCount: 3, copiesAvoided: 3, bufferRetentionReasons: [{ reason: 'fan-out', signalCount: 2 }], preparedStorageBytes: 48000, compileTiming: { validationMicroseconds: 10, schedulingMicroseconds: 20, preparationMicroseconds: 30, totalMicroseconds: 60, requestToActiveMicroseconds: 150 } },
+  preparedGraph: { nodeCount: 12, connectionCount: 15, feedbackRegionCount: 1, blockWiseRegionCount: 2, sampleWiseRegionCount: 1, logicalAudioBufferCount: 14, logicalSignalCount: 16, elidedNonAudioBufferCount: 2, physicalAudioBufferCount: 9, peakLiveBufferCount: 8, bufferBytesSaved: 1280, inPlaceAliasCount: 3, copiesAvoided: 3, fusedKernelCount: 2, fusedNodeCount: 3, simdKernelCount: 4, bufferRetentionReasons: [{ reason: 'fan-out', signalCount: 2 }], fusionPreventionReasons: [{ reason: 'modulated', signalCount: 1 }], preparedStorageBytes: 48000, compileTiming: { validationMicroseconds: 10, schedulingMicroseconds: 20, preparationMicroseconds: 30, totalMicroseconds: 60, requestToActiveMicroseconds: 150 } },
   clipping: { basis: 'measured', samples: 3, blocks: 1 },
   mute: { manual: false, safetyLatched: true, active: true }, safetyEventCoherent: true,
   lastSafetyEvent: { generation: 2, kind: 'runaway', channel: 'left', sampleIndex: 4, graphRevision: 6 }, recoveryCount: 1,
@@ -24,6 +24,7 @@ describe('runtime diagnostics contract', () => {
     expect(parsed.latency.outputPaths[0].nodeIds).toContain('pitch');
     expect(parsed.latency.parallelJoins[0].uncompensatedSamples).toBe(17282);
     expect(parsed.preparedGraph.compileTiming.requestToActiveMicroseconds).toBe(150);
+    expect(parsed.preparedGraph.fusedNodeCount).toBe(3);
     expect(parsed.lastSafetyEvent?.graphRevision).toBe(6);
     expect(parsed.activeGraphRevision).toBe(7);
     expect(parsed.topologyPublication.pendingRevision).toBe(9);

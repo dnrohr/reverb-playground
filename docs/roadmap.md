@@ -1182,7 +1182,7 @@ Acceptance criteria:
 - Maximum-node and maximum-block fixtures demonstrate lower or equal prepared buffer memory and fewer copies without increasing delay storage.
 - Sanitizer/canary, repeated reset, rapid publication, and two-runtime crossfade tests detect lifetime or alias corruption.
 
-### M17.3 Fuse and specialize prepared block kernels
+### M17.3 Fuse and specialize prepared block kernels — Complete
 
 Combine eligible linear operation chains and select typed processing kernels during compilation.
 

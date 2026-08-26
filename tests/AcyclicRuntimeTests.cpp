@@ -93,8 +93,10 @@ TEST_CASE("Constructed gain and sum graph matches direct reference calculation")
     REQUIRE(compiled.planDiagnostics.physicalAudioBufferCount == 4);
     REQUIRE(compiled.planDiagnostics.peakLiveBufferCount <= 4);
     REQUIRE(compiled.planDiagnostics.bufferBytesSaved == 8 * sizeof(float));
-    REQUIRE(compiled.planDiagnostics.inPlaceAliasCount == 1);
-    REQUIRE(compiled.planDiagnostics.copiesAvoided == 1);
+    REQUIRE(compiled.planDiagnostics.inPlaceAliasCount == 0);
+    REQUIRE(compiled.planDiagnostics.copiesAvoided == 0);
+    REQUIRE(compiled.planDiagnostics.fusedKernelCount == 1);
+    REQUIRE(compiled.planDiagnostics.fusedNodeCount == 1);
     const auto fanOutReason = std::ranges::find(compiled.planDiagnostics.bufferRetentionReasons,
         "fan-out", &BufferRetentionReason::reason);
     REQUIRE(fanOutReason != compiled.planDiagnostics.bufferRetentionReasons.end());
@@ -109,7 +111,7 @@ TEST_CASE("Constructed gain and sum graph matches direct reference calculation")
     }
 }
 
-TEST_CASE("Maximum linear graph reuses one prepared work buffer without corrupting boundaries")
+TEST_CASE("Maximum linear graph fuses static gains without corrupting boundaries")
 {
     constexpr std::size_t gainCount = 250;
     constexpr std::size_t blockSize = 2'048;
@@ -132,7 +134,10 @@ TEST_CASE("Maximum linear graph reuses one prepared work buffer without corrupti
     REQUIRE(compiled.planDiagnostics.logicalSignalCount == gainCount + 3);
     REQUIRE(compiled.planDiagnostics.elidedNonAudioBufferCount == 0);
     REQUIRE(compiled.planDiagnostics.physicalAudioBufferCount == 4);
-    REQUIRE(compiled.planDiagnostics.inPlaceAliasCount == gainCount - 1);
+    REQUIRE(compiled.planDiagnostics.inPlaceAliasCount == 0);
+    REQUIRE(compiled.planDiagnostics.fusedNodeCount == gainCount - 1);
+    REQUIRE(compiled.planDiagnostics.fusedKernelCount == 1);
+    REQUIRE(compiled.planDiagnostics.simdKernelCount == 1);
     REQUIRE(compiled.planDiagnostics.bufferBytesSaved
         == (gainCount - 1) * blockSize * sizeof(float));
     REQUIRE(compiled.runtime->preparedStorageBytes() == compiled.planDiagnostics.preparedStorageBytes);
@@ -152,6 +157,51 @@ TEST_CASE("Maximum linear graph reuses one prepared work buffer without corrupti
         std::span(outputLeft).subspan(1, blockSize), std::span(outputRight).subspan(1, blockSize));
     REQUIRE(std::ranges::equal(std::span<const float>(outputLeft).subspan(1, blockSize), left));
     REQUIRE(std::ranges::equal(std::span<const float>(outputRight).subspan(1, blockSize), right));
+}
+
+TEST_CASE("Prepared block compiler fuses Sum Gain and Low-pass while preserving node identity")
+{
+    GraphDocument graph;
+    graph.nodes = {
+        stereoInput(),
+        { "sum", "sum", { inputPort("in-a"), inputPort("in-b"), outputPort() },
+            { { "gain", 0.5, "linear" } } },
+        { "gain", "gain", { inputPort(), outputPort() }, { { "gain", -0.25, "linear" } } },
+        { "filter", "lowpass", { inputPort(), outputPort() }, { { "cutoff", 2'000.0, "hertz" } } },
+        stereoOutput(),
+    };
+    graph.connections = {
+        cable("left-sum", "input", "out-l", "sum", "in-a"),
+        cable("right-sum", "input", "out-r", "sum", "in-b"),
+        cable("sum-gain", "sum", "out", "gain", "in"),
+        cable("gain-filter", "gain", "out", "filter", "in"),
+        cable("filter-left", "filter", "out", "output", "in-l"),
+        cable("right-direct", "input", "out-r", "output", "in-r"),
+    };
+    auto compiled = compileAcyclicGraph(graph, 48'000.0, 64);
+    REQUIRE(compiled.valid());
+    REQUIRE(compiled.schedule == std::vector<std::string> { "input", "sum", "gain", "filter", "output" });
+    REQUIRE(compiled.planDiagnostics.fusedNodeCount == 2);
+    REQUIRE(compiled.planDiagnostics.fusedKernelCount == 1);
+
+    std::array<float, 64> left {};
+    std::array<float, 64> right {};
+    for (std::size_t index = 0; index < left.size(); ++index) {
+        left[index] = static_cast<float>(index) / 64.0F;
+        right[index] = index % 3 == 0 ? 0.25F : -0.125F;
+    }
+    std::array<float, 64> expected {};
+    for (std::size_t index = 0; index < expected.size(); ++index)
+        expected[index] = (left[index] + right[index]) * -0.125F;
+    reverb::dsp::OnePoleLowPass reference;
+    reference.prepare(48'000.0, 2'000.0);
+    reference.process(expected);
+    std::array<float, 64> outputLeft {};
+    std::array<float, 64> outputRight {};
+    compiled.runtime->process(left, right, outputLeft, outputRight);
+    for (std::size_t index = 0; index < expected.size(); ++index)
+        REQUIRE(std::abs(outputLeft[index] - expected[index]) <= 1.0e-7F);
+    REQUIRE(outputRight == right);
 }
 
 TEST_CASE("Constructed delay graph matches a direct one-sample shift")

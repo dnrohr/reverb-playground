@@ -3,6 +3,7 @@
 
 #include <reverb/dsp/Allpass.h>
 #include <reverb/dsp/BarrReference.h>
+#include <reverb/dsp/BlockKernels.h>
 #include <reverb/dsp/Delay.h>
 #include <reverb/dsp/Gain.h>
 #include <reverb/dsp/OnePoleLowPass.h>
@@ -12,6 +13,7 @@
 #include <array>
 #include <cmath>
 #include <numeric>
+#include <limits>
 #include <numbers>
 #include <vector>
 
@@ -93,6 +95,48 @@ TEST_CASE("Explicit sum and polarity match signed reference vectors")
     reverb::dsp::Sum::process(left, invertedRight, output);
 
     REQUIRE(output == std::array { 0.5F, -4.0F, 4.0F });
+}
+
+TEST_CASE("Prepared block kernels match scalar copy gain and scaled-sum references")
+{
+    constexpr std::size_t count = 19;
+    std::array<float, count> left {};
+    std::array<float, count> right {};
+    for (std::size_t index = 0; index < count; ++index) {
+        left[index] = static_cast<float>(index) * 0.125F - 1.0F;
+        right[index] = static_cast<float>(index % 5) * -0.2F;
+    }
+    std::array<float, count> copied {};
+    reverb::dsp::block::copyGain(left, copied, -0.75F);
+    for (std::size_t index = 0; index < count; ++index)
+        REQUIRE(copied[index] == left[index] * -0.75F);
+
+    auto inPlace = left;
+    reverb::dsp::block::gain(inPlace, 0.5F);
+    for (std::size_t index = 0; index < count; ++index)
+        REQUIRE(inPlace[index] == left[index] * 0.5F);
+
+    std::array<float, count> mixed {};
+    reverb::dsp::block::sumScaled(left, right, mixed, 0.25F);
+    for (std::size_t index = 0; index < count; ++index)
+        REQUIRE(mixed[index] == (left[index] + right[index]) * 0.25F);
+
+    auto aliased = left;
+    reverb::dsp::block::sumScaled(aliased, right, aliased, -0.5F);
+    for (std::size_t index = 0; index < count; ++index)
+        REQUIRE(aliased[index] == (left[index] + right[index]) * -0.5F);
+
+    std::array<float, count> weighted {};
+    reverb::dsp::block::weightedSum(left, right, weighted, -0.5F, 0.25F, 0.75F);
+    for (std::size_t index = 0; index < count; ++index)
+        REQUIRE(weighted[index] == (left[index] * -0.5F + right[index] * 0.25F) * 0.75F);
+
+    std::array<float, 8> denormals {};
+    denormals.fill(std::numeric_limits<float>::denorm_min());
+    reverb::dsp::block::gain(denormals, 0.5F);
+    REQUIRE(std::ranges::all_of(denormals, [](const float sample) {
+        return std::isfinite(sample) && std::abs(sample) <= std::numeric_limits<float>::denorm_min();
+    }));
 }
 
 TEST_CASE("One-pole low-pass has bounded step response and deterministic reset")

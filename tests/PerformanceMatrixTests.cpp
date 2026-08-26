@@ -152,3 +152,51 @@ TEST_CASE("M17 buffer-liveness comparison reduces storage without changing delay
         REQUIRE(measured.at("budgets").at("withinCrossfadeBudget").get<bool>());
     }
 }
+
+TEST_CASE("M17 fused-kernel comparison covers flagship block paths without memory regression")
+{
+    const auto directory = std::filesystem::path(REVERB_MEASUREMENTS_DIR);
+    std::ifstream baselineStream(directory / "performance-matrix-m17-2.json");
+    std::ifstream optimizedStream(directory / "performance-matrix-m17-3.json");
+    REQUIRE(baselineStream.good());
+    REQUIRE(optimizedStream.good());
+    const auto baseline = nlohmann::json::parse(baselineStream);
+    const auto optimized = nlohmann::json::parse(optimizedStream);
+    REQUIRE(optimized.at("cases").size() == 75);
+
+    std::map<std::string, const nlohmann::json*> baselineCases;
+    for (const auto& measured : baseline.at("cases")) {
+        const auto key = measured.at("graphId").get<std::string>() + "/"
+            + std::to_string(measured.at("sampleRate").get<int>()) + "/"
+            + std::to_string(measured.at("blockSize").get<int>());
+        baselineCases.emplace(key, &measured);
+    }
+
+    std::size_t shimmerComparisonCases = 0;
+    for (const auto& measured : optimized.at("cases")) {
+        const auto key = measured.at("graphId").get<std::string>() + "/"
+            + std::to_string(measured.at("sampleRate").get<int>()) + "/"
+            + std::to_string(measured.at("blockSize").get<int>());
+        const auto& graph = measured.at("graph");
+        const auto& baselineGraph = baselineCases.at(key)->at("graph");
+        REQUIRE(graph.at("fusedKernelCount").get<std::size_t>()
+            <= graph.at("fusedNodeCount").get<std::size_t>());
+        REQUIRE(graph.at("simdKernelCount").get<std::size_t>() > 0);
+        REQUIRE(graph.at("preparedMemoryBytes").get<std::size_t>()
+            <= baselineGraph.at("preparedMemoryBytes").get<std::size_t>());
+        REQUIRE(graph.at("delayMemoryBytes") == baselineGraph.at("delayMemoryBytes"));
+        REQUIRE(measured.at("finiteOutput").get<bool>());
+        REQUIRE(measured.at("budgets").at("withinNormalBudget").get<bool>());
+        REQUIRE(measured.at("budgets").at("withinCrossfadeBudget").get<bool>());
+
+        const auto graphId = measured.at("graphId").get<std::string>();
+        const auto sampleRate = measured.at("sampleRate").get<int>();
+        if ((graphId == "split-feedback-shimmer" || graphId == "reverse-cosmic-shimmer")
+            && (sampleRate == 48'000 || sampleRate == 96'000)) {
+            ++shimmerComparisonCases;
+            REQUIRE(graph.at("fusedKernelCount").get<std::size_t>() > 0);
+            REQUIRE(graph.at("fusedNodeCount").get<std::size_t>() >= 2);
+        }
+    }
+    REQUIRE(shimmerComparisonCases == 20);
+}

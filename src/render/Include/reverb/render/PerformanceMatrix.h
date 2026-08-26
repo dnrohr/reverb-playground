@@ -48,6 +48,9 @@ struct PerformanceCaseResult final {
     std::size_t bufferBytesSaved {};
     std::size_t inPlaceAliasCount {};
     std::size_t copiesAvoided {};
+    std::size_t fusedKernelCount {};
+    std::size_t fusedNodeCount {};
+    std::size_t simdKernelCount {};
     std::size_t estimatedOperationsPerSample {};
     std::string executionDomain;
     std::uint64_t validationMicroseconds {};

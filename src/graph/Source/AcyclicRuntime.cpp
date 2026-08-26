@@ -3,6 +3,7 @@
 #include <reverb/graph/ControlRate.h>
 
 #include <reverb/dsp/Allpass.h>
+#include <reverb/dsp/BlockKernels.h>
 #include <reverb/dsp/Delay.h>
 #include <reverb/dsp/EnvelopeFollower.h>
 #include <reverb/dsp/Gain.h>
@@ -27,6 +28,7 @@ namespace reverb::graph {
 namespace {
 
 enum class OperationKind { input, output, gain, sum, delay, allpass, lowpass, pitchShift, envelopeFollower, holdGate };
+enum class FusedKernelKind { none, sumGain, gainLowpass, sumGainLowpass, weightedSum, lowpassGain };
 using Processor = std::variant<std::monostate, reverb::dsp::Gain, reverb::dsp::Delay,
     reverb::dsp::Allpass, reverb::dsp::OnePoleLowPass,
     reverb::dsp::PitchShift, reverb::dsp::EnvelopeFollower, reverb::dsp::HoldGate>;
@@ -37,6 +39,11 @@ struct Operation final {
     std::vector<std::size_t> inputs;
     std::vector<std::size_t> outputs;
     Processor processor;
+    FusedKernelKind fusedKernel { FusedKernelKind::none };
+    float fusedScale { 1.0F };
+    float fusedInputScaleA { 1.0F };
+    float fusedInputScaleB { 1.0F };
+    bool fusedAway {};
     float sumGain { 1.0F };
     double baseDelayMilliseconds {};
     double baseCoefficient {};
@@ -490,16 +497,46 @@ void PreparedAcyclicRuntime::process(
         const auto processBlockRange = [&](const std::size_t begin, const std::size_t end) {
             for (auto operationIndex = begin; operationIndex < end; ++operationIndex) {
                 auto& operation = implementation_->operations[operationIndex];
-                if (operation.kind == OperationKind::input || operation.kind == OperationKind::output) continue;
+                if (operation.kind == OperationKind::input || operation.kind == OperationKind::output
+                    || operation.fusedAway) continue;
                 auto destination = fullBuffer(operation.outputs.front());
+                if (operation.fusedKernel == FusedKernelKind::sumGain) {
+                    reverb::dsp::block::sumScaled(
+                        fullBuffer(operation.inputs[0]), fullBuffer(operation.inputs[1]),
+                        destination, operation.fusedScale);
+                    continue;
+                }
+                if (operation.fusedKernel == FusedKernelKind::gainLowpass) {
+                    std::get<reverb::dsp::OnePoleLowPass>(operation.processor).processScaled(
+                        fullBuffer(operation.inputs.front()), destination, operation.fusedScale);
+                    continue;
+                }
+                if (operation.fusedKernel == FusedKernelKind::sumGainLowpass) {
+                    std::get<reverb::dsp::OnePoleLowPass>(operation.processor).processSummedScaled(
+                        fullBuffer(operation.inputs[0]), fullBuffer(operation.inputs[1]),
+                        destination, operation.fusedScale);
+                    continue;
+                }
+                if (operation.fusedKernel == FusedKernelKind::weightedSum) {
+                    reverb::dsp::block::weightedSum(
+                        fullBuffer(operation.inputs[0]), fullBuffer(operation.inputs[1]), destination,
+                        operation.fusedInputScaleA, operation.fusedInputScaleB, operation.fusedScale);
+                    continue;
+                }
+                if (operation.fusedKernel == FusedKernelKind::lowpassGain) {
+                    std::get<reverb::dsp::OnePoleLowPass>(operation.processor).processOutputScaled(
+                        fullBuffer(operation.inputs.front()), destination, operation.fusedScale);
+                    continue;
+                }
                 if (operation.inputs.front() != operation.outputs.front())
-                    std::ranges::copy(fullBuffer(operation.inputs.front()), destination.begin());
+                    reverb::dsp::block::copy(fullBuffer(operation.inputs.front()), destination);
                 if (operation.kind == OperationKind::sum) {
-                    reverb::dsp::Sum::process(destination, fullBuffer(operation.inputs[1]), destination);
-                    if (operation.sumGain != 1.0F) for (auto& sample : destination) sample *= operation.sumGain;
+                    reverb::dsp::block::sumScaled(
+                        destination, fullBuffer(operation.inputs[1]), destination, operation.sumGain);
                 } else if (operation.kind == OperationKind::gain) {
                     if (operation.gainModulation == noModulation)
-                        std::get<reverb::dsp::Gain>(operation.processor).process(destination);
+                        reverb::dsp::block::gain(
+                            destination, std::get<reverb::dsp::Gain>(operation.processor).getLinear());
                     else for (std::size_t sample = 0; sample < count; ++sample)
                         destination[sample] *= static_cast<float>(
                             implementation_->modulations[operation.gainModulation].values[sample]);
@@ -659,16 +696,45 @@ void PreparedAcyclicRuntime::process(
     for (auto& operation : implementation_->operations) {
         if (operation.kind == OperationKind::input || operation.kind == OperationKind::output)
             continue;
+        if (operation.fusedAway) continue;
         auto destination = buffer(operation.outputs.front());
+        if (operation.fusedKernel == FusedKernelKind::sumGain) {
+            reverb::dsp::block::sumScaled(
+                buffer(operation.inputs[0]), buffer(operation.inputs[1]),
+                destination, operation.fusedScale);
+            continue;
+        }
+        if (operation.fusedKernel == FusedKernelKind::gainLowpass) {
+            std::get<reverb::dsp::OnePoleLowPass>(operation.processor).processScaled(
+                buffer(operation.inputs.front()), destination, operation.fusedScale);
+            continue;
+        }
+        if (operation.fusedKernel == FusedKernelKind::sumGainLowpass) {
+            std::get<reverb::dsp::OnePoleLowPass>(operation.processor).processSummedScaled(
+                buffer(operation.inputs[0]), buffer(operation.inputs[1]),
+                destination, operation.fusedScale);
+            continue;
+        }
+        if (operation.fusedKernel == FusedKernelKind::weightedSum) {
+            reverb::dsp::block::weightedSum(
+                buffer(operation.inputs[0]), buffer(operation.inputs[1]), destination,
+                operation.fusedInputScaleA, operation.fusedInputScaleB, operation.fusedScale);
+            continue;
+        }
+        if (operation.fusedKernel == FusedKernelKind::lowpassGain) {
+            std::get<reverb::dsp::OnePoleLowPass>(operation.processor).processOutputScaled(
+                buffer(operation.inputs.front()), destination, operation.fusedScale);
+            continue;
+        }
         if (operation.inputs.front() != operation.outputs.front())
-            std::ranges::copy(buffer(operation.inputs.front()), destination.begin());
+            reverb::dsp::block::copy(buffer(operation.inputs.front()), destination);
         if (operation.kind == OperationKind::sum) {
-            reverb::dsp::Sum::process(destination, buffer(operation.inputs[1]), destination);
-            if (operation.sumGain != 1.0F)
-                for (auto& sample : destination) sample *= operation.sumGain;
+            reverb::dsp::block::sumScaled(
+                destination, buffer(operation.inputs[1]), destination, operation.sumGain);
         } else if (operation.kind == OperationKind::gain) {
             if (operation.gainModulation == noModulation) {
-                std::get<reverb::dsp::Gain>(operation.processor).process(destination);
+                reverb::dsp::block::gain(
+                    destination, std::get<reverb::dsp::Gain>(operation.processor).getLinear());
             } else {
                 const auto& values = implementation_->modulations[operation.gainModulation].values;
                 for (std::size_t sample = 0; sample < count; ++sample)
@@ -1310,6 +1376,178 @@ AcyclicCompileResult compileAcyclicGraph(
             else if (mapping.parameterId == "grain") operation->grainModulation = index;
             else operation->overlapModulation = index;
         }
+
+        const auto unfusedLogicalBufferCount = implementation->buffers.size();
+        std::vector<std::size_t> fusionProducer(
+            unfusedLogicalBufferCount, std::numeric_limits<std::size_t>::max());
+        std::vector<std::size_t> fusionFanOut(unfusedLogicalBufferCount, 0);
+        for (std::size_t index = 0; index < implementation->operations.size(); ++index) {
+            for (const auto output : implementation->operations[index].outputs)
+                fusionProducer[output] = index;
+            for (const auto input : implementation->operations[index].inputs)
+                ++fusionFanOut[input];
+        }
+        std::vector<bool> sampleWiseOperation(implementation->operations.size(), false);
+        for (const auto& [begin, end] : implementation->sampleWiseRegions)
+            std::fill(sampleWiseOperation.begin() + static_cast<std::ptrdiff_t>(begin),
+                sampleWiseOperation.begin() + static_cast<std::ptrdiff_t>(end), true);
+        std::unordered_set<std::size_t> fusedTargets;
+        const auto noFusionIndex = std::numeric_limits<std::size_t>::max();
+        for (std::size_t targetIndex = 0; targetIndex < implementation->operations.size(); ++targetIndex) {
+            auto& target = implementation->operations[targetIndex];
+            if (sampleWiseOperation[targetIndex] || target.inputs.empty()) continue;
+            const auto acceptsStaticGain = (target.kind == OperationKind::gain
+                    && target.gainModulation == noFusionIndex)
+                || (target.kind == OperationKind::lowpass
+                    && target.cutoffModulation == noFusionIndex);
+            if (!acceptsStaticGain) continue;
+            const auto sourceSignal = target.inputs.front();
+            const auto producerIndex = fusionProducer[sourceSignal];
+            if (producerIndex == noFusionIndex || sampleWiseOperation[producerIndex]
+                || fusionFanOut[sourceSignal] != 1) continue;
+            auto& producerOperation = implementation->operations[producerIndex];
+            if (producerOperation.fusedAway) continue;
+
+            auto fused = false;
+            if (target.kind == OperationKind::gain) {
+                const auto targetGain = std::get<reverb::dsp::Gain>(target.processor).getLinear();
+                if (producerOperation.kind == OperationKind::gain
+                    && producerOperation.gainModulation == noFusionIndex
+                    && producerOperation.fusedKernel == FusedKernelKind::none) {
+                    const auto combined = std::get<reverb::dsp::Gain>(producerOperation.processor).getLinear()
+                        * targetGain;
+                    std::get<reverb::dsp::Gain>(target.processor).setLinear(combined);
+                    target.inputs = producerOperation.inputs;
+                    fused = true;
+                } else if (producerOperation.kind == OperationKind::sum
+                    && producerOperation.fusedKernel == FusedKernelKind::none) {
+                    target.fusedKernel = FusedKernelKind::sumGain;
+                    target.fusedScale = producerOperation.sumGain * targetGain;
+                    target.inputs = producerOperation.inputs;
+                    fused = true;
+                } else if (producerOperation.fusedKernel == FusedKernelKind::sumGain) {
+                    target.fusedKernel = FusedKernelKind::sumGain;
+                    target.fusedScale = producerOperation.fusedScale * targetGain;
+                    target.inputs = producerOperation.inputs;
+                    fused = true;
+                }
+            } else if (producerOperation.fusedKernel == FusedKernelKind::sumGain) {
+                target.fusedKernel = FusedKernelKind::sumGainLowpass;
+                target.fusedScale = producerOperation.fusedScale;
+                target.inputs = producerOperation.inputs;
+                fused = true;
+            } else if (producerOperation.kind == OperationKind::gain
+                && producerOperation.gainModulation == noFusionIndex
+                && producerOperation.fusedKernel == FusedKernelKind::none) {
+                target.fusedKernel = FusedKernelKind::gainLowpass;
+                target.fusedScale = std::get<reverb::dsp::Gain>(producerOperation.processor).getLinear();
+                target.inputs = producerOperation.inputs;
+                fused = true;
+            }
+            if (!fused) continue;
+            producerOperation.fusedAway = true;
+            producerOperation.inputs.clear();
+            producerOperation.outputs.clear();
+            fusedTargets.erase(producerIndex);
+            fusedTargets.insert(targetIndex);
+            ++result.planDiagnostics.fusedNodeCount;
+        }
+
+        // Fold static Gain inputs into a Sum without removing either visible node
+        // from the schedule. The Sum record becomes a weighted block kernel.
+        for (std::size_t targetIndex = 0; targetIndex < implementation->operations.size(); ++targetIndex) {
+            auto& target = implementation->operations[targetIndex];
+            if (sampleWiseOperation[targetIndex] || target.fusedAway
+                || target.kind != OperationKind::sum || target.inputs.size() != 2) continue;
+            auto foldedAny = false;
+            for (std::size_t inputIndex = 0; inputIndex < 2; ++inputIndex) {
+                const auto sourceSignal = target.inputs[inputIndex];
+                const auto producerIndex = fusionProducer[sourceSignal];
+                if (producerIndex == noFusionIndex || sampleWiseOperation[producerIndex]
+                    || fusionFanOut[sourceSignal] != 1) continue;
+                auto& producerOperation = implementation->operations[producerIndex];
+                if (producerOperation.fusedAway || producerOperation.kind != OperationKind::gain
+                    || producerOperation.gainModulation != noFusionIndex
+                    || producerOperation.fusedKernel != FusedKernelKind::none) continue;
+                const auto scale = std::get<reverb::dsp::Gain>(producerOperation.processor).getLinear();
+                target.inputs[inputIndex] = producerOperation.inputs.front();
+                if (inputIndex == 0) target.fusedInputScaleA = scale;
+                else target.fusedInputScaleB = scale;
+                producerOperation.fusedAway = true;
+                producerOperation.inputs.clear();
+                producerOperation.outputs.clear();
+                fusedTargets.erase(producerIndex);
+                ++result.planDiagnostics.fusedNodeCount;
+                foldedAny = true;
+            }
+            if (foldedAny) {
+                target.fusedKernel = FusedKernelKind::weightedSum;
+                target.fusedScale = target.sumGain;
+                fusedTargets.insert(targetIndex);
+            }
+        }
+
+        // A static Gain after a Low-pass can be applied while writing the filter
+        // output; the filter's unscaled state remains bit-for-bit equivalent.
+        for (std::size_t targetIndex = 0; targetIndex < implementation->operations.size(); ++targetIndex) {
+            auto& target = implementation->operations[targetIndex];
+            if (sampleWiseOperation[targetIndex] || target.fusedAway
+                || target.kind != OperationKind::gain || target.gainModulation != noFusionIndex
+                || target.inputs.empty()) continue;
+            const auto sourceSignal = target.inputs.front();
+            const auto producerIndex = fusionProducer[sourceSignal];
+            if (producerIndex == noFusionIndex || sampleWiseOperation[producerIndex]
+                || fusionFanOut[sourceSignal] != 1) continue;
+            auto& producerOperation = implementation->operations[producerIndex];
+            if (producerOperation.fusedAway || producerOperation.kind != OperationKind::lowpass
+                || producerOperation.cutoffModulation != noFusionIndex
+                || producerOperation.fusedKernel != FusedKernelKind::none) continue;
+            producerOperation.fusedKernel = FusedKernelKind::lowpassGain;
+            producerOperation.fusedScale = std::get<reverb::dsp::Gain>(target.processor).getLinear();
+            producerOperation.outputs = target.outputs;
+            target.fusedAway = true;
+            target.inputs.clear();
+            target.outputs.clear();
+            fusedTargets.insert(producerIndex);
+            ++result.planDiagnostics.fusedNodeCount;
+        }
+        result.planDiagnostics.fusedKernelCount = fusedTargets.size();
+        if (reverb::dsp::block::usesSimd()) {
+            for (std::size_t index = 0; index < implementation->operations.size(); ++index) {
+                const auto& operation = implementation->operations[index];
+                if (sampleWiseOperation[index] || operation.fusedAway) continue;
+                result.planDiagnostics.simdKernelCount += static_cast<std::size_t>(
+                    operation.fusedKernel == FusedKernelKind::sumGain
+                    || operation.fusedKernel == FusedKernelKind::weightedSum
+                    || operation.kind == OperationKind::sum
+                    || (operation.kind == OperationKind::gain
+                        && operation.gainModulation == noFusionIndex));
+            }
+        }
+        result.planDiagnostics.fusionPreventionReasons = {
+            { "feedback-or-causal-region", static_cast<std::size_t>(std::ranges::count(sampleWiseOperation, true)) },
+            { "modulated", static_cast<std::size_t>(std::ranges::count_if(
+                implementation->operations, [&](const auto& operation) {
+                    return operation.gainModulation != noFusionIndex
+                        || operation.cutoffModulation != noFusionIndex
+                        || operation.delayModulation != noFusionIndex
+                        || operation.coefficientModulation != noFusionIndex
+                        || operation.semitoneModulation != noFusionIndex
+                        || operation.grainModulation != noFusionIndex
+                        || operation.overlapModulation != noFusionIndex;
+                })) },
+            { "fan-out-or-tap", static_cast<std::size_t>(std::ranges::count_if(
+                fusionFanOut, [](const auto count) { return count > 1; })) },
+            { "nonlinear-or-stateful", static_cast<std::size_t>(std::ranges::count_if(
+                implementation->operations, [](const auto& operation) {
+                    return operation.kind == OperationKind::delay
+                        || operation.kind == OperationKind::allpass
+                        || operation.kind == OperationKind::pitchShift
+                        || operation.kind == OperationKind::envelopeFollower
+                        || operation.kind == OperationKind::holdGate;
+                })) },
+            { "inspector-or-telemetry-observed", 0 },
+        };
         const auto logicalBufferCount = implementation->buffers.size();
         const auto noIndex = std::numeric_limits<std::size_t>::max();
         std::vector<std::size_t> producer(logicalBufferCount, noIndex);

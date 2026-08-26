@@ -90,9 +90,13 @@ struct PreparedGraphDiagnostics final {
     std::size_t bufferBytesSaved {};
     std::size_t inPlaceAliasCount {};
     std::size_t copiesAvoided {};
+    std::size_t fusedKernelCount {};
+    std::size_t fusedNodeCount {};
+    std::size_t simdKernelCount {};
     std::string executionDomain;
     std::vector<WorkloadFamily> workloadFamilies;
     std::vector<BufferRetentionReason> bufferRetentionReasons;
+    std::vector<BufferRetentionReason> fusionPreventionReasons;
     CompilePhaseTiming compileTiming;
 };
 

@@ -10,6 +10,12 @@ public:
     void reset() noexcept;
     void settleParameters() noexcept;
     void process(std::span<float> samples) noexcept;
+    void processScaled(std::span<const float> input, std::span<float> output, float scale) noexcept;
+    void processSummedScaled(
+        std::span<const float> left, std::span<const float> right,
+        std::span<float> output, float scale) noexcept;
+    void processOutputScaled(
+        std::span<const float> input, std::span<float> output, float scale) noexcept;
     void setCutoffHertz(double cutoffHertz) noexcept;
     [[nodiscard]] double cutoffHertz() const noexcept;
 

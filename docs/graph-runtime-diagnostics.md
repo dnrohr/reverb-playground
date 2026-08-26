@@ -17,6 +17,8 @@ The offline plan profile ranks processor families by estimated operations per sa
 
 Since M17.2, the compiled buffer-liveness profile also reports logical signals, physical and peak-live audio buffers, bytes saved, in-place aliases, copies actually skipped, and reasons a signal retained independent storage. These are deterministic plan properties. They do not claim an elapsed-time improvement; Release callback measurements remain the authority for that question. See [Compiled buffer liveness and reuse](buffer-liveness.md).
 
+Since M17.3, the block-kernel profile reports fused groups, folded visible blocks, SIMD-capable prepared kernels, and hard reasons that prevented fusion. The visible node count and schedule do not shrink: folded blocks retain identity while a typed prepared kernel represents their audio work. See [Compiled block kernels](compiled-block-kernels.md).
+
 ## Static cost model
 
 Weights intentionally describe approximate scalar work, not instruction counts: Gain 2, Sum 2, Delay 5, Allpass 9, Low-pass 6, Pitch Shift 48, Envelope Follower 8, and Hold Gate 7 operations per sample. LFO and Curve Mapper contribute their small normalized control cost. A sample-wise plan adds two dispatch operations per audio processor. The model is compiled off-thread from the actual node inventory and processor mode, so adding or removing an expensive family changes the estimate deterministically.

@@ -502,6 +502,11 @@ juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
         bufferRetentionReasons.push_back({
             { "reason", reason.reason }, { "signalCount", reason.signalCount },
         });
+    auto fusionPreventionReasons = nlohmann::ordered_json::array();
+    for (const auto& reason : topology.activePlanDiagnostics.fusionPreventionReasons)
+        fusionPreventionReasons.push_back({
+            { "reason", reason.reason }, { "signalCount", reason.signalCount },
+        });
     const auto estimatedOperations = graphMode
         ? topology.activePlanDiagnostics.estimatedScalarOperationsPerSample
         : reverb::dsp::RuntimeDiagnostics::estimatedScalarOperationsPerSample;
@@ -563,7 +568,11 @@ juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
             { "bufferBytesSaved", graphMode ? topology.activePlanDiagnostics.bufferBytesSaved : 0 },
             { "inPlaceAliasCount", graphMode ? topology.activePlanDiagnostics.inPlaceAliasCount : 0 },
             { "copiesAvoided", graphMode ? topology.activePlanDiagnostics.copiesAvoided : 0 },
+            { "fusedKernelCount", graphMode ? topology.activePlanDiagnostics.fusedKernelCount : 0 },
+            { "fusedNodeCount", graphMode ? topology.activePlanDiagnostics.fusedNodeCount : 0 },
+            { "simdKernelCount", graphMode ? topology.activePlanDiagnostics.simdKernelCount : 0 },
             { "bufferRetentionReasons", std::move(bufferRetentionReasons) },
+            { "fusionPreventionReasons", std::move(fusionPreventionReasons) },
             { "preparedStorageBytes", graphMode
                 ? topology.activePlanDiagnostics.preparedStorageBytes : snapshot.delayMemoryBytes },
             { "compileTiming", {
