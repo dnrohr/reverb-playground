@@ -7,6 +7,7 @@
 #include <array>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <set>
 
 TEST_CASE("Headless performance matrix separates normal and topology-crossfade measurements")
@@ -24,6 +25,7 @@ TEST_CASE("Headless performance matrix separates normal and topology-crossfade m
     REQUIRE(result.nodeCount > 0);
     REQUIRE(result.connectionCount > 0);
     REQUIRE(result.preparedMemoryBytes > 0);
+    REQUIRE(result.delayMemoryBytes > 0);
     REQUIRE(result.requestToActiveMicroseconds > 0);
     REQUIRE(result.finiteOutput);
 
@@ -103,4 +105,50 @@ TEST_CASE("M17 hybrid comparison publishes region counts for the complete matrix
         REQUIRE(measured.at("budgets").at("withinCrossfadeBudget").get<bool>());
     }
     REQUIRE(hybridCases == 60);
+}
+
+TEST_CASE("M17 buffer-liveness comparison reduces storage without changing delay arenas")
+{
+    const auto directory = std::filesystem::path(REVERB_MEASUREMENTS_DIR);
+    std::ifstream baselineStream(directory / "performance-matrix-m17-1.json");
+    std::ifstream optimizedStream(directory / "performance-matrix-m17-2.json");
+    REQUIRE(baselineStream.good());
+    REQUIRE(optimizedStream.good());
+    const auto baseline = nlohmann::json::parse(baselineStream);
+    const auto optimized = nlohmann::json::parse(optimizedStream);
+    REQUIRE(optimized.at("cases").size() == 75);
+
+    std::map<std::string, const nlohmann::json*> baselineCases;
+    for (const auto& measured : baseline.at("cases")) {
+        const auto key = measured.at("graphId").get<std::string>() + "/"
+            + std::to_string(measured.at("sampleRate").get<int>()) + "/"
+            + std::to_string(measured.at("blockSize").get<int>());
+        baselineCases.emplace(key, &measured);
+    }
+
+    for (const auto& measured : optimized.at("cases")) {
+        const auto key = measured.at("graphId").get<std::string>() + "/"
+            + std::to_string(measured.at("sampleRate").get<int>()) + "/"
+            + std::to_string(measured.at("blockSize").get<int>());
+        const auto baselineCase = baselineCases.at(key);
+        const auto& graph = measured.at("graph");
+        const auto& baselineGraph = baselineCase->at("graph");
+        REQUIRE(graph.at("physicalAudioBufferCount").get<std::size_t>()
+            <= graph.at("logicalAudioBufferCount").get<std::size_t>());
+        REQUIRE(graph.at("logicalAudioBufferCount").get<std::size_t>()
+            <= graph.at("logicalSignalCount").get<std::size_t>());
+        REQUIRE(graph.at("peakLiveBufferCount").get<std::size_t>()
+            <= graph.at("physicalAudioBufferCount").get<std::size_t>());
+        REQUIRE(graph.at("bufferBytesSaved").get<std::size_t>() > 0);
+        REQUIRE(graph.at("copiesAvoided").get<std::size_t>() > 0);
+        REQUIRE(graph.at("preparedMemoryBytes").get<std::size_t>()
+            <= baselineGraph.at("preparedMemoryBytes").get<std::size_t>());
+        REQUIRE(graph.at("preparedMemoryBytes").get<std::size_t>()
+            + graph.at("bufferBytesSaved").get<std::size_t>()
+            == baselineGraph.at("preparedMemoryBytes").get<std::size_t>());
+        REQUIRE(graph.at("delayMemoryBytes").get<std::size_t>() > 0);
+        REQUIRE(measured.at("finiteOutput").get<bool>());
+        REQUIRE(measured.at("budgets").at("withinNormalBudget").get<bool>());
+        REQUIRE(measured.at("budgets").at("withinCrossfadeBudget").get<bool>());
+    }
 }

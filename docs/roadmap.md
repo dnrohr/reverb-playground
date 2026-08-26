@@ -1170,7 +1170,7 @@ Acceptance criteria:
 - The schedule is fixed and fully prepared before publication, with no discovery, allocation, locking, or unbounded traversal in the audio callback.
 - Golden renders, host partition tests, modulation tests, safety recovery, and state restoration prove equivalence with the previous executor within documented floating-point tolerance.
 
-### M17.2 Add buffer liveness, reuse, and safe aliasing
+### M17.2 Add buffer liveness, reuse, and safe aliasing — Complete
 
 Compile buffer ownership from connection fan-out and last-use information instead of reserving and copying one full block buffer for every output.
 

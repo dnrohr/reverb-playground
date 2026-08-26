@@ -497,6 +497,11 @@ juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
             { "family", family.family }, { "nodeCount", family.nodeCount },
             { "estimatedScalarOperationsPerSample", family.estimatedScalarOperationsPerSample },
         });
+    auto bufferRetentionReasons = nlohmann::ordered_json::array();
+    for (const auto& reason : topology.activePlanDiagnostics.bufferRetentionReasons)
+        bufferRetentionReasons.push_back({
+            { "reason", reason.reason }, { "signalCount", reason.signalCount },
+        });
     const auto estimatedOperations = graphMode
         ? topology.activePlanDiagnostics.estimatedScalarOperationsPerSample
         : reverb::dsp::RuntimeDiagnostics::estimatedScalarOperationsPerSample;
@@ -550,6 +555,15 @@ juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
             { "feedbackRegionCount", graphMode ? topology.activePlanDiagnostics.feedbackRegionCount : 0 },
             { "blockWiseRegionCount", graphMode ? topology.activePlanDiagnostics.blockWiseRegionCount : 1 },
             { "sampleWiseRegionCount", graphMode ? topology.activePlanDiagnostics.sampleWiseRegionCount : 0 },
+            { "logicalAudioBufferCount", graphMode ? topology.activePlanDiagnostics.logicalAudioBufferCount : 0 },
+            { "logicalSignalCount", graphMode ? topology.activePlanDiagnostics.logicalSignalCount : 0 },
+            { "elidedNonAudioBufferCount", graphMode ? topology.activePlanDiagnostics.elidedNonAudioBufferCount : 0 },
+            { "physicalAudioBufferCount", graphMode ? topology.activePlanDiagnostics.physicalAudioBufferCount : 0 },
+            { "peakLiveBufferCount", graphMode ? topology.activePlanDiagnostics.peakLiveBufferCount : 0 },
+            { "bufferBytesSaved", graphMode ? topology.activePlanDiagnostics.bufferBytesSaved : 0 },
+            { "inPlaceAliasCount", graphMode ? topology.activePlanDiagnostics.inPlaceAliasCount : 0 },
+            { "copiesAvoided", graphMode ? topology.activePlanDiagnostics.copiesAvoided : 0 },
+            { "bufferRetentionReasons", std::move(bufferRetentionReasons) },
             { "preparedStorageBytes", graphMode
                 ? topology.activePlanDiagnostics.preparedStorageBytes : snapshot.delayMemoryBytes },
             { "compileTiming", {

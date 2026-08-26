@@ -15,6 +15,8 @@ Constructed-graph diagnostics now come from the active prepared plan rather than
 
 The offline plan profile ranks processor families by estimated operations per sample and labels the current executor domain as `block-wise`, `sample-wise`, or `hybrid`. Since M17.1, delay-containing strongly connected components and causal Envelope Follower/Hold Gate spans are isolated into sample-wise regions; prepared gaps execute as block kernels. Region counts describe the compiled plan rather than hidden changes to the visible schematic.
 
+Since M17.2, the compiled buffer-liveness profile also reports logical signals, physical and peak-live audio buffers, bytes saved, in-place aliases, copies actually skipped, and reasons a signal retained independent storage. These are deterministic plan properties. They do not claim an elapsed-time improvement; Release callback measurements remain the authority for that question. See [Compiled buffer liveness and reuse](buffer-liveness.md).
+
 ## Static cost model
 
 Weights intentionally describe approximate scalar work, not instruction counts: Gain 2, Sum 2, Delay 5, Allpass 9, Low-pass 6, Pitch Shift 48, Envelope Follower 8, and Hold Gate 7 operations per sample. LFO and Curve Mapper contribute their small normalized control cost. A sample-wise plan adds two dispatch operations per audio processor. The model is compiled off-thread from the actual node inventory and processor mode, so adding or removing an expensive family changes the estimate deterministically.

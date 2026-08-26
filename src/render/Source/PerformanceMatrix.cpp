@@ -150,11 +150,20 @@ PerformanceCaseResult measurePerformanceCase(const PerformanceCaseRequest& reque
         ? result.topologyCrossfade.medianMicroseconds / result.normal.medianMicroseconds : 0.0;
     result.graphLatencySamples = normalSnapshot.activeLatency.totalSamples;
     result.preparedMemoryBytes = normalSnapshot.activePlanDiagnostics.preparedStorageBytes;
+    result.delayMemoryBytes = normalSnapshot.activeDelayMemoryBytes;
     result.nodeCount = normalSnapshot.activePlanDiagnostics.nodeCount;
     result.connectionCount = normalSnapshot.activePlanDiagnostics.connectionCount;
     result.feedbackRegionCount = normalSnapshot.activePlanDiagnostics.feedbackRegionCount;
     result.blockWiseRegionCount = normalSnapshot.activePlanDiagnostics.blockWiseRegionCount;
     result.sampleWiseRegionCount = normalSnapshot.activePlanDiagnostics.sampleWiseRegionCount;
+    result.logicalAudioBufferCount = normalSnapshot.activePlanDiagnostics.logicalAudioBufferCount;
+    result.logicalSignalCount = normalSnapshot.activePlanDiagnostics.logicalSignalCount;
+    result.elidedNonAudioBufferCount = normalSnapshot.activePlanDiagnostics.elidedNonAudioBufferCount;
+    result.physicalAudioBufferCount = normalSnapshot.activePlanDiagnostics.physicalAudioBufferCount;
+    result.peakLiveBufferCount = normalSnapshot.activePlanDiagnostics.peakLiveBufferCount;
+    result.bufferBytesSaved = normalSnapshot.activePlanDiagnostics.bufferBytesSaved;
+    result.inPlaceAliasCount = normalSnapshot.activePlanDiagnostics.inPlaceAliasCount;
+    result.copiesAvoided = normalSnapshot.activePlanDiagnostics.copiesAvoided;
     result.estimatedOperationsPerSample = normalSnapshot.activePlanDiagnostics.estimatedScalarOperationsPerSample;
     result.executionDomain = normalSnapshot.activePlanDiagnostics.executionDomain;
     result.validationMicroseconds = normalSnapshot.activePlanDiagnostics.compileTiming.validationMicroseconds;
@@ -196,11 +205,20 @@ std::string performanceMatrixJson(
             { "graph", {
                 { "latencySamples", result.graphLatencySamples },
                 { "preparedMemoryBytes", result.preparedMemoryBytes },
+                { "delayMemoryBytes", result.delayMemoryBytes },
                 { "nodeCount", result.nodeCount },
                 { "connectionCount", result.connectionCount },
                 { "feedbackRegionCount", result.feedbackRegionCount },
                 { "blockWiseRegionCount", result.blockWiseRegionCount },
                 { "sampleWiseRegionCount", result.sampleWiseRegionCount },
+                { "logicalAudioBufferCount", result.logicalAudioBufferCount },
+                { "logicalSignalCount", result.logicalSignalCount },
+                { "elidedNonAudioBufferCount", result.elidedNonAudioBufferCount },
+                { "physicalAudioBufferCount", result.physicalAudioBufferCount },
+                { "peakLiveBufferCount", result.peakLiveBufferCount },
+                { "bufferBytesSaved", result.bufferBytesSaved },
+                { "inPlaceAliasCount", result.inPlaceAliasCount },
+                { "copiesAvoided", result.copiesAvoided },
                 { "estimatedOperationsPerSample", result.estimatedOperationsPerSample },
                 { "executionDomain", result.executionDomain },
             } },

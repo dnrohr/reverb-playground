@@ -89,6 +89,16 @@ TEST_CASE("Constructed gain and sum graph matches direct reference calculation")
 {
     auto compiled = compileAcyclicGraph(gainSumGraph(), 48'000.0, 8);
     REQUIRE(compiled.valid());
+    REQUIRE(compiled.planDiagnostics.logicalAudioBufferCount == 5);
+    REQUIRE(compiled.planDiagnostics.physicalAudioBufferCount == 4);
+    REQUIRE(compiled.planDiagnostics.peakLiveBufferCount <= 4);
+    REQUIRE(compiled.planDiagnostics.bufferBytesSaved == 8 * sizeof(float));
+    REQUIRE(compiled.planDiagnostics.inPlaceAliasCount == 1);
+    REQUIRE(compiled.planDiagnostics.copiesAvoided == 1);
+    const auto fanOutReason = std::ranges::find(compiled.planDiagnostics.bufferRetentionReasons,
+        "fan-out", &BufferRetentionReason::reason);
+    REQUIRE(fanOutReason != compiled.planDiagnostics.bufferRetentionReasons.end());
+    REQUIRE(fanOutReason->signalCount == 1);
     const std::array left { 1.0F, -0.5F, 0.25F, 0.0F };
     const std::array right { 0.5F, 0.25F, -0.5F, 1.0F };
     std::array<float, 4> outputLeft {}; std::array<float, 4> outputRight {};
@@ -97,6 +107,51 @@ TEST_CASE("Constructed gain and sum graph matches direct reference calculation")
         REQUIRE(outputLeft[index] == left[index] * 0.25F + right[index]);
         REQUIRE(outputRight[index] == right[index]);
     }
+}
+
+TEST_CASE("Maximum linear graph reuses one prepared work buffer without corrupting boundaries")
+{
+    constexpr std::size_t gainCount = 250;
+    constexpr std::size_t blockSize = 2'048;
+    GraphDocument graph;
+    graph.nodes.push_back(stereoInput());
+    for (std::size_t index = 0; index < gainCount; ++index)
+        graph.nodes.push_back({ "gain-" + std::to_string(index), "gain",
+            { inputPort(), outputPort() }, { { "gain", 1.0, "linear" } } });
+    graph.nodes.push_back(stereoOutput());
+    graph.connections.push_back(cable("input-chain", "input", "out-l", "gain-0", "in"));
+    for (std::size_t index = 1; index < gainCount; ++index)
+        graph.connections.push_back(cable("chain-" + std::to_string(index),
+            "gain-" + std::to_string(index - 1), "out", "gain-" + std::to_string(index), "in"));
+    graph.connections.push_back(cable("chain-left", "gain-249", "out", "output", "in-l"));
+    graph.connections.push_back(cable("right-direct", "input", "out-r", "output", "in-r"));
+
+    auto compiled = compileAcyclicGraph(graph, 48'000.0, blockSize);
+    REQUIRE(compiled.valid());
+    REQUIRE(compiled.planDiagnostics.logicalAudioBufferCount == gainCount + 3);
+    REQUIRE(compiled.planDiagnostics.logicalSignalCount == gainCount + 3);
+    REQUIRE(compiled.planDiagnostics.elidedNonAudioBufferCount == 0);
+    REQUIRE(compiled.planDiagnostics.physicalAudioBufferCount == 4);
+    REQUIRE(compiled.planDiagnostics.inPlaceAliasCount == gainCount - 1);
+    REQUIRE(compiled.planDiagnostics.bufferBytesSaved
+        == (gainCount - 1) * blockSize * sizeof(float));
+    REQUIRE(compiled.runtime->preparedStorageBytes() == compiled.planDiagnostics.preparedStorageBytes);
+
+    std::vector<float> left(blockSize, 0.25F), right(blockSize, -0.5F);
+    std::vector<float> outputLeft(blockSize + 2, 123.0F), outputRight(blockSize + 2, -123.0F);
+    compiled.runtime->process(left, right,
+        std::span(outputLeft).subspan(1, blockSize), std::span(outputRight).subspan(1, blockSize));
+    REQUIRE(std::ranges::equal(std::span<const float>(outputLeft).subspan(1, blockSize), left));
+    REQUIRE(std::ranges::equal(std::span<const float>(outputRight).subspan(1, blockSize), right));
+    REQUIRE(outputLeft.front() == 123.0F);
+    REQUIRE(outputLeft.back() == 123.0F);
+    REQUIRE(outputRight.front() == -123.0F);
+    REQUIRE(outputRight.back() == -123.0F);
+    compiled.runtime->reset();
+    compiled.runtime->process(left, right,
+        std::span(outputLeft).subspan(1, blockSize), std::span(outputRight).subspan(1, blockSize));
+    REQUIRE(std::ranges::equal(std::span<const float>(outputLeft).subspan(1, blockSize), left));
+    REQUIRE(std::ranges::equal(std::span<const float>(outputRight).subspan(1, blockSize), right));
 }
 
 TEST_CASE("Constructed delay graph matches a direct one-sample shift")

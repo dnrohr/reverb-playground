@@ -492,7 +492,8 @@ void PreparedAcyclicRuntime::process(
                 auto& operation = implementation_->operations[operationIndex];
                 if (operation.kind == OperationKind::input || operation.kind == OperationKind::output) continue;
                 auto destination = fullBuffer(operation.outputs.front());
-                std::ranges::copy(fullBuffer(operation.inputs.front()), destination.begin());
+                if (operation.inputs.front() != operation.outputs.front())
+                    std::ranges::copy(fullBuffer(operation.inputs.front()), destination.begin());
                 if (operation.kind == OperationKind::sum) {
                     reverb::dsp::Sum::process(destination, fullBuffer(operation.inputs[1]), destination);
                     if (operation.sumGain != 1.0F) for (auto& sample : destination) sample *= operation.sumGain;
@@ -574,7 +575,8 @@ void PreparedAcyclicRuntime::process(
                 auto& operation = implementation_->operations[operationIndex];
                 if (operation.kind == OperationKind::input || operation.kind == OperationKind::output || operation.kind == OperationKind::delay) continue;
                 auto destination = sampleBuffer(operation.outputs.front(), sampleIndex);
-                std::ranges::copy(sampleBuffer(operation.inputs.front(), sampleIndex), destination.begin());
+                if (operation.inputs.front() != operation.outputs.front())
+                    std::ranges::copy(sampleBuffer(operation.inputs.front(), sampleIndex), destination.begin());
                 if (operation.kind == OperationKind::sum) {
                     reverb::dsp::Sum::process(destination, sampleBuffer(operation.inputs[1], sampleIndex), destination);
                     destination.front() *= operation.sumGain;
@@ -658,7 +660,8 @@ void PreparedAcyclicRuntime::process(
         if (operation.kind == OperationKind::input || operation.kind == OperationKind::output)
             continue;
         auto destination = buffer(operation.outputs.front());
-        std::ranges::copy(buffer(operation.inputs.front()), destination.begin());
+        if (operation.inputs.front() != operation.outputs.front())
+            std::ranges::copy(buffer(operation.inputs.front()), destination.begin());
         if (operation.kind == OperationKind::sum) {
             reverb::dsp::Sum::process(destination, buffer(operation.inputs[1]), destination);
             if (operation.sumGain != 1.0F)
@@ -998,8 +1001,11 @@ AcyclicCompileResult compileAcyclicGraph(
     result.planDiagnostics.feedbackRegionCount = result.feedbackComponents.size();
     std::size_t preparedAudioBufferCount = 1;
     for (const auto& node : document.nodes)
-        preparedAudioBufferCount += static_cast<std::size_t>(
-            std::ranges::count(node.ports, PortDirection::output, &Port::direction));
+        preparedAudioBufferCount += static_cast<std::size_t>(std::ranges::count_if(
+            node.ports, [&](const auto& port) {
+                return port.direction == PortDirection::output
+                    && (port.signal == SignalType::audio || node.type == "envelope-follower");
+            }));
     result.planDiagnostics.preparedStorageBytes = result.delayMemory.allocatedBytes
         + preparedAudioBufferCount * maximumBlockSize * sizeof(float);
     const auto sampleWisePlan = !result.feedbackComponents.empty()
@@ -1045,7 +1051,8 @@ AcyclicCompileResult compileAcyclicGraph(
         std::size_t delayArenaOffset = 0;
         for (const auto& id : result.schedule) {
             for (const auto& port : nodes.at(id)->ports)
-                if (port.direction == PortDirection::output) {
+                if (port.direction == PortDirection::output
+                    && (port.signal == SignalType::audio || nodes.at(id)->type == "envelope-follower")) {
                 outputBuffers[portKey(id, port.id)] = implementation->buffers.size();
                 implementation->buffers.emplace_back(maximumBlockSize, 0.0F);
             }
@@ -1303,6 +1310,142 @@ AcyclicCompileResult compileAcyclicGraph(
             else if (mapping.parameterId == "grain") operation->grainModulation = index;
             else operation->overlapModulation = index;
         }
+        const auto logicalBufferCount = implementation->buffers.size();
+        const auto noIndex = std::numeric_limits<std::size_t>::max();
+        std::vector<std::size_t> producer(logicalBufferCount, noIndex);
+        std::vector<std::size_t> lastUse(logicalBufferCount, 0);
+        std::vector<std::size_t> fanOut(logicalBufferCount, 0);
+        for (std::size_t index = 0; index < implementation->operations.size(); ++index) {
+            const auto& operation = implementation->operations[index];
+            for (const auto output : operation.outputs) producer[output] = index;
+            for (const auto input : operation.inputs) {
+                lastUse[input] = std::max(lastUse[input], index);
+                ++fanOut[input];
+            }
+            if (operation.controlInput != noIndex) {
+                lastUse[operation.controlInput] = std::max(lastUse[operation.controlInput], index);
+                ++fanOut[operation.controlInput];
+            }
+        }
+        std::vector<bool> protectedBuffer(logicalBufferCount, false);
+        const auto protect = [&](const std::size_t logical) {
+            if (logical < protectedBuffer.size()) protectedBuffer[logical] = true;
+        };
+        protect(implementation->silenceBuffer);
+        protect(implementation->inputLeftBuffer);
+        protect(implementation->inputRightBuffer);
+        protect(implementation->outputLeftInput);
+        protect(implementation->outputRightInput);
+        const std::unordered_set<std::size_t> runtimeBoundarySignals {
+            implementation->silenceBuffer, implementation->inputLeftBuffer,
+            implementation->inputRightBuffer, implementation->outputLeftInput,
+            implementation->outputRightInput,
+        };
+        std::size_t causalSignals = 0;
+        for (const auto& [begin, end] : implementation->sampleWiseRegions)
+            for (auto index = begin; index < end; ++index) {
+                for (const auto input : implementation->operations[index].inputs)
+                    if (!protectedBuffer[input]) { protect(input); ++causalSignals; }
+                for (const auto output : implementation->operations[index].outputs)
+                    if (!protectedBuffer[output]) { protect(output); ++causalSignals; }
+                const auto control = implementation->operations[index].controlInput;
+                if (control != noIndex && !protectedBuffer[control]) { protect(control); ++causalSignals; }
+            }
+
+        std::vector<std::size_t> physicalForLogical(logicalBufferCount, noIndex);
+        std::vector<std::size_t> physicalLastUse;
+        const auto reservePhysical = [&](const std::size_t logical, const std::size_t until) {
+            physicalForLogical[logical] = physicalLastUse.size();
+            physicalLastUse.push_back(until);
+        };
+        reservePhysical(implementation->silenceBuffer, noIndex);
+        if (physicalForLogical[implementation->inputLeftBuffer] == noIndex)
+            reservePhysical(implementation->inputLeftBuffer, noIndex);
+        if (physicalForLogical[implementation->inputRightBuffer] == noIndex)
+            reservePhysical(implementation->inputRightBuffer, noIndex);
+        std::size_t aliases = 0;
+        const auto inPlaceSafe = [](const OperationKind kind) {
+            return kind == OperationKind::gain || kind == OperationKind::sum
+                || kind == OperationKind::delay || kind == OperationKind::allpass
+                || kind == OperationKind::lowpass || kind == OperationKind::pitchShift;
+        };
+        for (std::size_t index = 0; index < implementation->operations.size(); ++index) {
+            const auto& operation = implementation->operations[index];
+            for (const auto logical : operation.outputs) {
+                if (physicalForLogical[logical] != noIndex) continue;
+                auto physical = noIndex;
+                if (inPlaceSafe(operation.kind) && !operation.inputs.empty()) {
+                    const auto input = operation.inputs.front();
+                    if (!protectedBuffer[input] && fanOut[input] == 1 && lastUse[input] == index)
+                        physical = physicalForLogical[input];
+                }
+                if (physical != noIndex) {
+                    ++aliases;
+                } else if (!protectedBuffer[logical]) {
+                    for (std::size_t candidate = 0; candidate < physicalLastUse.size(); ++candidate)
+                        if (physicalLastUse[candidate] != noIndex && physicalLastUse[candidate] < index) {
+                            physical = candidate;
+                            break;
+                        }
+                }
+                if (physical == noIndex) reservePhysical(logical,
+                    protectedBuffer[logical] ? noIndex : lastUse[logical]);
+                else {
+                    physicalForLogical[logical] = physical;
+                    physicalLastUse[physical] = protectedBuffer[logical] ? noIndex : lastUse[logical];
+                }
+            }
+        }
+        const auto remap = [&](std::size_t& logical) {
+            if (logical < physicalForLogical.size() && physicalForLogical[logical] != noIndex)
+                logical = physicalForLogical[logical];
+        };
+        remap(implementation->silenceBuffer);
+        remap(implementation->inputLeftBuffer);
+        remap(implementation->inputRightBuffer);
+        remap(implementation->outputLeftInput);
+        remap(implementation->outputRightInput);
+        for (auto& operation : implementation->operations) {
+            for (auto& input : operation.inputs) remap(input);
+            for (auto& output : operation.outputs) remap(output);
+            if (operation.controlInput != noIndex) remap(operation.controlInput);
+        }
+        implementation->buffers.assign(
+            physicalLastUse.size(), std::vector<float>(maximumBlockSize, 0.0F));
+        std::size_t peakLive = 0;
+        for (std::size_t index = 0; index < implementation->operations.size(); ++index) {
+            std::unordered_set<std::size_t> live;
+            for (std::size_t logical = 0; logical < logicalBufferCount; ++logical) {
+                if (physicalForLogical[logical] == noIndex) continue;
+                const auto begins = producer[logical] == noIndex ? 0 : producer[logical];
+                const auto ends = protectedBuffer[logical] ? implementation->operations.size() : lastUse[logical];
+                if (begins <= index && index <= ends) live.insert(physicalForLogical[logical]);
+            }
+            peakLive = std::max(peakLive, live.size());
+        }
+        result.planDiagnostics.logicalAudioBufferCount = logicalBufferCount;
+        result.planDiagnostics.logicalSignalCount = 1;
+        for (const auto& node : document.nodes)
+            result.planDiagnostics.logicalSignalCount += static_cast<std::size_t>(
+                std::ranges::count(node.ports, PortDirection::output, &Port::direction));
+        result.planDiagnostics.elidedNonAudioBufferCount =
+            result.planDiagnostics.logicalSignalCount - logicalBufferCount;
+        result.planDiagnostics.physicalAudioBufferCount = physicalLastUse.size();
+        result.planDiagnostics.peakLiveBufferCount = peakLive;
+        result.planDiagnostics.bufferBytesSaved =
+            (result.planDiagnostics.logicalSignalCount - physicalLastUse.size())
+            * maximumBlockSize * sizeof(float);
+        result.planDiagnostics.inPlaceAliasCount = aliases;
+        result.planDiagnostics.copiesAvoided = aliases;
+        result.planDiagnostics.preparedStorageBytes = result.delayMemory.allocatedBytes
+            + physicalLastUse.size() * maximumBlockSize * sizeof(float);
+        result.planDiagnostics.bufferRetentionReasons = {
+            { "runtime-boundary", runtimeBoundarySignals.size() },
+            { "feedback-or-causal-region", causalSignals },
+            { "fan-out", static_cast<std::size_t>(std::ranges::count_if(
+                fanOut, [](const auto count) { return count > 1; })) },
+            { "inspector-or-telemetry-observed", 0 },
+        };
         result.planDiagnostics.compileTiming.preparationMicroseconds = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::microseconds>(
                 std::chrono::steady_clock::now() - schedulingFinished).count());

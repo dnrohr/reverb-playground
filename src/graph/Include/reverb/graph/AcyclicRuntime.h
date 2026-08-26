@@ -62,6 +62,11 @@ struct WorkloadFamily final {
     std::size_t estimatedScalarOperationsPerSample {};
 };
 
+struct BufferRetentionReason final {
+    std::string reason;
+    std::size_t signalCount {};
+};
+
 struct CompilePhaseTiming final {
     std::uint64_t validationMicroseconds {};
     std::uint64_t schedulingMicroseconds {};
@@ -77,8 +82,17 @@ struct PreparedGraphDiagnostics final {
     std::size_t sampleWiseRegionCount {};
     std::size_t preparedStorageBytes {};
     std::size_t estimatedScalarOperationsPerSample {};
+    std::size_t logicalAudioBufferCount {};
+    std::size_t logicalSignalCount {};
+    std::size_t elidedNonAudioBufferCount {};
+    std::size_t physicalAudioBufferCount {};
+    std::size_t peakLiveBufferCount {};
+    std::size_t bufferBytesSaved {};
+    std::size_t inPlaceAliasCount {};
+    std::size_t copiesAvoided {};
     std::string executionDomain;
     std::vector<WorkloadFamily> workloadFamilies;
+    std::vector<BufferRetentionReason> bufferRetentionReasons;
     CompilePhaseTiming compileTiming;
 };
 
