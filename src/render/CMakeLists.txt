@@ -2,6 +2,7 @@ add_library(reverb_render STATIC
     Source/EnvelopeMeasurements.cpp
     Source/GravityReference.cpp
     Source/OfflineRenderer.cpp
+    Source/PerformanceMatrix.cpp
     Source/PitchShiftValidation.cpp
     Source/ProcessedFileExporter.cpp
     Source/ResponseMeasurements.cpp
@@ -68,6 +69,14 @@ add_executable(reverb_reverse_cosmic_shimmer_validation_cli
     Source/ReverseCosmicShimmerValidationCli.cpp)
 
 target_link_libraries(reverb_reverse_cosmic_shimmer_validation_cli
+    PRIVATE
+        reverb_project_options
+        reverb_render)
+
+add_executable(reverb_performance_matrix_cli
+    Source/PerformanceMatrixCli.cpp)
+
+target_link_libraries(reverb_performance_matrix_cli
     PRIVATE
         reverb_project_options
         reverb_render)

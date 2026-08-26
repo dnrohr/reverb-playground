@@ -18,6 +18,7 @@ add_executable(reverb_tests
     ImpulseCaptureTests.cpp
     LiveReferenceHarnessTests.cpp
     OfflineRendererTests.cpp
+    PerformanceMatrixTests.cpp
     PreparedAudioFileSourceTests.cpp
     ProcessedFileExporterTests.cpp
     ResponseMeasurementsTests.cpp
@@ -83,3 +84,10 @@ add_test(
     COMMAND reverb_reverse_cosmic_shimmer_validation_cli
         --output-directory ${CMAKE_CURRENT_BINARY_DIR}/reverse-cosmic-shimmer-validation-smoke
         --report ${CMAKE_CURRENT_BINARY_DIR}/reverse-cosmic-shimmer-validation-smoke.json)
+
+add_test(
+    NAME "Performance matrix CLI writes a smoke report"
+    COMMAND reverb_performance_matrix_cli
+        --output ${CMAKE_CURRENT_BINARY_DIR}/performance-matrix-smoke.json
+        --smoke
+        --blocks 5)

@@ -1134,7 +1134,7 @@ Acceptance criteria:
 - Compilation measurements preserve newest-request-wins behavior and identify superseded work without making stale results audible.
 - The UI explains the difference between estimated operations, measured callback load, algorithmic latency, and compile/publication delay.
 
-### M16.4 Establish the representative performance matrix
+### M16.4 Establish the representative performance matrix — Complete
 
 Measure Barr Reference, Gravity Diffusion, Safe Parallel Shimmer, Split-Feedback Shimmer, and Reverse Cosmic Shimmer before executor optimization.
 
