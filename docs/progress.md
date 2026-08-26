@@ -80,7 +80,8 @@ Last updated: 2026-08-26
 | M16.2 Compile graph latency and report it to hosts | Complete | Prepared causal paths add serial latency, expose parallel differences without hidden compensation, and publish active processed latency to JUCE hosts from the message thread. |
 | M16.3 Add graph-specific compile and workload diagnostics | Complete | Active prepared plans now publish graph counts, memory, feedback regions, execution domain, family-weighted work, split compile timing, request-to-active delay, and superseded compiled work without per-node audio clocks. |
 | M16.4 Representative performance matrix | Complete | Repeatable 75-case Release baseline with normal/crossfade distributions, compile/latency/memory diagnostics, machine metadata, budgets, and optimization gates |
-| M17.1-M17.4 Hybrid compiled graph execution | Planned | SCC-local sample processing; block regions; buffer liveness/reuse; safe kernel fusion/SIMD; measured equivalence and improvement |
+| M17.1 Partition sample-wise and block-wise execution domains | Complete | Deterministic SCC-local Delay read/evaluate/write regions, block-wise gaps, causal follower/gate regions, multi-loop scheduling, region diagnostics, and a 75-case comparison |
+| M17.2-M17.4 Complete hybrid compiled graph execution | Planned | Buffer liveness/reuse; safe kernel fusion/SIMD; measured equivalence and improvement |
 | M18.1-M18.4 Pitch/control optimization and specialization | Planned | Dual-grain hot-loop optimization; block control ramps; bounded quality modes; evidence-based AOT/JIT decision |
 
 ## M0.2 verification

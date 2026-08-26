@@ -34,8 +34,8 @@
     },
     "lateOctave24GrowthDb": 40.476027137381934,
     "splitLateOctave24RelativeTo12Db": -20.40812817934028,
-    "parallelLateOctave24RelativeTo12Db": -68.90470423674756,
-    "feedbackVsParallelOctave24ContrastDb": 48.49657605740728
+    "parallelLateOctave24RelativeTo12Db": -68.89919799281085,
+    "feedbackVsParallelOctave24ContrastDb": 48.491069813470574
   },
   "independence": {
     "lowShiftedFeedback": 0.04,

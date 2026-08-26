@@ -1,0 +1,3986 @@
+{
+  "formatVersion": 1,
+  "scope": "single-machine pre-optimization baseline; values are not cross-machine comparable",
+  "machine": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel; logical threads 20",
+  "toolchain": "MSVC 1944",
+  "buildConfiguration": "Release",
+  "buildCommit": "748ab48f3e1c",
+  "source": "deterministic LCG noise plus 311 Hz sine; source preparation excluded from callback timing",
+  "cases": [
+    {
+      "graphId": "barr-reference",
+      "sampleRate": 44100.0,
+      "blockSize": 32,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 1.5,
+        "percentile95Microseconds": 1.7,
+        "peakMicroseconds": 21.6,
+        "medianLoadPercent": 0.20671875,
+        "percentile95LoadPercent": 0.23428125,
+        "peakLoadPercent": 2.97675,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 215,
+        "medianMicroseconds": 2.8,
+        "percentile95Microseconds": 3.1,
+        "peakMicroseconds": 4.1,
+        "medianLoadPercent": 0.385875,
+        "percentile95LoadPercent": 0.42721875000000004,
+        "peakLoadPercent": 0.56503125,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.8666666666666665,
+      "compile": {
+        "validationMicroseconds": 83,
+        "schedulingMicroseconds": 34,
+        "preparationMicroseconds": 101,
+        "totalMicroseconds": 220,
+        "requestToActiveMicroseconds": 235
+      },
+      "graph": {
+        "latencySamples": 0,
+        "preparedMemoryBytes": 107272,
+        "nodeCount": 10,
+        "connectionCount": 11,
+        "feedbackRegionCount": 0,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 0,
+        "estimatedOperationsPerSample": 62,
+        "executionDomain": "block-wise"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "barr-reference",
+      "sampleRate": 44100.0,
+      "blockSize": 64,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 2.6,
+        "percentile95Microseconds": 2.8,
+        "peakMicroseconds": 6.7,
+        "medianLoadPercent": 0.17915625000000002,
+        "percentile95LoadPercent": 0.1929375,
+        "peakLoadPercent": 0.461671875,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 110,
+        "medianMicroseconds": 4.9,
+        "percentile95Microseconds": 5.4,
+        "peakMicroseconds": 5.5,
+        "medianLoadPercent": 0.337640625,
+        "percentile95LoadPercent": 0.37209375,
+        "peakLoadPercent": 0.37898437500000004,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.8846153846153846,
+      "compile": {
+        "validationMicroseconds": 51,
+        "schedulingMicroseconds": 28,
+        "preparationMicroseconds": 59,
+        "totalMicroseconds": 140,
+        "requestToActiveMicroseconds": 146
+      },
+      "graph": {
+        "latencySamples": 0,
+        "preparedMemoryBytes": 108680,
+        "nodeCount": 10,
+        "connectionCount": 11,
+        "feedbackRegionCount": 0,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 0,
+        "estimatedOperationsPerSample": 62,
+        "executionDomain": "block-wise"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "barr-reference",
+      "sampleRate": 44100.0,
+      "blockSize": 128,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 4.8,
+        "percentile95Microseconds": 5.2,
+        "peakMicroseconds": 8.8,
+        "medianLoadPercent": 0.165375,
+        "percentile95LoadPercent": 0.17915625000000002,
+        "peakLoadPercent": 0.30318750000000005,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 9.7,
+        "percentile95Microseconds": 10.1,
+        "peakMicroseconds": 13.9,
+        "medianLoadPercent": 0.33419531249999995,
+        "percentile95LoadPercent": 0.34797656250000003,
+        "peakLoadPercent": 0.4788984375,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0208333333333335,
+      "compile": {
+        "validationMicroseconds": 40,
+        "schedulingMicroseconds": 33,
+        "preparationMicroseconds": 50,
+        "totalMicroseconds": 124,
+        "requestToActiveMicroseconds": 130
+      },
+      "graph": {
+        "latencySamples": 0,
+        "preparedMemoryBytes": 111496,
+        "nodeCount": 10,
+        "connectionCount": 11,
+        "feedbackRegionCount": 0,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 0,
+        "estimatedOperationsPerSample": 62,
+        "executionDomain": "block-wise"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "barr-reference",
+      "sampleRate": 44100.0,
+      "blockSize": 256,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 9.5,
+        "percentile95Microseconds": 10.3,
+        "peakMicroseconds": 15.1,
+        "medianLoadPercent": 0.16365234375,
+        "percentile95LoadPercent": 0.17743359375,
+        "peakLoadPercent": 0.26012109375000003,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 19.4,
+        "percentile95Microseconds": 21.1,
+        "peakMicroseconds": 22.2,
+        "medianLoadPercent": 0.33419531249999995,
+        "percentile95LoadPercent": 0.36348046875,
+        "peakLoadPercent": 0.3824296875,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0421052631578944,
+      "compile": {
+        "validationMicroseconds": 38,
+        "schedulingMicroseconds": 21,
+        "preparationMicroseconds": 79,
+        "totalMicroseconds": 140,
+        "requestToActiveMicroseconds": 148
+      },
+      "graph": {
+        "latencySamples": 0,
+        "preparedMemoryBytes": 117128,
+        "nodeCount": 10,
+        "connectionCount": 11,
+        "feedbackRegionCount": 0,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 0,
+        "estimatedOperationsPerSample": 62,
+        "executionDomain": "block-wise"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "barr-reference",
+      "sampleRate": 44100.0,
+      "blockSize": 512,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 19.1,
+        "percentile95Microseconds": 21.5,
+        "peakMicroseconds": 57.2,
+        "medianLoadPercent": 0.16451367187500002,
+        "percentile95LoadPercent": 0.185185546875,
+        "peakLoadPercent": 0.4926796875,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 20,
+        "medianMicroseconds": 38.0,
+        "percentile95Microseconds": 40.8,
+        "peakMicroseconds": 40.8,
+        "medianLoadPercent": 0.3273046875,
+        "percentile95LoadPercent": 0.351421875,
+        "peakLoadPercent": 0.351421875,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9895287958115182,
+      "compile": {
+        "validationMicroseconds": 35,
+        "schedulingMicroseconds": 19,
+        "preparationMicroseconds": 46,
+        "totalMicroseconds": 101,
+        "requestToActiveMicroseconds": 111
+      },
+      "graph": {
+        "latencySamples": 0,
+        "preparedMemoryBytes": 128392,
+        "nodeCount": 10,
+        "connectionCount": 11,
+        "feedbackRegionCount": 0,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 0,
+        "estimatedOperationsPerSample": 62,
+        "executionDomain": "block-wise"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "barr-reference",
+      "sampleRate": 48000.0,
+      "blockSize": 32,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 1.3,
+        "percentile95Microseconds": 1.5,
+        "peakMicroseconds": 2.4,
+        "medianLoadPercent": 0.195,
+        "percentile95LoadPercent": 0.225,
+        "peakLoadPercent": 0.36000000000000004,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 230,
+        "medianMicroseconds": 2.8,
+        "percentile95Microseconds": 3.1,
+        "peakMicroseconds": 9.0,
+        "medianLoadPercent": 0.42000000000000004,
+        "percentile95LoadPercent": 0.465,
+        "peakLoadPercent": 1.35,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.1538461538461537,
+      "compile": {
+        "validationMicroseconds": 48,
+        "schedulingMicroseconds": 28,
+        "preparationMicroseconds": 86,
+        "totalMicroseconds": 164,
+        "requestToActiveMicroseconds": 170
+      },
+      "graph": {
+        "latencySamples": 0,
+        "preparedMemoryBytes": 116632,
+        "nodeCount": 10,
+        "connectionCount": 11,
+        "feedbackRegionCount": 0,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 0,
+        "estimatedOperationsPerSample": 62,
+        "executionDomain": "block-wise"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "barr-reference",
+      "sampleRate": 48000.0,
+      "blockSize": 64,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 2.5,
+        "percentile95Microseconds": 2.8,
+        "peakMicroseconds": 3.9,
+        "medianLoadPercent": 0.1875,
+        "percentile95LoadPercent": 0.21000000000000002,
+        "peakLoadPercent": 0.29250000000000004,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 160,
+        "medianMicroseconds": 5.2,
+        "percentile95Microseconds": 5.8,
+        "peakMicroseconds": 6.6,
+        "medianLoadPercent": 0.39,
+        "percentile95LoadPercent": 0.435,
+        "peakLoadPercent": 0.49500000000000005,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.08,
+      "compile": {
+        "validationMicroseconds": 50,
+        "schedulingMicroseconds": 27,
+        "preparationMicroseconds": 67,
+        "totalMicroseconds": 145,
+        "requestToActiveMicroseconds": 151
+      },
+      "graph": {
+        "latencySamples": 0,
+        "preparedMemoryBytes": 118040,
+        "nodeCount": 10,
+        "connectionCount": 11,
+        "feedbackRegionCount": 0,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 0,
+        "estimatedOperationsPerSample": 62,
+        "executionDomain": "block-wise"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "barr-reference",
+      "sampleRate": 48000.0,
+      "blockSize": 128,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 5.1,
+        "percentile95Microseconds": 5.3,
+        "peakMicroseconds": 11.9,
+        "medianLoadPercent": 0.19125,
+        "percentile95LoadPercent": 0.19875,
+        "peakLoadPercent": 0.44625000000000004,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 10.4,
+        "percentile95Microseconds": 11.0,
+        "peakMicroseconds": 12.8,
+        "medianLoadPercent": 0.39,
+        "percentile95LoadPercent": 0.41250000000000003,
+        "peakLoadPercent": 0.48000000000000004,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.03921568627451,
+      "compile": {
+        "validationMicroseconds": 44,
+        "schedulingMicroseconds": 17,
+        "preparationMicroseconds": 48,
+        "totalMicroseconds": 111,
+        "requestToActiveMicroseconds": 116
+      },
+      "graph": {
+        "latencySamples": 0,
+        "preparedMemoryBytes": 120856,
+        "nodeCount": 10,
+        "connectionCount": 11,
+        "feedbackRegionCount": 0,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 0,
+        "estimatedOperationsPerSample": 62,
+        "executionDomain": "block-wise"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "barr-reference",
+      "sampleRate": 48000.0,
+      "blockSize": 256,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 10.2,
+        "percentile95Microseconds": 25.2,
+        "peakMicroseconds": 68.7,
+        "medianLoadPercent": 0.19125,
+        "percentile95LoadPercent": 0.47250000000000003,
+        "peakLoadPercent": 1.288125,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 20.6,
+        "percentile95Microseconds": 21.0,
+        "peakMicroseconds": 21.2,
+        "medianLoadPercent": 0.38625000000000004,
+        "percentile95LoadPercent": 0.39375000000000004,
+        "peakLoadPercent": 0.3975,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0196078431372553,
+      "compile": {
+        "validationMicroseconds": 50,
+        "schedulingMicroseconds": 24,
+        "preparationMicroseconds": 173,
+        "totalMicroseconds": 248,
+        "requestToActiveMicroseconds": 256
+      },
+      "graph": {
+        "latencySamples": 0,
+        "preparedMemoryBytes": 126488,
+        "nodeCount": 10,
+        "connectionCount": 11,
+        "feedbackRegionCount": 0,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 0,
+        "estimatedOperationsPerSample": 62,
+        "executionDomain": "block-wise"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "barr-reference",
+      "sampleRate": 48000.0,
+      "blockSize": 512,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 19.1,
+        "percentile95Microseconds": 22.2,
+        "peakMicroseconds": 285.4,
+        "medianLoadPercent": 0.17906250000000004,
+        "percentile95LoadPercent": 0.208125,
+        "peakLoadPercent": 2.6756249999999997,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 20,
+        "medianMicroseconds": 39.3,
+        "percentile95Microseconds": 41.5,
+        "peakMicroseconds": 46.3,
+        "medianLoadPercent": 0.3684375,
+        "percentile95LoadPercent": 0.38906250000000003,
+        "peakLoadPercent": 0.4340625,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.057591623036649,
+      "compile": {
+        "validationMicroseconds": 42,
+        "schedulingMicroseconds": 18,
+        "preparationMicroseconds": 54,
+        "totalMicroseconds": 116,
+        "requestToActiveMicroseconds": 127
+      },
+      "graph": {
+        "latencySamples": 0,
+        "preparedMemoryBytes": 137752,
+        "nodeCount": 10,
+        "connectionCount": 11,
+        "feedbackRegionCount": 0,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 0,
+        "estimatedOperationsPerSample": 62,
+        "executionDomain": "block-wise"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "barr-reference",
+      "sampleRate": 96000.0,
+      "blockSize": 32,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 1.4,
+        "percentile95Microseconds": 1.7,
+        "peakMicroseconds": 2.7,
+        "medianLoadPercent": 0.42000000000000004,
+        "percentile95LoadPercent": 0.51,
+        "peakLoadPercent": 0.81,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 600,
+        "medianMicroseconds": 2.8,
+        "percentile95Microseconds": 3.2,
+        "peakMicroseconds": 23.7,
+        "medianLoadPercent": 0.8400000000000001,
+        "percentile95LoadPercent": 0.9600000000000001,
+        "peakLoadPercent": 7.11,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0,
+      "compile": {
+        "validationMicroseconds": 49,
+        "schedulingMicroseconds": 24,
+        "preparationMicroseconds": 103,
+        "totalMicroseconds": 178,
+        "requestToActiveMicroseconds": 184
+      },
+      "graph": {
+        "latencySamples": 0,
+        "preparedMemoryBytes": 231832,
+        "nodeCount": 10,
+        "connectionCount": 11,
+        "feedbackRegionCount": 0,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 0,
+        "estimatedOperationsPerSample": 62,
+        "executionDomain": "block-wise"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "barr-reference",
+      "sampleRate": 96000.0,
+      "blockSize": 64,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 2.6,
+        "percentile95Microseconds": 2.8,
+        "peakMicroseconds": 2.9,
+        "medianLoadPercent": 0.39,
+        "percentile95LoadPercent": 0.42000000000000004,
+        "peakLoadPercent": 0.435,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 300,
+        "medianMicroseconds": 5.2,
+        "percentile95Microseconds": 5.8,
+        "peakMicroseconds": 224.1,
+        "medianLoadPercent": 0.78,
+        "percentile95LoadPercent": 0.87,
+        "peakLoadPercent": 33.615,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0,
+      "compile": {
+        "validationMicroseconds": 41,
+        "schedulingMicroseconds": 23,
+        "preparationMicroseconds": 72,
+        "totalMicroseconds": 137,
+        "requestToActiveMicroseconds": 158
+      },
+      "graph": {
+        "latencySamples": 0,
+        "preparedMemoryBytes": 233240,
+        "nodeCount": 10,
+        "connectionCount": 11,
+        "feedbackRegionCount": 0,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 0,
+        "estimatedOperationsPerSample": 62,
+        "executionDomain": "block-wise"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "barr-reference",
+      "sampleRate": 96000.0,
+      "blockSize": 128,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 5.1,
+        "percentile95Microseconds": 5.3,
+        "peakMicroseconds": 48.6,
+        "medianLoadPercent": 0.3825,
+        "percentile95LoadPercent": 0.3975,
+        "peakLoadPercent": 3.645,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 160,
+        "medianMicroseconds": 10.3,
+        "percentile95Microseconds": 10.9,
+        "peakMicroseconds": 13.1,
+        "medianLoadPercent": 0.7725000000000001,
+        "percentile95LoadPercent": 0.8175,
+        "peakLoadPercent": 0.9825,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0196078431372553,
+      "compile": {
+        "validationMicroseconds": 128,
+        "schedulingMicroseconds": 61,
+        "preparationMicroseconds": 119,
+        "totalMicroseconds": 310,
+        "requestToActiveMicroseconds": 317
+      },
+      "graph": {
+        "latencySamples": 0,
+        "preparedMemoryBytes": 236056,
+        "nodeCount": 10,
+        "connectionCount": 11,
+        "feedbackRegionCount": 0,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 0,
+        "estimatedOperationsPerSample": 62,
+        "executionDomain": "block-wise"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "barr-reference",
+      "sampleRate": 96000.0,
+      "blockSize": 256,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 10.2,
+        "percentile95Microseconds": 10.4,
+        "peakMicroseconds": 52.1,
+        "medianLoadPercent": 0.3825,
+        "percentile95LoadPercent": 0.39,
+        "peakLoadPercent": 1.95375,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 20.5,
+        "percentile95Microseconds": 23.5,
+        "peakMicroseconds": 28.5,
+        "medianLoadPercent": 0.76875,
+        "percentile95LoadPercent": 0.8812500000000001,
+        "peakLoadPercent": 1.06875,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0098039215686274,
+      "compile": {
+        "validationMicroseconds": 39,
+        "schedulingMicroseconds": 17,
+        "preparationMicroseconds": 68,
+        "totalMicroseconds": 125,
+        "requestToActiveMicroseconds": 131
+      },
+      "graph": {
+        "latencySamples": 0,
+        "preparedMemoryBytes": 241688,
+        "nodeCount": 10,
+        "connectionCount": 11,
+        "feedbackRegionCount": 0,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 0,
+        "estimatedOperationsPerSample": 62,
+        "executionDomain": "block-wise"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "barr-reference",
+      "sampleRate": 96000.0,
+      "blockSize": 512,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 20.4,
+        "percentile95Microseconds": 22.0,
+        "peakMicroseconds": 127.4,
+        "medianLoadPercent": 0.3825,
+        "percentile95LoadPercent": 0.41250000000000003,
+        "peakLoadPercent": 2.38875,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 39,
+        "medianMicroseconds": 40.5,
+        "percentile95Microseconds": 41.3,
+        "peakMicroseconds": 41.6,
+        "medianLoadPercent": 0.759375,
+        "percentile95LoadPercent": 0.774375,
+        "peakLoadPercent": 0.78,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9852941176470589,
+      "compile": {
+        "validationMicroseconds": 41,
+        "schedulingMicroseconds": 20,
+        "preparationMicroseconds": 69,
+        "totalMicroseconds": 132,
+        "requestToActiveMicroseconds": 141
+      },
+      "graph": {
+        "latencySamples": 0,
+        "preparedMemoryBytes": 252952,
+        "nodeCount": 10,
+        "connectionCount": 11,
+        "feedbackRegionCount": 0,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 0,
+        "estimatedOperationsPerSample": 62,
+        "executionDomain": "block-wise"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "gravity-diffusion",
+      "sampleRate": 44100.0,
+      "blockSize": 32,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 11.2,
+        "percentile95Microseconds": 11.9,
+        "peakMicroseconds": 55.2,
+        "medianLoadPercent": 1.5435,
+        "percentile95LoadPercent": 1.63996875,
+        "peakLoadPercent": 7.6072500000000005,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 280,
+        "medianMicroseconds": 22.9,
+        "percentile95Microseconds": 26.4,
+        "peakMicroseconds": 268.1,
+        "medianLoadPercent": 3.15590625,
+        "percentile95LoadPercent": 3.63825,
+        "peakLoadPercent": 36.947531250000004,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.044642857142857,
+      "compile": {
+        "validationMicroseconds": 230,
+        "schedulingMicroseconds": 101,
+        "preparationMicroseconds": 140,
+        "totalMicroseconds": 474,
+        "requestToActiveMicroseconds": 494
+      },
+      "graph": {
+        "latencySamples": 17639,
+        "preparedMemoryBytes": 306180,
+        "nodeCount": 52,
+        "connectionCount": 67,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 281,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "gravity-diffusion",
+      "sampleRate": 44100.0,
+      "blockSize": 64,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 22.1,
+        "percentile95Microseconds": 25.9,
+        "peakMicroseconds": 52.9,
+        "medianLoadPercent": 1.522828125,
+        "percentile95LoadPercent": 1.7846718750000001,
+        "peakLoadPercent": 3.6451406250000002,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 140,
+        "medianMicroseconds": 45.4,
+        "percentile95Microseconds": 59.4,
+        "peakMicroseconds": 156.5,
+        "medianLoadPercent": 3.12834375,
+        "percentile95LoadPercent": 4.09303125,
+        "peakLoadPercent": 10.783828125000001,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0542986425339365,
+      "compile": {
+        "validationMicroseconds": 275,
+        "schedulingMicroseconds": 194,
+        "preparationMicroseconds": 196,
+        "totalMicroseconds": 668,
+        "requestToActiveMicroseconds": 692
+      },
+      "graph": {
+        "latencySamples": 17639,
+        "preparedMemoryBytes": 312964,
+        "nodeCount": 52,
+        "connectionCount": 67,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 281,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "gravity-diffusion",
+      "sampleRate": 44100.0,
+      "blockSize": 128,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 45.0,
+        "percentile95Microseconds": 48.5,
+        "peakMicroseconds": 78.8,
+        "medianLoadPercent": 1.5503906250000001,
+        "percentile95LoadPercent": 1.6709765625000002,
+        "peakLoadPercent": 2.7149062500000003,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 90.4,
+        "percentile95Microseconds": 103.2,
+        "peakMicroseconds": 168.5,
+        "medianLoadPercent": 3.1145625,
+        "percentile95LoadPercent": 3.5555625,
+        "peakLoadPercent": 5.8053515625,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.008888888888889,
+      "compile": {
+        "validationMicroseconds": 240,
+        "schedulingMicroseconds": 105,
+        "preparationMicroseconds": 176,
+        "totalMicroseconds": 524,
+        "requestToActiveMicroseconds": 545
+      },
+      "graph": {
+        "latencySamples": 17639,
+        "preparedMemoryBytes": 326532,
+        "nodeCount": 52,
+        "connectionCount": 67,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 281,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "gravity-diffusion",
+      "sampleRate": 44100.0,
+      "blockSize": 256,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 84.7,
+        "percentile95Microseconds": 94.4,
+        "peakMicroseconds": 329.6,
+        "medianLoadPercent": 1.45908984375,
+        "percentile95LoadPercent": 1.6261875000000001,
+        "peakLoadPercent": 5.677875,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 182.2,
+        "percentile95Microseconds": 197.7,
+        "peakMicroseconds": 207.7,
+        "medianLoadPercent": 3.1386796875000003,
+        "percentile95LoadPercent": 3.4056914062500003,
+        "peakLoadPercent": 3.57795703125,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.15112160566706,
+      "compile": {
+        "validationMicroseconds": 274,
+        "schedulingMicroseconds": 117,
+        "preparationMicroseconds": 236,
+        "totalMicroseconds": 630,
+        "requestToActiveMicroseconds": 655
+      },
+      "graph": {
+        "latencySamples": 17639,
+        "preparedMemoryBytes": 353668,
+        "nodeCount": 52,
+        "connectionCount": 67,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 281,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "gravity-diffusion",
+      "sampleRate": 44100.0,
+      "blockSize": 512,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 178.1,
+        "percentile95Microseconds": 291.0,
+        "peakMicroseconds": 563.6,
+        "medianLoadPercent": 1.534025390625,
+        "percentile95LoadPercent": 2.50646484375,
+        "peakLoadPercent": 4.8544453125,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 20,
+        "medianMicroseconds": 380.1,
+        "percentile95Microseconds": 441.8,
+        "peakMicroseconds": 493.5,
+        "medianLoadPercent": 3.273908203125,
+        "percentile95LoadPercent": 3.80534765625,
+        "peakLoadPercent": 4.250654296875,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.1341942728804044,
+      "compile": {
+        "validationMicroseconds": 229,
+        "schedulingMicroseconds": 98,
+        "preparationMicroseconds": 151,
+        "totalMicroseconds": 481,
+        "requestToActiveMicroseconds": 539
+      },
+      "graph": {
+        "latencySamples": 17639,
+        "preparedMemoryBytes": 407940,
+        "nodeCount": 52,
+        "connectionCount": 67,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 281,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "gravity-diffusion",
+      "sampleRate": 48000.0,
+      "blockSize": 32,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 12.2,
+        "percentile95Microseconds": 12.7,
+        "peakMicroseconds": 22.5,
+        "medianLoadPercent": 1.83,
+        "percentile95LoadPercent": 1.905,
+        "peakLoadPercent": 3.375,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 300,
+        "medianMicroseconds": 24.4,
+        "percentile95Microseconds": 27.3,
+        "peakMicroseconds": 67.1,
+        "medianLoadPercent": 3.66,
+        "percentile95LoadPercent": 4.095000000000001,
+        "peakLoadPercent": 10.065,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0,
+      "compile": {
+        "validationMicroseconds": 295,
+        "schedulingMicroseconds": 119,
+        "preparationMicroseconds": 237,
+        "totalMicroseconds": 654,
+        "requestToActiveMicroseconds": 680
+      },
+      "graph": {
+        "latencySamples": 19200,
+        "preparedMemoryBytes": 332656,
+        "nodeCount": 52,
+        "connectionCount": 67,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 281,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "gravity-diffusion",
+      "sampleRate": 48000.0,
+      "blockSize": 64,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 23.7,
+        "percentile95Microseconds": 33.4,
+        "peakMicroseconds": 116.7,
+        "medianLoadPercent": 1.7775,
+        "percentile95LoadPercent": 2.5050000000000003,
+        "peakLoadPercent": 8.752500000000001,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 160,
+        "medianMicroseconds": 49.8,
+        "percentile95Microseconds": 55.1,
+        "peakMicroseconds": 66.4,
+        "medianLoadPercent": 3.7350000000000003,
+        "percentile95LoadPercent": 4.1325,
+        "peakLoadPercent": 4.980000000000001,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.1012658227848102,
+      "compile": {
+        "validationMicroseconds": 242,
+        "schedulingMicroseconds": 98,
+        "preparationMicroseconds": 213,
+        "totalMicroseconds": 555,
+        "requestToActiveMicroseconds": 596
+      },
+      "graph": {
+        "latencySamples": 19200,
+        "preparedMemoryBytes": 339440,
+        "nodeCount": 52,
+        "connectionCount": 67,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 281,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "gravity-diffusion",
+      "sampleRate": 48000.0,
+      "blockSize": 128,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 49.4,
+        "percentile95Microseconds": 73.5,
+        "peakMicroseconds": 101.5,
+        "medianLoadPercent": 1.8525,
+        "percentile95LoadPercent": 2.75625,
+        "peakLoadPercent": 3.8062500000000004,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 95.8,
+        "percentile95Microseconds": 103.8,
+        "peakMicroseconds": 227.1,
+        "medianLoadPercent": 3.5925000000000002,
+        "percentile95LoadPercent": 3.8925,
+        "peakLoadPercent": 8.516250000000001,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9392712550607287,
+      "compile": {
+        "validationMicroseconds": 272,
+        "schedulingMicroseconds": 117,
+        "preparationMicroseconds": 194,
+        "totalMicroseconds": 586,
+        "requestToActiveMicroseconds": 610
+      },
+      "graph": {
+        "latencySamples": 19200,
+        "preparedMemoryBytes": 353008,
+        "nodeCount": 52,
+        "connectionCount": 67,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 281,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "gravity-diffusion",
+      "sampleRate": 48000.0,
+      "blockSize": 256,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 91.3,
+        "percentile95Microseconds": 98.6,
+        "peakMicroseconds": 148.0,
+        "medianLoadPercent": 1.711875,
+        "percentile95LoadPercent": 1.8487500000000001,
+        "peakLoadPercent": 2.7750000000000004,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 189.9,
+        "percentile95Microseconds": 206.8,
+        "peakMicroseconds": 212.8,
+        "medianLoadPercent": 3.5606250000000004,
+        "percentile95LoadPercent": 3.8775000000000004,
+        "peakLoadPercent": 3.99,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0799561883899234,
+      "compile": {
+        "validationMicroseconds": 290,
+        "schedulingMicroseconds": 107,
+        "preparationMicroseconds": 210,
+        "totalMicroseconds": 611,
+        "requestToActiveMicroseconds": 636
+      },
+      "graph": {
+        "latencySamples": 19200,
+        "preparedMemoryBytes": 380144,
+        "nodeCount": 52,
+        "connectionCount": 67,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 281,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "gravity-diffusion",
+      "sampleRate": 48000.0,
+      "blockSize": 512,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 188.0,
+        "percentile95Microseconds": 194.0,
+        "peakMicroseconds": 409.7,
+        "medianLoadPercent": 1.7625000000000002,
+        "percentile95LoadPercent": 1.81875,
+        "peakLoadPercent": 3.8409375000000003,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 20,
+        "medianMicroseconds": 375.2,
+        "percentile95Microseconds": 397.9,
+        "peakMicroseconds": 398.8,
+        "medianLoadPercent": 3.5175,
+        "percentile95LoadPercent": 3.7303125,
+        "peakLoadPercent": 3.73875,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9957446808510637,
+      "compile": {
+        "validationMicroseconds": 269,
+        "schedulingMicroseconds": 118,
+        "preparationMicroseconds": 230,
+        "totalMicroseconds": 620,
+        "requestToActiveMicroseconds": 648
+      },
+      "graph": {
+        "latencySamples": 19200,
+        "preparedMemoryBytes": 434416,
+        "nodeCount": 52,
+        "connectionCount": 67,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 281,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "gravity-diffusion",
+      "sampleRate": 96000.0,
+      "blockSize": 32,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 11.9,
+        "percentile95Microseconds": 13.5,
+        "peakMicroseconds": 77.9,
+        "medianLoadPercent": 3.5700000000000003,
+        "percentile95LoadPercent": 4.05,
+        "peakLoadPercent": 23.370000000000005,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 600,
+        "medianMicroseconds": 23.4,
+        "percentile95Microseconds": 30.0,
+        "peakMicroseconds": 178.8,
+        "medianLoadPercent": 7.0200000000000005,
+        "percentile95LoadPercent": 9.0,
+        "peakLoadPercent": 53.64,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9663865546218486,
+      "compile": {
+        "validationMicroseconds": 271,
+        "schedulingMicroseconds": 123,
+        "preparationMicroseconds": 290,
+        "totalMicroseconds": 688,
+        "requestToActiveMicroseconds": 710
+      },
+      "graph": {
+        "latencySamples": 38400,
+        "preparedMemoryBytes": 658480,
+        "nodeCount": 52,
+        "connectionCount": 67,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 281,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "gravity-diffusion",
+      "sampleRate": 96000.0,
+      "blockSize": 64,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 22.6,
+        "percentile95Microseconds": 23.8,
+        "peakMicroseconds": 78.0,
+        "medianLoadPercent": 3.39,
+        "percentile95LoadPercent": 3.5700000000000003,
+        "peakLoadPercent": 11.700000000000001,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 300,
+        "medianMicroseconds": 46.1,
+        "percentile95Microseconds": 52.0,
+        "peakMicroseconds": 83.3,
+        "medianLoadPercent": 6.915,
+        "percentile95LoadPercent": 7.800000000000001,
+        "peakLoadPercent": 12.495000000000001,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0398230088495573,
+      "compile": {
+        "validationMicroseconds": 263,
+        "schedulingMicroseconds": 114,
+        "preparationMicroseconds": 358,
+        "totalMicroseconds": 739,
+        "requestToActiveMicroseconds": 815
+      },
+      "graph": {
+        "latencySamples": 38400,
+        "preparedMemoryBytes": 665264,
+        "nodeCount": 52,
+        "connectionCount": 67,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 281,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "gravity-diffusion",
+      "sampleRate": 96000.0,
+      "blockSize": 128,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 44.4,
+        "percentile95Microseconds": 48.1,
+        "peakMicroseconds": 209.7,
+        "medianLoadPercent": 3.33,
+        "percentile95LoadPercent": 3.6075000000000004,
+        "peakLoadPercent": 15.727500000000001,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 160,
+        "medianMicroseconds": 91.6,
+        "percentile95Microseconds": 101.7,
+        "peakMicroseconds": 198.2,
+        "medianLoadPercent": 6.87,
+        "percentile95LoadPercent": 7.6275,
+        "peakLoadPercent": 14.865,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.063063063063063,
+      "compile": {
+        "validationMicroseconds": 251,
+        "schedulingMicroseconds": 114,
+        "preparationMicroseconds": 328,
+        "totalMicroseconds": 696,
+        "requestToActiveMicroseconds": 721
+      },
+      "graph": {
+        "latencySamples": 38400,
+        "preparedMemoryBytes": 678832,
+        "nodeCount": 52,
+        "connectionCount": 67,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 281,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "gravity-diffusion",
+      "sampleRate": 96000.0,
+      "blockSize": 256,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 88.8,
+        "percentile95Microseconds": 105.6,
+        "peakMicroseconds": 257.3,
+        "medianLoadPercent": 3.33,
+        "percentile95LoadPercent": 3.9600000000000004,
+        "peakLoadPercent": 9.64875,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 182.2,
+        "percentile95Microseconds": 220.3,
+        "peakMicroseconds": 366.8,
+        "medianLoadPercent": 6.8325000000000005,
+        "percentile95LoadPercent": 8.26125,
+        "peakLoadPercent": 13.755,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0518018018018016,
+      "compile": {
+        "validationMicroseconds": 254,
+        "schedulingMicroseconds": 110,
+        "preparationMicroseconds": 279,
+        "totalMicroseconds": 645,
+        "requestToActiveMicroseconds": 708
+      },
+      "graph": {
+        "latencySamples": 38400,
+        "preparedMemoryBytes": 705968,
+        "nodeCount": 52,
+        "connectionCount": 67,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 281,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "gravity-diffusion",
+      "sampleRate": 96000.0,
+      "blockSize": 512,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 194.1,
+        "percentile95Microseconds": 252.3,
+        "peakMicroseconds": 474.2,
+        "medianLoadPercent": 3.6393750000000002,
+        "percentile95LoadPercent": 4.730625,
+        "peakLoadPercent": 8.891250000000001,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 392.4,
+        "percentile95Microseconds": 453.1,
+        "peakMicroseconds": 696.8,
+        "medianLoadPercent": 7.357500000000001,
+        "percentile95LoadPercent": 8.495625,
+        "peakLoadPercent": 13.065000000000001,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0216383307573413,
+      "compile": {
+        "validationMicroseconds": 246,
+        "schedulingMicroseconds": 119,
+        "preparationMicroseconds": 329,
+        "totalMicroseconds": 697,
+        "requestToActiveMicroseconds": 727
+      },
+      "graph": {
+        "latencySamples": 38400,
+        "preparedMemoryBytes": 760240,
+        "nodeCount": 52,
+        "connectionCount": 67,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 281,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "safe-parallel-shimmer",
+      "sampleRate": 44100.0,
+      "blockSize": 32,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 9.8,
+        "percentile95Microseconds": 10.0,
+        "peakMicroseconds": 19.6,
+        "medianLoadPercent": 1.3505625,
+        "percentile95LoadPercent": 1.378125,
+        "peakLoadPercent": 2.701125,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 280,
+        "medianMicroseconds": 19.4,
+        "percentile95Microseconds": 21.3,
+        "peakMicroseconds": 68.0,
+        "medianLoadPercent": 2.6735624999999996,
+        "percentile95LoadPercent": 2.93540625,
+        "peakLoadPercent": 9.37125,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9795918367346936,
+      "compile": {
+        "validationMicroseconds": 170,
+        "schedulingMicroseconds": 86,
+        "preparationMicroseconds": 149,
+        "totalMicroseconds": 411,
+        "requestToActiveMicroseconds": 428
+      },
+      "graph": {
+        "latencySamples": 22449,
+        "preparedMemoryBytes": 372436,
+        "nodeCount": 28,
+        "connectionCount": 32,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 213,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "safe-parallel-shimmer",
+      "sampleRate": 44100.0,
+      "blockSize": 64,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 19.1,
+        "percentile95Microseconds": 19.6,
+        "peakMicroseconds": 34.1,
+        "medianLoadPercent": 1.3161093750000001,
+        "percentile95LoadPercent": 1.3505625,
+        "peakLoadPercent": 2.349703125,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 140,
+        "medianMicroseconds": 38.2,
+        "percentile95Microseconds": 44.2,
+        "peakMicroseconds": 91.9,
+        "medianLoadPercent": 2.6322187500000003,
+        "percentile95LoadPercent": 3.04565625,
+        "peakLoadPercent": 6.332484375,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0,
+      "compile": {
+        "validationMicroseconds": 156,
+        "schedulingMicroseconds": 91,
+        "preparationMicroseconds": 155,
+        "totalMicroseconds": 405,
+        "requestToActiveMicroseconds": 423
+      },
+      "graph": {
+        "latencySamples": 22449,
+        "preparedMemoryBytes": 376148,
+        "nodeCount": 28,
+        "connectionCount": 32,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 213,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "safe-parallel-shimmer",
+      "sampleRate": 44100.0,
+      "blockSize": 128,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 37.2,
+        "percentile95Microseconds": 44.6,
+        "peakMicroseconds": 79.4,
+        "medianLoadPercent": 1.2816562500000002,
+        "percentile95LoadPercent": 1.536609375,
+        "peakLoadPercent": 2.7355781250000004,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 78.6,
+        "percentile95Microseconds": 86.5,
+        "peakMicroseconds": 106.4,
+        "medianLoadPercent": 2.708015625,
+        "percentile95LoadPercent": 2.9801953125000002,
+        "peakLoadPercent": 3.6658125000000004,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.1129032258064515,
+      "compile": {
+        "validationMicroseconds": 161,
+        "schedulingMicroseconds": 87,
+        "preparationMicroseconds": 144,
+        "totalMicroseconds": 396,
+        "requestToActiveMicroseconds": 414
+      },
+      "graph": {
+        "latencySamples": 22449,
+        "preparedMemoryBytes": 383572,
+        "nodeCount": 28,
+        "connectionCount": 32,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 213,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "safe-parallel-shimmer",
+      "sampleRate": 44100.0,
+      "blockSize": 256,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 82.7,
+        "percentile95Microseconds": 95.4,
+        "peakMicroseconds": 199.0,
+        "medianLoadPercent": 1.42463671875,
+        "percentile95LoadPercent": 1.6434140625,
+        "peakLoadPercent": 3.4280859375,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 146.3,
+        "percentile95Microseconds": 222.9,
+        "peakMicroseconds": 301.0,
+        "medianLoadPercent": 2.5202460937500004,
+        "percentile95LoadPercent": 3.83980078125,
+        "peakLoadPercent": 5.1851953125,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.7690447400241838,
+      "compile": {
+        "validationMicroseconds": 161,
+        "schedulingMicroseconds": 86,
+        "preparationMicroseconds": 153,
+        "totalMicroseconds": 404,
+        "requestToActiveMicroseconds": 422
+      },
+      "graph": {
+        "latencySamples": 22449,
+        "preparedMemoryBytes": 398420,
+        "nodeCount": 28,
+        "connectionCount": 32,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 213,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "safe-parallel-shimmer",
+      "sampleRate": 44100.0,
+      "blockSize": 512,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 164.3,
+        "percentile95Microseconds": 194.0,
+        "peakMicroseconds": 545.0,
+        "medianLoadPercent": 1.415162109375,
+        "percentile95LoadPercent": 1.6709765625000002,
+        "peakLoadPercent": 4.6942382812500005,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 20,
+        "medianMicroseconds": 283.8,
+        "percentile95Microseconds": 307.0,
+        "peakMicroseconds": 353.0,
+        "medianLoadPercent": 2.44444921875,
+        "percentile95LoadPercent": 2.6442773437500002,
+        "peakLoadPercent": 3.04048828125,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.7273280584297017,
+      "compile": {
+        "validationMicroseconds": 160,
+        "schedulingMicroseconds": 89,
+        "preparationMicroseconds": 184,
+        "totalMicroseconds": 435,
+        "requestToActiveMicroseconds": 456
+      },
+      "graph": {
+        "latencySamples": 22449,
+        "preparedMemoryBytes": 428116,
+        "nodeCount": 28,
+        "connectionCount": 32,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 213,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "safe-parallel-shimmer",
+      "sampleRate": 48000.0,
+      "blockSize": 32,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 9.0,
+        "percentile95Microseconds": 9.7,
+        "peakMicroseconds": 64.3,
+        "medianLoadPercent": 1.35,
+        "percentile95LoadPercent": 1.4549999999999998,
+        "peakLoadPercent": 9.645000000000001,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 300,
+        "medianMicroseconds": 18.2,
+        "percentile95Microseconds": 20.8,
+        "peakMicroseconds": 71.6,
+        "medianLoadPercent": 2.73,
+        "percentile95LoadPercent": 3.12,
+        "peakLoadPercent": 10.739999999999998,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.022222222222222,
+      "compile": {
+        "validationMicroseconds": 172,
+        "schedulingMicroseconds": 96,
+        "preparationMicroseconds": 170,
+        "totalMicroseconds": 440,
+        "requestToActiveMicroseconds": 457
+      },
+      "graph": {
+        "latencySamples": 24434,
+        "preparedMemoryBytes": 405040,
+        "nodeCount": 28,
+        "connectionCount": 32,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 213,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "safe-parallel-shimmer",
+      "sampleRate": 48000.0,
+      "blockSize": 64,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 18.7,
+        "percentile95Microseconds": 19.7,
+        "peakMicroseconds": 61.6,
+        "medianLoadPercent": 1.4025,
+        "percentile95LoadPercent": 1.4775,
+        "peakLoadPercent": 4.62,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 160,
+        "medianMicroseconds": 38.0,
+        "percentile95Microseconds": 39.4,
+        "peakMicroseconds": 90.9,
+        "medianLoadPercent": 2.85,
+        "percentile95LoadPercent": 2.955,
+        "peakLoadPercent": 6.817500000000001,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0320855614973263,
+      "compile": {
+        "validationMicroseconds": 158,
+        "schedulingMicroseconds": 84,
+        "preparationMicroseconds": 175,
+        "totalMicroseconds": 420,
+        "requestToActiveMicroseconds": 438
+      },
+      "graph": {
+        "latencySamples": 24434,
+        "preparedMemoryBytes": 408752,
+        "nodeCount": 28,
+        "connectionCount": 32,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 213,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "safe-parallel-shimmer",
+      "sampleRate": 48000.0,
+      "blockSize": 128,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 36.4,
+        "percentile95Microseconds": 38.6,
+        "peakMicroseconds": 98.8,
+        "medianLoadPercent": 1.365,
+        "percentile95LoadPercent": 1.4475,
+        "peakLoadPercent": 3.705,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 71.3,
+        "percentile95Microseconds": 80.4,
+        "peakMicroseconds": 109.6,
+        "medianLoadPercent": 2.67375,
+        "percentile95LoadPercent": 3.0150000000000006,
+        "peakLoadPercent": 4.11,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9587912087912087,
+      "compile": {
+        "validationMicroseconds": 133,
+        "schedulingMicroseconds": 73,
+        "preparationMicroseconds": 133,
+        "totalMicroseconds": 342,
+        "requestToActiveMicroseconds": 360
+      },
+      "graph": {
+        "latencySamples": 24434,
+        "preparedMemoryBytes": 416176,
+        "nodeCount": 28,
+        "connectionCount": 32,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 213,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "safe-parallel-shimmer",
+      "sampleRate": 48000.0,
+      "blockSize": 256,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 74.8,
+        "percentile95Microseconds": 80.4,
+        "peakMicroseconds": 356.1,
+        "medianLoadPercent": 1.4025,
+        "percentile95LoadPercent": 1.5075000000000003,
+        "peakLoadPercent": 6.676875000000001,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 139.5,
+        "percentile95Microseconds": 152.8,
+        "peakMicroseconds": 182.5,
+        "medianLoadPercent": 2.615625,
+        "percentile95LoadPercent": 2.8650000000000007,
+        "peakLoadPercent": 3.421875,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.8649732620320856,
+      "compile": {
+        "validationMicroseconds": 153,
+        "schedulingMicroseconds": 86,
+        "preparationMicroseconds": 226,
+        "totalMicroseconds": 468,
+        "requestToActiveMicroseconds": 491
+      },
+      "graph": {
+        "latencySamples": 24434,
+        "preparedMemoryBytes": 431024,
+        "nodeCount": 28,
+        "connectionCount": 32,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 213,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "safe-parallel-shimmer",
+      "sampleRate": 48000.0,
+      "blockSize": 512,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 151.2,
+        "percentile95Microseconds": 164.8,
+        "peakMicroseconds": 277.0,
+        "medianLoadPercent": 1.4175,
+        "percentile95LoadPercent": 1.5450000000000002,
+        "peakLoadPercent": 2.5968750000000003,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 20,
+        "medianMicroseconds": 282.1,
+        "percentile95Microseconds": 361.7,
+        "peakMicroseconds": 496.9,
+        "medianLoadPercent": 2.6446875000000003,
+        "percentile95LoadPercent": 3.3909375,
+        "peakLoadPercent": 4.658437500000001,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.865740740740741,
+      "compile": {
+        "validationMicroseconds": 144,
+        "schedulingMicroseconds": 78,
+        "preparationMicroseconds": 132,
+        "totalMicroseconds": 358,
+        "requestToActiveMicroseconds": 379
+      },
+      "graph": {
+        "latencySamples": 24434,
+        "preparedMemoryBytes": 460720,
+        "nodeCount": 28,
+        "connectionCount": 32,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 213,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "safe-parallel-shimmer",
+      "sampleRate": 96000.0,
+      "blockSize": 32,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 9.0,
+        "percentile95Microseconds": 9.3,
+        "peakMicroseconds": 60.7,
+        "medianLoadPercent": 2.7,
+        "percentile95LoadPercent": 2.7900000000000005,
+        "peakLoadPercent": 18.21,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 600,
+        "medianMicroseconds": 18.1,
+        "percentile95Microseconds": 19.5,
+        "peakMicroseconds": 65.3,
+        "medianLoadPercent": 5.430000000000001,
+        "percentile95LoadPercent": 5.8500000000000005,
+        "peakLoadPercent": 19.59,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.011111111111111,
+      "compile": {
+        "validationMicroseconds": 185,
+        "schedulingMicroseconds": 80,
+        "preparationMicroseconds": 287,
+        "totalMicroseconds": 556,
+        "requestToActiveMicroseconds": 577
+      },
+      "graph": {
+        "latencySamples": 48866,
+        "preparedMemoryBytes": 806324,
+        "nodeCount": 28,
+        "connectionCount": 32,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 213,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "safe-parallel-shimmer",
+      "sampleRate": 96000.0,
+      "blockSize": 64,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 18.3,
+        "percentile95Microseconds": 19.4,
+        "peakMicroseconds": 33.8,
+        "medianLoadPercent": 2.745,
+        "percentile95LoadPercent": 2.9099999999999997,
+        "peakLoadPercent": 5.069999999999999,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 300,
+        "medianMicroseconds": 37.5,
+        "percentile95Microseconds": 42.3,
+        "peakMicroseconds": 156.7,
+        "medianLoadPercent": 5.625,
+        "percentile95LoadPercent": 6.345000000000001,
+        "peakLoadPercent": 23.505,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0491803278688523,
+      "compile": {
+        "validationMicroseconds": 152,
+        "schedulingMicroseconds": 87,
+        "preparationMicroseconds": 212,
+        "totalMicroseconds": 456,
+        "requestToActiveMicroseconds": 472
+      },
+      "graph": {
+        "latencySamples": 48866,
+        "preparedMemoryBytes": 810036,
+        "nodeCount": 28,
+        "connectionCount": 32,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 213,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "safe-parallel-shimmer",
+      "sampleRate": 96000.0,
+      "blockSize": 128,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 34.6,
+        "percentile95Microseconds": 37.5,
+        "peakMicroseconds": 170.8,
+        "medianLoadPercent": 2.595,
+        "percentile95LoadPercent": 2.8125,
+        "peakLoadPercent": 12.81,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 160,
+        "medianMicroseconds": 67.1,
+        "percentile95Microseconds": 105.7,
+        "peakMicroseconds": 315.2,
+        "medianLoadPercent": 5.0325,
+        "percentile95LoadPercent": 7.9275,
+        "peakLoadPercent": 23.64,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9393063583815027,
+      "compile": {
+        "validationMicroseconds": 147,
+        "schedulingMicroseconds": 80,
+        "preparationMicroseconds": 84,
+        "totalMicroseconds": 314,
+        "requestToActiveMicroseconds": 330
+      },
+      "graph": {
+        "latencySamples": 48866,
+        "preparedMemoryBytes": 817460,
+        "nodeCount": 28,
+        "connectionCount": 32,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 213,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "safe-parallel-shimmer",
+      "sampleRate": 96000.0,
+      "blockSize": 256,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 66.5,
+        "percentile95Microseconds": 86.8,
+        "peakMicroseconds": 358.6,
+        "medianLoadPercent": 2.4937500000000004,
+        "percentile95LoadPercent": 3.2550000000000003,
+        "peakLoadPercent": 13.447500000000002,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 131.1,
+        "percentile95Microseconds": 145.1,
+        "peakMicroseconds": 254.1,
+        "medianLoadPercent": 4.916250000000001,
+        "percentile95LoadPercent": 5.44125,
+        "peakLoadPercent": 9.52875,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9714285714285713,
+      "compile": {
+        "validationMicroseconds": 150,
+        "schedulingMicroseconds": 100,
+        "preparationMicroseconds": 249,
+        "totalMicroseconds": 502,
+        "requestToActiveMicroseconds": 521
+      },
+      "graph": {
+        "latencySamples": 48866,
+        "preparedMemoryBytes": 832308,
+        "nodeCount": 28,
+        "connectionCount": 32,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 213,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "safe-parallel-shimmer",
+      "sampleRate": 96000.0,
+      "blockSize": 512,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 138.5,
+        "percentile95Microseconds": 179.5,
+        "peakMicroseconds": 442.0,
+        "medianLoadPercent": 2.5968750000000003,
+        "percentile95LoadPercent": 3.365625,
+        "peakLoadPercent": 8.2875,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 262.1,
+        "percentile95Microseconds": 279.9,
+        "peakMicroseconds": 824.0,
+        "medianLoadPercent": 4.914375000000001,
+        "percentile95LoadPercent": 5.248125,
+        "peakLoadPercent": 15.450000000000001,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.8924187725631771,
+      "compile": {
+        "validationMicroseconds": 177,
+        "schedulingMicroseconds": 81,
+        "preparationMicroseconds": 226,
+        "totalMicroseconds": 486,
+        "requestToActiveMicroseconds": 506
+      },
+      "graph": {
+        "latencySamples": 48866,
+        "preparedMemoryBytes": 862004,
+        "nodeCount": 28,
+        "connectionCount": 32,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 213,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "split-feedback-shimmer",
+      "sampleRate": 44100.0,
+      "blockSize": 32,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 7.7,
+        "percentile95Microseconds": 7.9,
+        "peakMicroseconds": 13.2,
+        "medianLoadPercent": 1.06115625,
+        "percentile95LoadPercent": 1.08871875,
+        "peakLoadPercent": 1.819125,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 280,
+        "medianMicroseconds": 15.3,
+        "percentile95Microseconds": 16.2,
+        "peakMicroseconds": 23.5,
+        "medianLoadPercent": 2.10853125,
+        "percentile95LoadPercent": 2.2325625000000002,
+        "peakLoadPercent": 3.23859375,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9870129870129871,
+      "compile": {
+        "validationMicroseconds": 123,
+        "schedulingMicroseconds": 85,
+        "preparationMicroseconds": 113,
+        "totalMicroseconds": 324,
+        "requestToActiveMicroseconds": 340
+      },
+      "graph": {
+        "latencySamples": 6571,
+        "preparedMemoryBytes": 288960,
+        "nodeCount": 25,
+        "connectionCount": 29,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 191,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "split-feedback-shimmer",
+      "sampleRate": 44100.0,
+      "blockSize": 64,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 15.8,
+        "percentile95Microseconds": 16.6,
+        "peakMicroseconds": 69.6,
+        "medianLoadPercent": 1.08871875,
+        "percentile95LoadPercent": 1.1438437500000003,
+        "peakLoadPercent": 4.795875,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 140,
+        "medianMicroseconds": 32.3,
+        "percentile95Microseconds": 35.9,
+        "peakMicroseconds": 222.7,
+        "medianLoadPercent": 2.2256718749999997,
+        "percentile95LoadPercent": 2.4737343750000003,
+        "peakLoadPercent": 15.345421875000001,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0443037974683542,
+      "compile": {
+        "validationMicroseconds": 128,
+        "schedulingMicroseconds": 73,
+        "preparationMicroseconds": 127,
+        "totalMicroseconds": 331,
+        "requestToActiveMicroseconds": 345
+      },
+      "graph": {
+        "latencySamples": 6571,
+        "preparedMemoryBytes": 292288,
+        "nodeCount": 25,
+        "connectionCount": 29,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 191,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "split-feedback-shimmer",
+      "sampleRate": 44100.0,
+      "blockSize": 128,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 32.5,
+        "percentile95Microseconds": 36.3,
+        "peakMicroseconds": 43.9,
+        "medianLoadPercent": 1.1197265625000001,
+        "percentile95LoadPercent": 1.2506484375,
+        "peakLoadPercent": 1.5124921875000001,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 64.8,
+        "percentile95Microseconds": 150.0,
+        "peakMicroseconds": 174.9,
+        "medianLoadPercent": 2.2325625000000002,
+        "percentile95LoadPercent": 5.16796875,
+        "peakLoadPercent": 6.025851562500001,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9938461538461538,
+      "compile": {
+        "validationMicroseconds": 173,
+        "schedulingMicroseconds": 79,
+        "preparationMicroseconds": 107,
+        "totalMicroseconds": 362,
+        "requestToActiveMicroseconds": 377
+      },
+      "graph": {
+        "latencySamples": 6571,
+        "preparedMemoryBytes": 298944,
+        "nodeCount": 25,
+        "connectionCount": 29,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 191,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "split-feedback-shimmer",
+      "sampleRate": 44100.0,
+      "blockSize": 256,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 68.0,
+        "percentile95Microseconds": 75.8,
+        "peakMicroseconds": 182.6,
+        "medianLoadPercent": 1.17140625,
+        "percentile95LoadPercent": 1.3057734375,
+        "peakLoadPercent": 3.1455703125000003,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 132.4,
+        "percentile95Microseconds": 142.1,
+        "peakMicroseconds": 280.3,
+        "medianLoadPercent": 2.280796875,
+        "percentile95LoadPercent": 2.4478945312500002,
+        "peakLoadPercent": 4.82860546875,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.947058823529412,
+      "compile": {
+        "validationMicroseconds": 163,
+        "schedulingMicroseconds": 82,
+        "preparationMicroseconds": 114,
+        "totalMicroseconds": 361,
+        "requestToActiveMicroseconds": 393
+      },
+      "graph": {
+        "latencySamples": 6571,
+        "preparedMemoryBytes": 312256,
+        "nodeCount": 25,
+        "connectionCount": 29,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 191,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "split-feedback-shimmer",
+      "sampleRate": 44100.0,
+      "blockSize": 512,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 155.4,
+        "percentile95Microseconds": 160.7,
+        "peakMicroseconds": 277.2,
+        "medianLoadPercent": 1.3385039062500002,
+        "percentile95LoadPercent": 1.3841542968749998,
+        "peakLoadPercent": 2.3876015625,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 20,
+        "medianMicroseconds": 273.7,
+        "percentile95Microseconds": 296.1,
+        "peakMicroseconds": 297.2,
+        "medianLoadPercent": 2.357455078125,
+        "percentile95LoadPercent": 2.5503925781250003,
+        "peakLoadPercent": 2.5598671875,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.761261261261261,
+      "compile": {
+        "validationMicroseconds": 134,
+        "schedulingMicroseconds": 76,
+        "preparationMicroseconds": 109,
+        "totalMicroseconds": 322,
+        "requestToActiveMicroseconds": 340
+      },
+      "graph": {
+        "latencySamples": 6571,
+        "preparedMemoryBytes": 338880,
+        "nodeCount": 25,
+        "connectionCount": 29,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 191,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "split-feedback-shimmer",
+      "sampleRate": 48000.0,
+      "blockSize": 32,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 8.6,
+        "percentile95Microseconds": 9.9,
+        "peakMicroseconds": 39.3,
+        "medianLoadPercent": 1.29,
+        "percentile95LoadPercent": 1.485,
+        "peakLoadPercent": 5.895,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 300,
+        "medianMicroseconds": 16.4,
+        "percentile95Microseconds": 17.6,
+        "peakMicroseconds": 24.4,
+        "medianLoadPercent": 2.46,
+        "percentile95LoadPercent": 2.6400000000000006,
+        "peakLoadPercent": 3.66,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9069767441860463,
+      "compile": {
+        "validationMicroseconds": 140,
+        "schedulingMicroseconds": 79,
+        "preparationMicroseconds": 114,
+        "totalMicroseconds": 336,
+        "requestToActiveMicroseconds": 351
+      },
+      "graph": {
+        "latencySamples": 7152,
+        "preparedMemoryBytes": 314216,
+        "nodeCount": 25,
+        "connectionCount": 29,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 191,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "split-feedback-shimmer",
+      "sampleRate": 48000.0,
+      "blockSize": 64,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 16.5,
+        "percentile95Microseconds": 17.9,
+        "peakMicroseconds": 66.8,
+        "medianLoadPercent": 1.2375,
+        "percentile95LoadPercent": 1.3424999999999998,
+        "peakLoadPercent": 5.010000000000001,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 160,
+        "medianMicroseconds": 32.3,
+        "percentile95Microseconds": 34.5,
+        "peakMicroseconds": 38.7,
+        "medianLoadPercent": 2.4225,
+        "percentile95LoadPercent": 2.5875000000000004,
+        "peakLoadPercent": 2.9025000000000003,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9575757575757573,
+      "compile": {
+        "validationMicroseconds": 139,
+        "schedulingMicroseconds": 77,
+        "preparationMicroseconds": 110,
+        "totalMicroseconds": 329,
+        "requestToActiveMicroseconds": 346
+      },
+      "graph": {
+        "latencySamples": 7152,
+        "preparedMemoryBytes": 317544,
+        "nodeCount": 25,
+        "connectionCount": 29,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 191,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "split-feedback-shimmer",
+      "sampleRate": 48000.0,
+      "blockSize": 128,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 32.7,
+        "percentile95Microseconds": 41.2,
+        "peakMicroseconds": 83.1,
+        "medianLoadPercent": 1.2262500000000003,
+        "percentile95LoadPercent": 1.5450000000000002,
+        "peakLoadPercent": 3.11625,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 64.7,
+        "percentile95Microseconds": 76.0,
+        "peakMicroseconds": 80.6,
+        "medianLoadPercent": 2.42625,
+        "percentile95LoadPercent": 2.85,
+        "peakLoadPercent": 3.0225,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9785932721712538,
+      "compile": {
+        "validationMicroseconds": 141,
+        "schedulingMicroseconds": 80,
+        "preparationMicroseconds": 137,
+        "totalMicroseconds": 361,
+        "requestToActiveMicroseconds": 377
+      },
+      "graph": {
+        "latencySamples": 7152,
+        "preparedMemoryBytes": 324200,
+        "nodeCount": 25,
+        "connectionCount": 29,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 191,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "split-feedback-shimmer",
+      "sampleRate": 48000.0,
+      "blockSize": 256,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 72.7,
+        "percentile95Microseconds": 83.8,
+        "peakMicroseconds": 259.8,
+        "medianLoadPercent": 1.3631250000000001,
+        "percentile95LoadPercent": 1.57125,
+        "peakLoadPercent": 4.87125,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 128.8,
+        "percentile95Microseconds": 137.6,
+        "peakMicroseconds": 150.4,
+        "medianLoadPercent": 2.4150000000000005,
+        "percentile95LoadPercent": 2.58,
+        "peakLoadPercent": 2.8200000000000003,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.7716643741403026,
+      "compile": {
+        "validationMicroseconds": 156,
+        "schedulingMicroseconds": 83,
+        "preparationMicroseconds": 124,
+        "totalMicroseconds": 365,
+        "requestToActiveMicroseconds": 383
+      },
+      "graph": {
+        "latencySamples": 7152,
+        "preparedMemoryBytes": 337512,
+        "nodeCount": 25,
+        "connectionCount": 29,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 191,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "split-feedback-shimmer",
+      "sampleRate": 48000.0,
+      "blockSize": 512,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 146.3,
+        "percentile95Microseconds": 159.6,
+        "peakMicroseconds": 222.8,
+        "medianLoadPercent": 1.3715625000000002,
+        "percentile95LoadPercent": 1.49625,
+        "peakLoadPercent": 2.08875,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 20,
+        "medianMicroseconds": 278.7,
+        "percentile95Microseconds": 306.6,
+        "peakMicroseconds": 328.5,
+        "medianLoadPercent": 2.6128125,
+        "percentile95LoadPercent": 2.8743750000000006,
+        "peakLoadPercent": 3.0796875000000004,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9049897470950101,
+      "compile": {
+        "validationMicroseconds": 136,
+        "schedulingMicroseconds": 77,
+        "preparationMicroseconds": 127,
+        "totalMicroseconds": 342,
+        "requestToActiveMicroseconds": 360
+      },
+      "graph": {
+        "latencySamples": 7152,
+        "preparedMemoryBytes": 364136,
+        "nodeCount": 25,
+        "connectionCount": 29,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 191,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "split-feedback-shimmer",
+      "sampleRate": 96000.0,
+      "blockSize": 32,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 8.8,
+        "percentile95Microseconds": 9.1,
+        "peakMicroseconds": 70.1,
+        "medianLoadPercent": 2.6400000000000006,
+        "percentile95LoadPercent": 2.73,
+        "peakLoadPercent": 21.029999999999998,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 600,
+        "medianMicroseconds": 16.3,
+        "percentile95Microseconds": 17.2,
+        "peakMicroseconds": 85.4,
+        "medianLoadPercent": 4.890000000000001,
+        "percentile95LoadPercent": 5.16,
+        "peakLoadPercent": 25.62,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.8522727272727273,
+      "compile": {
+        "validationMicroseconds": 134,
+        "schedulingMicroseconds": 78,
+        "preparationMicroseconds": 173,
+        "totalMicroseconds": 389,
+        "requestToActiveMicroseconds": 403
+      },
+      "graph": {
+        "latencySamples": 14304,
+        "preparedMemoryBytes": 625064,
+        "nodeCount": 25,
+        "connectionCount": 29,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 191,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "split-feedback-shimmer",
+      "sampleRate": 96000.0,
+      "blockSize": 64,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 16.3,
+        "percentile95Microseconds": 17.9,
+        "peakMicroseconds": 75.2,
+        "medianLoadPercent": 2.4450000000000003,
+        "percentile95LoadPercent": 2.6849999999999996,
+        "peakLoadPercent": 11.280000000000001,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 300,
+        "medianMicroseconds": 32.1,
+        "percentile95Microseconds": 34.4,
+        "peakMicroseconds": 42.4,
+        "medianLoadPercent": 4.815,
+        "percentile95LoadPercent": 5.16,
+        "peakLoadPercent": 6.36,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.969325153374233,
+      "compile": {
+        "validationMicroseconds": 137,
+        "schedulingMicroseconds": 82,
+        "preparationMicroseconds": 194,
+        "totalMicroseconds": 415,
+        "requestToActiveMicroseconds": 441
+      },
+      "graph": {
+        "latencySamples": 14304,
+        "preparedMemoryBytes": 628392,
+        "nodeCount": 25,
+        "connectionCount": 29,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 191,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "split-feedback-shimmer",
+      "sampleRate": 96000.0,
+      "blockSize": 128,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 32.1,
+        "percentile95Microseconds": 34.4,
+        "peakMicroseconds": 205.0,
+        "medianLoadPercent": 2.4075,
+        "percentile95LoadPercent": 2.58,
+        "peakLoadPercent": 15.375,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 160,
+        "medianMicroseconds": 64.5,
+        "percentile95Microseconds": 69.9,
+        "peakMicroseconds": 351.7,
+        "medianLoadPercent": 4.8375,
+        "percentile95LoadPercent": 5.242500000000001,
+        "peakLoadPercent": 26.3775,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0093457943925235,
+      "compile": {
+        "validationMicroseconds": 140,
+        "schedulingMicroseconds": 80,
+        "preparationMicroseconds": 175,
+        "totalMicroseconds": 398,
+        "requestToActiveMicroseconds": 413
+      },
+      "graph": {
+        "latencySamples": 14304,
+        "preparedMemoryBytes": 635048,
+        "nodeCount": 25,
+        "connectionCount": 29,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 191,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "split-feedback-shimmer",
+      "sampleRate": 96000.0,
+      "blockSize": 256,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 61.9,
+        "percentile95Microseconds": 104.4,
+        "peakMicroseconds": 378.5,
+        "medianLoadPercent": 2.32125,
+        "percentile95LoadPercent": 3.915,
+        "peakLoadPercent": 14.193750000000001,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 127.0,
+        "percentile95Microseconds": 137.8,
+        "peakMicroseconds": 389.3,
+        "medianLoadPercent": 4.7625,
+        "percentile95LoadPercent": 5.167500000000001,
+        "peakLoadPercent": 14.59875,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.051696284329564,
+      "compile": {
+        "validationMicroseconds": 140,
+        "schedulingMicroseconds": 73,
+        "preparationMicroseconds": 171,
+        "totalMicroseconds": 387,
+        "requestToActiveMicroseconds": 402
+      },
+      "graph": {
+        "latencySamples": 14304,
+        "preparedMemoryBytes": 648360,
+        "nodeCount": 25,
+        "connectionCount": 29,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 191,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "split-feedback-shimmer",
+      "sampleRate": 96000.0,
+      "blockSize": 512,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 125.7,
+        "percentile95Microseconds": 138.6,
+        "peakMicroseconds": 434.1,
+        "medianLoadPercent": 2.356875,
+        "percentile95LoadPercent": 2.5987500000000003,
+        "peakLoadPercent": 8.139375000000001,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 238.7,
+        "percentile95Microseconds": 288.7,
+        "peakMicroseconds": 465.9,
+        "medianLoadPercent": 4.475625,
+        "percentile95LoadPercent": 5.413125,
+        "peakLoadPercent": 8.735625,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.8989657915672233,
+      "compile": {
+        "validationMicroseconds": 121,
+        "schedulingMicroseconds": 72,
+        "preparationMicroseconds": 159,
+        "totalMicroseconds": 354,
+        "requestToActiveMicroseconds": 379
+      },
+      "graph": {
+        "latencySamples": 14304,
+        "preparedMemoryBytes": 674984,
+        "nodeCount": 25,
+        "connectionCount": 29,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 191,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "reverse-cosmic-shimmer",
+      "sampleRate": 44100.0,
+      "blockSize": 32,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 13.9,
+        "percentile95Microseconds": 15.6,
+        "peakMicroseconds": 22.4,
+        "medianLoadPercent": 1.91559375,
+        "percentile95LoadPercent": 2.149875,
+        "peakLoadPercent": 3.087,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 280,
+        "medianMicroseconds": 28.9,
+        "percentile95Microseconds": 33.9,
+        "peakMicroseconds": 315.4,
+        "medianLoadPercent": 3.98278125,
+        "percentile95LoadPercent": 4.67184375,
+        "peakLoadPercent": 43.4660625,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.079136690647482,
+      "compile": {
+        "validationMicroseconds": 246,
+        "schedulingMicroseconds": 133,
+        "preparationMicroseconds": 241,
+        "totalMicroseconds": 623,
+        "requestToActiveMicroseconds": 738
+      },
+      "graph": {
+        "latencySamples": 23860,
+        "preparedMemoryBytes": 609940,
+        "nodeCount": 45,
+        "connectionCount": 57,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 318,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "reverse-cosmic-shimmer",
+      "sampleRate": 44100.0,
+      "blockSize": 64,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 28.6,
+        "percentile95Microseconds": 32.5,
+        "peakMicroseconds": 106.6,
+        "medianLoadPercent": 1.97071875,
+        "percentile95LoadPercent": 2.2394531250000003,
+        "peakLoadPercent": 7.34540625,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 140,
+        "medianMicroseconds": 57.9,
+        "percentile95Microseconds": 61.8,
+        "peakMicroseconds": 96.3,
+        "medianLoadPercent": 3.989671875,
+        "percentile95LoadPercent": 4.25840625,
+        "peakLoadPercent": 6.635671875,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.024475524475524,
+      "compile": {
+        "validationMicroseconds": 262,
+        "schedulingMicroseconds": 132,
+        "preparationMicroseconds": 241,
+        "totalMicroseconds": 639,
+        "requestToActiveMicroseconds": 665
+      },
+      "graph": {
+        "latencySamples": 23860,
+        "preparedMemoryBytes": 615828,
+        "nodeCount": 45,
+        "connectionCount": 57,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 318,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "reverse-cosmic-shimmer",
+      "sampleRate": 44100.0,
+      "blockSize": 128,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 67.6,
+        "percentile95Microseconds": 71.3,
+        "peakMicroseconds": 103.2,
+        "medianLoadPercent": 2.32903125,
+        "percentile95LoadPercent": 2.4565078125,
+        "peakLoadPercent": 3.5555625,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 124.8,
+        "percentile95Microseconds": 135.8,
+        "peakMicroseconds": 163.1,
+        "medianLoadPercent": 4.29975,
+        "percentile95LoadPercent": 4.678734375000001,
+        "peakLoadPercent": 5.619304687500001,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.8461538461538463,
+      "compile": {
+        "validationMicroseconds": 255,
+        "schedulingMicroseconds": 134,
+        "preparationMicroseconds": 226,
+        "totalMicroseconds": 619,
+        "requestToActiveMicroseconds": 643
+      },
+      "graph": {
+        "latencySamples": 23860,
+        "preparedMemoryBytes": 627604,
+        "nodeCount": 45,
+        "connectionCount": 57,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 318,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "reverse-cosmic-shimmer",
+      "sampleRate": 44100.0,
+      "blockSize": 256,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 141.2,
+        "percentile95Microseconds": 159.9,
+        "peakMicroseconds": 424.6,
+        "medianLoadPercent": 2.4323906249999996,
+        "percentile95LoadPercent": 2.75452734375,
+        "peakLoadPercent": 7.3143984375,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 236.0,
+        "percentile95Microseconds": 272.6,
+        "peakMicroseconds": 288.4,
+        "medianLoadPercent": 4.06546875,
+        "percentile95LoadPercent": 4.695960937500001,
+        "peakLoadPercent": 4.968140624999999,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.671388101983003,
+      "compile": {
+        "validationMicroseconds": 273,
+        "schedulingMicroseconds": 142,
+        "preparationMicroseconds": 246,
+        "totalMicroseconds": 664,
+        "requestToActiveMicroseconds": 695
+      },
+      "graph": {
+        "latencySamples": 23860,
+        "preparedMemoryBytes": 651156,
+        "nodeCount": 45,
+        "connectionCount": 57,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 318,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "reverse-cosmic-shimmer",
+      "sampleRate": 44100.0,
+      "blockSize": 512,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 299.9,
+        "percentile95Microseconds": 320.8,
+        "peakMicroseconds": 700.0,
+        "medianLoadPercent": 2.583123046875,
+        "percentile95LoadPercent": 2.763140625,
+        "peakLoadPercent": 6.029296875,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 20,
+        "medianMicroseconds": 469.3,
+        "percentile95Microseconds": 633.5,
+        "peakMicroseconds": 1046.2,
+        "medianLoadPercent": 4.0422128906250006,
+        "percentile95LoadPercent": 5.456513671875,
+        "peakLoadPercent": 9.01121484375,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.5648549516505503,
+      "compile": {
+        "validationMicroseconds": 259,
+        "schedulingMicroseconds": 144,
+        "preparationMicroseconds": 250,
+        "totalMicroseconds": 657,
+        "requestToActiveMicroseconds": 686
+      },
+      "graph": {
+        "latencySamples": 23860,
+        "preparedMemoryBytes": 698260,
+        "nodeCount": 45,
+        "connectionCount": 57,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 318,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "reverse-cosmic-shimmer",
+      "sampleRate": 48000.0,
+      "blockSize": 32,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 14.8,
+        "percentile95Microseconds": 15.4,
+        "peakMicroseconds": 80.6,
+        "medianLoadPercent": 2.22,
+        "percentile95LoadPercent": 2.31,
+        "peakLoadPercent": 12.09,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 300,
+        "medianMicroseconds": 29.3,
+        "percentile95Microseconds": 34.2,
+        "peakMicroseconds": 280.9,
+        "medianLoadPercent": 4.3950000000000005,
+        "percentile95LoadPercent": 5.130000000000001,
+        "peakLoadPercent": 42.135,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9797297297297296,
+      "compile": {
+        "validationMicroseconds": 239,
+        "schedulingMicroseconds": 133,
+        "preparationMicroseconds": 336,
+        "totalMicroseconds": 712,
+        "requestToActiveMicroseconds": 739
+      },
+      "graph": {
+        "latencySamples": 25970,
+        "preparedMemoryBytes": 663356,
+        "nodeCount": 45,
+        "connectionCount": 57,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 318,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "reverse-cosmic-shimmer",
+      "sampleRate": 48000.0,
+      "blockSize": 64,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 29.5,
+        "percentile95Microseconds": 34.3,
+        "peakMicroseconds": 84.1,
+        "medianLoadPercent": 2.2125,
+        "percentile95LoadPercent": 2.5725,
+        "peakLoadPercent": 6.3075,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 160,
+        "medianMicroseconds": 58.1,
+        "percentile95Microseconds": 65.4,
+        "peakMicroseconds": 338.4,
+        "medianLoadPercent": 4.3575,
+        "percentile95LoadPercent": 4.905000000000001,
+        "peakLoadPercent": 25.380000000000003,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.9694915254237289,
+      "compile": {
+        "validationMicroseconds": 267,
+        "schedulingMicroseconds": 140,
+        "preparationMicroseconds": 244,
+        "totalMicroseconds": 655,
+        "requestToActiveMicroseconds": 681
+      },
+      "graph": {
+        "latencySamples": 25970,
+        "preparedMemoryBytes": 669244,
+        "nodeCount": 45,
+        "connectionCount": 57,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 318,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "reverse-cosmic-shimmer",
+      "sampleRate": 48000.0,
+      "blockSize": 128,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 63.0,
+        "percentile95Microseconds": 67.4,
+        "peakMicroseconds": 366.9,
+        "medianLoadPercent": 2.3625000000000003,
+        "percentile95LoadPercent": 2.5275000000000003,
+        "peakLoadPercent": 13.758750000000001,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 122.1,
+        "percentile95Microseconds": 139.8,
+        "peakMicroseconds": 183.4,
+        "medianLoadPercent": 4.57875,
+        "percentile95LoadPercent": 5.242500000000001,
+        "peakLoadPercent": 6.8775,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.938095238095238,
+      "compile": {
+        "validationMicroseconds": 251,
+        "schedulingMicroseconds": 147,
+        "preparationMicroseconds": 236,
+        "totalMicroseconds": 638,
+        "requestToActiveMicroseconds": 668
+      },
+      "graph": {
+        "latencySamples": 25970,
+        "preparedMemoryBytes": 681020,
+        "nodeCount": 45,
+        "connectionCount": 57,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 318,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "reverse-cosmic-shimmer",
+      "sampleRate": 48000.0,
+      "blockSize": 256,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 138.4,
+        "percentile95Microseconds": 172.1,
+        "peakMicroseconds": 301.3,
+        "medianLoadPercent": 2.595,
+        "percentile95LoadPercent": 3.226875,
+        "peakLoadPercent": 5.649375,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 218.6,
+        "percentile95Microseconds": 276.5,
+        "peakMicroseconds": 657.0,
+        "medianLoadPercent": 4.09875,
+        "percentile95LoadPercent": 5.184375,
+        "peakLoadPercent": 12.318750000000001,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.579479768786127,
+      "compile": {
+        "validationMicroseconds": 253,
+        "schedulingMicroseconds": 145,
+        "preparationMicroseconds": 269,
+        "totalMicroseconds": 671,
+        "requestToActiveMicroseconds": 699
+      },
+      "graph": {
+        "latencySamples": 25970,
+        "preparedMemoryBytes": 704572,
+        "nodeCount": 45,
+        "connectionCount": 57,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 318,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "reverse-cosmic-shimmer",
+      "sampleRate": 48000.0,
+      "blockSize": 512,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 290.1,
+        "percentile95Microseconds": 451.9,
+        "peakMicroseconds": 802.8,
+        "medianLoadPercent": 2.7196875000000005,
+        "percentile95LoadPercent": 4.236562500000001,
+        "peakLoadPercent": 7.52625,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 20,
+        "medianMicroseconds": 439.1,
+        "percentile95Microseconds": 499.8,
+        "peakMicroseconds": 889.4,
+        "medianLoadPercent": 4.116562500000001,
+        "percentile95LoadPercent": 4.685625,
+        "peakLoadPercent": 8.338125,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.5136159944846603,
+      "compile": {
+        "validationMicroseconds": 246,
+        "schedulingMicroseconds": 131,
+        "preparationMicroseconds": 299,
+        "totalMicroseconds": 679,
+        "requestToActiveMicroseconds": 708
+      },
+      "graph": {
+        "latencySamples": 25970,
+        "preparedMemoryBytes": 751676,
+        "nodeCount": 45,
+        "connectionCount": 57,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 318,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "reverse-cosmic-shimmer",
+      "sampleRate": 96000.0,
+      "blockSize": 32,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 14.3,
+        "percentile95Microseconds": 15.0,
+        "peakMicroseconds": 69.7,
+        "medianLoadPercent": 4.29,
+        "percentile95LoadPercent": 4.5,
+        "peakLoadPercent": 20.91,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 600,
+        "medianMicroseconds": 29.4,
+        "percentile95Microseconds": 35.4,
+        "peakMicroseconds": 342.6,
+        "medianLoadPercent": 8.82,
+        "percentile95LoadPercent": 10.620000000000001,
+        "peakLoadPercent": 102.78,
+        "underruns": 1
+      },
+      "crossfadeMedianOverheadRatio": 2.055944055944056,
+      "compile": {
+        "validationMicroseconds": 262,
+        "schedulingMicroseconds": 134,
+        "preparationMicroseconds": 551,
+        "totalMicroseconds": 950,
+        "requestToActiveMicroseconds": 978
+      },
+      "graph": {
+        "latencySamples": 51938,
+        "preparedMemoryBytes": 1320764,
+        "nodeCount": 45,
+        "connectionCount": 57,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 318,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "reverse-cosmic-shimmer",
+      "sampleRate": 96000.0,
+      "blockSize": 64,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 27.0,
+        "percentile95Microseconds": 28.1,
+        "peakMicroseconds": 33.9,
+        "medianLoadPercent": 4.05,
+        "percentile95LoadPercent": 4.215,
+        "peakLoadPercent": 5.085,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 300,
+        "medianMicroseconds": 56.9,
+        "percentile95Microseconds": 63.3,
+        "peakMicroseconds": 333.3,
+        "medianLoadPercent": 8.535,
+        "percentile95LoadPercent": 9.495000000000001,
+        "peakLoadPercent": 49.995000000000005,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.107407407407407,
+      "compile": {
+        "validationMicroseconds": 245,
+        "schedulingMicroseconds": 157,
+        "preparationMicroseconds": 436,
+        "totalMicroseconds": 842,
+        "requestToActiveMicroseconds": 867
+      },
+      "graph": {
+        "latencySamples": 51938,
+        "preparedMemoryBytes": 1326652,
+        "nodeCount": 45,
+        "connectionCount": 57,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 318,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "reverse-cosmic-shimmer",
+      "sampleRate": 96000.0,
+      "blockSize": 128,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 54.9,
+        "percentile95Microseconds": 62.2,
+        "peakMicroseconds": 380.6,
+        "medianLoadPercent": 4.117500000000001,
+        "percentile95LoadPercent": 4.665,
+        "peakLoadPercent": 28.545,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 160,
+        "medianMicroseconds": 113.7,
+        "percentile95Microseconds": 124.4,
+        "peakMicroseconds": 301.7,
+        "medianLoadPercent": 8.5275,
+        "percentile95LoadPercent": 9.33,
+        "peakLoadPercent": 22.6275,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 2.0710382513661205,
+      "compile": {
+        "validationMicroseconds": 279,
+        "schedulingMicroseconds": 125,
+        "preparationMicroseconds": 613,
+        "totalMicroseconds": 1021,
+        "requestToActiveMicroseconds": 1060
+      },
+      "graph": {
+        "latencySamples": 51938,
+        "preparedMemoryBytes": 1338428,
+        "nodeCount": 45,
+        "connectionCount": 57,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 318,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "reverse-cosmic-shimmer",
+      "sampleRate": 96000.0,
+      "blockSize": 256,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 118.1,
+        "percentile95Microseconds": 135.2,
+        "peakMicroseconds": 438.0,
+        "medianLoadPercent": 4.42875,
+        "percentile95LoadPercent": 5.069999999999999,
+        "peakLoadPercent": 16.425,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 222.4,
+        "percentile95Microseconds": 243.8,
+        "peakMicroseconds": 484.7,
+        "medianLoadPercent": 8.34,
+        "percentile95LoadPercent": 9.1425,
+        "peakLoadPercent": 18.17625,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.8831498729889926,
+      "compile": {
+        "validationMicroseconds": 452,
+        "schedulingMicroseconds": 138,
+        "preparationMicroseconds": 354,
+        "totalMicroseconds": 948,
+        "requestToActiveMicroseconds": 975
+      },
+      "graph": {
+        "latencySamples": 51938,
+        "preparedMemoryBytes": 1361980,
+        "nodeCount": 45,
+        "connectionCount": 57,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 318,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "reverse-cosmic-shimmer",
+      "sampleRate": 96000.0,
+      "blockSize": 512,
+      "measuredBlocks": 200,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 200,
+        "medianMicroseconds": 258.0,
+        "percentile95Microseconds": 324.1,
+        "peakMicroseconds": 904.9,
+        "medianLoadPercent": 4.8375,
+        "percentile95LoadPercent": 6.076875000000001,
+        "peakLoadPercent": 16.966875,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 455.7,
+        "percentile95Microseconds": 676.8,
+        "peakMicroseconds": 1106.6,
+        "medianLoadPercent": 8.544375,
+        "percentile95LoadPercent": 12.690000000000001,
+        "peakLoadPercent": 20.748749999999998,
+        "underruns": 0
+      },
+      "crossfadeMedianOverheadRatio": 1.7662790697674418,
+      "compile": {
+        "validationMicroseconds": 258,
+        "schedulingMicroseconds": 136,
+        "preparationMicroseconds": 395,
+        "totalMicroseconds": 793,
+        "requestToActiveMicroseconds": 821
+      },
+      "graph": {
+        "latencySamples": 51938,
+        "preparedMemoryBytes": 1409084,
+        "nodeCount": 45,
+        "connectionCount": 57,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "estimatedOperationsPerSample": 318,
+        "executionDomain": "hybrid"
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    }
+  ]
+}

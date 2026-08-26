@@ -13,7 +13,7 @@ Constructed-graph diagnostics now come from the active prepared plan rather than
 - **Graph / prepared** gives node, cable, and feedback-region counts for the active revision.
 - **Compile timing** separates validation, causal scheduling/analysis, runtime preparation, total compile time, and request-to-active publication time.
 
-The offline plan profile ranks processor families by estimated operations per sample and labels the current executor domain as `block-wise` or `sample-wise`. The current executor makes an entire graph sample-wise when it contains feedback or causal Envelope Follower/Hold Gate work; M17 will use this baseline to partition only the required regions.
+The offline plan profile ranks processor families by estimated operations per sample and labels the current executor domain as `block-wise`, `sample-wise`, or `hybrid`. Since M17.1, delay-containing strongly connected components and causal Envelope Follower/Hold Gate spans are isolated into sample-wise regions; prepared gaps execute as block kernels. Region counts describe the compiled plan rather than hidden changes to the visible schematic.
 
 ## Static cost model
 

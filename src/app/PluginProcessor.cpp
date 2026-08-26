@@ -548,6 +548,8 @@ juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
             { "nodeCount", graphMode ? topology.activePlanDiagnostics.nodeCount : 10 },
             { "connectionCount", graphMode ? topology.activePlanDiagnostics.connectionCount : 0 },
             { "feedbackRegionCount", graphMode ? topology.activePlanDiagnostics.feedbackRegionCount : 0 },
+            { "blockWiseRegionCount", graphMode ? topology.activePlanDiagnostics.blockWiseRegionCount : 1 },
+            { "sampleWiseRegionCount", graphMode ? topology.activePlanDiagnostics.sampleWiseRegionCount : 0 },
             { "preparedStorageBytes", graphMode
                 ? topology.activePlanDiagnostics.preparedStorageBytes : snapshot.delayMemoryBytes },
             { "compileTiming", {

@@ -1158,7 +1158,7 @@ Goal: preserve the visual graph's exact semantics while compiling it into mixed 
 
 M17 extends the existing prepared execution plan; it does not introduce runtime JSON interpretation, executable-memory JIT code, or audio-thread compilation.
 
-### M17.1 Partition sample-wise and block-wise execution domains
+### M17.1 Partition sample-wise and block-wise execution domains — Complete
 
 Use strongly connected components and causal control dependencies to isolate the regions that genuinely require per-sample evaluation.
 

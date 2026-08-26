@@ -332,7 +332,7 @@ struct PreparedAcyclicRuntime::Impl final {
     PreparedGraphDiagnostics planDiagnostics;
     std::vector<float> delayArena;
     bool feedbackMode {};
-    bool sampleWiseMode {};
+    std::vector<std::pair<std::size_t, std::size_t>> sampleWiseRegions;
     std::size_t silenceBuffer {};
     std::size_t inputLeftBuffer {};
     std::size_t inputRightBuffer {};
@@ -480,24 +480,103 @@ void PreparedAcyclicRuntime::process(
         if (!implementation_->modulations.empty())
             --implementation_->samplesUntilControlTick;
     }
-    if (implementation_->sampleWiseMode) {
-        auto sampleBuffer = [this](const std::size_t index) { return std::span<float>(implementation_->buffers[index]).first(1); };
-        for (std::size_t sampleIndex = 0; sampleIndex < count; ++sampleIndex) {
-            implementation_->buffers[implementation_->silenceBuffer][0] = 0.0F;
-            implementation_->buffers[implementation_->inputLeftBuffer][0] = inputLeft[sampleIndex];
-            implementation_->buffers[implementation_->inputRightBuffer][0] = inputRight[sampleIndex];
-            for (auto& operation : implementation_->operations) if (operation.kind == OperationKind::delay) {
+    if (!implementation_->sampleWiseRegions.empty()) {
+        auto fullBuffer = [this, count](const std::size_t index) {
+            return std::span<float>(implementation_->buffers[index]).first(count);
+        };
+        std::ranges::fill(fullBuffer(implementation_->silenceBuffer), 0.0F);
+        std::ranges::copy(inputLeft.first(count), fullBuffer(implementation_->inputLeftBuffer).begin());
+        std::ranges::copy(inputRight.first(count), fullBuffer(implementation_->inputRightBuffer).begin());
+        const auto processBlockRange = [&](const std::size_t begin, const std::size_t end) {
+            for (auto operationIndex = begin; operationIndex < end; ++operationIndex) {
+                auto& operation = implementation_->operations[operationIndex];
+                if (operation.kind == OperationKind::input || operation.kind == OperationKind::output) continue;
+                auto destination = fullBuffer(operation.outputs.front());
+                std::ranges::copy(fullBuffer(operation.inputs.front()), destination.begin());
+                if (operation.kind == OperationKind::sum) {
+                    reverb::dsp::Sum::process(destination, fullBuffer(operation.inputs[1]), destination);
+                    if (operation.sumGain != 1.0F) for (auto& sample : destination) sample *= operation.sumGain;
+                } else if (operation.kind == OperationKind::gain) {
+                    if (operation.gainModulation == noModulation)
+                        std::get<reverb::dsp::Gain>(operation.processor).process(destination);
+                    else for (std::size_t sample = 0; sample < count; ++sample)
+                        destination[sample] *= static_cast<float>(
+                            implementation_->modulations[operation.gainModulation].values[sample]);
+                } else if (operation.kind == OperationKind::delay) {
+                    auto& processor = std::get<reverb::dsp::Delay>(operation.processor);
+                    if (operation.delayModulation == noModulation) processor.process(destination);
+                    else processor.processModulated(destination,
+                        std::span<const double>(implementation_->modulations[operation.delayModulation].values).first(count));
+                } else if (operation.kind == OperationKind::allpass) {
+                    auto& processor = std::get<reverb::dsp::Allpass>(operation.processor);
+                    if (operation.delayModulation == noModulation && operation.coefficientModulation == noModulation)
+                        processor.process(destination);
+                    else for (std::size_t sample = 0; sample < count; ++sample) {
+                        const auto delay = operation.delayModulation == noModulation ? operation.baseDelayMilliseconds
+                            : implementation_->modulations[operation.delayModulation].values[sample];
+                        const auto coefficient = operation.coefficientModulation == noModulation ? operation.baseCoefficient
+                            : implementation_->modulations[operation.coefficientModulation].values[sample];
+                        destination[sample] = processor.processSampleModulated(destination[sample], delay, coefficient);
+                    }
+                } else if (operation.kind == OperationKind::lowpass) {
+                    auto& processor = std::get<reverb::dsp::OnePoleLowPass>(operation.processor);
+                    if (operation.cutoffModulation == noModulation) processor.process(destination);
+                    else for (std::size_t sample = 0; sample < count; ++sample) {
+                        processor.setCutoffHertz(implementation_->modulations[operation.cutoffModulation].values[sample]);
+                        processor.process(destination.subspan(sample, 1));
+                    }
+                } else if (operation.kind == OperationKind::pitchShift) {
+                    auto& processor = std::get<reverb::dsp::PitchShift>(operation.processor);
+                    for (std::size_t sample = 0; sample < count; ++sample) {
+                        processor.setParameters({
+                            operation.semitoneModulation == noModulation ? operation.baseSemitones : implementation_->modulations[operation.semitoneModulation].values[sample],
+                            operation.grainModulation == noModulation ? operation.baseGrainMilliseconds : implementation_->modulations[operation.grainModulation].values[sample],
+                            operation.overlapModulation == noModulation ? operation.baseOverlap : implementation_->modulations[operation.overlapModulation].values[sample],
+                            operation.grainDirection, operation.basePhaseCycles });
+                        processor.process(destination.subspan(sample, 1));
+                    }
+                } else if (operation.kind == OperationKind::envelopeFollower) {
+                    for (std::size_t sample = 0; sample < count; ++sample)
+                        destination[sample] = std::get<reverb::dsp::EnvelopeFollower>(operation.processor)
+                            .processSample(fullBuffer(operation.inputs.front())[sample]);
+                } else if (operation.kind == OperationKind::holdGate) {
+                    for (std::size_t sample = 0; sample < count; ++sample) {
+                        const auto control = operation.controlInput == noModulation ? 0.0
+                            : mapControlValue(fullBuffer(operation.controlInput)[sample], operation.controlCurveFamily,
+                                operation.controlCurveAmount, operation.controlExponent, operation.controlScale,
+                                operation.controlOffset, operation.controlPolarity, operation.controlClampMinimum,
+                                operation.controlClampMaximum);
+                        destination[sample] = std::get<reverb::dsp::HoldGate>(operation.processor)
+                            .processSample(destination[sample], static_cast<float>(control));
+                    }
+                }
+            }
+        };
+        auto sampleBuffer = [this](const std::size_t index, const std::size_t sample) {
+            return std::span<float>(implementation_->buffers[index]).subspan(sample, 1);
+        };
+        auto cursor = std::size_t {};
+        for (const auto& [regionBegin, regionEnd] : implementation_->sampleWiseRegions) {
+            processBlockRange(cursor, regionBegin);
+            for (std::size_t sampleIndex = 0; sampleIndex < count; ++sampleIndex) {
+            for (auto operationIndex = regionBegin;
+                operationIndex < regionEnd; ++operationIndex) {
+                auto& operation = implementation_->operations[operationIndex];
+                if (operation.kind != OperationKind::delay) continue;
                 if (operation.delayModulation != noModulation)
                     std::get<reverb::dsp::Delay>(operation.processor).setDelayMilliseconds(
                         implementation_->modulations[operation.delayModulation].values[sampleIndex]);
-                implementation_->buffers[operation.outputs.front()][0] = std::get<reverb::dsp::Delay>(operation.processor).readSample();
+                implementation_->buffers[operation.outputs.front()][sampleIndex]
+                    = std::get<reverb::dsp::Delay>(operation.processor).readSample();
             }
-            for (auto& operation : implementation_->operations) {
+            for (auto operationIndex = regionBegin;
+                operationIndex < regionEnd; ++operationIndex) {
+                auto& operation = implementation_->operations[operationIndex];
                 if (operation.kind == OperationKind::input || operation.kind == OperationKind::output || operation.kind == OperationKind::delay) continue;
-                auto destination = sampleBuffer(operation.outputs.front());
-                std::ranges::copy(sampleBuffer(operation.inputs.front()), destination.begin());
+                auto destination = sampleBuffer(operation.outputs.front(), sampleIndex);
+                std::ranges::copy(sampleBuffer(operation.inputs.front(), sampleIndex), destination.begin());
                 if (operation.kind == OperationKind::sum) {
-                    reverb::dsp::Sum::process(destination, sampleBuffer(operation.inputs[1]), destination);
+                    reverb::dsp::Sum::process(destination, sampleBuffer(operation.inputs[1], sampleIndex), destination);
                     destination.front() *= operation.sumGain;
                 } else if (operation.kind == OperationKind::gain) {
                     if (operation.gainModulation == noModulation) {
@@ -541,12 +620,12 @@ void PreparedAcyclicRuntime::process(
                 }
                 else if (operation.kind == OperationKind::envelopeFollower) {
                     destination.front() = std::get<reverb::dsp::EnvelopeFollower>(operation.processor)
-                        .processSample(implementation_->buffers[operation.inputs.front()][0]);
+                        .processSample(implementation_->buffers[operation.inputs.front()][sampleIndex]);
                 } else if (operation.kind == OperationKind::holdGate) {
                     const auto control = operation.controlInput == noModulation
                         ? 0.0
                         : mapControlValue(
-                            implementation_->buffers[operation.controlInput][0],
+                            implementation_->buffers[operation.controlInput][sampleIndex],
                             operation.controlCurveFamily, operation.controlCurveAmount,
                             operation.controlExponent, operation.controlScale, operation.controlOffset,
                             operation.controlPolarity, operation.controlClampMinimum,
@@ -555,11 +634,19 @@ void PreparedAcyclicRuntime::process(
                         .processSample(destination.front(), static_cast<float>(control));
                 }
             }
-            for (auto& operation : implementation_->operations) if (operation.kind == OperationKind::delay)
-                std::get<reverb::dsp::Delay>(operation.processor).writeSample(implementation_->buffers[operation.inputs.front()][0]);
-            outputLeft[sampleIndex] = implementation_->buffers[implementation_->outputLeftInput][0];
-            outputRight[sampleIndex] = implementation_->buffers[implementation_->outputRightInput][0];
+            for (auto operationIndex = regionBegin;
+                operationIndex < regionEnd; ++operationIndex) {
+                auto& operation = implementation_->operations[operationIndex];
+                if (operation.kind == OperationKind::delay)
+                    std::get<reverb::dsp::Delay>(operation.processor).writeSample(
+                        implementation_->buffers[operation.inputs.front()][sampleIndex]);
+            }
+            }
+            cursor = regionEnd;
         }
+        processBlockRange(cursor, implementation_->operations.size());
+        std::ranges::copy(fullBuffer(implementation_->outputLeftInput), outputLeft.begin());
+        std::ranges::copy(fullBuffer(implementation_->outputRightInput), outputRight.begin());
         return;
     }
     auto buffer = [this, count](const std::size_t index) { return std::span<float>(implementation_->buffers[index]).first(count); };
@@ -806,12 +893,26 @@ AcyclicCompileResult compileAcyclicGraph(
         std::chrono::duration_cast<std::chrono::microseconds>(validationFinished - compileStarted).count());
     if (!result.errors.empty()) return finish();
 
-    std::priority_queue<std::string, std::vector<std::string>, std::greater<>> ready;
-    for (const auto& [id, degree] : indegree) if (degree == 0) ready.push(id);
+    std::unordered_map<std::string, std::size_t> feedbackRegionByNode;
+    if (allowFeedback) {
+        for (const auto& component : cyclicComponents(nodes, adjacency)) {
+            if (std::ranges::any_of(component, [&](const auto& id) { return nodes.at(id)->type == "delay"; })) {
+                result.feedbackComponents.push_back(component);
+                const auto region = result.feedbackComponents.size();
+                for (const auto& id : component) feedbackRegionByNode.emplace(id, region);
+            }
+        }
+    }
+    using ReadyNode = std::pair<std::size_t, std::string>;
+    std::priority_queue<ReadyNode, std::vector<ReadyNode>, std::greater<>> ready;
+    for (const auto& [id, degree] : indegree)
+        if (degree == 0) ready.emplace(feedbackRegionByNode.contains(id) ? feedbackRegionByNode.at(id) : 0, id);
     while (!ready.empty()) {
-        auto id = ready.top(); ready.pop(); result.schedule.push_back(id);
+        auto id = ready.top().second; ready.pop(); result.schedule.push_back(id);
         auto targets = executionAdjacency[id]; std::ranges::sort(targets);
-        for (const auto& target : targets) if (--indegree[target] == 0) ready.push(target);
+        for (const auto& target : targets)
+            if (--indegree[target] == 0) ready.emplace(
+                feedbackRegionByNode.contains(target) ? feedbackRegionByNode.at(target) : 0, target);
     }
     if (result.schedule.size() != nodes.size()) {
         if (allowFeedback) {
@@ -826,13 +927,6 @@ AcyclicCompileResult compileAcyclicGraph(
                 std::chrono::steady_clock::now() - validationFinished).count());
         return finish();
     }
-    if (allowFeedback) {
-        for (const auto& component : cyclicComponents(nodes, adjacency)) {
-            if (std::ranges::any_of(component, [&](const auto& id) { return nodes.at(id)->type == "delay"; }))
-                result.feedbackComponents.push_back(component);
-        }
-    }
-
     const auto inputId = std::ranges::find_if(document.nodes, [](const Node& node) { return node.type == "stereo-input"; })->id;
     const auto outputId = std::ranges::find_if(document.nodes, [](const Node& node) { return node.type == "stereo-output"; })->id;
 
@@ -912,7 +1006,7 @@ AcyclicCompileResult compileAcyclicGraph(
         || std::ranges::any_of(document.nodes, [](const auto& node) {
             return node.type == "envelope-follower" || node.type == "hold-gate";
         });
-    result.planDiagnostics.executionDomain = sampleWisePlan ? "sample-wise" : "block-wise";
+    result.planDiagnostics.executionDomain = sampleWisePlan ? "hybrid" : "block-wise";
     std::map<std::string, WorkloadFamily> familyProfile;
     std::size_t audioOperationCount = 0;
     for (const auto& node : document.nodes) {
@@ -946,10 +1040,6 @@ AcyclicCompileResult compileAcyclicGraph(
         implementation->controlQuantumSamples = controlPlan.quantumSamples == 0 ? 1 : controlPlan.quantumSamples;
         implementation->delayArena.assign(result.delayMemory.allocatedSamples, 0.0F);
         implementation->feedbackMode = allowFeedback && !result.feedbackComponents.empty();
-        implementation->sampleWiseMode = implementation->feedbackMode
-            || std::ranges::any_of(document.nodes, [](const auto& node) {
-                return node.type == "envelope-follower" || node.type == "hold-gate";
-            });
         implementation->buffers.emplace_back(maximumBlockSize, 0.0F); implementation->silenceBuffer = 0;
         std::unordered_map<std::string, std::size_t> outputBuffers;
         std::size_t delayArenaOffset = 0;
@@ -1117,6 +1207,70 @@ AcyclicCompileResult compileAcyclicGraph(
                 if (const auto* gain = parameter(node, "gain")) operation.sumGain = static_cast<float>(gain->value);
             }
             implementation->operations.push_back(std::move(operation));
+        }
+        std::unordered_map<std::string, std::size_t> operationIndexById;
+        for (std::size_t index = 0; index < implementation->operations.size(); ++index)
+            operationIndexById.emplace(implementation->operations[index].id, index);
+        std::vector<std::pair<std::size_t, std::size_t>> sampleRegions;
+        const auto regionFor = [&](const std::vector<std::string>& ids) {
+            auto begin = implementation->operations.size();
+            auto end = std::size_t {};
+            for (const auto& id : ids)
+                if (const auto found = operationIndexById.find(id); found != operationIndexById.end()) {
+                    begin = std::min(begin, found->second);
+                    end = std::max(end, found->second + 1);
+                }
+            if (begin < end) sampleRegions.emplace_back(begin, end);
+        };
+        for (const auto& component : result.feedbackComponents) regionFor(component);
+        for (const auto& node : document.nodes) {
+            if (node.type != "hold-gate") continue;
+            const auto gateCable = incoming.find(portKey(node.id, "gate"));
+            if (gateCable == incoming.end()) continue;
+            auto sourceId = gateCable->second->from.nodeId;
+            if (nodes.at(sourceId)->type == "control-map") {
+                const auto mapperInput = incoming.find(portKey(sourceId, "in"));
+                if (mapperInput != incoming.end()) sourceId = mapperInput->second->from.nodeId;
+            }
+            regionFor({ sourceId, node.id });
+        }
+        std::ranges::sort(sampleRegions);
+        for (const auto& region : sampleRegions) {
+            if (!implementation->sampleWiseRegions.empty()
+                && region.first < implementation->sampleWiseRegions.back().second)
+                implementation->sampleWiseRegions.back().second = std::max(
+                    implementation->sampleWiseRegions.back().second, region.second);
+            else implementation->sampleWiseRegions.push_back(region);
+        }
+        if (!implementation->sampleWiseRegions.empty()) {
+            result.planDiagnostics.sampleWiseRegionCount = implementation->sampleWiseRegions.size();
+            auto cursor = std::size_t {};
+            std::size_t sampleOperationCount = 0;
+            for (const auto& [begin, end] : implementation->sampleWiseRegions) {
+                result.planDiagnostics.blockWiseRegionCount += static_cast<std::size_t>(begin > cursor);
+                sampleOperationCount += static_cast<std::size_t>(std::ranges::count_if(
+                    implementation->operations.begin() + static_cast<std::ptrdiff_t>(begin),
+                    implementation->operations.begin() + static_cast<std::ptrdiff_t>(end),
+                    [](const auto& operation) {
+                        return operation.kind != OperationKind::input && operation.kind != OperationKind::output;
+                    }));
+                cursor = end;
+            }
+            result.planDiagnostics.blockWiseRegionCount += static_cast<std::size_t>(
+                cursor < implementation->operations.size());
+            result.planDiagnostics.executionDomain = result.planDiagnostics.blockWiseRegionCount > 0
+                ? "hybrid" : "sample-wise";
+            if (auto dispatch = std::ranges::find(result.planDiagnostics.workloadFamilies,
+                    "sample-wise-dispatch", &WorkloadFamily::family);
+                dispatch != result.planDiagnostics.workloadFamilies.end()) {
+                result.planDiagnostics.estimatedScalarOperationsPerSample -= dispatch->estimatedScalarOperationsPerSample;
+                dispatch->nodeCount = sampleOperationCount;
+                dispatch->estimatedScalarOperationsPerSample = sampleOperationCount * 2;
+                result.planDiagnostics.estimatedScalarOperationsPerSample += dispatch->estimatedScalarOperationsPerSample;
+            }
+        } else {
+            result.planDiagnostics.blockWiseRegionCount = implementation->operations.empty() ? 0 : 1;
+            result.planDiagnostics.executionDomain = "block-wise";
         }
         for (const auto& mapping : controlPlan.mappings) {
             if (mapping.parameterId != "gain" && mapping.parameterId != "delay"

@@ -306,7 +306,7 @@ function DiagnosticsPanel({ diagnostics, runawayLoop, canUndo, onUndo, onRecover
         <section><span>MEMORY / PREPARED</span><strong>{formatBytes(diagnostics.preparedGraph.preparedStorageBytes)}</strong><small>{formatBytes(diagnostics.delayMemory.bytes)} delays · {diagnostics.delayMemory.lineCount} lines</small></section>
         <section><span>LATENCY / COMPILED</span><strong>{diagnostics.latency.samples.toLocaleString()} samples</strong><small>{diagnostics.latency.milliseconds.toFixed(2)} ms · host {diagnostics.latency.hostReportedSamples.toLocaleString()}</small></section>
         <section><span>CLIPPING / MEASURED</span><strong>{diagnostics.clipping.samples.toLocaleString()} samples</strong><small>{diagnostics.clipping.blocks.toLocaleString()} affected blocks</small></section>
-        <section><span>GRAPH / PREPARED</span><strong>{diagnostics.preparedGraph.nodeCount} nodes</strong><small>{diagnostics.preparedGraph.connectionCount} cables · {diagnostics.preparedGraph.feedbackRegionCount} feedback regions</small></section>
+        <section><span>GRAPH / PREPARED</span><strong>{diagnostics.preparedGraph.nodeCount} nodes</strong><small>{diagnostics.preparedGraph.connectionCount} cables · {diagnostics.preparedGraph.blockWiseRegionCount} block / {diagnostics.preparedGraph.sampleWiseRegionCount} sample regions</small></section>
       </div>
       <dl className="revision-diagnostic">
         <div><dt>ACTIVE GRAPH REVISION</dt><dd>#{diagnostics.topologyPublication.activeRevision || diagnostics.activeGraphRevision}</dd></div>

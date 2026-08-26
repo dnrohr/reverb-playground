@@ -73,6 +73,8 @@ struct PreparedGraphDiagnostics final {
     std::size_t nodeCount {};
     std::size_t connectionCount {};
     std::size_t feedbackRegionCount {};
+    std::size_t blockWiseRegionCount {};
+    std::size_t sampleWiseRegionCount {};
     std::size_t preparedStorageBytes {};
     std::size_t estimatedScalarOperationsPerSample {};
     std::string executionDomain;

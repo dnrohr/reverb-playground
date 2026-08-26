@@ -153,6 +153,8 @@ PerformanceCaseResult measurePerformanceCase(const PerformanceCaseRequest& reque
     result.nodeCount = normalSnapshot.activePlanDiagnostics.nodeCount;
     result.connectionCount = normalSnapshot.activePlanDiagnostics.connectionCount;
     result.feedbackRegionCount = normalSnapshot.activePlanDiagnostics.feedbackRegionCount;
+    result.blockWiseRegionCount = normalSnapshot.activePlanDiagnostics.blockWiseRegionCount;
+    result.sampleWiseRegionCount = normalSnapshot.activePlanDiagnostics.sampleWiseRegionCount;
     result.estimatedOperationsPerSample = normalSnapshot.activePlanDiagnostics.estimatedScalarOperationsPerSample;
     result.executionDomain = normalSnapshot.activePlanDiagnostics.executionDomain;
     result.validationMicroseconds = normalSnapshot.activePlanDiagnostics.compileTiming.validationMicroseconds;
@@ -197,6 +199,8 @@ std::string performanceMatrixJson(
                 { "nodeCount", result.nodeCount },
                 { "connectionCount", result.connectionCount },
                 { "feedbackRegionCount", result.feedbackRegionCount },
+                { "blockWiseRegionCount", result.blockWiseRegionCount },
+                { "sampleWiseRegionCount", result.sampleWiseRegionCount },
                 { "estimatedOperationsPerSample", result.estimatedOperationsPerSample },
                 { "executionDomain", result.executionDomain },
             } },

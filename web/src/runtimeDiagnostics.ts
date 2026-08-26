@@ -1,7 +1,7 @@
 export interface RuntimeDiagnostics {
   formatVersion: 1;
   activeGraphRevision: number;
-  workloadEstimate: { basis: 'prepared-plan-estimate' | 'barr-static-estimate'; scalarOperationsPerSample: number; scalarOperationsPerSecond: number; executionDomain: 'block-wise' | 'sample-wise'; families: { family: string; nodeCount: number; estimatedScalarOperationsPerSample: number }[] };
+  workloadEstimate: { basis: 'prepared-plan-estimate' | 'barr-static-estimate'; scalarOperationsPerSample: number; scalarOperationsPerSecond: number; executionDomain: 'block-wise' | 'sample-wise' | 'hybrid'; families: { family: string; nodeCount: number; estimatedScalarOperationsPerSample: number }[] };
   liveCpu: { basis: 'measured'; processedBlocks: number; loadPercent: number; peakLoadPercent: number };
   delayMemory: { basis: 'prepared-allocation'; lineCount: number; bytes: number };
   latency: {
@@ -10,7 +10,7 @@ export interface RuntimeDiagnostics {
     parallelJoins: { nodeId: string; minimumInputSamples: number; maximumInputSamples: number; uncompensatedSamples: number }[];
     compensationPolicy: string;
   };
-  preparedGraph: { nodeCount: number; connectionCount: number; feedbackRegionCount: number; preparedStorageBytes: number; compileTiming: { validationMicroseconds: number; schedulingMicroseconds: number; preparationMicroseconds: number; totalMicroseconds: number; requestToActiveMicroseconds: number } };
+  preparedGraph: { nodeCount: number; connectionCount: number; feedbackRegionCount: number; blockWiseRegionCount: number; sampleWiseRegionCount: number; preparedStorageBytes: number; compileTiming: { validationMicroseconds: number; schedulingMicroseconds: number; preparationMicroseconds: number; totalMicroseconds: number; requestToActiveMicroseconds: number } };
   clipping: { basis: 'measured'; samples: number; blocks: number };
   mute: { manual: boolean; safetyLatched: boolean; active: boolean };
   safetyEventCoherent: boolean;
@@ -61,7 +61,7 @@ export function parseRuntimeDiagnostics(value: unknown): RuntimeDiagnostics {
   const mute = record(root.mute, 'mute');
   const topology = record(root.topologyPublication, 'topology publication');
   if ((estimate.basis !== 'prepared-plan-estimate' && estimate.basis !== 'barr-static-estimate') || cpu.basis !== 'measured' || memory.basis !== 'prepared-allocation' || latency.basis !== 'compiled-active-graph' || clipping.basis !== 'measured') throw new Error('diagnostic bases are invalid');
-  if (estimate.executionDomain !== 'block-wise' && estimate.executionDomain !== 'sample-wise') throw new Error('execution domain is invalid');
+  if (estimate.executionDomain !== 'block-wise' && estimate.executionDomain !== 'sample-wise' && estimate.executionDomain !== 'hybrid') throw new Error('execution domain is invalid');
   if (!Array.isArray(estimate.families)) throw new Error('workload families must be an array');
   const families = estimate.families.map((item, index) => {
     const family = record(item, `workload family ${index}`);
@@ -94,7 +94,7 @@ export function parseRuntimeDiagnostics(value: unknown): RuntimeDiagnostics {
     liveCpu: { basis: 'measured', processedBlocks: count(cpu.processedBlocks, 'processed blocks'), loadPercent: finite(cpu.loadPercent, 'live load'), peakLoadPercent: finite(cpu.peakLoadPercent, 'peak load') },
     delayMemory: { basis: 'prepared-allocation', lineCount: count(memory.lineCount, 'delay lines'), bytes: count(memory.bytes, 'delay bytes') },
     latency: { basis: 'compiled-active-graph', samples: count(latency.samples, 'graph latency samples'), milliseconds: finite(latency.milliseconds, 'graph latency milliseconds'), hostReportedSamples: count(latency.hostReportedSamples, 'host latency samples'), outputPaths, parallelJoins, compensationPolicy: text(latency.compensationPolicy, 'latency compensation policy') },
-    preparedGraph: { nodeCount: count(preparedGraph.nodeCount, 'prepared node count'), connectionCount: count(preparedGraph.connectionCount, 'prepared connection count'), feedbackRegionCount: count(preparedGraph.feedbackRegionCount, 'feedback region count'), preparedStorageBytes: count(preparedGraph.preparedStorageBytes, 'prepared storage'), compileTiming: { validationMicroseconds: count(compileTiming.validationMicroseconds, 'validation time'), schedulingMicroseconds: count(compileTiming.schedulingMicroseconds, 'scheduling time'), preparationMicroseconds: count(compileTiming.preparationMicroseconds, 'preparation time'), totalMicroseconds: count(compileTiming.totalMicroseconds, 'compile time'), requestToActiveMicroseconds: count(compileTiming.requestToActiveMicroseconds, 'request-to-active time') } },
+    preparedGraph: { nodeCount: count(preparedGraph.nodeCount, 'prepared node count'), connectionCount: count(preparedGraph.connectionCount, 'prepared connection count'), feedbackRegionCount: count(preparedGraph.feedbackRegionCount, 'feedback region count'), blockWiseRegionCount: count(preparedGraph.blockWiseRegionCount, 'block-wise region count'), sampleWiseRegionCount: count(preparedGraph.sampleWiseRegionCount, 'sample-wise region count'), preparedStorageBytes: count(preparedGraph.preparedStorageBytes, 'prepared storage'), compileTiming: { validationMicroseconds: count(compileTiming.validationMicroseconds, 'validation time'), schedulingMicroseconds: count(compileTiming.schedulingMicroseconds, 'scheduling time'), preparationMicroseconds: count(compileTiming.preparationMicroseconds, 'preparation time'), totalMicroseconds: count(compileTiming.totalMicroseconds, 'compile time'), requestToActiveMicroseconds: count(compileTiming.requestToActiveMicroseconds, 'request-to-active time') } },
     clipping: { basis: 'measured', samples: count(clipping.samples, 'clipped samples'), blocks: count(clipping.blocks, 'clipped blocks') },
     mute: parsedMute,
     safetyEventCoherent: coherent,

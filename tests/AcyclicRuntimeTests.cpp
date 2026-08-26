@@ -554,6 +554,8 @@ TEST_CASE("Prepared plan profiles actual families and execution domain off the a
     REQUIRE(blockPlan.planDiagnostics.connectionCount == 5);
     REQUIRE(blockPlan.planDiagnostics.feedbackRegionCount == 0);
     REQUIRE(blockPlan.planDiagnostics.executionDomain == "block-wise");
+    REQUIRE(blockPlan.planDiagnostics.blockWiseRegionCount == 1);
+    REQUIRE(blockPlan.planDiagnostics.sampleWiseRegionCount == 0);
     REQUIRE(blockPlan.planDiagnostics.estimatedScalarOperationsPerSample == 4);
     REQUIRE(blockPlan.planDiagnostics.preparedStorageBytes == blockPlan.runtime->preparedStorageBytes());
     REQUIRE(blockPlan.planDiagnostics.compileTiming.totalMicroseconds >=
@@ -580,7 +582,9 @@ TEST_CASE("Prepared plan profiles actual families and execution domain off the a
     const auto samplePlan = compileFeedbackGraph(feedback, 48'000.0, 64);
     REQUIRE(samplePlan.valid());
     REQUIRE(samplePlan.planDiagnostics.feedbackRegionCount == 1);
-    REQUIRE(samplePlan.planDiagnostics.executionDomain == "sample-wise");
+    REQUIRE(samplePlan.planDiagnostics.executionDomain == "hybrid");
+    REQUIRE(samplePlan.planDiagnostics.blockWiseRegionCount == 2);
+    REQUIRE(samplePlan.planDiagnostics.sampleWiseRegionCount == 1);
     const auto dispatch = std::ranges::find(
         samplePlan.planDiagnostics.workloadFamilies, "sample-wise-dispatch", &WorkloadFamily::family);
     REQUIRE(dispatch != samplePlan.planDiagnostics.workloadFamilies.end());

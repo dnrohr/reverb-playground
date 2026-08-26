@@ -79,3 +79,28 @@ TEST_CASE("Published performance baseline covers every flagship graph rate and b
                     + "/" + std::to_string(block)));
     REQUIRE(cases.size() == 75);
 }
+
+TEST_CASE("M17 hybrid comparison publishes region counts for the complete matrix")
+{
+    const auto path = std::filesystem::path(REVERB_MEASUREMENTS_DIR)
+        / "performance-matrix-m17-1.json";
+    std::ifstream stream(path);
+    REQUIRE(stream.good());
+    const auto document = nlohmann::json::parse(stream);
+    REQUIRE(document.at("cases").size() == 75);
+    std::size_t hybridCases = 0;
+    for (const auto& measured : document.at("cases")) {
+        const auto& graph = measured.at("graph");
+        REQUIRE(graph.contains("blockWiseRegionCount"));
+        REQUIRE(graph.contains("sampleWiseRegionCount"));
+        if (graph.at("executionDomain") == "hybrid") {
+            ++hybridCases;
+            REQUIRE(graph.at("blockWiseRegionCount").get<std::size_t>() > 0);
+            REQUIRE(graph.at("sampleWiseRegionCount").get<std::size_t>() > 0);
+        }
+        REQUIRE(measured.at("finiteOutput").get<bool>());
+        REQUIRE(measured.at("budgets").at("withinNormalBudget").get<bool>());
+        REQUIRE(measured.at("budgets").at("withinCrossfadeBudget").get<bool>());
+    }
+    REQUIRE(hybridCases == 60);
+}

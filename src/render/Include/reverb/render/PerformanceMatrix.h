@@ -37,6 +37,8 @@ struct PerformanceCaseResult final {
     std::size_t nodeCount {};
     std::size_t connectionCount {};
     std::size_t feedbackRegionCount {};
+    std::size_t blockWiseRegionCount {};
+    std::size_t sampleWiseRegionCount {};
     std::size_t estimatedOperationsPerSample {};
     std::string executionDomain;
     std::uint64_t validationMicroseconds {};

@@ -578,6 +578,9 @@ TEST_CASE("Nested and multiple feedback loops compile and render deterministical
     REQUIRE(first.feedbackComponents == std::vector<std::vector<std::string>> {
         { "delay-a", "delay-b", "sum-a", "sum-b" }, { "delay-c", "sum-c" },
     });
+    REQUIRE(first.planDiagnostics.sampleWiseRegionCount == 2);
+    REQUIRE(first.planDiagnostics.blockWiseRegionCount >= 1);
+    REQUIRE(first.planDiagnostics.executionDomain == "hybrid");
     std::array<float, 16> left {}; std::array<float, 16> right {}; left[0] = 0.25F; right[0] = -0.5F;
     std::array<float, 16> firstLeft {}; std::array<float, 16> firstRight {}; std::array<float, 16> secondLeft {}; std::array<float, 16> secondRight {};
     first.runtime->process(left, right, firstLeft, firstRight); second.runtime->process(left, right, secondLeft, secondRight);
