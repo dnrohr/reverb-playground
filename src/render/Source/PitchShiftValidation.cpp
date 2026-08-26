@@ -235,6 +235,56 @@ ReverseGrainMetrics measureReverseGrain(const double sampleRate)
         std::sqrt(differenceEnergy / std::max(referenceEnergy, 1.0e-24)) };
 }
 
+PitchShiftBenchmarkMetrics measureBenchmark(const double sampleRate, const std::string& scenario)
+{
+    constexpr std::size_t blockSize = 256;
+    const auto processedFrames = static_cast<std::uint64_t>(sampleRate);
+    reverb::dsp::PitchShift first;
+    reverb::dsp::PitchShift second;
+    first.prepare(sampleRate, { 12.0, 60.0, 0.5,
+        reverb::dsp::pitch_shift::GrainDirection::forward });
+    second.prepare(sampleRate, { 7.0, 80.0, 0.65,
+        reverb::dsp::pitch_shift::GrainDirection::reverse, 0.373 });
+    std::array<float, blockSize> firstBlock {};
+    std::array<float, blockSize> secondBlock {};
+    for (std::size_t frame = 0; frame < blockSize; ++frame)
+        firstBlock[frame] = static_cast<float>(0.25 * std::sin(
+            2.0 * std::numbers::pi * 440.0 * static_cast<double>(frame) / sampleRate));
+    for (auto warmup = 0; warmup < 32; ++warmup) first.process(firstBlock);
+
+    const auto started = Clock::now();
+    std::uint64_t rendered = 0;
+    std::size_t blockIndex = 0;
+    while (rendered < processedFrames) {
+        const auto count = static_cast<std::size_t>(std::min<std::uint64_t>(blockSize, processedFrames - rendered));
+        const auto firstSpan = std::span(firstBlock).first(count);
+        if (scenario == "parameter-transition") {
+            first.setParameters({ blockIndex % 2 == 0 ? -12.0 : 12.0,
+                blockIndex % 2 == 0 ? 40.0 : 120.0,
+                blockIndex % 2 == 0 ? 0.25 : 1.0,
+                blockIndex % 2 == 0 ? reverb::dsp::pitch_shift::GrainDirection::forward
+                                    : reverb::dsp::pitch_shift::GrainDirection::reverse });
+        }
+        first.process(firstSpan);
+        if (scenario == "two-voices" || scenario == "topology-crossfade") {
+            std::copy(firstSpan.begin(), firstSpan.end(), secondBlock.begin());
+            second.process(std::span(secondBlock).first(count));
+            if (scenario == "topology-crossfade") {
+                const auto mix = static_cast<float>(rendered) / static_cast<float>(processedFrames);
+                for (std::size_t frame = 0; frame < count; ++frame)
+                    firstBlock[frame] = std::lerp(firstBlock[frame], secondBlock[frame], mix);
+            }
+        }
+        rendered += count;
+        ++blockIndex;
+    }
+    const auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - started).count();
+    const auto audioMicroseconds = 1'000'000.0 * static_cast<double>(processedFrames) / sampleRate;
+    return { scenario, processedFrames,
+        static_cast<std::uint64_t>(std::max<std::int64_t>(0, elapsed)),
+        100.0 * static_cast<double>(elapsed) / audioMicroseconds };
+}
+
 nlohmann::ordered_json directionJson(const PitchShiftDirectionMetrics& metrics)
 {
     return {
@@ -268,6 +318,10 @@ PitchShiftValidationReport measurePitchShiftValidation()
             0.0, 0.373, reverseGrain.correlation, reverseGrain.deterministic,
             reverseGrain.causal, reverseGrain.forwardPeakEnvelopeStep,
             reverseGrain.reversePeakEnvelopeStep, reverseGrain.envelopeDifferenceRms,
+            { measureBenchmark(sampleRate, "steady-state"),
+                measureBenchmark(sampleRate, "parameter-transition"),
+                measureBenchmark(sampleRate, "two-voices"),
+                measureBenchmark(sampleRate, "topology-crossfade") },
         });
     }
     return report;
@@ -277,6 +331,15 @@ std::string writePitchShiftValidationJson(const PitchShiftValidationReport& repo
 {
     auto rates = nlohmann::ordered_json::array();
     for (const auto& rate : report.rates) {
+        auto benchmarks = nlohmann::ordered_json::array();
+        for (const auto& benchmark : rate.benchmarks) {
+            benchmarks.push_back({
+                { "scenario", benchmark.scenario },
+                { "processedFrames", benchmark.processedFrames },
+                { "elapsedMicroseconds", benchmark.elapsedMicroseconds },
+                { "realtimeLoadPercent", benchmark.realtimeLoadPercent },
+            });
+        }
         rates.push_back({
             { "sampleRate", rate.sampleRate },
             { "latencySamples", rate.latencySamples },
@@ -299,6 +362,7 @@ std::string writePitchShiftValidationJson(const PitchShiftValidationReport& repo
                     { "fixtureSpacingMilliseconds", 137.0 },
                 } },
             } },
+            { "benchmarks", std::move(benchmarks) },
         });
     }
     return nlohmann::ordered_json {

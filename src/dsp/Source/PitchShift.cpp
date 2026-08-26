@@ -14,6 +14,22 @@ double wrappedPhase(const double phase) noexcept
     return wrapped < 0.0 ? wrapped + 1.0 : wrapped;
 }
 
+// Minimax-style low-order approximations on [0, pi/2]. The overlap gains do
+// not need libm accuracy, but preserving the endpoints is important for
+// click-free dual-grain hand-offs.
+void fastSinCosQuarterTurn(const double angle, float& sine, float& cosine) noexcept
+{
+    const auto x2 = angle * angle;
+    const auto sinValue = angle * (1.0 + x2 * (-1.666665710e-1
+        + x2 * (8.333017292e-3 + x2 * -1.980661520e-4)));
+    const auto mirrored = std::numbers::pi * 0.5 - angle;
+    const auto y2 = mirrored * mirrored;
+    const auto cosValue = mirrored * (1.0 + y2 * (-1.666665710e-1
+        + y2 * (8.333017292e-3 + y2 * -1.980661520e-4)));
+    sine = static_cast<float>(sinValue);
+    cosine = static_cast<float>(cosValue);
+}
+
 } // namespace
 
 void PitchShift::prepare(const double sampleRate, const PitchShiftParameters& parameters)
@@ -52,8 +68,13 @@ void PitchShift::prepare(
     const auto safe = sanitize(parameters);
     currentSemitones_ = safe.semitones;
     targetSemitones_ = safe.semitones;
+    currentRatio_ = pitch_shift::ratioForSemitones(safe.semitones);
+    targetRatio_ = currentRatio_;
+    ratioMultiplier_ = 1.0;
     currentState_ = { safe.phaseCycles, safe.grainMilliseconds, safe.overlap,
         safe.direction, safe.phaseCycles };
+    targetState_ = currentState_;
+    configureState(currentState_);
     targetState_ = currentState_;
     reset();
 }
@@ -66,9 +87,13 @@ void PitchShift::reset() noexcept
     semitoneRampRemaining_ = 0;
     semitoneStep_ = 0.0;
     currentSemitones_ = targetSemitones_;
+    currentRatio_ = targetRatio_;
+    ratioMultiplier_ = 1.0;
     currentState_ = targetState_;
     currentState_.phase = currentState_.resetPhaseCycles;
     targetState_.phase = targetState_.resetPhaseCycles;
+    configureState(currentState_);
+    configureState(targetState_);
 }
 
 void PitchShift::process(const std::span<float> samples) noexcept
@@ -84,23 +109,26 @@ void PitchShift::process(const std::span<float> samples) noexcept
 
         if (semitoneRampRemaining_ > 0) {
             currentSemitones_ += semitoneStep_;
-            if (--semitoneRampRemaining_ == 0) currentSemitones_ = targetSemitones_;
+            currentRatio_ *= ratioMultiplier_;
+            if (--semitoneRampRemaining_ == 0) {
+                currentSemitones_ = targetSemitones_;
+                currentRatio_ = targetRatio_;
+            }
         }
-        const auto ratio = pitch_shift::ratioForSemitones(currentSemitones_);
-        auto output = renderState(currentState_, ratio);
+        auto output = renderState(currentState_, currentRatio_);
         if (transitionRemaining_ > 0) {
             const auto progress = 1.0 - static_cast<double>(transitionRemaining_)
                 / static_cast<double>(transitionSamples_);
-            output = std::lerp(output, renderState(targetState_, ratio), static_cast<float>(progress));
+            output = std::lerp(output, renderState(targetState_, currentRatio_), static_cast<float>(progress));
         }
 
         sample = std::clamp(output,
             -static_cast<float>(pitch_shift::maximumEqualPowerOutputMagnitude),
             static_cast<float>(pitch_shift::maximumEqualPowerOutputMagnitude));
-        writeIndex_ = (writeIndex_ + 1) % storage_.size();
-        advance(currentState_, sampleRate_);
+        if (++writeIndex_ == storage_.size()) writeIndex_ = 0;
+        advance(currentState_);
         if (transitionRemaining_ > 0) {
-            advance(targetState_, sampleRate_);
+            advance(targetState_);
             if (--transitionRemaining_ == 0) currentState_ = targetState_;
         }
     }
@@ -111,9 +139,12 @@ void PitchShift::setParameters(const PitchShiftParameters& parameters) noexcept
     const auto safe = sanitize(parameters);
     if (safe.semitones != targetSemitones_) {
         targetSemitones_ = safe.semitones;
+        targetRatio_ = pitch_shift::ratioForSemitones(targetSemitones_);
         semitoneRampRemaining_ = transitionSamples_;
         semitoneStep_ = (targetSemitones_ - currentSemitones_)
             / static_cast<double>(transitionSamples_);
+        ratioMultiplier_ = std::pow(targetRatio_ / currentRatio_,
+            1.0 / static_cast<double>(transitionSamples_));
     }
 
     if (safe.grainMilliseconds == targetState_.grainMilliseconds
@@ -129,12 +160,15 @@ void PitchShift::setParameters(const PitchShiftParameters& parameters) noexcept
     targetState_.direction = safe.direction;
     targetState_.phase = safe.phaseCycles;
     targetState_.resetPhaseCycles = safe.phaseCycles;
+    configureState(targetState_);
     transitionRemaining_ = transitionSamples_;
 }
 
 void PitchShift::settleParameters() noexcept
 {
     currentSemitones_ = targetSemitones_;
+    currentRatio_ = targetRatio_;
+    ratioMultiplier_ = 1.0;
     semitoneRampRemaining_ = 0;
     semitoneStep_ = 0.0;
     currentState_ = targetState_;
@@ -173,9 +207,9 @@ PitchShiftParameters PitchShift::sanitize(const PitchShiftParameters& parameters
 
 float PitchShift::renderState(const GrainState& state, const double ratio) const noexcept
 {
-    const auto grainSamples = state.grainMilliseconds * sampleRate_ / 1'000.0;
-    const auto head0 = wrappedPhase(state.phase);
-    const auto head1 = wrappedPhase(state.phase + 0.5);
+    const auto grainSamples = state.grainSamples;
+    const auto head0 = state.phase;
+    const auto head1 = state.phase < 0.5 ? state.phase + 0.5 : state.phase - 0.5;
     const auto delayFor = [&](const double phase) {
         if (state.direction == pitch_shift::GrainDirection::reverse)
             return static_cast<double>(latencySamples_) + (1.0 + ratio) * grainSamples * phase;
@@ -184,14 +218,14 @@ float PitchShift::renderState(const GrainState& state, const double ratio) const
             + (slope >= 0.0 ? slope * phase : -slope * (1.0 - phase));
     };
 
-    const auto raw = std::sin(std::numbers::pi * head0);
-    const auto dominance = raw * raw;
+    const auto dominance = 0.5 - 0.5 * state.windowCos;
     const auto halfWidth = state.overlap * 0.5;
     const auto blend = std::clamp(
         (dominance - (0.5 - halfWidth)) / (2.0 * halfWidth), 0.0, 1.0);
     const auto angle = blend * std::numbers::pi * 0.5;
-    const auto gain0 = static_cast<float>(std::sin(angle));
-    const auto gain1 = static_cast<float>(std::cos(angle));
+    float gain0 {};
+    float gain1 {};
+    fastSinCosQuarterTurn(angle, gain0, gain1);
     constexpr auto equalPowerHeadroom = static_cast<float>(std::numbers::sqrt2 / 2.0);
     return equalPowerHeadroom * (gain0 * readFractional(delayFor(head0))
         + gain1 * readFractional(delayFor(head1)));
@@ -200,17 +234,36 @@ float PitchShift::renderState(const GrainState& state, const double ratio) const
 float PitchShift::readFractional(const double delaySamples) const noexcept
 {
     const auto bounded = std::clamp(delaySamples, 1.0, static_cast<double>(storage_.size() - 2));
-    const auto lower = static_cast<std::size_t>(std::floor(bounded));
+    const auto lower = static_cast<std::size_t>(bounded);
     const auto fraction = static_cast<float>(bounded - static_cast<double>(lower));
-    const auto first = storage_[(writeIndex_ + storage_.size() - lower) % storage_.size()];
-    const auto second = storage_[(writeIndex_ + storage_.size() - lower - 1) % storage_.size()];
+    auto firstIndex = writeIndex_ + storage_.size() - lower;
+    if (firstIndex >= storage_.size()) firstIndex -= storage_.size();
+    auto secondIndex = firstIndex == 0 ? storage_.size() - 1 : firstIndex - 1;
+    const auto first = storage_[firstIndex];
+    const auto second = storage_[secondIndex];
     return std::lerp(first, second, fraction);
 }
 
-void PitchShift::advance(GrainState& state, const double sampleRate) noexcept
+void PitchShift::configureState(GrainState& state) const noexcept
 {
-    const auto grainSamples = std::max(1.0, state.grainMilliseconds * sampleRate / 1'000.0);
-    state.phase = wrappedPhase(state.phase + 1.0 / grainSamples);
+    state.phase = wrappedPhase(state.phase);
+    state.grainSamples = std::max(1.0, state.grainMilliseconds * sampleRate_ / 1'000.0);
+    state.phaseIncrement = 1.0 / state.grainSamples;
+    const auto phaseAngle = 2.0 * std::numbers::pi * state.phase;
+    const auto rotationAngle = 2.0 * std::numbers::pi * state.phaseIncrement;
+    state.windowCos = std::cos(phaseAngle);
+    state.windowSin = std::sin(phaseAngle);
+    state.rotationCos = std::cos(rotationAngle);
+    state.rotationSin = std::sin(rotationAngle);
+}
+
+void PitchShift::advance(GrainState& state) noexcept
+{
+    state.phase += state.phaseIncrement;
+    if (state.phase >= 1.0) state.phase -= 1.0;
+    const auto cosine = state.windowCos * state.rotationCos - state.windowSin * state.rotationSin;
+    state.windowSin = state.windowSin * state.rotationCos + state.windowCos * state.rotationSin;
+    state.windowCos = cosine;
 }
 
 } // namespace reverb::dsp

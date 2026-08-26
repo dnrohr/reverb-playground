@@ -18,6 +18,13 @@ struct PitchShiftDirectionMetrics final {
     std::uint64_t elapsedMicroseconds {};
 };
 
+struct PitchShiftBenchmarkMetrics final {
+    std::string scenario;
+    std::uint64_t processedFrames {};
+    std::uint64_t elapsedMicroseconds {};
+    double realtimeLoadPercent {};
+};
+
 struct PitchShiftRateMetrics final {
     double sampleRate {};
     std::size_t latencySamples {};
@@ -34,6 +41,7 @@ struct PitchShiftRateMetrics final {
     double forwardTransientPeakEnvelopeStep {};
     double reverseTransientPeakEnvelopeStep {};
     double transientEnvelopeDifferenceRms {};
+    std::vector<PitchShiftBenchmarkMetrics> benchmarks;
 };
 
 struct PitchShiftValidationReport final {

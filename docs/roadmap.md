@@ -1218,6 +1218,10 @@ Goal: reduce the remaining hot-path cost and octave-shifter latency after the hy
 
 ### M18.1 Optimize the dual-grain Pitch Shift inner loop
 
+Status: Complete (2026-08-26). See the
+[qualification report](pitch-shift-inner-loop-optimization.md) and checked
+[measurement artifact](../artifacts/measurements/pitch-shift-validation-v1.json).
+
 Replace avoidable per-sample transcendental, wrapping, modulo, and parameter work with prepared state while retaining the public dual-grain behavior.
 
 Acceptance criteria:

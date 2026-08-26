@@ -262,9 +262,9 @@ it is a comparative result, not a cross-machine guarantee.
 
 | Rate | Latency | Storage | CPU forward / reverse | Folded alias vs 400→800 Hz reference, forward / reverse |
 |---:|---:|---:|---:|---:|
-| 44.1 kHz | 15,878 / 360.05 ms | 127,024 bytes | 0.203% / 0.322% | -6.07 / -6.03 dB |
-| 48 kHz | 17,282 / 360.04 ms | 138,256 bytes | 0.240% / 0.230% | -0.001 / -0.001 dB |
-| 96 kHz | 34,562 / 360.02 ms | 276,496 bytes | 0.480% / 0.470% | -0.001 / -0.001 dB |
+| 44.1 kHz | 15,878 / 360.05 ms | 127,024 bytes | 0.08% / 0.08% | -6.07 / -6.03 dB |
+| 48 kHz | 17,282 / 360.04 ms | 138,256 bytes | 0.10% / 0.09% | -0.001 / -0.001 dB |
+| 96 kHz | 34,562 / 360.02 ms | 276,496 bytes | 0.17% / 0.19% | -0.001 / -0.001 dB |
 
 The alias fixture sends a sine at `0.35 × Fs` through `+12 st`: its desired
 `0.70 × Fs` result exceeds Nyquist and folds to `0.30 × Fs`. Linear
@@ -273,6 +273,11 @@ essentially as strong as the ordinary 400→800 Hz reference line; 44.1 kHz is
 about 6 dB lower for this grain/rate alignment. This is a disclosed quality
 limit, not a pass implying transparency. Shimmer graphs must band-limit before
 and after shifting, and shifted feedback must darken each circulation.
+
+The current report also contains the M18.1 steady, transition, two-voice, and
+topology-crossfade benchmark cases. See the
+[inner-loop optimization report](pitch-shift-inner-loop-optimization.md) for
+the exact baseline comparison and implementation boundary.
 
 Executable spectral fixtures also render a 220/277.18/329.63 Hz chord at
 44.1, 48, and 96 kHz. Each expected +12-semitone band dominates its unshifted

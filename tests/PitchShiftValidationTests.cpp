@@ -279,5 +279,15 @@ TEST_CASE("Checked Pitch Shift validation records rate quality latency storage C
         REQUIRE(reverseGrain.at("transientEnvelope").at("forwardPeakStep").get<double>() > 0.0);
         REQUIRE(reverseGrain.at("transientEnvelope").at("reversePeakStep").get<double>() > 0.0);
         REQUIRE(reverseGrain.at("transientEnvelope").at("normalizedDifferenceRms").get<double>() > 0.1);
+        REQUIRE(rate.at("benchmarks").size() == 4);
+        REQUIRE(rate.at("benchmarks").at(0).at("scenario") == "steady-state");
+        REQUIRE(rate.at("benchmarks").at(1).at("scenario") == "parameter-transition");
+        REQUIRE(rate.at("benchmarks").at(2).at("scenario") == "two-voices");
+        REQUIRE(rate.at("benchmarks").at(3).at("scenario") == "topology-crossfade");
+        for (const auto& benchmark : rate.at("benchmarks")) {
+            REQUIRE(benchmark.at("processedFrames") == static_cast<std::uint64_t>(sampleRate));
+            REQUIRE(benchmark.at("elapsedMicroseconds").get<std::uint64_t>() > 0);
+            REQUIRE(benchmark.at("realtimeLoadPercent").get<double>() < 10.0);
+        }
     }
 }

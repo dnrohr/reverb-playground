@@ -38,6 +38,12 @@ private:
         double overlap { pitch_shift::defaultOverlap };
         pitch_shift::GrainDirection direction { pitch_shift::GrainDirection::forward };
         double resetPhaseCycles { pitch_shift::defaultPhaseCycles };
+        double grainSamples { 1.0 };
+        double phaseIncrement {};
+        double windowCos { 1.0 };
+        double windowSin {};
+        double rotationCos { 1.0 };
+        double rotationSin {};
     };
 
     std::vector<float> ownedStorage_;
@@ -51,13 +57,17 @@ private:
     double currentSemitones_ { pitch_shift::defaultSemitones };
     double targetSemitones_ { pitch_shift::defaultSemitones };
     double semitoneStep_ {};
+    double currentRatio_ { 1.0 };
+    double targetRatio_ { 1.0 };
+    double ratioMultiplier_ { 1.0 };
     GrainState currentState_;
     GrainState targetState_;
 
     [[nodiscard]] static PitchShiftParameters sanitize(const PitchShiftParameters& parameters) noexcept;
     [[nodiscard]] float renderState(const GrainState& state, double ratio) const noexcept;
     [[nodiscard]] float readFractional(double delaySamples) const noexcept;
-    static void advance(GrainState& state, double sampleRate) noexcept;
+    void configureState(GrainState& state) const noexcept;
+    static void advance(GrainState& state) noexcept;
 };
 
 } // namespace reverb::dsp

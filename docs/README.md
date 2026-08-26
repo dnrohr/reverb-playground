@@ -66,6 +66,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Gravity Diffusion factory patch and teaching view](gravity-diffusion-factory-and-teaching.md) - project-authored provenance, reconstruction and modification guide, honest prediction/reference/live-measurement hierarchy, A/B workflow, and UI evidence.
 - [Gravity Diffusion validation and Windows package](gravity-validation-and-package.md) - multi-rate safety, macro sweeps, named-host restore, physical scaling evidence, and exact package identity.
 - [Visible Pitch Shift primitive design](pitch-shift-primitive-design.md) - mono dual-read-head semantics, fixed causal latency, grain controls, automation, quality limits, and prepared resource budgets.
+- [Pitch Shift inner-loop optimization](pitch-shift-inner-loop-optimization.md) - prepared phase/window/addressing work, transition behavior, same-machine Release measurements, and qualification boundary.
 - [Reverse grains and stereo decorrelation](reverse-grain-and-stereo-decorrelation.md) - deterministic phase pairing, causal boundaries, transient evidence, compatibility, and multirate budgets.
 - [Reverse Cosmic Shimmer topology design](reverse-cosmic-shimmer-topology-design.md) - causal-rise front end, paired reverse-octave returns, dark circulation, slow motion, and unequal stereo extraction.
 - [Safe Parallel Shimmer topology design](safe-parallel-shimmer-design.md) - visible post-tank octave branch, structural non-recirculation, stereo extraction, alignment, memory, and loudness budgets.
