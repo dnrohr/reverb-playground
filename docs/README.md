@@ -49,6 +49,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Stereo impulse and decay view](stereo-impulse-and-decay-view.md) - accessible channel waveforms, Schroeder decay, bounded zoom/pan, T30 estimates, and refusal explanations.
 - [Live energy telemetry](live-energy-telemetry.md) - fixed, non-blocking RMS snapshots; smoothed node/cable activity; disable and reduced-motion behavior.
 - [Runtime resource and safety diagnostics](runtime-resource-safety-diagnostics.md) - labeled estimates/measurements, prepared memory, clipping, revision-bound safety events, and explicit recovery.
+- [Hybrid executor qualification](hybrid-executor-qualification.md) - exact-commit M16/M17 comparison, correctness coverage, shimmer operation reduction, timing/memory gates, and M17 exit decision.
 - [Runaway-feedback safety and recovery](runaway-feedback-safety.md) - sustained detection, likely-loop guidance, muted Undo, and state-clearing recovery.
 - [Reverse, inverse, gated, and Bloom requirements](reverse-and-gated-architecture-requirements.md) - distinct impulse contracts, the causal first method, required primitives, and naming rules.
 - [Envelope Follower and Hold Gate](envelope-follower-and-hold-gate.md) - detector equation, gate timing/retrigger semantics, restricted routing, persistence, and feedback safety.

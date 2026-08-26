@@ -1194,7 +1194,7 @@ Acceptance criteria:
 - Modulated, feedback, nonlinear, tapped, branched, and telemetry-observed boundaries prevent unsafe fusion explicitly.
 - Exact/scalar-reference comparisons, denormal handling, clipping/safety behavior, and deterministic reload remain within documented tolerance.
 
-### M17.4 Qualify the hybrid executor
+### M17.4 Qualify the hybrid executor — Complete
 
 Compare the new plan with the M16 baseline and gate it on both correctness and material benefit.
 

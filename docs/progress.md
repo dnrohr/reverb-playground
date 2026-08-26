@@ -83,7 +83,7 @@ Last updated: 2026-08-26
 | M17.1 Partition sample-wise and block-wise execution domains | Complete | Deterministic SCC-local Delay read/evaluate/write regions, block-wise gaps, causal follower/gate regions, multi-loop scheduling, region diagnostics, and a 75-case comparison |
 | M17.2 Add buffer liveness, reuse, and safe aliasing | Complete | Deterministic last-use allocation, safe in-place aliases, control-buffer elision, protected boundaries, copy skipping, diagnostics, and a 75-case comparison |
 | M17.3 Fuse and specialize prepared block kernels | Complete | Typed static route fusion, SSE2/scalar copy-gain-mix kernels, hard boundary diagnostics, scalar equivalence, and a 75-case comparison |
-| M17.4 Qualify the hybrid executor | Planned | Full correctness qualification, M16 comparison, performance gates, and current explanatory evidence |
+| M17.4 Qualify the hybrid executor | Complete | Machine-checkable 75-case M16/M17 gates, complete correctness coverage, shimmer operation reduction at 48/96 kHz, bounded compile/publication/crossfade results, and current evidence |
 | M18.1-M18.4 Pitch/control optimization and specialization | Planned | Dual-grain hot-loop optimization; block control ramps; bounded quality modes; evidence-based AOT/JIT decision |
 
 ## M0.2 verification
