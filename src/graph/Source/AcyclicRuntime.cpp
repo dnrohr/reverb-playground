@@ -96,6 +96,27 @@ struct RuntimeModulation final {
 
 std::string portKey(const std::string& node, const std::string& port) { return node + "\n" + port; }
 
+std::uint64_t steadyNanoseconds() noexcept
+{
+    return static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count());
+}
+
+std::size_t estimatedOperationsPerSample(const std::string_view type) noexcept
+{
+    if (type == "gain") return 2;
+    if (type == "sum") return 2;
+    if (type == "delay") return 5;
+    if (type == "allpass") return 9;
+    if (type == "lowpass") return 6;
+    if (type == "pitch-shift") return 48;
+    if (type == "envelope-follower") return 8;
+    if (type == "hold-gate") return 7;
+    if (type == "lfo") return 1;
+    if (type == "control-map") return 2;
+    return 0;
+}
+
 const Parameter* parameter(const Node& node, const std::string_view id)
 {
     const auto found = std::ranges::find(node.parameters, id, &Parameter::id);
@@ -308,6 +329,7 @@ struct PreparedAcyclicRuntime::Impl final {
     std::size_t maximumBlockSize {};
     DelayMemoryPlan delayMemory;
     GraphLatencyPlan latency;
+    PreparedGraphDiagnostics planDiagnostics;
     std::vector<float> delayArena;
     bool feedbackMode {};
     bool sampleWiseMode {};
@@ -341,6 +363,7 @@ std::size_t PreparedAcyclicRuntime::preparedStorageBytes() const noexcept
 }
 const DelayMemoryPlan& PreparedAcyclicRuntime::delayMemoryPlan() const noexcept { return implementation_->delayMemory; }
 const GraphLatencyPlan& PreparedAcyclicRuntime::latencyPlan() const noexcept { return implementation_->latency; }
+const PreparedGraphDiagnostics& PreparedAcyclicRuntime::planDiagnostics() const noexcept { return implementation_->planDiagnostics; }
 
 void PreparedAcyclicRuntime::reset() noexcept
 {
@@ -627,10 +650,13 @@ AcyclicCompileResult compileAcyclicGraph(
 {
     AcyclicCompileResult result;
     result.warnings = document.migrationWarnings;
+    result.planDiagnostics.nodeCount = document.nodes.size();
+    result.planDiagnostics.connectionCount = document.connections.size();
     const auto compileStarted = std::chrono::steady_clock::now();
     const auto finish = [&]() {
         result.compileMicroseconds = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::microseconds>(
             std::chrono::steady_clock::now() - compileStarted).count());
+        result.planDiagnostics.compileTiming.totalMicroseconds = result.compileMicroseconds;
         return std::move(result);
     };
     if (sampleRate <= 0.0) result.errors.push_back("sample rate must be positive");
@@ -775,6 +801,9 @@ AcyclicCompileResult compileAcyclicGraph(
             }
         }
     }
+    const auto validationFinished = std::chrono::steady_clock::now();
+    result.planDiagnostics.compileTiming.validationMicroseconds = static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::microseconds>(validationFinished - compileStarted).count());
     if (!result.errors.empty()) return finish();
 
     std::priority_queue<std::string, std::vector<std::string>, std::greater<>> ready;
@@ -791,7 +820,11 @@ AcyclicCompileResult compileAcyclicGraph(
                 result.errors.push_back(loopMessage(loop)); result.offendingLoops.push_back(std::move(loop));
             }
         } else result.errors.push_back("acyclic compiler rejected a directed cycle; feedback compilation is provided by M3.4");
-        result.schedule.clear(); return finish();
+        result.schedule.clear();
+        result.planDiagnostics.compileTiming.schedulingMicroseconds = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::steady_clock::now() - validationFinished).count());
+        return finish();
     }
     if (allowFeedback) {
         for (const auto& component : cyclicComponents(nodes, adjacency)) {
@@ -867,6 +900,43 @@ AcyclicCompileResult compileAcyclicGraph(
         else if (!fromInput.contains(id)) result.warnings.push_back("node '" + id + "' is unreachable from stereo input");
         else if (!toOutput.contains(id)) result.warnings.push_back("node '" + id + "' cannot reach stereo output and is discarded");
     }
+
+    result.planDiagnostics.feedbackRegionCount = result.feedbackComponents.size();
+    std::size_t preparedAudioBufferCount = 1;
+    for (const auto& node : document.nodes)
+        preparedAudioBufferCount += static_cast<std::size_t>(
+            std::ranges::count(node.ports, PortDirection::output, &Port::direction));
+    result.planDiagnostics.preparedStorageBytes = result.delayMemory.allocatedBytes
+        + preparedAudioBufferCount * maximumBlockSize * sizeof(float);
+    const auto sampleWisePlan = !result.feedbackComponents.empty()
+        || std::ranges::any_of(document.nodes, [](const auto& node) {
+            return node.type == "envelope-follower" || node.type == "hold-gate";
+        });
+    result.planDiagnostics.executionDomain = sampleWisePlan ? "sample-wise" : "block-wise";
+    std::map<std::string, WorkloadFamily> familyProfile;
+    std::size_t audioOperationCount = 0;
+    for (const auto& node : document.nodes) {
+        const auto weight = estimatedOperationsPerSample(node.type);
+        if (weight == 0) continue;
+        auto& family = familyProfile[node.type];
+        family.family = node.type;
+        ++family.nodeCount;
+        family.estimatedScalarOperationsPerSample += weight;
+        result.planDiagnostics.estimatedScalarOperationsPerSample += weight;
+        if (node.type != "lfo" && node.type != "control-map" && node.type != "macro")
+            ++audioOperationCount;
+    }
+    if (sampleWisePlan && audioOperationCount > 0) {
+        const auto dispatchCost = audioOperationCount * 2;
+        familyProfile["sample-wise-dispatch"] = {
+            "sample-wise-dispatch", audioOperationCount, dispatchCost };
+        result.planDiagnostics.estimatedScalarOperationsPerSample += dispatchCost;
+    }
+    for (auto& [_, family] : familyProfile)
+        result.planDiagnostics.workloadFamilies.push_back(std::move(family));
+    const auto schedulingFinished = std::chrono::steady_clock::now();
+    result.planDiagnostics.compileTiming.schedulingMicroseconds = static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::microseconds>(schedulingFinished - validationFinished).count());
 
     try {
         auto implementation = std::make_unique<PreparedAcyclicRuntime::Impl>();
@@ -1079,8 +1149,19 @@ AcyclicCompileResult compileAcyclicGraph(
             else if (mapping.parameterId == "grain") operation->grainModulation = index;
             else operation->overlapModulation = index;
         }
+        result.planDiagnostics.compileTiming.preparationMicroseconds = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::steady_clock::now() - schedulingFinished).count());
+        result.planDiagnostics.compileTiming.totalMicroseconds =
+            result.planDiagnostics.compileTiming.validationMicroseconds
+            + result.planDiagnostics.compileTiming.schedulingMicroseconds
+            + result.planDiagnostics.compileTiming.preparationMicroseconds;
+        implementation->planDiagnostics = result.planDiagnostics;
         result.runtime = std::unique_ptr<PreparedAcyclicRuntime>(new PreparedAcyclicRuntime(std::move(implementation)));
     } catch (const std::exception& exception) {
+        result.planDiagnostics.compileTiming.preparationMicroseconds = static_cast<std::uint64_t>(
+            std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::steady_clock::now() - schedulingFinished).count());
         result.errors.push_back(std::string("runtime preparation failed: ") + exception.what());
         result.runtime.reset();
     }
@@ -1099,6 +1180,7 @@ struct AcyclicRuntimeHost::RuntimeEnvelope final {
     std::size_t crossfadeSamples {};
     std::vector<float> crossfadeLeft;
     std::vector<float> crossfadeRight;
+    std::uint64_t requestedAtNanoseconds {};
 };
 
 struct AcyclicRuntimeHost::CompilationRequest final {
@@ -1107,6 +1189,7 @@ struct AcyclicRuntimeHost::CompilationRequest final {
     std::size_t maximumBlockSize {};
     bool allowFeedback {};
     std::uint64_t revision {};
+    std::uint64_t requestedAtNanoseconds {};
 };
 
 AcyclicRuntimeHost::AcyclicRuntimeHost()
@@ -1131,22 +1214,28 @@ AcyclicRuntimeHost::~AcyclicRuntimeHost()
 AcyclicPublishResult AcyclicRuntimeHost::compileAndPublish(
     const GraphDocument& document, const double sampleRate, const std::size_t maximumBlockSize)
 {
+    const auto requestedAt = steadyNanoseconds();
     const auto revision = requestedRevision_.fetch_add(1, std::memory_order_acq_rel) + 1;
-    return publishCompiled(compileAcyclicGraph(document, sampleRate, maximumBlockSize), revision, sampleRate);
+    return publishCompiled(
+        compileAcyclicGraph(document, sampleRate, maximumBlockSize), revision, sampleRate, requestedAt);
 }
 
 AcyclicPublishResult AcyclicRuntimeHost::compileFeedbackAndPublish(
     const GraphDocument& document, const double sampleRate, const std::size_t maximumBlockSize)
 {
+    const auto requestedAt = steadyNanoseconds();
     const auto revision = requestedRevision_.fetch_add(1, std::memory_order_acq_rel) + 1;
-    return publishCompiled(compileFeedbackGraph(document, sampleRate, maximumBlockSize), revision, sampleRate);
+    return publishCompiled(
+        compileFeedbackGraph(document, sampleRate, maximumBlockSize), revision, sampleRate, requestedAt);
 }
 
 AcyclicPublishResult AcyclicRuntimeHost::publishCompiled(
-    AcyclicCompileResult result, const std::uint64_t revision, const double sampleRate)
+    AcyclicCompileResult result, const std::uint64_t revision, const double sampleRate,
+    const std::uint64_t requestedAtNanoseconds)
 {
     AcyclicPublishResult publication {
-        result.schedule, result.warnings, result.errors, result.delayMemory, result.latency };
+        result.schedule, result.warnings, result.errors, result.delayMemory, result.latency,
+        result.planDiagnostics };
     completedCompilations_.fetch_add(1, std::memory_order_relaxed);
     if (!result.valid()) {
         failedRevision_.store(revision, std::memory_order_release);
@@ -1161,9 +1250,19 @@ AcyclicPublishResult AcyclicRuntimeHost::publishCompiled(
     {
         std::scoped_lock lock(latencyPlansMutex_);
         latencyPlans_[revision] = result.latency;
-        while (latencyPlans_.size() > 32) latencyPlans_.erase(latencyPlans_.begin());
+        planDiagnostics_[revision] = result.planDiagnostics;
+        const auto active = activeRevision_.load(std::memory_order_acquire);
+        while (latencyPlans_.size() > 32) {
+            const auto candidate = std::ranges::find_if(latencyPlans_, [active, revision](const auto& item) {
+                return item.first != active && item.first != revision;
+            });
+            if (candidate == latencyPlans_.end()) break;
+            const auto staleRevision = candidate->first;
+            latencyPlans_.erase(candidate);
+            planDiagnostics_.erase(staleRevision);
+        }
     }
-    publishPending(std::move(result.runtime), revision, sampleRate);
+    publishPending(std::move(result.runtime), revision, sampleRate, requestedAtNanoseconds);
     return publication;
 }
 
@@ -1174,12 +1273,13 @@ std::uint64_t AcyclicRuntimeHost::requestCompilation(
     const bool allowFeedback)
 {
     const auto revision = requestedRevision_.fetch_add(1, std::memory_order_acq_rel) + 1;
+    const auto requestedAt = steadyNanoseconds();
     {
         std::scoped_lock lock(requestMutex_);
         if (latestRequest_ != nullptr)
             supersededRequests_.fetch_add(1, std::memory_order_relaxed);
         latestRequest_ = std::make_unique<CompilationRequest>(CompilationRequest {
-            std::move(document), sampleRate, maximumBlockSize, allowFeedback, revision });
+            std::move(document), sampleRate, maximumBlockSize, allowFeedback, revision, requestedAt });
     }
     requestCondition_.notify_one();
     return revision;
@@ -1207,6 +1307,9 @@ void AcyclicRuntimeHost::compilerLoop(const std::stop_token stopToken)
             if (requestedRevision_.load(std::memory_order_acquire) > request->revision
                 || (latestRequest_ != nullptr && latestRequest_->revision > request->revision)) {
                 supersededRequests_.fetch_add(1, std::memory_order_relaxed);
+                supersededCompilations_.fetch_add(1, std::memory_order_relaxed);
+                lastSupersededCompileMicroseconds_.store(
+                    result.compileMicroseconds, std::memory_order_release);
                 continue;
             }
         }
@@ -1214,9 +1317,21 @@ void AcyclicRuntimeHost::compilerLoop(const std::stop_token stopToken)
             {
                 std::scoped_lock lock(latencyPlansMutex_);
                 latencyPlans_[request->revision] = result.latency;
-                while (latencyPlans_.size() > 32) latencyPlans_.erase(latencyPlans_.begin());
+                planDiagnostics_[request->revision] = result.planDiagnostics;
+                const auto active = activeRevision_.load(std::memory_order_acquire);
+                while (latencyPlans_.size() > 32) {
+                    const auto candidate = std::ranges::find_if(
+                        latencyPlans_, [active, revision = request->revision](const auto& item) {
+                            return item.first != active && item.first != revision;
+                        });
+                    if (candidate == latencyPlans_.end()) break;
+                    const auto staleRevision = candidate->first;
+                    latencyPlans_.erase(candidate);
+                    planDiagnostics_.erase(staleRevision);
+                }
             }
-            publishPending(std::move(result.runtime), request->revision, request->sampleRate);
+            publishPending(std::move(result.runtime), request->revision, request->sampleRate,
+                request->requestedAtNanoseconds);
         } else {
             failedRevision_.store(request->revision, std::memory_order_release);
             std::scoped_lock lock(failureMutex_);
@@ -1233,7 +1348,8 @@ void AcyclicRuntimeHost::compilerLoop(const std::stop_token stopToken)
 void AcyclicRuntimeHost::publishPending(
     std::unique_ptr<PreparedAcyclicRuntime> runtime,
     const std::uint64_t revision,
-    const double sampleRate)
+    const double sampleRate,
+    const std::uint64_t requestedAtNanoseconds)
 {
     std::scoped_lock lock(pendingPublicationMutex_);
     const auto maximumBlockSize = runtime->maximumBlockSize();
@@ -1241,7 +1357,8 @@ void AcyclicRuntimeHost::publishPending(
         1.0, std::round(sampleRate * topologyCrossfadeMilliseconds / 1'000.0)));
     auto* envelope = new RuntimeEnvelope {
         std::move(runtime), revision, crossfadeSamples,
-        std::vector<float>(maximumBlockSize), std::vector<float>(maximumBlockSize) };
+        std::vector<float>(maximumBlockSize), std::vector<float>(maximumBlockSize),
+        requestedAtNanoseconds };
     const auto activeRevision = activeRevision_.load(std::memory_order_acquire);
     auto* currentPending = pendingRuntime_.load(std::memory_order_acquire);
     if (revision <= activeRevision
@@ -1249,13 +1366,18 @@ void AcyclicRuntimeHost::publishPending(
             && revision <= pendingRevision_.load(std::memory_order_acquire))) {
         delete envelope;
         supersededRequests_.fetch_add(1, std::memory_order_relaxed);
+        supersededCompilations_.fetch_add(1, std::memory_order_relaxed);
         return;
     }
     auto* superseded = pendingRuntime_.exchange(envelope, std::memory_order_acq_rel);
     pendingRevision_.store(revision, std::memory_order_release);
     if (superseded != nullptr) {
+        lastSupersededCompileMicroseconds_.store(
+            superseded->runtime->planDiagnostics().compileTiming.totalMicroseconds,
+            std::memory_order_release);
         delete superseded;
         supersededRequests_.fetch_add(1, std::memory_order_relaxed);
+        supersededCompilations_.fetch_add(1, std::memory_order_relaxed);
     }
 }
 
@@ -1306,10 +1428,15 @@ TopologyPublicationSnapshot AcyclicRuntimeHost::publicationSnapshot() const
     snapshot.lastCrossfadeToRevision = lastCrossfadeToRevision_.load(std::memory_order_acquire);
     snapshot.activeDelayLineCount = activeDelayLineCount_.load(std::memory_order_acquire);
     snapshot.activeDelayMemoryBytes = activeDelayMemoryBytes_.load(std::memory_order_acquire);
+    snapshot.activeRequestToActiveMicroseconds = activeRequestToActiveMicroseconds_.load(std::memory_order_acquire);
+    snapshot.supersededCompilations = supersededCompilations_.load(std::memory_order_acquire);
+    snapshot.lastSupersededCompileMicroseconds = lastSupersededCompileMicroseconds_.load(std::memory_order_acquire);
     {
         std::scoped_lock lock(latencyPlansMutex_);
         if (const auto found = latencyPlans_.find(snapshot.activeRevision); found != latencyPlans_.end())
             snapshot.activeLatency = found->second;
+        if (const auto found = planDiagnostics_.find(snapshot.activeRevision); found != planDiagnostics_.end())
+            snapshot.activePlanDiagnostics = found->second;
     }
     std::scoped_lock lock(failureMutex_);
     snapshot.failure = failure_;
@@ -1333,6 +1460,9 @@ void AcyclicRuntimeHost::process(
                 pending->runtime->delayMemoryPlan().allocatedBytes, std::memory_order_release);
             activeLatencySamples_.store(
                 pending->runtime->latencyPlan().totalSamples, std::memory_order_release);
+            activeRequestToActiveMicroseconds_.store(
+                (steadyNanoseconds() - pending->requestedAtNanoseconds) / 1'000,
+                std::memory_order_release);
             if (pendingRuntime_.load(std::memory_order_acquire) == nullptr)
                 pendingRevision_.store(0, std::memory_order_release);
             if (active != nullptr) {

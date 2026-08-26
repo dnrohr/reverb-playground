@@ -1122,7 +1122,7 @@ Acceptance criteria:
 - Dry/audition and parallel wet paths follow an explicit visible-compensation policy; no hidden delay makes the schematic disagree with audible routing.
 - Host tests verify latency reporting, state restoration, graph changes, bypass/dry alignment, and unchanged behavior in hosts that defer or ignore dynamic latency updates.
 
-### M16.3 Add graph-specific compile and workload diagnostics
+### M16.3 Add graph-specific compile and workload diagnostics — Complete
 
 Replace the fixed Barr workload estimate in constructed-graph mode with information produced by the actual prepared plan.
 

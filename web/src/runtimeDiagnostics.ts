@@ -1,7 +1,7 @@
 export interface RuntimeDiagnostics {
   formatVersion: 1;
   activeGraphRevision: number;
-  workloadEstimate: { basis: 'static-estimate'; scalarOperationsPerSample: number; scalarOperationsPerSecond: number };
+  workloadEstimate: { basis: 'prepared-plan-estimate' | 'barr-static-estimate'; scalarOperationsPerSample: number; scalarOperationsPerSecond: number; executionDomain: 'block-wise' | 'sample-wise'; families: { family: string; nodeCount: number; estimatedScalarOperationsPerSample: number }[] };
   liveCpu: { basis: 'measured'; processedBlocks: number; loadPercent: number; peakLoadPercent: number };
   delayMemory: { basis: 'prepared-allocation'; lineCount: number; bytes: number };
   latency: {
@@ -10,6 +10,7 @@ export interface RuntimeDiagnostics {
     parallelJoins: { nodeId: string; minimumInputSamples: number; maximumInputSamples: number; uncompensatedSamples: number }[];
     compensationPolicy: string;
   };
+  preparedGraph: { nodeCount: number; connectionCount: number; feedbackRegionCount: number; preparedStorageBytes: number; compileTiming: { validationMicroseconds: number; schedulingMicroseconds: number; preparationMicroseconds: number; totalMicroseconds: number; requestToActiveMicroseconds: number } };
   clipping: { basis: 'measured'; samples: number; blocks: number };
   mute: { manual: boolean; safetyLatched: boolean; active: boolean };
   safetyEventCoherent: boolean;
@@ -17,7 +18,7 @@ export interface RuntimeDiagnostics {
   recoveryCount: number;
   topologyPublication: {
     requestedRevision: number; pendingRevision: number; activeRevision: number; failedRevision: number;
-    supersededRequests: number; completedCompilations: number; reclaimedRuntimes: number;
+    supersededRequests: number; completedCompilations: number; supersededCompilations: number; lastSupersededCompileMicroseconds: number; reclaimedRuntimes: number;
     crossfadeFromRevision: number; crossfadePositionSamples: number; crossfadeTotalSamples: number;
     completedCrossfades: number; lastCrossfadeFromRevision: number; lastCrossfadeToRevision: number;
     activeDelayLineCount: number; activeDelayMemoryBytes: number;
@@ -54,10 +55,18 @@ export function parseRuntimeDiagnostics(value: unknown): RuntimeDiagnostics {
   const cpu = record(root.liveCpu, 'live CPU');
   const memory = record(root.delayMemory, 'delay memory');
   const latency = record(root.latency, 'latency');
+  const preparedGraph = record(root.preparedGraph, 'prepared graph');
+  const compileTiming = record(preparedGraph.compileTiming, 'compile timing');
   const clipping = record(root.clipping, 'clipping');
   const mute = record(root.mute, 'mute');
   const topology = record(root.topologyPublication, 'topology publication');
-  if (estimate.basis !== 'static-estimate' || cpu.basis !== 'measured' || memory.basis !== 'prepared-allocation' || latency.basis !== 'compiled-active-graph' || clipping.basis !== 'measured') throw new Error('diagnostic bases are invalid');
+  if ((estimate.basis !== 'prepared-plan-estimate' && estimate.basis !== 'barr-static-estimate') || cpu.basis !== 'measured' || memory.basis !== 'prepared-allocation' || latency.basis !== 'compiled-active-graph' || clipping.basis !== 'measured') throw new Error('diagnostic bases are invalid');
+  if (estimate.executionDomain !== 'block-wise' && estimate.executionDomain !== 'sample-wise') throw new Error('execution domain is invalid');
+  if (!Array.isArray(estimate.families)) throw new Error('workload families must be an array');
+  const families = estimate.families.map((item, index) => {
+    const family = record(item, `workload family ${index}`);
+    return { family: text(family.family, 'workload family name'), nodeCount: count(family.nodeCount, 'workload family nodes'), estimatedScalarOperationsPerSample: count(family.estimatedScalarOperationsPerSample, 'workload family operations') };
+  });
   if (!Array.isArray(latency.outputPaths) || !Array.isArray(latency.parallelJoins)) throw new Error('latency paths and joins must be arrays');
   const outputPaths = latency.outputPaths.map((item, index) => {
     const path = record(item, `latency output path ${index}`);
@@ -81,10 +90,11 @@ export function parseRuntimeDiagnostics(value: unknown): RuntimeDiagnostics {
   return {
     formatVersion: 1,
     activeGraphRevision: count(root.activeGraphRevision, 'active revision'),
-    workloadEstimate: { basis: 'static-estimate', scalarOperationsPerSample: count(estimate.scalarOperationsPerSample, 'estimated operations/sample'), scalarOperationsPerSecond: finite(estimate.scalarOperationsPerSecond, 'estimated operations/second') },
+    workloadEstimate: { basis: estimate.basis, scalarOperationsPerSample: count(estimate.scalarOperationsPerSample, 'estimated operations/sample'), scalarOperationsPerSecond: finite(estimate.scalarOperationsPerSecond, 'estimated operations/second'), executionDomain: estimate.executionDomain, families },
     liveCpu: { basis: 'measured', processedBlocks: count(cpu.processedBlocks, 'processed blocks'), loadPercent: finite(cpu.loadPercent, 'live load'), peakLoadPercent: finite(cpu.peakLoadPercent, 'peak load') },
     delayMemory: { basis: 'prepared-allocation', lineCount: count(memory.lineCount, 'delay lines'), bytes: count(memory.bytes, 'delay bytes') },
     latency: { basis: 'compiled-active-graph', samples: count(latency.samples, 'graph latency samples'), milliseconds: finite(latency.milliseconds, 'graph latency milliseconds'), hostReportedSamples: count(latency.hostReportedSamples, 'host latency samples'), outputPaths, parallelJoins, compensationPolicy: text(latency.compensationPolicy, 'latency compensation policy') },
+    preparedGraph: { nodeCount: count(preparedGraph.nodeCount, 'prepared node count'), connectionCount: count(preparedGraph.connectionCount, 'prepared connection count'), feedbackRegionCount: count(preparedGraph.feedbackRegionCount, 'feedback region count'), preparedStorageBytes: count(preparedGraph.preparedStorageBytes, 'prepared storage'), compileTiming: { validationMicroseconds: count(compileTiming.validationMicroseconds, 'validation time'), schedulingMicroseconds: count(compileTiming.schedulingMicroseconds, 'scheduling time'), preparationMicroseconds: count(compileTiming.preparationMicroseconds, 'preparation time'), totalMicroseconds: count(compileTiming.totalMicroseconds, 'compile time'), requestToActiveMicroseconds: count(compileTiming.requestToActiveMicroseconds, 'request-to-active time') } },
     clipping: { basis: 'measured', samples: count(clipping.samples, 'clipped samples'), blocks: count(clipping.blocks, 'clipped blocks') },
     mute: parsedMute,
     safetyEventCoherent: coherent,
@@ -97,6 +107,8 @@ export function parseRuntimeDiagnostics(value: unknown): RuntimeDiagnostics {
       failedRevision: count(topology.failedRevision, 'failed topology revision'),
       supersededRequests: count(topology.supersededRequests, 'superseded topology requests'),
       completedCompilations: count(topology.completedCompilations, 'completed topology compilations'),
+      supersededCompilations: count(topology.supersededCompilations, 'superseded topology compilations'),
+      lastSupersededCompileMicroseconds: count(topology.lastSupersededCompileMicroseconds, 'last superseded compile time'),
       reclaimedRuntimes: count(topology.reclaimedRuntimes, 'reclaimed topology runtimes'),
       crossfadeFromRevision: count(topology.crossfadeFromRevision, 'crossfade source revision'),
       crossfadePositionSamples: count(topology.crossfadePositionSamples, 'crossfade position'),

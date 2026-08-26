@@ -78,7 +78,8 @@ Last updated: 2026-08-25
 | Post-M15 startup and waveform polish | Complete | Eight-second timed Loading/Welcome presentation; slate/cyan waveform selection with amber active-loop state; deterministic palette/timing tests; refreshed UI evidence |
 | M16.1 Constrain Pitch Shift to one octave and migrate safely | Complete | Unified -12...+12 DSP/graph/editor contract; +7 perfect fifth; deterministic schema-v2 clamp warning; exact 44.1/48/96/192 kHz latency and storage tests; factory qualification |
 | M16.2 Compile graph latency and report it to hosts | Complete | Prepared causal paths add serial latency, expose parallel differences without hidden compensation, and publish active processed latency to JUCE hosts from the message thread. |
-| M16.3-M16.4 Diagnostics and performance baselines | Planned | Graph-specific diagnostics; representative baseline matrix |
+| M16.3 Add graph-specific compile and workload diagnostics | Complete | Active prepared plans now publish graph counts, memory, feedback regions, execution domain, family-weighted work, split compile timing, request-to-active delay, and superseded compiled work without per-node audio clocks. |
+| M16.4 Representative performance matrix | Planned | Release baseline matrix across flagship graphs, rates, and block sizes |
 | M17.1-M17.4 Hybrid compiled graph execution | Planned | SCC-local sample processing; block regions; buffer liveness/reuse; safe kernel fusion/SIMD; measured equivalence and improvement |
 | M18.1-M18.4 Pitch/control optimization and specialization | Planned | Dual-grain hot-loop optimization; block control ramps; bounded quality modes; evidence-based AOT/JIT decision |
 

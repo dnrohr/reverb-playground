@@ -491,6 +491,15 @@ juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
             { "maximumInputSamples", join.maximumInputSamples },
             { "uncompensatedSamples", join.uncompensatedSamples() },
         });
+    auto workloadFamilies = nlohmann::ordered_json::array();
+    for (const auto& family : topology.activePlanDiagnostics.workloadFamilies)
+        workloadFamilies.push_back({
+            { "family", family.family }, { "nodeCount", family.nodeCount },
+            { "estimatedScalarOperationsPerSample", family.estimatedScalarOperationsPerSample },
+        });
+    const auto estimatedOperations = graphMode
+        ? topology.activePlanDiagnostics.estimatedScalarOperationsPerSample
+        : reverb::dsp::RuntimeDiagnostics::estimatedScalarOperationsPerSample;
     const nlohmann::ordered_json json {
         { "formatVersion", 1 },
         { "activeGraphRevision", graphMode
@@ -502,6 +511,8 @@ juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
             { "failedRevision", topology.failedRevision },
             { "supersededRequests", topology.supersededRequests },
             { "completedCompilations", topology.completedCompilations },
+            { "supersededCompilations", topology.supersededCompilations },
+            { "lastSupersededCompileMicroseconds", topology.lastSupersededCompileMicroseconds },
             { "reclaimedRuntimes", topology.reclaimedRuntimes },
             { "crossfadeFromRevision", topology.crossfadeFromRevision },
             { "crossfadePositionSamples", topology.crossfadePositionSamples },
@@ -514,10 +525,13 @@ juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
             { "failure", topology.failure },
         } },
         { "workloadEstimate", {
-            { "basis", "static-estimate" },
-            { "scalarOperationsPerSample", reverb::dsp::RuntimeDiagnostics::estimatedScalarOperationsPerSample },
+            { "basis", graphMode ? "prepared-plan-estimate" : "barr-static-estimate" },
+            { "scalarOperationsPerSample", estimatedOperations },
             { "scalarOperationsPerSecond", sampleRate > 0.0
-                ? reverb::dsp::RuntimeDiagnostics::estimatedScalarOperationsPerSample * sampleRate : 0.0 },
+                ? estimatedOperations * sampleRate : 0.0 },
+            { "executionDomain", graphMode
+                ? topology.activePlanDiagnostics.executionDomain : "block-wise" },
+            { "families", std::move(workloadFamilies) },
         } },
         { "liveCpu", {
             { "basis", "measured" },
@@ -529,6 +543,20 @@ juce::String ReverbPlaygroundProcessor::runtimeDiagnosticsJson() const
             { "basis", "prepared-allocation" },
             { "lineCount", graphMode ? topology.activeDelayLineCount : snapshot.delayLineCount },
             { "bytes", graphMode ? topology.activeDelayMemoryBytes : snapshot.delayMemoryBytes },
+        } },
+        { "preparedGraph", {
+            { "nodeCount", graphMode ? topology.activePlanDiagnostics.nodeCount : 10 },
+            { "connectionCount", graphMode ? topology.activePlanDiagnostics.connectionCount : 0 },
+            { "feedbackRegionCount", graphMode ? topology.activePlanDiagnostics.feedbackRegionCount : 0 },
+            { "preparedStorageBytes", graphMode
+                ? topology.activePlanDiagnostics.preparedStorageBytes : snapshot.delayMemoryBytes },
+            { "compileTiming", {
+                { "validationMicroseconds", topology.activePlanDiagnostics.compileTiming.validationMicroseconds },
+                { "schedulingMicroseconds", topology.activePlanDiagnostics.compileTiming.schedulingMicroseconds },
+                { "preparationMicroseconds", topology.activePlanDiagnostics.compileTiming.preparationMicroseconds },
+                { "totalMicroseconds", topology.activePlanDiagnostics.compileTiming.totalMicroseconds },
+                { "requestToActiveMicroseconds", topology.activeRequestToActiveMicroseconds },
+            } },
         } },
         { "latency", {
             { "basis", "compiled-active-graph" },

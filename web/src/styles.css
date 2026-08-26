@@ -159,6 +159,11 @@ button { font: inherit; }
 .revision-diagnostic dt { color: #82919a; font-size: 8px; font-weight: 800; letter-spacing: .07em; }
 .revision-diagnostic dd { margin: 0; max-width: 58%; color: var(--text); font: 10px/1.35 ui-monospace, Consolas, monospace; overflow-wrap: anywhere; text-align: right; }
 .latency-policy { margin: 8px 0; padding: 8px; border-left: 2px solid var(--cyan); color: #9fb0b9; background: #10171b; font-size: 8px; line-height: 1.45; }
+.workload-profile { display: grid; gap: 4px; margin: 8px 0; padding: 8px; border: 1px solid #303c44; background: #12191e; }
+.workload-profile > span { color: var(--amber); font: 800 8px ui-monospace, Consolas, monospace; letter-spacing: .08em; }
+.workload-profile div { display: flex; justify-content: space-between; gap: 8px; color: #9bacb5; font: 9px ui-monospace, Consolas, monospace; }
+.workload-profile strong { color: var(--text); }
+.diagnostic-basis-note { margin: 8px 0; color: #9fb0b9; font-size: 8px; line-height: 1.5; }
 .topology-failure { margin: 9px 0; padding: 8px 9px; border-left: 3px solid var(--danger); color: #ffb9bc; background: rgba(226, 78, 83, .08); font: 8px/1.45 ui-monospace, Consolas, monospace; }
 .safety-event { padding: 10px; border: 1px solid rgba(226, 78, 83, .55); border-left: 3px solid var(--danger); background: rgba(226, 78, 83, .07); }
 .safety-event > span { color: var(--danger); }

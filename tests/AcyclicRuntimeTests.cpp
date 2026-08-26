@@ -395,6 +395,12 @@ TEST_CASE("Topology publication exposes pending active and failed revisions with
     std::array<float, 1> outputLeft {}; std::array<float, 1> outputRight {};
     host.process(left, right, outputLeft, outputRight);
     REQUIRE(host.publicationSnapshot().activeRevision == firstRevision);
+    snapshot = host.publicationSnapshot();
+    REQUIRE(snapshot.activePlanDiagnostics.nodeCount == 4);
+    REQUIRE(snapshot.activePlanDiagnostics.connectionCount == 5);
+    REQUIRE(snapshot.activePlanDiagnostics.executionDomain == "block-wise");
+    REQUIRE(snapshot.activePlanDiagnostics.estimatedScalarOperationsPerSample == 4);
+    REQUIRE(snapshot.activeRequestToActiveMicroseconds > 0);
     REQUIRE(outputLeft[0] == 0.75F);
 
     auto invalid = gainSumGraph(); invalid.nodes[1].type = "unknown";
@@ -437,6 +443,7 @@ TEST_CASE("Topology changes crossfade for a fixed duration and coalesce while a 
     REQUIRE(queued.activeRevision == 2);
     REQUIRE(queued.pendingRevision == 4);
     REQUIRE(queued.supersededRequests > 0);
+    REQUIRE(queued.supersededCompilations > 0);
 
     host.process(input, silence, outputLeft, outputRight);
     REQUIRE(outputLeft == std::array<float, 5> { 0.55F, 0.60F, 0.65F, 0.70F, 0.75F });
@@ -537,6 +544,47 @@ TEST_CASE("Compiled graph latency adds serial processors and exposes output path
     REQUIRE(compiled.latency.outputPaths[0].samples == 17'762);
     REQUIRE(compiled.latency.outputPaths[0].nodeIds
         == std::vector<std::string> { "input", "delay", "pitch", "output" });
+}
+
+TEST_CASE("Prepared plan profiles actual families and execution domain off the audio thread")
+{
+    const auto blockPlan = compileAcyclicGraph(gainSumGraph(), 48'000.0, 64);
+    REQUIRE(blockPlan.valid());
+    REQUIRE(blockPlan.planDiagnostics.nodeCount == 4);
+    REQUIRE(blockPlan.planDiagnostics.connectionCount == 5);
+    REQUIRE(blockPlan.planDiagnostics.feedbackRegionCount == 0);
+    REQUIRE(blockPlan.planDiagnostics.executionDomain == "block-wise");
+    REQUIRE(blockPlan.planDiagnostics.estimatedScalarOperationsPerSample == 4);
+    REQUIRE(blockPlan.planDiagnostics.preparedStorageBytes == blockPlan.runtime->preparedStorageBytes());
+    REQUIRE(blockPlan.planDiagnostics.compileTiming.totalMicroseconds >=
+        blockPlan.planDiagnostics.compileTiming.validationMicroseconds
+        + blockPlan.planDiagnostics.compileTiming.schedulingMicroseconds
+        + blockPlan.planDiagnostics.compileTiming.preparationMicroseconds);
+    REQUIRE(std::ranges::find(blockPlan.planDiagnostics.workloadFamilies, "gain", &WorkloadFamily::family)
+        != blockPlan.planDiagnostics.workloadFamilies.end());
+
+    GraphDocument feedback;
+    feedback.nodes = {
+        stereoInput(),
+        { "join", "sum", { inputPort("in-a"), inputPort("in-b"), outputPort() }, {} },
+        { "delay", "delay", { inputPort(), outputPort() }, { { "delay", 10.0, "milliseconds" } } },
+        stereoOutput(),
+    };
+    feedback.connections = {
+        cable("input-join", "input", "out-l", "join", "in-a"),
+        cable("delay-return", "delay", "out", "join", "in-b"),
+        cable("join-delay", "join", "out", "delay", "in"),
+        cable("left", "join", "out", "output", "in-l"),
+        cable("right", "join", "out", "output", "in-r"),
+    };
+    const auto samplePlan = compileFeedbackGraph(feedback, 48'000.0, 64);
+    REQUIRE(samplePlan.valid());
+    REQUIRE(samplePlan.planDiagnostics.feedbackRegionCount == 1);
+    REQUIRE(samplePlan.planDiagnostics.executionDomain == "sample-wise");
+    const auto dispatch = std::ranges::find(
+        samplePlan.planDiagnostics.workloadFamilies, "sample-wise-dispatch", &WorkloadFamily::family);
+    REQUIRE(dispatch != samplePlan.planDiagnostics.workloadFamilies.end());
+    REQUIRE(dispatch->nodeCount == 2);
 }
 
 TEST_CASE("Compiled graph latency reports parallel maxima and uncompensated differences")

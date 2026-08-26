@@ -239,8 +239,12 @@ holds both markers in a static separated state without removing any labels.
 
 <!-- visualization: diagnostics -->
 
-The panel labels operation count as a static estimate, callback load and
-clipping as live measurements, and delay memory as exact prepared bytes. Its
+The panel labels operation count as an active prepared-plan estimate, callback
+load and clipping as aggregate live measurements, and total runtime memory as
+exact prepared bytes. It also exposes node/cable/feedback counts, the current
+block-wise or sample-wise execution domain, expensive processor families,
+validation/scheduling/preparation time, request-to-active delay, and stale
+compiled work that was superseded. Its
 compiled-latency card shows active samples/milliseconds, both output paths, and
 the node identity and sample difference of every uncompensated parallel join;
 these are prepared graph facts rather than callback timing. Graph
@@ -261,3 +265,5 @@ clears stored feedback state explicitly.
   exact modulation formula and scheduling policy.
 - [Graph latency and host reporting](graph-latency-and-host-reporting.md)
   defines compiled path rules, the no-hidden-compensation policy, and JUCE host updates.
+- [Graph runtime diagnostics](graph-runtime-diagnostics.md) defines prepared-plan
+  workload estimates, compile/publication measurements, and real-time boundaries.

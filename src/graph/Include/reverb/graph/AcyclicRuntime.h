@@ -56,6 +56,30 @@ struct GraphLatencyPlan final {
     std::vector<LatencyJoin> parallelJoins;
 };
 
+struct WorkloadFamily final {
+    std::string family;
+    std::size_t nodeCount {};
+    std::size_t estimatedScalarOperationsPerSample {};
+};
+
+struct CompilePhaseTiming final {
+    std::uint64_t validationMicroseconds {};
+    std::uint64_t schedulingMicroseconds {};
+    std::uint64_t preparationMicroseconds {};
+    std::uint64_t totalMicroseconds {};
+};
+
+struct PreparedGraphDiagnostics final {
+    std::size_t nodeCount {};
+    std::size_t connectionCount {};
+    std::size_t feedbackRegionCount {};
+    std::size_t preparedStorageBytes {};
+    std::size_t estimatedScalarOperationsPerSample {};
+    std::string executionDomain;
+    std::vector<WorkloadFamily> workloadFamilies;
+    CompilePhaseTiming compileTiming;
+};
+
 class PreparedAcyclicRuntime final {
 public:
     ~PreparedAcyclicRuntime();
@@ -78,6 +102,7 @@ public:
     [[nodiscard]] std::size_t preparedStorageBytes() const noexcept;
     [[nodiscard]] const DelayMemoryPlan& delayMemoryPlan() const noexcept;
     [[nodiscard]] const GraphLatencyPlan& latencyPlan() const noexcept;
+    [[nodiscard]] const PreparedGraphDiagnostics& planDiagnostics() const noexcept;
 
 private:
     struct Impl;
@@ -97,6 +122,7 @@ struct AcyclicCompileResult final {
     std::uint64_t compileMicroseconds {};
     DelayMemoryPlan delayMemory;
     GraphLatencyPlan latency;
+    PreparedGraphDiagnostics planDiagnostics;
 
     [[nodiscard]] bool valid() const noexcept { return runtime != nullptr && errors.empty(); }
 };
@@ -107,6 +133,7 @@ struct AcyclicPublishResult final {
     std::vector<std::string> errors;
     DelayMemoryPlan delayMemory;
     GraphLatencyPlan latency;
+    PreparedGraphDiagnostics planDiagnostics;
     [[nodiscard]] bool valid() const noexcept { return errors.empty(); }
 };
 
@@ -127,6 +154,10 @@ struct TopologyPublicationSnapshot final {
     std::size_t activeDelayLineCount {};
     std::size_t activeDelayMemoryBytes {};
     GraphLatencyPlan activeLatency;
+    PreparedGraphDiagnostics activePlanDiagnostics;
+    std::uint64_t activeRequestToActiveMicroseconds {};
+    std::uint64_t supersededCompilations {};
+    std::uint64_t lastSupersededCompileMicroseconds {};
     std::string failure;
 };
 
@@ -182,10 +213,12 @@ private:
     static constexpr std::size_t retirementCapacity = 16;
 
     [[nodiscard]] AcyclicPublishResult publishCompiled(
-        AcyclicCompileResult result, std::uint64_t revision, double sampleRate);
+        AcyclicCompileResult result, std::uint64_t revision, double sampleRate,
+        std::uint64_t requestedAtNanoseconds);
     void compilerLoop(std::stop_token stopToken);
     void publishPending(
-        std::unique_ptr<PreparedAcyclicRuntime> runtime, std::uint64_t revision, double sampleRate);
+        std::unique_ptr<PreparedAcyclicRuntime> runtime, std::uint64_t revision, double sampleRate,
+        std::uint64_t requestedAtNanoseconds);
     void reclaimRetired() noexcept;
     [[nodiscard]] bool retirementHasCapacity() const noexcept;
     void retire(RuntimeEnvelope* runtime) noexcept;
@@ -217,11 +250,15 @@ private:
     std::atomic<std::size_t> activeDelayLineCount_ {};
     std::atomic<std::size_t> activeDelayMemoryBytes_ {};
     std::atomic<std::size_t> activeLatencySamples_ {};
+    std::atomic<std::uint64_t> activeRequestToActiveMicroseconds_ {};
+    std::atomic<std::uint64_t> supersededCompilations_ {};
+    std::atomic<std::uint64_t> lastSupersededCompileMicroseconds_ {};
     std::array<std::atomic<std::uint64_t>, maximumMacroControls> macroKeys_ {};
     std::array<std::atomic<double>, maximumMacroControls> macroValues_ {};
     mutable std::mutex failureMutex_;
     mutable std::mutex latencyPlansMutex_;
     std::map<std::uint64_t, GraphLatencyPlan> latencyPlans_;
+    std::map<std::uint64_t, PreparedGraphDiagnostics> planDiagnostics_;
     std::mutex pendingPublicationMutex_;
     std::string failure_;
 };
