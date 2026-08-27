@@ -33,6 +33,13 @@ UI tasks require a current screenshot. Interactive, animated, audio-reactive, or
 | M16. Latency truth and performance baselines | Pitch range, graph latency, compile time, and CPU cost are accurate and actionable | Compare factory graphs with honest latency/load diagnostics and compensated DAW playback |
 | M17. Hybrid compiled graph execution | Only causal recursive regions execute sample-by-sample; the remaining graph uses optimized block kernels | Run the flagship feedback graphs measurably faster without changing their audio or safety behavior |
 | M18. Pitch/control optimization and specialization | Pitch Shift, modulation delivery, and selected hot graph paths meet measured release budgets | Audition octave shimmer at lower latency/load and publish evidence for generic versus specialized execution |
+| M18.5. Audition and telemetry truth | Audition, mix, gain, loop/export, and Energy controls match their labels and the active compiled graph | Hear an unmistakable dry/wet comparison, export the intended range, and see energy move through the graph that is actually sounding |
+| M19. Perceptual density measurement | Sparse echoes, recurrence, coloration, and stereo buildup become measurable | Compare current factories against controlled sparse and dense fixtures in a density inspector |
+| M20. Dense figure-eight tank | A two-branch cross-coupled tank provides a lower-risk dense late reverb | Audition a stable, tunable factory with materially smoother density than the current networks |
+| M21. Constrained four-line FDN | A visible, inspectable Hadamard FDN produces a modern dense tail | Follow four delay lines through energy-preserving mixing while hearing predictable decay |
+| M22. Assisted delay-set tuning | Deterministic offline search proposes reproducible, measurable tunings | Generate, rank, audition, accept, or reject candidate delay sets without losing the current patch |
+| M23. Dense-network optimization | Reusable SIMD/fused kernels accelerate measured FDN and figure-eight hot paths | Run dense tanks faster without hidden factory code or changed audio semantics |
+| M24. Dense-reverb product qualification | Dense factories are listening-tested, host-safe, documented, packaged, and releasable | Compare matched factories, automate/reopen/export them, and pass clean Windows release CI |
 
 ---
 
@@ -1278,6 +1285,215 @@ Acceptance criteria:
 Milestone exit criteria:
 
 - Octave shimmer runs with honest reduced latency and measured lower cost, control-heavy graphs avoid unnecessary audio-rate dispatch, and the project has evidence for using generic, specialized, or JIT execution rather than relying on intuition.
+
+---
+
+## M18.5. Audition and telemetry truth
+
+Resolve the current control-semantic gaps before density measurements depend on audition and Energy behavior.
+
+### M18.5.1 Make live dry/wet comparison explicit
+
+Tasks: replace the ambiguous processed/dry behavior with clearly named Dry, Wet, and Audition Mix states; define the live mix law; make the state equally clear for loaded audio and live input; distinguish impulse-capture input muting from audition muting.
+
+Acceptance criteria:
+
+- Dry emits the selected source without graph processing, Wet emits graph output only, and Audition Mix emits the documented dry/wet blend.
+- Switching is click-safe and its latency policy is explicit.
+- `Mute Live Input` is shown only in impulse-capture context and explains that it does not mute loaded audio or provide dry/wet control.
+- Automated fixtures make all three live states measurably distinct.
+
+### M18.5.2 Clarify master gain and export semantics
+
+Tasks: rename or remove redundant audition gain; decide whether export follows it; label export-only controls as export-only; disclose the 50/50 Audition Mix law or replace it with an explicit mix value.
+
+Acceptance criteria:
+
+- The UI states exactly which paths Master/Audition Gain affects.
+- Live audition and exported samples follow one documented, tested gain policy.
+- Wet-only and mixed export fixtures are measurably distinct and loudness behavior is documented.
+
+### M18.5.3 Define loop-range export
+
+Tasks: add an explicit Entire File versus Selected Loop export range; pass source-frame bounds to the offline exporter; define tail rendering at the selected end; keep loop playback crossfade separate from exported range semantics.
+
+Acceptance criteria:
+
+- Entire File exports the complete source once plus its bounded tail.
+- Selected Loop exports exactly the selected source interval once plus its bounded tail unless a repeated-loop count is explicitly chosen later.
+- Output duration, resampling boundaries, and cancellation are deterministic and tested.
+- The export dialog states the selected range before rendering.
+
+### M18.5.4 Bind Energy to compiled graph execution
+
+Tasks: add bounded per-node telemetry lanes to the prepared graph plan; publish coherent 30 Hz snapshots from the active revision; keep telemetry free when disabled; map node energy to downstream cables; handle topology crossfades and graph replacement safely.
+
+Acceptance criteria:
+
+- Energy On visibly responds on Barr and every compiled factory while audio plays.
+- Energy Off performs no observation work in the audio callback.
+- Snapshot node IDs and revision match the active visible graph; stale frames cannot decorate a replacement graph.
+- Polling, dropped frames, and the visualization cannot change rendered audio.
+- Reduced-motion behavior remains accessible and explicit.
+
+Milestone exit criteria:
+
+- Audition and export labels describe what users actually hear or receive, loop range is explicit, and Energy visualizes the active compiled graph rather than the legacy fixed engine.
+
+---
+
+## M19. Perceptual density measurement
+
+### M19.1 Add deterministic density analysis
+
+Tasks: measure windowed echo density, active-peak count, crest factor, kurtosis, energy variation, autocorrelation recurrence, spectral flatness, and early/middle/late stereo correlation; qualify sparse and dense reference fixtures; baseline every factory.
+
+Acceptance criteria:
+
+- Metrics distinguish controlled sparse and dense fixtures and remain stable at 44.1, 48, and 96 kHz.
+- Each metric has a documented perceptual meaning and limitation.
+- Versioned machine-readable reports preserve current factory baselines.
+
+### M19.2 Add a density inspector
+
+Tasks: plot density over time, mark prominent recurrence periods, expose early/middle/late summaries, and integrate explanations into teaching mode.
+
+Acceptance criteria:
+
+- Sparse and dense regions are distinguishable without color alone at every supported editor size.
+- The inspector adds no audio-thread work while closed.
+- Tests, screenshot, and an interaction video cover the finished UI.
+
+---
+
+## M20. Dense figure-eight tank
+
+### M20.1 Implement a calculated two-branch reference
+
+Tasks: build cross-coupled branches with input diffusion, distributed tank diffusion, in-loop damping, unequal delays, independent output taps, subtle modulation, and delay-aware RT60 gains.
+
+Acceptance criteria:
+
+- All feedback is visible, delayed, bounded, partition-deterministic, and finite at supported rates and parameter extremes.
+- Both branches track the requested decay within a documented tolerance.
+- Density growth materially exceeds Barr and Gravity baselines without merely darkening discrete repeats.
+
+### M20.2 Tune and publish Dense Figure Eight
+
+Tasks: search candidate delay sets, reject recurrence relationships, tune diffusion/damping/modulation/output taps, expose useful macros, and add a teaching overlay.
+
+Acceptance criteria:
+
+- Qualified recurrence, decay, stereo, pitch-stability, CPU, memory, and listening fixtures pass.
+- The shipped patch exactly matches its visible/native graph and remains editable.
+
+---
+
+## M21. Constrained four-line FDN
+
+### M21.1 Implement the four-line Hadamard network
+
+Tasks: add four unequal delay lines, normalized 4x4 Hadamard mixing, per-line delay-aware gains and damping, bounded modulation, and explicit input/output vectors.
+
+Acceptance criteria:
+
+- The matrix preserves energy within floating-point tolerance and does not control decay implicitly.
+- RT60 mapping, reset, serialization, block partitioning, storage, and safety pass deterministic tests.
+
+### M21.2 Make matrix mixing inspectable
+
+Tasks: add a transparent four-input/four-output Matrix Mixer compound with coefficients, polarity, energy, and an expanded equivalent sum/gain view.
+
+Acceptance criteria:
+
+- DSP semantics are persisted explicitly and never exist only in presentation code.
+- Expansion exposes the complete equivalent routing without making the minimum-size canvas unusable.
+- Invalid or amplifying matrices follow a documented reject/normalize policy.
+
+### M21.3 Publish a four-line Dense Room factory
+
+Tasks: qualify delay set, diffusion, injection/pickup vectors, damping, modulation, size/decay/width controls, and circulation teaching overlays.
+
+Acceptance criteria:
+
+- Density and recurrence improve materially over current factories and the figure-eight reference.
+- The factory stays finite, decorrelated, mono-compatible, inspectable, and exact across supported rates and saved-state round trips.
+
+---
+
+## M22. Assisted delay-set tuning
+
+### M22.1 Generate deterministic candidates
+
+Tasks: search bounded delay ranges; penalize common factors, repeated differences, and near periods; calculate RT60 gains; enforce memory/modulation margins; record the seed and rejection reasons.
+
+Acceptance criteria:
+
+- Identical inputs reproduce identical rankings and invalid/over-budget candidates never render.
+- Intentionally good and poor fixtures validate each scoring component.
+
+### M22.2 Rank rendered responses
+
+Tasks: render impulse, noise-burst, percussion, and tonal fixtures; score density, recurrence, coloration, decay, and stereo behavior independently; export candidates as ordinary patches.
+
+Acceptance criteria:
+
+- No unstable candidate can pass and no single composite score hides a failed dimension.
+- Top candidates have normalized listening fixtures and complete reproduction provenance.
+
+### M22.3 Add non-destructive assisted tuning
+
+Tasks: offer smoother/less-metallic/wider/less-modulated alternatives, explain proposed changes, preview safely, and support accept/cancel/undo.
+
+Acceptance criteria:
+
+- Suggestions never silently mutate saved state; cancel restores the exact graph/runtime.
+- Preview switching is click-safe, level matched, measurable, and covered by screenshot/video evidence.
+
+---
+
+## M23. Dense-network optimization
+
+### M23.1 Profile dense tanks by processor family
+
+Tasks: separate delay, matrix, damping, modulation, routing, telemetry, normal, and crossfade costs across supported rates and blocks.
+
+Acceptance criteria:
+
+- Exact-commit baselines identify a measured dominant cost before any specialized implementation is accepted.
+
+### M23.2 Add reusable dense-network kernels
+
+Tasks: evaluate SIMD across FDN lines, Hadamard butterflies, batched filters, incremental fractional cursors, fused read/damp/gain/mix/write paths, and shared modulation tables.
+
+Acceptance criteria:
+
+- Retained kernels improve their target fixture by at least 10-15%, preserve visible semantics and audio equivalence, allocate/lock nowhere in the callback, and fall back safely for unsupported arrangements.
+
+---
+
+## M24. Dense-reverb product qualification
+
+### M24.1 Run comparative listening and measurement qualification
+
+Tasks: loudness-match Barr, Gravity, Figure Eight, and FDN across percussion, speech, piano, pads, noise, room/hall, dark, and modulated settings; record objective results separately from listening notes.
+
+Acceptance criteria:
+
+- Dense designs demonstrate less repeat-like tails while explicitly evaluating ringing, smearing, pitch motion, and mono compatibility; failed fixtures remain visible and drive retuning.
+
+### M24.2 Qualify hosts, safety, documentation, and release artifacts
+
+Tasks: exercise extreme controls, continuous editing, automation, save/reopen, offline export, sample-rate changes, standalone/VST3 packaging, and the full release gate.
+
+Acceptance criteria:
+
+- No non-finite output, runaway publication, callback allocation, or invalid state replacement occurs.
+- Supported graph/rate/block/quality limits are documented, the Windows package validates, and clean `main` CI passes.
+
+Milestone exit criteria:
+
+- The project ships at least one convincingly dense, teachable, editable reverb with reproducible tuning evidence and honest audition/export/telemetry behavior.
 
 ---
 
