@@ -85,6 +85,29 @@ void OnePoleLowPass::processOutputScaled(
     std::fill(output.begin() + static_cast<std::ptrdiff_t>(count), output.end(), 0.0F);
 }
 
+void OnePoleLowPass::processModulated(
+    const std::span<float> samples,
+    const std::span<const double> cutoffHertz) noexcept
+{
+    if (cutoffHertz.size() < samples.size()) {
+        std::ranges::fill(samples, 0.0F);
+        return;
+    }
+    for (std::size_t index = 0; index < samples.size(); ++index) {
+        samples[index] = processSampleModulated(samples[index], cutoffHertz[index]);
+    }
+}
+
+float OnePoleLowPass::processSampleModulated(
+    const float sample, const double cutoffHertz) noexcept
+{
+    setCutoffHertz(cutoffHertz);
+    feedback_ += (targetFeedback_ - feedback_) * smoothing_;
+    feed_ += (targetFeed_ - feed_) * smoothing_;
+    state_ = feed_ * sample + feedback_ * state_;
+    return state_;
+}
+
 void OnePoleLowPass::setCutoffHertz(const double cutoffHertz) noexcept
 {
     cutoffHertz_ = std::clamp(cutoffHertz, 1.0, sampleRate_ * 0.499);

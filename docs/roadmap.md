@@ -1234,6 +1234,9 @@ Acceptance criteria:
 
 ### M18.2 Compile control-rate ramps into block processors
 
+Status: Complete (2026-08-26). See the
+[implementation and qualification report](compiled-control-ramp-processing.md).
+
 Deliver 1 kHz control results to audio processors without repeatedly invoking one-sample setters and one-sample span processing across the host block.
 
 Acceptance criteria:

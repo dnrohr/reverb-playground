@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <span>
 #include <vector>
 
 namespace reverb::graph {
@@ -87,6 +88,7 @@ public:
     void reset(double value) noexcept;
     void setTarget(double value, std::size_t samples) noexcept;
     [[nodiscard]] double next() noexcept;
+    void fill(std::span<double> values) noexcept;
     [[nodiscard]] double current() const noexcept { return current_; }
 
 private:

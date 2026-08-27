@@ -16,6 +16,7 @@ public:
     void process(std::span<float> samples) noexcept;
     void processModulated(std::span<float> samples, std::span<const double> delayMilliseconds) noexcept;
     [[nodiscard]] float readSample() const noexcept;
+    [[nodiscard]] float readSampleModulated(double delayMilliseconds) noexcept;
     void writeSample(float sample) noexcept;
     void setDelayMilliseconds(double delayMilliseconds) noexcept;
 

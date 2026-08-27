@@ -23,6 +23,13 @@ public:
         std::span<float> preparedStorage);
     void reset() noexcept;
     void process(std::span<float> samples) noexcept;
+    void processModulated(std::span<float> samples,
+        std::span<const double> semitones,
+        std::span<const double> grainMilliseconds,
+        std::span<const double> overlap,
+        const PitchShiftParameters& constants) noexcept;
+    [[nodiscard]] float processSampleModulated(
+        float sample, const PitchShiftParameters& parameters) noexcept;
     void setParameters(const PitchShiftParameters& parameters) noexcept;
     void settleParameters() noexcept;
 
@@ -65,6 +72,7 @@ private:
 
     [[nodiscard]] static PitchShiftParameters sanitize(const PitchShiftParameters& parameters) noexcept;
     [[nodiscard]] float renderState(const GrainState& state, double ratio) const noexcept;
+    [[nodiscard]] float processSample(float sample) noexcept;
     [[nodiscard]] float readFractional(double delaySamples) const noexcept;
     void configureState(GrainState& state) const noexcept;
     static void advance(GrainState& state) noexcept;

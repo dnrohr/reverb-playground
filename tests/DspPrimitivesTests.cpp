@@ -286,3 +286,42 @@ TEST_CASE("Constant modulated allpass matches static processing and clamps extre
     REQUIRE(std::abs(modulated.coefficient()) <= 0.95F);
     REQUIRE(modulated.delayMilliseconds() <= 100.0);
 }
+
+TEST_CASE("Block modulation kernels match the former per-sample parameter path")
+{
+    constexpr auto sampleRate = 48'000.0;
+    constexpr std::size_t frames = 2'048;
+    std::vector<float> source(frames);
+    std::vector<double> cutoff(frames);
+    std::vector<double> delay(frames);
+    for (std::size_t index = 0; index < frames; ++index) {
+        source[index] = static_cast<float>(0.2 * std::sin(0.031 * static_cast<double>(index)));
+        cutoff[index] = 500.0 + 8'000.0 * static_cast<double>(index) / frames;
+        delay[index] = 4.0 + 8.0 * static_cast<double>(index) / frames;
+    }
+
+    reverb::dsp::OnePoleLowPass sampleFilter;
+    reverb::dsp::OnePoleLowPass blockFilter;
+    sampleFilter.prepare(sampleRate, 500.0);
+    blockFilter.prepare(sampleRate, 500.0);
+    auto expectedFilter = source;
+    auto actualFilter = source;
+    for (std::size_t index = 0; index < frames; ++index) {
+        sampleFilter.setCutoffHertz(cutoff[index]);
+        sampleFilter.process(std::span(expectedFilter).subspan(index, 1));
+    }
+    blockFilter.processModulated(actualFilter, cutoff);
+    REQUIRE(actualFilter == expectedFilter);
+
+    reverb::dsp::Allpass sampleAllpass;
+    reverb::dsp::Allpass blockAllpass;
+    sampleAllpass.prepare(sampleRate, 4.0, 0.55F, 20.0);
+    blockAllpass.prepare(sampleRate, 4.0, 0.55F, 20.0);
+    auto expectedAllpass = source;
+    auto actualAllpass = source;
+    for (std::size_t index = 0; index < frames; ++index)
+        expectedAllpass[index] = sampleAllpass.processSampleModulated(
+            expectedAllpass[index], delay[index], 0.55);
+    blockAllpass.processModulated(actualAllpass, delay, {}, 4.0, 0.55);
+    REQUIRE(actualAllpass == expectedAllpass);
+}

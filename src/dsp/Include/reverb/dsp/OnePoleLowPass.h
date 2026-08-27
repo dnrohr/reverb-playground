@@ -16,6 +16,9 @@ public:
         std::span<float> output, float scale) noexcept;
     void processOutputScaled(
         std::span<const float> input, std::span<float> output, float scale) noexcept;
+    void processModulated(std::span<float> samples,
+        std::span<const double> cutoffHertz) noexcept;
+    [[nodiscard]] float processSampleModulated(float sample, double cutoffHertz) noexcept;
     void setCutoffHertz(double cutoffHertz) noexcept;
     [[nodiscard]] double cutoffHertz() const noexcept;
 

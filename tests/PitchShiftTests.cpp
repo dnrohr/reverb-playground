@@ -239,3 +239,30 @@ TEST_CASE("Pitch shift reset and parameter transitions are deterministic and con
     REQUIRE(guarded.front() == 321.0F);
     REQUIRE(guarded.back() == 321.0F);
 }
+
+TEST_CASE("Pitch shift block modulation matches sample-wise parameter delivery")
+{
+    using namespace reverb::dsp;
+    constexpr auto sampleRate = 48'000.0;
+    constexpr std::size_t frames = 8'192;
+    const PitchShiftParameters constants {
+        0.0, 60.0, 0.5, pitch_shift::GrainDirection::forward, 0.0 };
+    PitchShift sampleWise;
+    PitchShift blockWise;
+    sampleWise.prepare(sampleRate, constants);
+    blockWise.prepare(sampleRate, constants);
+    std::vector<float> expected(frames);
+    std::vector<double> semitones(frames);
+    for (std::size_t index = 0; index < frames; ++index) {
+        expected[index] = static_cast<float>(0.2 * std::sin(0.071 * static_cast<double>(index)));
+        semitones[index] = -12.0 + 24.0 * static_cast<double>(index) / frames;
+    }
+    auto actual = expected;
+    for (std::size_t index = 0; index < frames; ++index) {
+        sampleWise.setParameters({ semitones[index], constants.grainMilliseconds,
+            constants.overlap, constants.direction, constants.phaseCycles });
+        sampleWise.process(std::span(expected).subspan(index, 1));
+    }
+    blockWise.processModulated(actual, semitones, {}, {}, constants);
+    REQUIRE(actual == expected);
+}

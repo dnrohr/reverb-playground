@@ -452,7 +452,7 @@ void PreparedAcyclicRuntime::process(
         return;
     }
     const auto noModulation = std::numeric_limits<std::size_t>::max();
-    for (std::size_t sample = 0; sample < count; ++sample) {
+    for (std::size_t sample = 0; sample < count;) {
         if (!implementation_->modulations.empty() && implementation_->samplesUntilControlTick == 0) {
             for (auto& control : implementation_->controlOperations) {
                 if (control.kind == ControlOperationKind::macro) {
@@ -482,11 +482,17 @@ void PreparedAcyclicRuntime::process(
             }
             implementation_->samplesUntilControlTick = implementation_->controlQuantumSamples;
         }
+        if (implementation_->modulations.empty()) break;
+        const auto segment = std::min(count - sample, implementation_->samplesUntilControlTick);
         for (auto& modulation : implementation_->modulations)
-            modulation.values[sample] = modulation.ramp.next();
-        if (!implementation_->modulations.empty())
-            --implementation_->samplesUntilControlTick;
+            modulation.ramp.fill(std::span(modulation.values).subspan(sample, segment));
+        implementation_->samplesUntilControlTick -= segment;
+        sample += segment;
     }
+    const auto modulationSpan = [this, count, noModulation](const std::size_t index) {
+        return index == noModulation ? std::span<const double> {}
+            : std::span<const double>(implementation_->modulations[index].values).first(count);
+    };
     if (!implementation_->sampleWiseRegions.empty()) {
         auto fullBuffer = [this, count](const std::size_t index) {
             return std::span<float>(implementation_->buffers[index]).first(count);
@@ -549,30 +555,24 @@ void PreparedAcyclicRuntime::process(
                     auto& processor = std::get<reverb::dsp::Allpass>(operation.processor);
                     if (operation.delayModulation == noModulation && operation.coefficientModulation == noModulation)
                         processor.process(destination);
-                    else for (std::size_t sample = 0; sample < count; ++sample) {
-                        const auto delay = operation.delayModulation == noModulation ? operation.baseDelayMilliseconds
-                            : implementation_->modulations[operation.delayModulation].values[sample];
-                        const auto coefficient = operation.coefficientModulation == noModulation ? operation.baseCoefficient
-                            : implementation_->modulations[operation.coefficientModulation].values[sample];
-                        destination[sample] = processor.processSampleModulated(destination[sample], delay, coefficient);
-                    }
+                    else processor.processModulated(destination,
+                        modulationSpan(operation.delayModulation),
+                        modulationSpan(operation.coefficientModulation),
+                        operation.baseDelayMilliseconds, operation.baseCoefficient);
                 } else if (operation.kind == OperationKind::lowpass) {
                     auto& processor = std::get<reverb::dsp::OnePoleLowPass>(operation.processor);
                     if (operation.cutoffModulation == noModulation) processor.process(destination);
-                    else for (std::size_t sample = 0; sample < count; ++sample) {
-                        processor.setCutoffHertz(implementation_->modulations[operation.cutoffModulation].values[sample]);
-                        processor.process(destination.subspan(sample, 1));
-                    }
+                    else processor.processModulated(destination,
+                        modulationSpan(operation.cutoffModulation));
                 } else if (operation.kind == OperationKind::pitchShift) {
                     auto& processor = std::get<reverb::dsp::PitchShift>(operation.processor);
-                    for (std::size_t sample = 0; sample < count; ++sample) {
-                        processor.setParameters({
-                            operation.semitoneModulation == noModulation ? operation.baseSemitones : implementation_->modulations[operation.semitoneModulation].values[sample],
-                            operation.grainModulation == noModulation ? operation.baseGrainMilliseconds : implementation_->modulations[operation.grainModulation].values[sample],
-                            operation.overlapModulation == noModulation ? operation.baseOverlap : implementation_->modulations[operation.overlapModulation].values[sample],
-                            operation.grainDirection, operation.basePhaseCycles });
-                        processor.process(destination.subspan(sample, 1));
-                    }
+                    processor.processModulated(destination,
+                        modulationSpan(operation.semitoneModulation),
+                        modulationSpan(operation.grainModulation),
+                        modulationSpan(operation.overlapModulation),
+                        { operation.baseSemitones, operation.baseGrainMilliseconds,
+                            operation.baseOverlap, operation.grainDirection,
+                            operation.basePhaseCycles });
                 } else if (operation.kind == OperationKind::envelopeFollower) {
                     for (std::size_t sample = 0; sample < count; ++sample)
                         destination[sample] = std::get<reverb::dsp::EnvelopeFollower>(operation.processor)
@@ -601,11 +601,11 @@ void PreparedAcyclicRuntime::process(
                 operationIndex < regionEnd; ++operationIndex) {
                 auto& operation = implementation_->operations[operationIndex];
                 if (operation.kind != OperationKind::delay) continue;
-                if (operation.delayModulation != noModulation)
-                    std::get<reverb::dsp::Delay>(operation.processor).setDelayMilliseconds(
-                        implementation_->modulations[operation.delayModulation].values[sampleIndex]);
                 implementation_->buffers[operation.outputs.front()][sampleIndex]
-                    = std::get<reverb::dsp::Delay>(operation.processor).readSample();
+                    = operation.delayModulation == noModulation
+                    ? std::get<reverb::dsp::Delay>(operation.processor).readSample()
+                    : std::get<reverb::dsp::Delay>(operation.processor).readSampleModulated(
+                        implementation_->modulations[operation.delayModulation].values[sampleIndex]);
             }
             for (auto operationIndex = regionBegin;
                 operationIndex < regionEnd; ++operationIndex) {
@@ -639,13 +639,13 @@ void PreparedAcyclicRuntime::process(
                 }
                 else if (operation.kind == OperationKind::lowpass) {
                     auto& processor = std::get<reverb::dsp::OnePoleLowPass>(operation.processor);
-                    if (operation.cutoffModulation != noModulation)
-                        processor.setCutoffHertz(implementation_->modulations[operation.cutoffModulation].values[sampleIndex]);
-                    processor.process(destination);
+                    if (operation.cutoffModulation == noModulation) processor.process(destination);
+                    else destination.front() = processor.processSampleModulated(destination.front(),
+                        implementation_->modulations[operation.cutoffModulation].values[sampleIndex]);
                 }
                 else if (operation.kind == OperationKind::pitchShift) {
                     auto& processor = std::get<reverb::dsp::PitchShift>(operation.processor);
-                    processor.setParameters({
+                    destination.front() = processor.processSampleModulated(destination.front(), {
                         operation.semitoneModulation == noModulation ? operation.baseSemitones
                             : implementation_->modulations[operation.semitoneModulation].values[sampleIndex],
                         operation.grainModulation == noModulation ? operation.baseGrainMilliseconds
@@ -655,7 +655,6 @@ void PreparedAcyclicRuntime::process(
                         operation.grainDirection,
                         operation.basePhaseCycles,
                     });
-                    processor.process(destination);
                 }
                 else if (operation.kind == OperationKind::envelopeFollower) {
                     destination.front() = std::get<reverb::dsp::EnvelopeFollower>(operation.processor)
@@ -751,49 +750,29 @@ void PreparedAcyclicRuntime::process(
             auto& processor = std::get<reverb::dsp::Allpass>(operation.processor);
             if (operation.delayModulation == noModulation && operation.coefficientModulation == noModulation) {
                 processor.process(destination);
-            } else {
-                for (std::size_t sample = 0; sample < count; ++sample) {
-                    const auto delay = operation.delayModulation == noModulation
-                        ? operation.baseDelayMilliseconds
-                        : implementation_->modulations[operation.delayModulation].values[sample];
-                    const auto coefficient = operation.coefficientModulation == noModulation
-                        ? operation.baseCoefficient
-                        : implementation_->modulations[operation.coefficientModulation].values[sample];
-                    destination[sample] = processor.processSampleModulated(destination[sample], delay, coefficient);
-                }
-            }
+            } else processor.processModulated(destination,
+                modulationSpan(operation.delayModulation),
+                modulationSpan(operation.coefficientModulation),
+                operation.baseDelayMilliseconds, operation.baseCoefficient);
         } else if (operation.kind == OperationKind::lowpass) {
             auto& processor = std::get<reverb::dsp::OnePoleLowPass>(operation.processor);
             if (operation.cutoffModulation == noModulation) {
                 processor.process(destination);
-            } else {
-                const auto& values = implementation_->modulations[operation.cutoffModulation].values;
-                for (std::size_t sample = 0; sample < count; ++sample) {
-                    processor.setCutoffHertz(values[sample]);
-                    processor.process(destination.subspan(sample, 1));
-                }
-            }
+            } else processor.processModulated(destination,
+                modulationSpan(operation.cutoffModulation));
         } else if (operation.kind == OperationKind::pitchShift) {
             auto& processor = std::get<reverb::dsp::PitchShift>(operation.processor);
             if (operation.semitoneModulation == noModulation
                 && operation.grainModulation == noModulation
                 && operation.overlapModulation == noModulation) {
                 processor.process(destination);
-            } else {
-                for (std::size_t sample = 0; sample < count; ++sample) {
-                    processor.setParameters({
-                        operation.semitoneModulation == noModulation ? operation.baseSemitones
-                            : implementation_->modulations[operation.semitoneModulation].values[sample],
-                        operation.grainModulation == noModulation ? operation.baseGrainMilliseconds
-                            : implementation_->modulations[operation.grainModulation].values[sample],
-                        operation.overlapModulation == noModulation ? operation.baseOverlap
-                            : implementation_->modulations[operation.overlapModulation].values[sample],
-                        operation.grainDirection,
-                        operation.basePhaseCycles,
-                    });
-                    processor.process(destination.subspan(sample, 1));
-                }
-            }
+            } else processor.processModulated(destination,
+                modulationSpan(operation.semitoneModulation),
+                modulationSpan(operation.grainModulation),
+                modulationSpan(operation.overlapModulation),
+                { operation.baseSemitones, operation.baseGrainMilliseconds,
+                    operation.baseOverlap, operation.grainDirection,
+                    operation.basePhaseCycles });
         }
     }
     std::ranges::copy(buffer(implementation_->outputLeftInput), outputLeft.begin());

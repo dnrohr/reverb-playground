@@ -103,35 +103,69 @@ void PitchShift::process(const std::span<float> samples) noexcept
         return;
     }
 
-    for (auto& sample : samples) {
-        const auto input = std::isfinite(sample) ? sample : 0.0F;
-        storage_[writeIndex_] = input;
+    for (auto& sample : samples) sample = processSample(sample);
+}
 
-        if (semitoneRampRemaining_ > 0) {
-            currentSemitones_ += semitoneStep_;
-            currentRatio_ *= ratioMultiplier_;
-            if (--semitoneRampRemaining_ == 0) {
-                currentSemitones_ = targetSemitones_;
-                currentRatio_ = targetRatio_;
-            }
-        }
-        auto output = renderState(currentState_, currentRatio_);
-        if (transitionRemaining_ > 0) {
-            const auto progress = 1.0 - static_cast<double>(transitionRemaining_)
-                / static_cast<double>(transitionSamples_);
-            output = std::lerp(output, renderState(targetState_, currentRatio_), static_cast<float>(progress));
-        }
+void PitchShift::processModulated(
+    const std::span<float> samples,
+    const std::span<const double> semitones,
+    const std::span<const double> grainMilliseconds,
+    const std::span<const double> overlap,
+    const PitchShiftParameters& constants) noexcept
+{
+    if (storage_.empty()
+        || (!semitones.empty() && semitones.size() < samples.size())
+        || (!grainMilliseconds.empty() && grainMilliseconds.size() < samples.size())
+        || (!overlap.empty() && overlap.size() < samples.size())) {
+        std::ranges::fill(samples, 0.0F);
+        return;
+    }
+    for (std::size_t index = 0; index < samples.size(); ++index) {
+        samples[index] = processSampleModulated(samples[index], {
+            semitones.empty() ? constants.semitones : semitones[index],
+            grainMilliseconds.empty() ? constants.grainMilliseconds : grainMilliseconds[index],
+            overlap.empty() ? constants.overlap : overlap[index],
+            constants.direction,
+            constants.phaseCycles,
+        });
+    }
+}
 
-        sample = std::clamp(output,
-            -static_cast<float>(pitch_shift::maximumEqualPowerOutputMagnitude),
-            static_cast<float>(pitch_shift::maximumEqualPowerOutputMagnitude));
-        if (++writeIndex_ == storage_.size()) writeIndex_ = 0;
-        advance(currentState_);
-        if (transitionRemaining_ > 0) {
-            advance(targetState_);
-            if (--transitionRemaining_ == 0) currentState_ = targetState_;
+float PitchShift::processSampleModulated(
+    const float sample, const PitchShiftParameters& parameters) noexcept
+{
+    if (storage_.empty()) return 0.0F;
+    setParameters(parameters);
+    return processSample(sample);
+}
+
+float PitchShift::processSample(const float sample) noexcept
+{
+    const auto input = std::isfinite(sample) ? sample : 0.0F;
+    storage_[writeIndex_] = input;
+    if (semitoneRampRemaining_ > 0) {
+        currentSemitones_ += semitoneStep_;
+        currentRatio_ *= ratioMultiplier_;
+        if (--semitoneRampRemaining_ == 0) {
+            currentSemitones_ = targetSemitones_;
+            currentRatio_ = targetRatio_;
         }
     }
+    auto output = renderState(currentState_, currentRatio_);
+    if (transitionRemaining_ > 0) {
+        const auto progress = 1.0 - static_cast<double>(transitionRemaining_)
+            / static_cast<double>(transitionSamples_);
+        output = std::lerp(output, renderState(targetState_, currentRatio_), static_cast<float>(progress));
+    }
+    if (++writeIndex_ == storage_.size()) writeIndex_ = 0;
+    advance(currentState_);
+    if (transitionRemaining_ > 0) {
+        advance(targetState_);
+        if (--transitionRemaining_ == 0) currentState_ = targetState_;
+    }
+    return std::clamp(output,
+        -static_cast<float>(pitch_shift::maximumEqualPowerOutputMagnitude),
+        static_cast<float>(pitch_shift::maximumEqualPowerOutputMagnitude));
 }
 
 void PitchShift::setParameters(const PitchShiftParameters& parameters) noexcept

@@ -112,6 +112,26 @@ void Allpass::processModulated(
     }
 }
 
+void Allpass::processModulated(
+    const std::span<float> samples,
+    const std::span<const double> delayMilliseconds,
+    const std::span<const double> coefficients,
+    const double constantDelayMilliseconds,
+    const double constantCoefficient) noexcept
+{
+    if (buffer_.empty()
+        || (!delayMilliseconds.empty() && delayMilliseconds.size() < samples.size())
+        || (!coefficients.empty() && coefficients.size() < samples.size())) {
+        std::ranges::fill(samples, 0.0F);
+        return;
+    }
+    for (std::size_t index = 0; index < samples.size(); ++index) {
+        samples[index] = processSampleModulated(samples[index],
+            delayMilliseconds.empty() ? constantDelayMilliseconds : delayMilliseconds[index],
+            coefficients.empty() ? constantCoefficient : coefficients[index]);
+    }
+}
+
 float Allpass::processSampleModulated(
     const float sample, const double delayMilliseconds, const double coefficient) noexcept
 {

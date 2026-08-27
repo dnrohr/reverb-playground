@@ -105,6 +105,12 @@ float Delay::readSample() const noexcept
     return std::lerp(first, second, fraction);
 }
 
+float Delay::readSampleModulated(const double delayMilliseconds) noexcept
+{
+    setDelayMilliseconds(delayMilliseconds);
+    return readSample();
+}
+
 void Delay::writeSample(const float sample) noexcept
 {
     if (buffer_.empty()) return;

@@ -236,4 +236,9 @@ double ControlRamp::next() noexcept
     return current_;
 }
 
+void ControlRamp::fill(const std::span<double> values) noexcept
+{
+    for (auto& value : values) value = next();
+}
+
 } // namespace reverb::graph
