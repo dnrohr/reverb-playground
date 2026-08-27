@@ -68,6 +68,7 @@ Useful references:
 - [Schematic editor interactions](docs/schematic-editor-interactions.md)
 - [Keith Barr reverb architecture research](docs/keith-barr-reverb-architectures.md)
 - [Large modulated, reverse, and shimmer topology research](docs/large-modulated-and-shimmer-reverb-topologies.md)
+- [Dense figure-eight reference design](docs/dense-figure-eight-design.md)
 - [Current progress](docs/progress.md) and [roadmap](docs/roadmap.md)
 - [Alpha demonstration video](artifacts/ui/m7-6-alpha-release/reverb-playground-alpha-demo.mp4)
 

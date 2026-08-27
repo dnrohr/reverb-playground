@@ -1371,7 +1371,7 @@ Acceptance criteria:
 
 ## M20. Dense figure-eight tank
 
-### M20.1 Implement a calculated two-branch reference
+### M20.1 Implement a calculated two-branch reference — Complete
 
 Tasks: build cross-coupled branches with input diffusion, distributed tank diffusion, in-loop damping, unequal delays, independent output taps, subtle modulation, and delay-aware RT60 gains.
 

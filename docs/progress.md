@@ -1265,3 +1265,23 @@ Results:
   evidence lives under `artifacts/ui/m19-2-density-inspector/`.
 - The deterministic browser-only capture fixture used for visual QA was removed
   before rebuilding production assets. Native capture remains authoritative.
+
+## M20.1 verification
+
+- The calculated Dense Figure Eight is a fully visible 37-node, 44-cable graph:
+  four input diffusers feed two opposite-polarity, cross-coupled branches with
+  six tank allpasses, four unequal delays, independent damping, slow motion,
+  and unequal signed stereo extraction taps.
+- Each branch return derives its gain from its own traversal time and the
+  requested 0.4–8 second RT60. One complete two-branch circulation reaches
+  -60 dB within floating-point tolerance; high-frequency damping is explicitly
+  allowed to decay faster than that low-frequency target.
+- Native tests require finite, sub-unity output at 44.1, 48, and 96 kHz and at
+  control extremes. The 64- and 257-sample processing partitions produce
+  sample-exact output, and patch JSON round-trips without changing the graph.
+- Against the M19 baselines, middle echo density must exceed both Barr and
+  Gravity by at least 0.08 and late active-peak rate must exceed Gravity by at
+  least 2×. [Dense figure-eight reference](dense-figure-eight-design.md)
+  records the architecture, decay equation, limits, and measurement contract.
+- This task adds no UI, so no screenshot or video is required. Factory controls,
+  teaching overlays, listening evidence, and complete qualification are M20.2.
