@@ -57,6 +57,18 @@ describe('patch persistence', () => {
     expect(writePatchJson(loaded.nodes, loaded.edges, loaded.viewport)).toBe(written);
   });
 
+  it('stores quality explicitly and defaults legacy schema-v2 patches to Normal', () => {
+    const flow = createFlowModel(reference);
+    flow.nodes.push(createModuleNode('stereo-input', 'stereo-input-1', { x: -200, y: 0 }), createModuleNode('stereo-output', 'stereo-output-1', { x: 200, y: 0 }));
+    const highJson = writePatchJson(flow.nodes, flow.edges, { x: 0, y: 0, zoom: 1 }, 'high');
+    expect(parsePatchJson(highJson, reference).source.qualityPolicy).toBe('high');
+
+    const legacy = JSON.parse(highJson) as Record<string, unknown>;
+    delete legacy.qualityPolicy;
+    expect(parsePatchJson(JSON.stringify(legacy), reference).source.qualityPolicy).toBe('normal');
+    expect(() => parsePatchJson(JSON.stringify({ ...legacy, qualityPolicy: 'ultra' }), reference)).toThrow(/unsupported qualityPolicy/);
+  });
+
   it('migrates legacy Pitch Shift values into one octave with a visible warning', () => {
     const flow = createFlowModel(reference);
     flow.nodes.push(createModuleNode('stereo-input', 'stereo-input-1', { x: -200, y: 0 }), createModuleNode('pitch-shift', 'pitch-shift-1', { x: 0, y: 0 }), createModuleNode('stereo-output', 'stereo-output-1', { x: 200, y: 0 }));

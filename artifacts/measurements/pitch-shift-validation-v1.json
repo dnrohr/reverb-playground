@@ -22,6 +22,89 @@
     "blockSize": 256,
     "warning": "Workstation measurement; compare trends, not an absolute cross-machine guarantee."
   },
+  "qualityModes": [
+    {
+      "id": "draft",
+      "interpolation": "nearest",
+      "sampleRate": 48000.0,
+      "directions": [
+        {
+          "direction": "forward",
+          "measuredOctaveCents": 0.0,
+          "referenceTargetDbfs": -8.287954338655027,
+          "foldedAliasDbfs": -8.288705990653714,
+          "aliasRelativeToReferenceDb": -0.0007516519986872083,
+          "measuredCpuRealtimeLoadPercent": 0.0772,
+          "processedFrames": 48000,
+          "elapsedMicroseconds": 772
+        },
+        {
+          "direction": "reverse",
+          "measuredOctaveCents": 0.0,
+          "referenceTargetDbfs": -8.287966561883943,
+          "foldedAliasDbfs": -8.288710502470519,
+          "aliasRelativeToReferenceDb": -0.0007439405865756754,
+          "measuredCpuRealtimeLoadPercent": 0.0766,
+          "processedFrames": 48000,
+          "elapsedMicroseconds": 766
+        }
+      ]
+    },
+    {
+      "id": "normal",
+      "interpolation": "linear",
+      "sampleRate": 48000.0,
+      "directions": [
+        {
+          "direction": "forward",
+          "measuredOctaveCents": 0.0,
+          "referenceTargetDbfs": -8.287966561919589,
+          "foldedAliasDbfs": -8.288710502469664,
+          "aliasRelativeToReferenceDb": -0.0007439405500750951,
+          "measuredCpuRealtimeLoadPercent": 0.1056,
+          "processedFrames": 48000,
+          "elapsedMicroseconds": 1056
+        },
+        {
+          "direction": "reverse",
+          "measuredOctaveCents": 0.0,
+          "referenceTargetDbfs": -8.28796656188395,
+          "foldedAliasDbfs": -8.288710502470565,
+          "aliasRelativeToReferenceDb": -0.0007439405866147553,
+          "measuredCpuRealtimeLoadPercent": 0.116,
+          "processedFrames": 48000,
+          "elapsedMicroseconds": 1160
+        }
+      ]
+    },
+    {
+      "id": "high",
+      "interpolation": "cubic",
+      "sampleRate": 48000.0,
+      "directions": [
+        {
+          "direction": "forward",
+          "measuredOctaveCents": 0.0,
+          "referenceTargetDbfs": -8.287966712331924,
+          "foldedAliasDbfs": -8.288711786401192,
+          "aliasRelativeToReferenceDb": -0.00074507406926827,
+          "measuredCpuRealtimeLoadPercent": 0.0985,
+          "processedFrames": 48000,
+          "elapsedMicroseconds": 985
+        },
+        {
+          "direction": "reverse",
+          "measuredOctaveCents": 0.0,
+          "referenceTargetDbfs": -8.28796656188395,
+          "foldedAliasDbfs": -8.288710502470565,
+          "aliasRelativeToReferenceDb": -0.0007439405866147553,
+          "measuredCpuRealtimeLoadPercent": 0.0977,
+          "processedFrames": 48000,
+          "elapsedMicroseconds": 977
+        }
+      ]
+    }
+  ],
   "rates": [
     {
       "sampleRate": 44100.0,
@@ -36,9 +119,9 @@
           "referenceTargetDbfs": -8.287969688228587,
           "foldedAliasDbfs": -14.353814236298103,
           "aliasRelativeToReferenceDb": -6.065844548069515,
-          "measuredCpuRealtimeLoadPercent": 0.0827,
+          "measuredCpuRealtimeLoadPercent": 0.0911,
           "processedFrames": 44100,
-          "elapsedMicroseconds": 827
+          "elapsedMicroseconds": 911
         },
         {
           "direction": "reverse",
@@ -46,9 +129,9 @@
           "referenceTargetDbfs": -8.287969688182494,
           "foldedAliasDbfs": -14.32146740839887,
           "aliasRelativeToReferenceDb": -6.033497720216376,
-          "measuredCpuRealtimeLoadPercent": 0.0837,
+          "measuredCpuRealtimeLoadPercent": 0.0808,
           "processedFrames": 44100,
-          "elapsedMicroseconds": 837
+          "elapsedMicroseconds": 808
         }
       ],
       "reverseGrain": {
@@ -71,26 +154,26 @@
         {
           "scenario": "steady-state",
           "processedFrames": 44100,
-          "elapsedMicroseconds": 882,
-          "realtimeLoadPercent": 0.0882
+          "elapsedMicroseconds": 863,
+          "realtimeLoadPercent": 0.0863
         },
         {
           "scenario": "parameter-transition",
           "processedFrames": 44100,
-          "elapsedMicroseconds": 1807,
-          "realtimeLoadPercent": 0.1807
+          "elapsedMicroseconds": 1857,
+          "realtimeLoadPercent": 0.1857
         },
         {
           "scenario": "two-voices",
           "processedFrames": 44100,
-          "elapsedMicroseconds": 1819,
-          "realtimeLoadPercent": 0.1819
+          "elapsedMicroseconds": 1866,
+          "realtimeLoadPercent": 0.1866
         },
         {
           "scenario": "topology-crossfade",
           "processedFrames": 44100,
-          "elapsedMicroseconds": 1751,
-          "realtimeLoadPercent": 0.1751
+          "elapsedMicroseconds": 1932,
+          "realtimeLoadPercent": 0.1932
         }
       ]
     },
@@ -107,9 +190,9 @@
           "referenceTargetDbfs": -8.287966561919589,
           "foldedAliasDbfs": -8.288710502469664,
           "aliasRelativeToReferenceDb": -0.0007439405500750951,
-          "measuredCpuRealtimeLoadPercent": 0.0951,
+          "measuredCpuRealtimeLoadPercent": 0.0957,
           "processedFrames": 48000,
-          "elapsedMicroseconds": 951
+          "elapsedMicroseconds": 957
         },
         {
           "direction": "reverse",
@@ -117,9 +200,9 @@
           "referenceTargetDbfs": -8.28796656188395,
           "foldedAliasDbfs": -8.288710502470565,
           "aliasRelativeToReferenceDb": -0.0007439405866147553,
-          "measuredCpuRealtimeLoadPercent": 0.0921,
+          "measuredCpuRealtimeLoadPercent": 0.1046,
           "processedFrames": 48000,
-          "elapsedMicroseconds": 921
+          "elapsedMicroseconds": 1046
         }
       ],
       "reverseGrain": {
@@ -142,26 +225,26 @@
         {
           "scenario": "steady-state",
           "processedFrames": 48000,
-          "elapsedMicroseconds": 958,
-          "realtimeLoadPercent": 0.0958
+          "elapsedMicroseconds": 995,
+          "realtimeLoadPercent": 0.0995
         },
         {
           "scenario": "parameter-transition",
           "processedFrames": 48000,
-          "elapsedMicroseconds": 1974,
-          "realtimeLoadPercent": 0.1974
+          "elapsedMicroseconds": 2041,
+          "realtimeLoadPercent": 0.2041
         },
         {
           "scenario": "two-voices",
           "processedFrames": 48000,
-          "elapsedMicroseconds": 2022,
-          "realtimeLoadPercent": 0.2022
+          "elapsedMicroseconds": 2026,
+          "realtimeLoadPercent": 0.2026
         },
         {
           "scenario": "topology-crossfade",
           "processedFrames": 48000,
-          "elapsedMicroseconds": 2181,
-          "realtimeLoadPercent": 0.2181
+          "elapsedMicroseconds": 2274,
+          "realtimeLoadPercent": 0.2274
         }
       ]
     },
@@ -178,9 +261,9 @@
           "referenceTargetDbfs": -8.287954291670095,
           "foldedAliasDbfs": -8.28870294786023,
           "aliasRelativeToReferenceDb": -0.0007486561901348665,
-          "measuredCpuRealtimeLoadPercent": 0.1692,
+          "measuredCpuRealtimeLoadPercent": 0.2694,
           "processedFrames": 96000,
-          "elapsedMicroseconds": 1692
+          "elapsedMicroseconds": 2694
         },
         {
           "direction": "reverse",
@@ -188,9 +271,9 @@
           "referenceTargetDbfs": -8.287954291666024,
           "foldedAliasDbfs": -8.288703241515531,
           "aliasRelativeToReferenceDb": -0.0007489498495072411,
-          "measuredCpuRealtimeLoadPercent": 0.1902,
+          "measuredCpuRealtimeLoadPercent": 0.2008,
           "processedFrames": 96000,
-          "elapsedMicroseconds": 1902
+          "elapsedMicroseconds": 2008
         }
       ],
       "reverseGrain": {
@@ -213,26 +296,26 @@
         {
           "scenario": "steady-state",
           "processedFrames": 96000,
-          "elapsedMicroseconds": 1978,
-          "realtimeLoadPercent": 0.1978
+          "elapsedMicroseconds": 2075,
+          "realtimeLoadPercent": 0.2075
         },
         {
           "scenario": "parameter-transition",
           "processedFrames": 96000,
-          "elapsedMicroseconds": 4085,
-          "realtimeLoadPercent": 0.4085
+          "elapsedMicroseconds": 4569,
+          "realtimeLoadPercent": 0.4569
         },
         {
           "scenario": "two-voices",
           "processedFrames": 96000,
-          "elapsedMicroseconds": 4097,
-          "realtimeLoadPercent": 0.4097
+          "elapsedMicroseconds": 4483,
+          "realtimeLoadPercent": 0.4483
         },
         {
           "scenario": "topology-crossfade",
           "processedFrames": 96000,
-          "elapsedMicroseconds": 4184,
-          "realtimeLoadPercent": 0.4184
+          "elapsedMicroseconds": 4552,
+          "realtimeLoadPercent": 0.4552
         }
       ]
     }

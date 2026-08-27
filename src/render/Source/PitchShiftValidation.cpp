@@ -10,6 +10,7 @@
 #include <cmath>
 #include <numbers>
 #include <span>
+#include <tuple>
 #include <vector>
 
 namespace reverb::render {
@@ -34,10 +35,11 @@ struct ReverseGrainMetrics final {
 ToneRender renderTone(
     const double sampleRate,
     const double frequency,
-    const reverb::dsp::pitch_shift::GrainDirection direction)
+    const reverb::dsp::pitch_shift::GrainDirection direction,
+    const reverb::dsp::PitchShiftQuality quality = reverb::dsp::PitchShiftQuality::normal)
 {
     reverb::dsp::PitchShift shifter;
-    shifter.prepare(sampleRate, { 12.0, 60.0, 0.5, direction });
+    shifter.prepare(sampleRate, { 12.0, 60.0, 0.5, direction, 0.0, quality });
     const auto frames = shifter.latencySamples() + static_cast<std::size_t>(sampleRate);
     std::vector<float> samples(frames);
     for (std::size_t frame = 0; frame < frames; ++frame)
@@ -101,16 +103,17 @@ double cents(const double measured, const double expected) noexcept
 
 PitchShiftDirectionMetrics measureDirection(
     const double sampleRate,
-    const reverb::dsp::pitch_shift::GrainDirection direction)
+    const reverb::dsp::pitch_shift::GrainDirection direction,
+    const reverb::dsp::PitchShiftQuality quality = reverb::dsp::PitchShiftQuality::normal)
 {
-    const auto reference = renderTone(sampleRate, 400.0, direction);
+    const auto reference = renderTone(sampleRate, 400.0, direction, quality);
     const auto referenceSamples = std::span<const float>(reference.samples).subspan(
         reference.latency + static_cast<std::size_t>(0.2 * sampleRate),
         static_cast<std::size_t>(0.6 * sampleRate));
     const auto referencePeak = bandPeak(referenceSamples, sampleRate, 800.0);
 
     const auto highInputFrequency = sampleRate * 0.35;
-    const auto alias = renderTone(sampleRate, highInputFrequency, direction);
+    const auto alias = renderTone(sampleRate, highInputFrequency, direction, quality);
     const auto aliasSamples = std::span<const float>(alias.samples).subspan(
         alias.latency + static_cast<std::size_t>(0.2 * sampleRate),
         static_cast<std::size_t>(0.6 * sampleRate));
@@ -120,7 +123,7 @@ PitchShiftDirectionMetrics measureDirection(
     constexpr std::size_t blockSize = 256;
     const auto processedFrames = static_cast<std::uint64_t>(sampleRate);
     reverb::dsp::PitchShift processor;
-    processor.prepare(sampleRate, { 12.0, 60.0, 0.5, direction });
+    processor.prepare(sampleRate, { 12.0, 60.0, 0.5, direction, 0.0, quality });
     std::array<float, blockSize> block {};
     for (std::size_t frame = 0; frame < block.size(); ++frame)
         block[frame] = static_cast<float>(0.25 * std::sin(
@@ -304,7 +307,7 @@ nlohmann::ordered_json directionJson(const PitchShiftDirectionMetrics& metrics)
 PitchShiftValidationReport measurePitchShiftValidation()
 {
     PitchShiftValidationReport report {
-        "dual-grain-linear-v1", "linear", 60.0, 0.5, {},
+        "dual-grain-linear-v1", "linear", 60.0, 0.5, {}, {},
     };
     for (const auto sampleRate : reverb::dsp::pitch_shift::qualificationSampleRates) {
         const auto latency = reverb::dsp::pitch_shift::reportedLatencySamples(sampleRate);
@@ -323,6 +326,16 @@ PitchShiftValidationReport measurePitchShiftValidation()
                 measureBenchmark(sampleRate, "two-voices"),
                 measureBenchmark(sampleRate, "topology-crossfade") },
         });
+    }
+    constexpr auto comparisonRate = 48'000.0;
+    for (const auto [id, interpolation, quality] : {
+             std::tuple { "draft", "nearest", reverb::dsp::PitchShiftQuality::draft },
+             std::tuple { "normal", "linear", reverb::dsp::PitchShiftQuality::normal },
+             std::tuple { "high", "cubic", reverb::dsp::PitchShiftQuality::high },
+         }) {
+        report.qualityModes.push_back({ id, interpolation,
+            measureDirection(comparisonRate, reverb::dsp::pitch_shift::GrainDirection::forward, quality),
+            measureDirection(comparisonRate, reverb::dsp::pitch_shift::GrainDirection::reverse, quality) });
     }
     return report;
 }
@@ -365,6 +378,16 @@ std::string writePitchShiftValidationJson(const PitchShiftValidationReport& repo
             { "benchmarks", std::move(benchmarks) },
         });
     }
+    auto qualityModes = nlohmann::ordered_json::array();
+    for (const auto& mode : report.qualityModes) {
+        qualityModes.push_back({
+            { "id", mode.id }, { "interpolation", mode.interpolation },
+            { "sampleRate", 48'000.0 },
+            { "directions", nlohmann::ordered_json::array({
+                directionJson(mode.forward), directionJson(mode.reverse),
+            }) },
+        });
+    }
     return nlohmann::ordered_json {
         { "formatVersion", 1 },
         { "measurement", "pitch-shift-validation" },
@@ -384,6 +407,7 @@ std::string writePitchShiftValidationJson(const PitchShiftValidationReport& repo
             { "blockSize", 256 },
             { "warning", "Workstation measurement; compare trends, not an absolute cross-machine guarantee." },
         } },
+        { "qualityModes", std::move(qualityModes) },
         { "rates", std::move(rates) },
     }.dump(2);
 }

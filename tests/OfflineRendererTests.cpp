@@ -109,6 +109,28 @@ TEST_CASE("Offline render is deterministic across reset and serialized patch rel
     REQUIRE(afterReload.right == first.right);
 }
 
+TEST_CASE("Offline render honors the persisted Pitch Shift quality policy")
+{
+    const auto patchPath = std::filesystem::path { REVERB_FACTORY_PATCH_DIR }
+        / "safe-parallel-shimmer.rvp.json";
+    std::ifstream stream(patchPath);
+    REQUIRE(stream.good());
+    const std::string patchJson {
+        std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
+    auto patch = reverb::graph::parsePatchJson(patchJson);
+
+    const auto render = [&](const reverb::graph::QualityPolicy policy) {
+        patch.qualityPolicy = policy;
+        return reverb::render::renderOffline({ patch, reverb::render::InputKind::boundedNoise, 48'000.0, 36'000 });
+    };
+    const auto draft = render(reverb::graph::QualityPolicy::draft);
+    const auto normal = render(reverb::graph::QualityPolicy::normal);
+    const auto high = render(reverb::graph::QualityPolicy::high);
+    REQUIRE(draft.left != normal.left);
+    REQUIRE(high.left != normal.left);
+    REQUIRE(normal.left == render(reverb::graph::QualityPolicy::normal).left);
+}
+
 TEST_CASE("Analysis is stable and machine readable")
 {
     const auto request = requestFor(reverb::render::InputKind::impulse);

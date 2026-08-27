@@ -1249,6 +1249,8 @@ Acceptance criteria:
 
 ### M18.3 Add bounded quality modes
 
+Status: Complete.
+
 Define quality choices only where they produce a measured latency/load benefit without making saved graphs ambiguous.
 
 Acceptance criteria:
@@ -1260,6 +1262,8 @@ Acceptance criteria:
 - Automated measurements and listening fixtures compare cost and artifacts at each supported quality level.
 
 ### M18.4 Decide factory specialization versus generic execution
+
+Status: In progress.
 
 Use the completed measurements to determine whether selected factory graphs need ahead-of-time C++ kernels and whether native-code JIT compilation is justified.
 

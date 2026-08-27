@@ -40,6 +40,7 @@ For a guided tour, follow [Getting started: hear and inspect the Barr reference]
 - Audio-file playback, looping, seeking, wet/dry comparison, and processed-file export
 - Live energy, impulse response, decay, RT60, safety, and feedback-loop visualizations
 - Continuous audible editing, undo/redo, copy/paste, and patch save/load
+- Draft, Normal, and High processing policies that are saved with each patch
 - Contextual explanations intended to teach through use
 
 ## Standalone or VST3?
@@ -61,6 +62,7 @@ Report reproducible bugs or documentation problems through [GitHub Issues](https
 Useful references:
 
 - [Module and visualization reference](docs/module-and-visualization-reference.md)
+- [Processing quality modes](docs/quality-modes.md)
 - [Saving and loading patches](docs/patch-saving-and-loading.md)
 - [Schematic editor interactions](docs/schematic-editor-interactions.md)
 - [Keith Barr reverb architecture research](docs/keith-barr-reverb-architectures.md)

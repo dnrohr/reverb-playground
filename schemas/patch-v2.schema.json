@@ -8,6 +8,7 @@
   "properties": {
     "schemaVersion": { "const": 2 },
     "engineVersion": { "type": "string", "minLength": 1 },
+    "qualityPolicy": { "enum": ["draft", "normal", "high"] },
     "semantic": { "$ref": "#/$defs/semanticGraph" },
     "layout": { "$ref": "#/$defs/layout" }
   },

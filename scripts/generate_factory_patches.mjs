@@ -336,23 +336,23 @@ for (const [filename, document] of [
 const gravityFactoryPath = resolve(outputDirectory, 'gravity-diffusion.rvp.json');
 const gravityFactoryBytes = await readFile(gravityFactoryPath);
 const gravityFactoryHash = createHash('sha256').update(gravityFactoryBytes).digest('hex');
-if (gravityFactoryHash !== '8e683dfb595c6f24ac5882e46e6d3fbffcb92790a5616f1bd2b31be1c8973124')
+if (gravityFactoryHash !== '2c7f8615c1fe96dcf97a6c3d0662477186783618458ac7104ad1ac011fa05bf5')
   throw new Error('gravity-diffusion.rvp.json is stale; run .\\scripts\\generate_gravity_factory_patch.ps1 -Configuration Release');
 
 const shimmerFactoryPath = resolve(outputDirectory, 'safe-parallel-shimmer.rvp.json');
 const shimmerFactoryBytes = await readFile(shimmerFactoryPath);
 const shimmerFactoryHash = createHash('sha256').update(shimmerFactoryBytes).digest('hex');
-if (shimmerFactoryHash !== 'd35eebc8741a33fbf51a6c4492bd5dd615745cf0eeba84a6834351df07ac94d8')
+if (shimmerFactoryHash !== '7438ecdc52570dd23b0fa3d560630e82ead8d001005001e451706bebecd84e7c')
   throw new Error('safe-parallel-shimmer.rvp.json is stale; run .\\scripts\\generate_safe_parallel_shimmer_factory.ps1 -Configuration Release');
 
 const splitShimmerFactoryPath = resolve(outputDirectory, 'split-feedback-shimmer.rvp.json');
 const splitShimmerFactoryBytes = await readFile(splitShimmerFactoryPath);
 const splitShimmerFactoryHash = createHash('sha256').update(splitShimmerFactoryBytes).digest('hex');
-if (splitShimmerFactoryHash !== 'e216b5a82fab8beeb93727e697c8e821136ac8d81a62763db89ab84ac4e08bc7')
+if (splitShimmerFactoryHash !== 'd89872ca7293d33e00a5aebc57e15ae8d84a2a94636316ca10f8f76d93a13cfc')
   throw new Error('split-feedback-shimmer.rvp.json is stale; run .\\scripts\\generate_split_feedback_shimmer_factory.ps1 -Configuration Release');
 
 const reverseCosmicFactoryPath = resolve(outputDirectory, 'reverse-cosmic-shimmer.rvp.json');
 const reverseCosmicFactoryBytes = await readFile(reverseCosmicFactoryPath);
 const reverseCosmicFactoryHash = createHash('sha256').update(reverseCosmicFactoryBytes).digest('hex');
-if (reverseCosmicFactoryHash !== '9c41eb44a31806995fa26b749a4a1fb2153143547037b8b638d53242ca453f5a')
+if (reverseCosmicFactoryHash !== '200bc054ddacbf171a9bc3213357910b36a9731900b7b69e0e4b343c1f719628')
   throw new Error('reverse-cosmic-shimmer.rvp.json is stale; run .\\scripts\\generate_reverse_cosmic_shimmer_factory.ps1 -Configuration Release');

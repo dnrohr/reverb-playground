@@ -166,6 +166,7 @@ TEST_CASE("Plugin host state restores every visible Pitch Shift field after prep
         { "input", 20.0, 120.0 }, { "pitch-shift-1", 320.0, 120.0 }, { "output", 680.0, 120.0 },
     };
     document.layout.viewport = { 17.0, -23.0, 0.83 };
+    document.qualityPolicy = QualityPolicy::high;
     const auto serialized = writePatchJson(document);
 
     ReverbPlaygroundProcessor source;
@@ -184,6 +185,7 @@ TEST_CASE("Plugin host state restores every visible Pitch Shift field after prep
     CHECK(pitch.at("type") == "pitch-shift");
     CHECK(pitch.at("parameters").at(0).at("modulation").at("amount") == 3.0);
     CHECK(pitch.at("parameters").at(3).at("value") == 1.0);
+    CHECK(afterPrepare.at("qualityPolicy") == "high");
 }
 
 TEST_CASE("Plugin host state restores the complete Safe Parallel Shimmer factory and edited level")

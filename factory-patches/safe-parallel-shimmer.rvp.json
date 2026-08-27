@@ -1,6 +1,7 @@
 {
   "schemaVersion": 2,
   "engineVersion": "0.1",
+  "qualityPolicy": "normal",
   "semantic": {
     "nodes": [
       {

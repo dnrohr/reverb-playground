@@ -98,12 +98,15 @@ struct Layout final {
     friend bool operator==(const Layout&, const Layout&) = default;
 };
 
+enum class QualityPolicy : std::uint8_t { draft, normal, high };
+
 class GraphDocument final {
 public:
     static constexpr std::uint32_t schemaVersion = 2;
     static constexpr std::uint32_t oldestReadableSchemaVersion = 1;
 
     std::string engineVersion { "0.1" };
+    QualityPolicy qualityPolicy { QualityPolicy::normal };
     std::vector<Node> nodes;
     std::vector<Connection> connections;
     Layout layout;

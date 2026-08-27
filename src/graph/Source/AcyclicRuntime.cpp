@@ -51,6 +51,7 @@ struct Operation final {
     double baseGrainMilliseconds {};
     double baseOverlap {};
     double basePhaseCycles {};
+    reverb::dsp::PitchShiftQuality pitchQuality { reverb::dsp::PitchShiftQuality::normal };
     reverb::dsp::pitch_shift::GrainDirection grainDirection { reverb::dsp::pitch_shift::GrainDirection::forward };
     std::size_t gainModulation { std::numeric_limits<std::size_t>::max() };
     std::size_t delayModulation { std::numeric_limits<std::size_t>::max() };
@@ -572,7 +573,7 @@ void PreparedAcyclicRuntime::process(
                         modulationSpan(operation.overlapModulation),
                         { operation.baseSemitones, operation.baseGrainMilliseconds,
                             operation.baseOverlap, operation.grainDirection,
-                            operation.basePhaseCycles });
+                            operation.basePhaseCycles, operation.pitchQuality });
                 } else if (operation.kind == OperationKind::envelopeFollower) {
                     for (std::size_t sample = 0; sample < count; ++sample)
                         destination[sample] = std::get<reverb::dsp::EnvelopeFollower>(operation.processor)
@@ -653,7 +654,7 @@ void PreparedAcyclicRuntime::process(
                         operation.overlapModulation == noModulation ? operation.baseOverlap
                             : implementation_->modulations[operation.overlapModulation].values[sampleIndex],
                         operation.grainDirection,
-                        operation.basePhaseCycles,
+                        operation.basePhaseCycles, operation.pitchQuality,
                     });
                 }
                 else if (operation.kind == OperationKind::envelopeFollower) {
@@ -772,7 +773,7 @@ void PreparedAcyclicRuntime::process(
                 modulationSpan(operation.overlapModulation),
                 { operation.baseSemitones, operation.baseGrainMilliseconds,
                     operation.baseOverlap, operation.grainDirection,
-                    operation.basePhaseCycles });
+                    operation.basePhaseCycles, operation.pitchQuality });
         }
     }
     std::ranges::copy(buffer(implementation_->outputLeftInput), outputLeft.begin());
@@ -1209,11 +1210,16 @@ AcyclicCompileResult compileAcyclicGraph(
                 operation.grainDirection = parameter(node, "direction")->value >= 0.5
                     ? reverb::dsp::pitch_shift::GrainDirection::reverse
                     : reverb::dsp::pitch_shift::GrainDirection::forward;
+                operation.pitchQuality = document.qualityPolicy == QualityPolicy::draft
+                    ? reverb::dsp::PitchShiftQuality::draft
+                    : document.qualityPolicy == QualityPolicy::high
+                    ? reverb::dsp::PitchShiftQuality::high
+                    : reverb::dsp::PitchShiftQuality::normal;
                 reverb::dsp::PitchShift processor;
                 processor.prepare(sampleRate, {
                     operation.baseSemitones, operation.baseGrainMilliseconds,
                     operation.baseOverlap, operation.grainDirection,
-                    operation.basePhaseCycles,
+                    operation.basePhaseCycles, operation.pitchQuality,
                 }, std::span(implementation->delayArena).subspan(delayArenaOffset, samples));
                 delayArenaOffset += samples;
                 operation.processor = std::move(processor);

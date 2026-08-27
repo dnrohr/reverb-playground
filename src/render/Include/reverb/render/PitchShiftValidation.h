@@ -50,6 +50,13 @@ struct PitchShiftValidationReport final {
     double grainMilliseconds {};
     double overlap {};
     std::vector<PitchShiftRateMetrics> rates;
+    struct QualityModeMetrics final {
+        std::string id;
+        std::string interpolation;
+        PitchShiftDirectionMetrics forward;
+        PitchShiftDirectionMetrics reverse;
+    };
+    std::vector<QualityModeMetrics> qualityModes;
 };
 
 [[nodiscard]] PitchShiftValidationReport measurePitchShiftValidation();

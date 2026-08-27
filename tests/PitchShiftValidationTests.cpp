@@ -254,6 +254,21 @@ TEST_CASE("Checked Pitch Shift validation records rate quality latency storage C
     REQUIRE(report.at("measurement") == "pitch-shift-validation");
     REQUIRE(report.at("quality").at("id") == "dual-grain-linear-v1");
     REQUIRE(report.at("quality").at("interpolation") == "linear");
+    REQUIRE(report.at("qualityModes").size() == 3);
+    REQUIRE(report.at("qualityModes").at(0).at("id") == "draft");
+    REQUIRE(report.at("qualityModes").at(0).at("interpolation") == "nearest");
+    REQUIRE(report.at("qualityModes").at(1).at("id") == "normal");
+    REQUIRE(report.at("qualityModes").at(1).at("interpolation") == "linear");
+    REQUIRE(report.at("qualityModes").at(2).at("id") == "high");
+    REQUIRE(report.at("qualityModes").at(2).at("interpolation") == "cubic");
+    for (const auto& mode : report.at("qualityModes")) {
+        REQUIRE(mode.at("sampleRate") == 48'000.0);
+        REQUIRE(mode.at("directions").size() == 2);
+        for (const auto& direction : mode.at("directions")) {
+            REQUIRE(std::abs(direction.at("measuredOctaveCents").get<double>()) <= 15.0);
+            REQUIRE(direction.at("measuredCpuRealtimeLoadPercent").get<double>() < 10.0);
+        }
+    }
     REQUIRE(report.at("rates").size() == reverb::dsp::pitch_shift::qualificationSampleRates.size());
     for (std::size_t index = 0; index < report.at("rates").size(); ++index) {
         const auto& rate = report.at("rates").at(index);

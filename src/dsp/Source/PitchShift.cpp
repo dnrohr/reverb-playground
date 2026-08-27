@@ -71,6 +71,7 @@ void PitchShift::prepare(
     currentRatio_ = pitch_shift::ratioForSemitones(safe.semitones);
     targetRatio_ = currentRatio_;
     ratioMultiplier_ = 1.0;
+    quality_ = safe.quality;
     currentState_ = { safe.phaseCycles, safe.grainMilliseconds, safe.overlap,
         safe.direction, safe.phaseCycles };
     targetState_ = currentState_;
@@ -171,6 +172,7 @@ float PitchShift::processSample(const float sample) noexcept
 void PitchShift::setParameters(const PitchShiftParameters& parameters) noexcept
 {
     const auto safe = sanitize(parameters);
+    quality_ = safe.quality;
     if (safe.semitones != targetSemitones_) {
         targetSemitones_ = safe.semitones;
         targetRatio_ = pitch_shift::ratioForSemitones(targetSemitones_);
@@ -212,7 +214,7 @@ void PitchShift::settleParameters() noexcept
 PitchShiftParameters PitchShift::parameters() const noexcept
 {
     return { targetSemitones_, targetState_.grainMilliseconds,
-        targetState_.overlap, targetState_.direction, targetState_.resetPhaseCycles };
+        targetState_.overlap, targetState_.direction, targetState_.resetPhaseCycles, quality_ };
 }
 
 std::size_t PitchShift::latencySamples() const noexcept { return latencySamples_; }
@@ -236,7 +238,7 @@ PitchShiftParameters PitchShift::sanitize(const PitchShiftParameters& parameters
         ? std::clamp(parameters.phaseCycles,
             pitch_shift::minimumPhaseCycles, pitch_shift::maximumPhaseCycles)
         : pitch_shift::defaultPhaseCycles;
-    return { semitones, grain, overlap, parameters.direction, phase };
+    return { semitones, grain, overlap, parameters.direction, phase, parameters.quality };
 }
 
 float PitchShift::renderState(const GrainState& state, const double ratio) const noexcept
@@ -274,8 +276,18 @@ float PitchShift::readFractional(const double delaySamples) const noexcept
     if (firstIndex >= storage_.size()) firstIndex -= storage_.size();
     auto secondIndex = firstIndex == 0 ? storage_.size() - 1 : firstIndex - 1;
     const auto first = storage_[firstIndex];
+    if (quality_ == PitchShiftQuality::draft) return first;
     const auto second = storage_[secondIndex];
-    return std::lerp(first, second, fraction);
+    if (quality_ == PitchShiftQuality::normal) return std::lerp(first, second, fraction);
+    const auto previousIndex = firstIndex + 1 == storage_.size() ? 0 : firstIndex + 1;
+    const auto nextIndex = secondIndex == 0 ? storage_.size() - 1 : secondIndex - 1;
+    const auto previous = storage_[previousIndex];
+    const auto next = storage_[nextIndex];
+    const auto t = fraction;
+    return 0.5F * ((2.0F * first)
+        + (-previous + second) * t
+        + (2.0F * previous - 5.0F * first + 4.0F * second - next) * t * t
+        + (-previous + 3.0F * first - 3.0F * second + next) * t * t * t);
 }
 
 void PitchShift::configureState(GrainState& state) const noexcept

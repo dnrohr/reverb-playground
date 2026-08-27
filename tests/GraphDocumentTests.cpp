@@ -93,7 +93,27 @@ TEST_CASE("Patch schema is valid JSON Schema metadata")
         REQUIRE(schema.at("$schema") == "https://json-schema.org/draft/2020-12/schema");
         REQUIRE(schema.at("properties").at("schemaVersion").at("const") == version);
         REQUIRE(schema.at("required").size() == 4);
+        if (version == 2)
+            REQUIRE(schema.at("properties").at("qualityPolicy").at("enum")
+                == nlohmann::json::array({ "draft", "normal", "high" }));
     }
+}
+
+TEST_CASE("Patch quality policy defaults safely and round trips explicitly")
+{
+    using namespace reverb::graph;
+    const auto legacy = parsePatchJson(readFixture("patches/valid/barr-minimal.json"));
+    REQUIRE(legacy.qualityPolicy == QualityPolicy::normal);
+
+    auto high = legacy;
+    high.qualityPolicy = QualityPolicy::high;
+    const auto written = writePatchJson(high);
+    auto json = nlohmann::json::parse(written);
+    REQUIRE(json.at("qualityPolicy") == "high");
+    REQUIRE(parsePatchJson(written) == high);
+
+    json["qualityPolicy"] = "unbounded";
+    REQUIRE_THROWS(parsePatchJson(json.dump()));
 }
 
 TEST_CASE("Every released schema version migrates to deterministic schema v2")

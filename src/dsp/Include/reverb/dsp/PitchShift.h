@@ -3,10 +3,13 @@
 #include <reverb/dsp/PitchShiftContract.h>
 
 #include <cstddef>
+#include <cstdint>
 #include <span>
 #include <vector>
 
 namespace reverb::dsp {
+
+enum class PitchShiftQuality : std::uint8_t { draft, normal, high };
 
 struct PitchShiftParameters final {
     double semitones { pitch_shift::defaultSemitones };
@@ -14,6 +17,7 @@ struct PitchShiftParameters final {
     double overlap { pitch_shift::defaultOverlap };
     pitch_shift::GrainDirection direction { pitch_shift::GrainDirection::forward };
     double phaseCycles { pitch_shift::defaultPhaseCycles };
+    PitchShiftQuality quality { PitchShiftQuality::normal };
 };
 
 class PitchShift final {
@@ -67,6 +71,7 @@ private:
     double currentRatio_ { 1.0 };
     double targetRatio_ { 1.0 };
     double ratioMultiplier_ { 1.0 };
+    PitchShiftQuality quality_ { PitchShiftQuality::normal };
     GrainState currentState_;
     GrainState targetState_;
 

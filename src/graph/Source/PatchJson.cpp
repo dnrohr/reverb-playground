@@ -202,6 +202,13 @@ GraphDocument parsePatchJson(const std::string_view jsonText)
 
     GraphDocument document;
     document.engineVersion = root.at("engineVersion").get<std::string>();
+    if (const auto quality = root.find("qualityPolicy"); quality != root.end()) {
+        const auto value = quality->get<std::string>();
+        if (value == "draft") document.qualityPolicy = QualityPolicy::draft;
+        else if (value == "normal") document.qualityPolicy = QualityPolicy::normal;
+        else if (value == "high") document.qualityPolicy = QualityPolicy::high;
+        else throw std::invalid_argument("unsupported qualityPolicy '" + value + "'");
+    }
 
     const auto& semantic = root.at("semantic");
     for (const auto& nodeJson : semantic.at("nodes")) {
@@ -294,6 +301,8 @@ std::string writePatchJson(const GraphDocument& document)
     const Json root {
         { "schemaVersion", GraphDocument::schemaVersion },
         { "engineVersion", document.engineVersion },
+        { "qualityPolicy", document.qualityPolicy == QualityPolicy::draft ? "draft"
+            : document.qualityPolicy == QualityPolicy::high ? "high" : "normal" },
         { "semantic",
             {
                 { "nodes", std::move(nodeArray) },

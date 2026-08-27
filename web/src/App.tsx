@@ -23,7 +23,7 @@ import { decorateFeedbackLoops, decorateRunawayFeedbackLoop, inspectFeedbackLoop
 import { connectGraph, decideConnection, insertSumForOccupiedInput } from './connectionEditing';
 import { PatchNode } from './PatchNode';
 import { callNative } from './nativeBridge';
-import { parsePatchJson, writePatchJson } from './patchPersistence';
+import { parsePatchJson, writePatchJson, type QualityPolicy } from './patchPersistence';
 import researchText from '../../docs/keith-barr-reverb-architectures.md?raw';
 import { teachingTopicFor, type TeachingTopic } from './teaching';
 import { parseImpulseCaptureResult, parseImpulseCaptureStatus, type ImpulseCaptureResult, type ImpulseCaptureStatus } from './impulseCapture';
@@ -385,6 +385,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const loadInput = useRef<HTMLInputElement | null>(null);
   const [fileStatus, setFileStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
   const [activePatchId, setActivePatchId] = useState<FactoryPatchId | 'custom'>(restored ? 'custom' : 'barr-reference');
+  const [qualityPolicy, setQualityPolicy] = useState<QualityPolicy>(restored?.source.qualityPolicy ?? 'normal');
   const [comparisonPatchId, setComparisonPatchId] = useState<ComparisonPatchId>('causal-reverse-envelope');
   const [teachingEnabled, setTeachingEnabled] = useState(() => {
     try { return window.localStorage.getItem('reverb-playground-teaching') !== 'off'; } catch { return true; }
@@ -423,7 +424,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [diagnostics, setDiagnostics] = useState<RuntimeDiagnostics | null>(null);
   const [controlPreviewTime, setControlPreviewTime] = useState(() => performance.now() / 1000);
   const audibleFingerprint = useMemo(() => audibleGraphFingerprint(nodes, edges), [edges, nodes]);
-  const hostStateJson = useMemo(() => writePatchJson(nodes, edges, viewport), [edges, nodes, viewport]);
+  const hostStateJson = useMemo(() => writePatchJson(nodes, edges, viewport, qualityPolicy), [edges, nodes, qualityPolicy, viewport]);
   const activePatch = activePatchId === 'custom' ? null : factoryPatchDescription(activePatchId);
 
   const loopInspection = useMemo(() => selectedNode
@@ -485,7 +486,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     let cancelled = false;
     const timer = window.setTimeout(async () => {
       try {
-        const result = parseGraphPublicationResult(await callNative('publishGraph', writePatchJson(nodes, edges, viewport)));
+        const result = parseGraphPublicationResult(await callNative('publishGraph', writePatchJson(nodes, edges, viewport, qualityPolicy)));
         if (!cancelled) setGraphStatus(result.accepted
           ? { kind: 'ok', message: `GRAPH REVISION #${result.revision} QUEUED FOR AUDITION` }
           : { kind: 'error', message: result.error });
@@ -494,7 +495,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       }
     }, 35);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [audibleFingerprint]);
+  }, [audibleFingerprint, qualityPolicy]);
 
   useEffect(() => {
     let cancelled = false;
@@ -766,7 +767,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
   const savePatch = useCallback(() => {
     try {
-      const json = writePatchJson(nodes, edges, viewport);
+      const json = writePatchJson(nodes, edges, viewport, qualityPolicy);
       parsePatchJson(json, snapshot);
       const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
       const link = document.createElement('a');
@@ -782,7 +783,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     } catch (reason) {
       setFileStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Patch save failed' });
     }
-  }, [activePatch, edges, nodes, snapshot, viewport]);
+  }, [activePatch, edges, nodes, qualityPolicy, snapshot, viewport]);
 
   const loadPatch = useCallback(async (file: File) => {
     try {
@@ -790,6 +791,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       setNodes(loaded.nodes);
       setEdges(loaded.edges);
       setViewport(loaded.viewport);
+      setQualityPolicy(loaded.source.qualityPolicy);
       await setFlowViewport(loaded.viewport);
       for (const node of loaded.nodes) {
         for (const parameter of node.data.parameters)
@@ -842,6 +844,15 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
             >
               {activePatchId === 'custom' ? <option value="custom">Custom / loaded file</option> : null}
               {factoryPatches.map((patch) => <option key={patch.id} value={patch.id}>{patch.label}</option>)}
+            </select>
+          </label>
+          <label className="factory-picker quality-picker" title="Draft uses nearest interpolation; Normal uses linear; High uses cubic interpolation. Saved with the patch.">
+            <span>QUALITY</span>
+            <select aria-label="Processing quality" value={qualityPolicy}
+              onChange={(event) => setQualityPolicy(event.target.value as QualityPolicy)}>
+              <option value="draft">Draft / lowest cost</option>
+              <option value="normal">Normal / released sound</option>
+              <option value="high">High / cubic</option>
             </select>
           </label>
           <div className="comparison-switch" role="group" aria-label="Compare Barr reference with selected design">

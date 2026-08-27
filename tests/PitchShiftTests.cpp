@@ -266,3 +266,27 @@ TEST_CASE("Pitch shift block modulation matches sample-wise parameter delivery")
     blockWise.processModulated(actual, semitones, {}, {}, constants);
     REQUIRE(actual == expected);
 }
+
+TEST_CASE("Pitch shift quality modes are bounded distinct and preserve latency")
+{
+    using namespace reverb::dsp;
+    constexpr auto sampleRate = 48'000.0;
+    const auto render = [&](const PitchShiftQuality quality) {
+        PitchShift processor;
+        processor.prepare(sampleRate, { 7.0, 60.0, 0.5,
+            pitch_shift::GrainDirection::forward, 0.0, quality });
+        std::vector<float> output(processor.latencySamples() + 12'000);
+        for (std::size_t index = 0; index < output.size(); ++index)
+            output[index] = static_cast<float>(0.3 * std::sin(0.173 * static_cast<double>(index)));
+        const auto latency = processor.latencySamples();
+        processor.process(output);
+        REQUIRE(processor.latencySamples() == latency);
+        REQUIRE(std::ranges::all_of(output, [](const float sample) { return std::isfinite(sample); }));
+        return output;
+    };
+    const auto draft = render(PitchShiftQuality::draft);
+    const auto normal = render(PitchShiftQuality::normal);
+    const auto high = render(PitchShiftQuality::high);
+    REQUIRE(draft != normal);
+    REQUIRE(high != normal);
+}
