@@ -454,11 +454,27 @@ juce::String ReverbPlaygroundProcessor::impulseCaptureJson() const
 bool ReverbPlaygroundProcessor::setEnergyTelemetryEnabled(const bool enabled) noexcept
 {
     harness_.setEnergyTelemetryEnabled(enabled);
+    graphHost_.setEnergyTelemetryEnabled(enabled);
     return enabled;
 }
 
 juce::String ReverbPlaygroundProcessor::energyTelemetryJson() const
 {
+    if (graphAudioEnabled_.load(std::memory_order_acquire)) {
+        const auto snapshot = graphHost_.energySnapshot();
+        auto nodes = nlohmann::ordered_json::array();
+        for (const auto& node : snapshot.nodes)
+            nodes.push_back({ { "nodeId", node.nodeId }, { "rms", node.rms } });
+        const nlohmann::ordered_json json {
+            { "formatVersion", 1 }, { "enabled", snapshot.enabled },
+            { "coherent", snapshot.coherent }, { "revision", snapshot.revision },
+            { "generation", snapshot.generation },
+            { "observedSampleValues", snapshot.observedSampleValues },
+            { "nodes", std::move(nodes) },
+        };
+        const auto text = json.dump();
+        return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
+    }
     const auto snapshot = harness_.energyTelemetrySnapshot();
     auto nodes = nlohmann::ordered_json::array();
     for (std::size_t index = 0; index < snapshot.rms.size(); ++index) {
@@ -470,6 +486,7 @@ juce::String ReverbPlaygroundProcessor::energyTelemetryJson() const
         { "formatVersion", 1 },
         { "enabled", snapshot.enabled },
         { "coherent", snapshot.coherent },
+        { "revision", 0 },
         { "generation", snapshot.generation },
         { "observedSampleValues", snapshot.observedSampleValues },
         { "nodes", std::move(nodes) },
@@ -747,10 +764,12 @@ bool ReverbPlaygroundProcessor::setAudioFileLoop(
 
 bool ReverbPlaygroundProcessor::startProcessedFileExport(
     const juce::File& destination,
+    const reverb::render::FileExportRange range,
     const bool overwriteConfirmed,
     std::string& error)
 {
     const auto patch = hostPatchState_.document().value_or(reverb::graph::makeBarrReferenceGraph());
+    const auto transport = audioFileSource_.snapshot();
     return fileExporter_.start({
         .source = loadedAudioFile_,
         .destination = destination,
@@ -763,6 +782,11 @@ bool ReverbPlaygroundProcessor::startProcessedFileExport(
         .overwriteConfirmed = overwriteConfirmed,
         .wetGain = static_cast<double>(wetGain()),
         .dryGain = static_cast<double>(dryGain()),
+        .range = range,
+        .sourceStartFrame = range == reverb::render::FileExportRange::selectedLoop
+            ? transport.loopStartSourceFrame : 0,
+        .sourceEndFrame = range == reverb::render::FileExportRange::selectedLoop
+            ? transport.loopEndSourceFrame : transport.frameCount,
     }, error);
 }
 

@@ -78,12 +78,13 @@ public:
     void stopAudioFile();
     bool seekAudioFile(std::int64_t sourceFrame, std::string& error);
     bool setAudioFileLoop(bool enabled, std::int64_t startSourceFrame, std::int64_t endSourceFrame, std::string& error);
-    bool startProcessedFileExport(const juce::File& destination,
+    bool startProcessedFileExport(const juce::File& destination, reverb::render::FileExportRange range,
         bool overwriteConfirmed, std::string& error);
     bool startProcessedFileExport(const juce::File& destination, reverb::render::FileExportMode,
         bool overwriteConfirmed, std::string& error)
     {
-        return startProcessedFileExport(destination, overwriteConfirmed, error);
+        return startProcessedFileExport(destination, reverb::render::FileExportRange::entireFile,
+            overwriteConfirmed, error);
     }
     void cancelProcessedFileExport() noexcept;
     [[nodiscard]] juce::String processedFileExportJson() const;

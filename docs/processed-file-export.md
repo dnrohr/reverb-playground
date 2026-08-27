@@ -6,18 +6,20 @@ The standalone can render the loaded source through the current published graph
 without a DAW or physical audio device. Export runs on its own worker and never
 borrows the live read-ahead ring or audio callback.
 
-## Output modes and format
+## Mix, range, and format
 
-**Wet Only** writes the graph output. **Audition Mix** writes an equal 50/50
-linear blend of the resampled dry source and graph output. Both modes apply the
-Master Audition Gain captured when export starts; Emergency Mute is a live
-monitoring control and does not silently erase an offline render.
+Export uses the same independent linear law as live audition: `Wet Gain × graph
+output + Dry Gain × selected source`. There is no hidden normalization. Both
+gains and the graph are snapshotted when export starts; Emergency Mute remains a
+live monitoring control and does not silently erase an offline render.
 
 Every successful file is stereo 24-bit PCM WAV at 48 kHz. Mono sources are
 duplicated before graph processing and stereo sources preserve channel identity.
 JUCE's prepared resampler converts other supported source rates before the
-authoritative graph runtime. Looping is deliberately ignored: export processes
-the complete source once from its first frame.
+authoritative graph runtime. **Entire File** processes the complete source once.
+**Selected Loop** seeks to the visible loop start, processes that interval once
+(it does not repeat it), and begins tail rendering at the loop end. Playback
+crossfades are not baked into either export range.
 
 ## Tail and safety policy
 
@@ -47,7 +49,7 @@ or failure. Closing the processor requests cancellation and joins the worker.
 
 The exporter compiles a fresh runtime from the current graph snapshot, processes
 fixed 256-frame blocks, and uses deterministic source-rate conversion and PCM24
-quantization. Repeated requests with the same source, graph, mode, gain, and tail
-policy produce byte-identical WAV files. Tests also compare mode differences,
-tail bounds, resampling metadata, cancellation, overwrite, invalid destinations,
-and numerical-safety failure.
+quantization. Repeated requests with the same source, graph, gains, range, and
+tail policy produce byte-identical WAV files. Tests cover independent gain mixes,
+selected-loop frame bounds, tail bounds, resampling metadata, cancellation,
+overwrite, invalid destinations, and numerical-safety failure.

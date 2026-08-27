@@ -72,9 +72,9 @@ EditorShell::EditorShell(Callbacks callbacks)
     dryGain_.onValueChange = [this] { callbacks_.setDryGain(static_cast<float>(dryGain_.getValue())); };
     muteButton_.setToggleState(callbacks_.emergencyMuted(), juce::dontSendNotification);
 
-    const std::array<juce::Component*, 12> auditionComponents {
+    const std::array<juce::Component*, 13> auditionComponents {
         &sourceMode_, &fileButton_, &filePlayButton_, &fileStopButton_, &drawerButton_,
-        &loopButton_, &fileLabel_, &transportLabel_, &seek_,
+        &loopButton_, &exportRange_, &fileLabel_, &transportLabel_, &seek_,
         &exportButton_, &exportProgressBar_, &loopRange_,
     };
     for (auto* component : auditionComponents) {
@@ -116,6 +116,10 @@ EditorShell::EditorShell(Callbacks callbacks)
         const auto error = callbacks_.setAudioFileLoop(loopButton_.getToggleState(), start, end);
         if (error.isNotEmpty()) status_.setText(error, juce::dontSendNotification);
     };
+    exportRange_.addItem("ENTIRE FILE", 1);
+    exportRange_.addItem("SELECTED LOOP", 2);
+    exportRange_.setSelectedId(1, juce::dontSendNotification);
+    exportRange_.setTitle("Export source range");
     exportButton_.setColour(juce::TextButton::buttonColourId, amber.darker(0.55F));
     exportButton_.onClick = [this] {
         const auto status = juce::JSON::parse(callbacks_.processedFileExportJson());
@@ -343,6 +347,7 @@ void EditorShell::resized()
         waveformBounds_ = convert(deck.waveform);
         fileStopButton_.setBounds(convert(deck.stop));
         loopButton_.setBounds(convert(deck.loop));
+        exportRange_.setBounds(convert(deck.exportMode));
         exportProgressBar_.setBounds(convert(deck.exportProgress));
         seek_.setBounds(convert(deck.seek));
         loopRange_.setBounds(convert(deck.loopRange));
@@ -382,7 +387,7 @@ void EditorShell::chooseExportFile()
                     destination = destination.withFileExtension(".wav");
                 const auto overwriteConfirmed = destination.existsAsFile();
                 const auto error = callbacks_.startProcessedFileExport(
-                    destination, overwriteConfirmed);
+                    destination, exportRange_.getSelectedId() - 1, overwriteConfirmed);
                 if (error.isNotEmpty()) status_.setText(error, juce::dontSendNotification);
             }
             exportChooser_.reset();
@@ -408,8 +413,8 @@ void EditorShell::setAuditionDrawerExpanded(const bool expanded)
     auditionDrawerExpanded_ = callbacks_.standaloneAuditionAvailable && expanded;
     drawerButton_.setButtonText(auditionDrawerExpanded_ ? juce::String::fromUTF8("\xe2\x88\x92") : "+");
     drawerButton_.setTooltip(auditionDrawerExpanded_ ? "Hide audio-file details" : "Show audio-file details");
-    const std::array<juce::Component*, 5> drawerComponents {
-        &fileStopButton_, &loopButton_,
+    const std::array<juce::Component*, 6> drawerComponents {
+        &fileStopButton_, &loopButton_, &exportRange_,
         &exportProgressBar_, &seek_, &loopRange_,
     };
     for (auto* component : drawerComponents)
@@ -478,6 +483,9 @@ void EditorShell::updateTransport()
     if (const auto* loop = object->getProperty("loop").getDynamicObject()) {
         const auto enabled = static_cast<bool>(loop->getProperty("enabled"));
         loopButton_.setToggleState(enabled, juce::dontSendNotification);
+        exportRange_.setItemEnabled(2, enabled);
+        if (!enabled && exportRange_.getSelectedId() == 2)
+            exportRange_.setSelectedId(1, juce::dontSendNotification);
         if (!loopRange_.isMouseButtonDown() && fileFrameCount_ > 0) {
             loopRange_.setMinAndMaxValues(
                 static_cast<double>(static_cast<std::int64_t>(loop->getProperty("startSourceFrame"))) / fileFrameCount_,
@@ -498,6 +506,7 @@ void EditorShell::updateTransport()
     exportProgress_ = static_cast<double>(exportStatus.getProperty("progress", 0.0));
     exportButton_.setButtonText(exportState == "rendering" ? "CANCEL EXPORT" : "EXPORT WAV...");
     exportButton_.setEnabled(fileFrameCount_ > 0 || exportState == "rendering");
+    exportRange_.setEnabled(exportState != "rendering");
     if (exportState == "failed")
         status_.setText(exportStatus.getProperty("error", "Export failed").toString(), juce::dontSendNotification);
     else if (exportState == "complete")

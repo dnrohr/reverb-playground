@@ -421,6 +421,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [energyLevels, setEnergyLevels] = useState<EnergyLevels>({});
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
   const [diagnostics, setDiagnostics] = useState<RuntimeDiagnostics | null>(null);
+  const activeGraphRevision = useRef(0);
   const [controlPreviewTime, setControlPreviewTime] = useState(() => performance.now() / 1000);
   const audibleFingerprint = useMemo(() => audibleGraphFingerprint(nodes, edges), [edges, nodes]);
   const hostStateJson = useMemo(() => writePatchJson(nodes, edges, viewport, qualityPolicy), [edges, nodes, qualityPolicy, viewport]);
@@ -532,6 +533,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       try {
         let frame = parseEnergyTelemetry(await callNative('getEnergyTelemetry'));
         const now = performance.now();
+        if (frame.revision !== activeGraphRevision.current) {
+          if (!cancelled) setEnergyLevels({});
+          return;
+        }
         if (frame.generation !== lastGeneration) {
           lastGeneration = frame.generation;
           lastGenerationAt = now;
@@ -562,6 +567,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         const next = parseRuntimeDiagnostics(await callNative('getRuntimeDiagnostics'));
         if (!cancelled) {
           setDiagnostics(next);
+          activeGraphRevision.current = next.topologyPublication.activeRevision;
           if (next.topologyPublication.failedRevision > 0
             && next.topologyPublication.failedRevision === next.topologyPublication.requestedRevision
             && next.topologyPublication.failure)

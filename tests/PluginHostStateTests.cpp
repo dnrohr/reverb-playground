@@ -468,3 +468,36 @@ TEST_CASE("Host state stores independent wet and dry gains without the obsolete 
     REQUIRE(restored.wetGain() == Catch::Approx(0.73F));
     REQUIRE(restored.dryGain() == Catch::Approx(0.21F));
 }
+
+TEST_CASE("Energy telemetry follows the active compiled graph revision and is free when disabled")
+{
+    ReverbPlaygroundProcessor processor;
+    processor.prepareToPlay(48'000.0, 128);
+    const auto patch = factoryPatch("reverse-cosmic-shimmer.rvp.json");
+    const auto published = nlohmann::json::parse(processor.publishGraphJson(patch).toStdString());
+    REQUIRE(published.at("accepted") == true);
+    const auto requestedRevision = published.at("revision").get<std::uint64_t>();
+    REQUIRE(processor.setEnergyTelemetryEnabled(true));
+    juce::AudioBuffer<float> buffer(2, 128);
+    juce::MidiBuffer midi;
+    for (auto block = 0; block < 200; ++block) {
+        buffer.clear();
+        if (block % 20 == 0) buffer.setSample(0, 0, 0.1F);
+        processor.processBlock(buffer, midi);
+        const auto energy = nlohmann::json::parse(processor.energyTelemetryJson().toStdString());
+        if (energy.at("revision") == requestedRevision && energy.at("generation").get<int>() > 0) {
+            REQUIRE(energy.at("coherent") == true);
+            REQUIRE(energy.at("nodes").size() > 10);
+            REQUIRE(std::ranges::any_of(energy.at("nodes"), [](const auto& node) {
+                return node.at("rms").template get<float>() > 0.0F;
+            }));
+            processor.setEnergyTelemetryEnabled(false);
+            const auto disabled = nlohmann::json::parse(processor.energyTelemetryJson().toStdString());
+            REQUIRE(disabled.at("enabled") == false);
+            REQUIRE(disabled.at("nodes").empty());
+            return;
+        }
+        std::this_thread::yield();
+    }
+    FAIL("compiled graph energy did not publish its active revision");
+}

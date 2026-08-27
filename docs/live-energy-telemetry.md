@@ -4,7 +4,12 @@ M4.4 connects measured DSP activity to the schematic without exposing audio-thre
 
 ## Real-time contract
 
-The prepared `EnergyTelemetry` object owns ten fixed atomic RMS lanes and fixed audio-thread scratch arrays. When enabled, each Barr processing block measures stereo input/output and the output of Sum, Low-pass, and the six Allpass stages. It peak-holds block RMS values until a 30 Hz publication boundary, then publishes one coherent snapshot through an atomic sequence lock.
+The fixed Barr harness owns ten fixed RMS lanes. Editable compiled graphs own a
+bounded lane for each prepared audio operation, keyed to that graph's stable node
+ID. When enabled, the audible active runtime peak-holds block RMS until a 30 Hz
+publication boundary, then publishes one coherent snapshot with the active graph
+revision. During topology crossfades only the incoming, newly audible revision is
+published; the UI discards any frame whose revision no longer matches diagnostics.
 
 The audio callback does not allocate, lock, serialize, invoke UI code, or wait for a reader. The message thread performs a bounded snapshot retry and creates JSON only from copied atomic values. Polling late, skipping generations, or never polling cannot influence DSP state or samples; native tests compare polled and ignored renders sample-for-sample.
 
@@ -18,7 +23,16 @@ Each block has a five-segment activity meter as a non-colour intensity cue. Incr
 
 ## Accessibility and control
 
-**Energy On/Off** is an explicit header control. Turning it off stops both native measurement and UI polling. If the operating system requests reduced motion, energy animation starts disabled, the toggle reports **Energy Reduced**, and the ordinary global reduced-motion CSS removes residual transitions. Graph editing, audio, measurement, and saved state are unaffected; telemetry is presentation-only and is not serialized.
+**Energy On/Off** is an explicit header control. Turning it off stops UI polling
+and takes a single disabled branch in the audio callback: no buffers are scanned,
+no RMS values are calculated, and no telemetry atomics are published. If the
+operating system requests reduced motion, energy animation starts disabled and
+the toggle reports **Energy Reduced**. Telemetry is presentation-only and is not
+serialized.
+
+Reviewed Release evidence is in `artifacts/ui/m18-5-audition-truth/compiled-energy.mp4`.
+It triggers the audible impulse through the active 58-block compiled graph and
+shows node/cable energy advance through that revision.
 
 ## Scope note
 

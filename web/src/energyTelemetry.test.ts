@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { energyLevelClass, parseEnergyTelemetry, rmsToLevel, shouldRunEnergyTelemetry, smoothEnergy } from './energyTelemetry';
 
-const frame = (rms: number) => ({ formatVersion: 1 as const, enabled: true, coherent: true, generation: 1, observedSampleValues: 100, nodes: [{ nodeId: 'tank-1', rms }] });
+const frame = (rms: number) => ({ formatVersion: 1 as const, enabled: true, coherent: true, revision: 7, generation: 1, observedSampleValues: 100, nodes: [{ nodeId: 'tank-1', rms }] });
 
 describe('energy telemetry presentation', () => {
   it('validates fixed native snapshots and rejects unsafe values', () => {

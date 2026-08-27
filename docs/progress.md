@@ -90,6 +90,8 @@ Last updated: 2026-08-26
 | M18.4 Factory specialization decision | Complete | 15 paired Barr direct/generic Release cases are sample-identical with a 1.010x median p95 ratio; no AOT duplication or runtime JIT; documented supported envelope and final package/host qualification |
 | M18.5.1 Independent Wet/Dry gains | Complete | One smoothed, unnormalized Wet/Dry law shared by live audition and offline export; immediate-dry latency policy; versioned host state and exact legacy master migration |
 | M18.5.2 Audition/capture control cleanup | Complete | Removed master, processed/bypass, export-mix, and capture-mute controls; impulse measurement always isolates its source; post-sum mute/safety retained; reviewed standalone evidence |
+| M18.5.3 Loop-range export | Complete | Explicit Entire File/Selected Loop selector; source-frame seek and exact one-pass interval; tail begins at selected end; deterministic duration fixture |
+| M18.5.4 Compiled-graph Energy | Complete | Bounded per-operation RMS lanes, coherent 30 Hz revision-tagged publication, incoming-revision topology handling, stale-frame rejection, and a zero-observation disabled path |
 
 ## M0.2 verification
 

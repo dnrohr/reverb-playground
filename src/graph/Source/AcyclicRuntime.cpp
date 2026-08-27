@@ -354,6 +354,9 @@ struct PreparedAcyclicRuntime::Impl final {
     std::vector<RuntimeModulation> modulations;
     std::size_t controlQuantumSamples { 1 };
     std::size_t samplesUntilControlTick {};
+    std::vector<std::string> energyNodeIds;
+    std::vector<float> blockEnergyRms;
+    std::uint64_t blockEnergyObservedValues {};
 };
 
 PreparedAcyclicRuntime::PreparedAcyclicRuntime(std::unique_ptr<Impl> implementation) noexcept
@@ -372,6 +375,9 @@ std::size_t PreparedAcyclicRuntime::preparedStorageBytes() const noexcept
 const DelayMemoryPlan& PreparedAcyclicRuntime::delayMemoryPlan() const noexcept { return implementation_->delayMemory; }
 const GraphLatencyPlan& PreparedAcyclicRuntime::latencyPlan() const noexcept { return implementation_->latency; }
 const PreparedGraphDiagnostics& PreparedAcyclicRuntime::planDiagnostics() const noexcept { return implementation_->planDiagnostics; }
+const std::vector<std::string>& PreparedAcyclicRuntime::energyNodeIds() const noexcept { return implementation_->energyNodeIds; }
+const std::vector<float>& PreparedAcyclicRuntime::blockEnergyRms() const noexcept { return implementation_->blockEnergyRms; }
+std::uint64_t PreparedAcyclicRuntime::blockEnergyObservedValues() const noexcept { return implementation_->blockEnergyObservedValues; }
 
 void PreparedAcyclicRuntime::reset() noexcept
 {
@@ -443,7 +449,8 @@ void PreparedAcyclicRuntime::applyMacroValue(
 
 void PreparedAcyclicRuntime::process(
     const std::span<const float> inputLeft, const std::span<const float> inputRight,
-    const std::span<float> outputLeft, const std::span<float> outputRight) noexcept
+    const std::span<float> outputLeft, const std::span<float> outputRight,
+    const bool observeEnergy) noexcept
 {
     const auto count = outputLeft.size();
     if (outputRight.size() != count || inputLeft.size() < count || inputRight.size() < count
@@ -453,6 +460,24 @@ void PreparedAcyclicRuntime::process(
         return;
     }
     const auto noModulation = std::numeric_limits<std::size_t>::max();
+    const auto measureEnergy = [this, count, observeEnergy]() noexcept {
+        if (!observeEnergy) return;
+        implementation_->blockEnergyObservedValues = 0;
+        for (std::size_t index = 0; index < implementation_->operations.size(); ++index) {
+            const auto& operation = implementation_->operations[index];
+            const auto& lanes = operation.kind == OperationKind::output ? operation.inputs : operation.outputs;
+            double energy = 0.0;
+            std::size_t values = 0;
+            for (const auto lane : lanes) {
+                const auto samples = std::span<const float>(implementation_->buffers[lane]).first(count);
+                for (const auto sample : samples) energy += static_cast<double>(sample) * sample;
+                values += samples.size();
+            }
+            implementation_->blockEnergyRms[index] = values == 0 ? 0.0F
+                : static_cast<float>(std::sqrt(energy / static_cast<double>(values)));
+            implementation_->blockEnergyObservedValues += values;
+        }
+    };
     for (std::size_t sample = 0; sample < count;) {
         if (!implementation_->modulations.empty() && implementation_->samplesUntilControlTick == 0) {
             for (auto& control : implementation_->controlOperations) {
@@ -686,6 +711,7 @@ void PreparedAcyclicRuntime::process(
         processBlockRange(cursor, implementation_->operations.size());
         std::ranges::copy(fullBuffer(implementation_->outputLeftInput), outputLeft.begin());
         std::ranges::copy(fullBuffer(implementation_->outputRightInput), outputRight.begin());
+        measureEnergy();
         return;
     }
     auto buffer = [this, count](const std::size_t index) { return std::span<float>(implementation_->buffers[index]).first(count); };
@@ -778,6 +804,7 @@ void PreparedAcyclicRuntime::process(
     }
     std::ranges::copy(buffer(implementation_->outputLeftInput), outputLeft.begin());
     std::ranges::copy(buffer(implementation_->outputRightInput), outputRight.begin());
+    measureEnergy();
 }
 
 AcyclicCompileResult compileAcyclicGraph(
@@ -1559,6 +1586,10 @@ AcyclicCompileResult compileAcyclicGraph(
         protect(implementation->inputRightBuffer);
         protect(implementation->outputLeftInput);
         protect(implementation->outputRightInput);
+        std::size_t telemetrySignals = 0;
+        for (const auto& operation : implementation->operations)
+            for (const auto output : operation.outputs)
+                if (!protectedBuffer[output]) { protect(output); ++telemetrySignals; }
         const std::unordered_set<std::size_t> runtimeBoundarySignals {
             implementation->silenceBuffer, implementation->inputLeftBuffer,
             implementation->inputRightBuffer, implementation->outputLeftInput,
@@ -1667,7 +1698,7 @@ AcyclicCompileResult compileAcyclicGraph(
             { "feedback-or-causal-region", causalSignals },
             { "fan-out", static_cast<std::size_t>(std::ranges::count_if(
                 fanOut, [](const auto count) { return count > 1; })) },
-            { "inspector-or-telemetry-observed", 0 },
+            { "inspector-or-telemetry-observed", telemetrySignals },
         };
         result.planDiagnostics.compileTiming.preparationMicroseconds = static_cast<std::uint64_t>(
             std::chrono::duration_cast<std::chrono::microseconds>(
@@ -1677,6 +1708,10 @@ AcyclicCompileResult compileAcyclicGraph(
             + result.planDiagnostics.compileTiming.schedulingMicroseconds
             + result.planDiagnostics.compileTiming.preparationMicroseconds;
         implementation->planDiagnostics = result.planDiagnostics;
+        implementation->energyNodeIds.reserve(implementation->operations.size());
+        for (const auto& operation : implementation->operations)
+            implementation->energyNodeIds.push_back(operation.id);
+        implementation->blockEnergyRms.assign(implementation->operations.size(), 0.0F);
         result.runtime = std::unique_ptr<PreparedAcyclicRuntime>(new PreparedAcyclicRuntime(std::move(implementation)));
     } catch (const std::exception& exception) {
         result.planDiagnostics.compileTiming.preparationMicroseconds = static_cast<std::uint64_t>(
@@ -1701,6 +1736,10 @@ struct AcyclicRuntimeHost::RuntimeEnvelope final {
     std::vector<float> crossfadeLeft;
     std::vector<float> crossfadeRight;
     std::uint64_t requestedAtNanoseconds {};
+    std::size_t energyPublishIntervalFrames { 1 };
+    std::size_t energyFramesUntilPublish { 1 };
+    std::uint64_t energyObservedValues {};
+    std::array<float, AcyclicRuntimeHost::maximumEnergyNodes> pendingEnergyRms {};
 };
 
 struct AcyclicRuntimeHost::CompilationRequest final {
@@ -1718,6 +1757,7 @@ AcyclicRuntimeHost::AcyclicRuntimeHost()
     static_assert(std::atomic<RuntimeEnvelope*>::is_always_lock_free);
     static_assert(std::atomic<std::size_t>::is_always_lock_free);
     static_assert(std::atomic<std::uint64_t>::is_always_lock_free);
+    for (auto& value : energyRms_) value.store(0.0F, std::memory_order_relaxed);
 }
 
 AcyclicRuntimeHost::~AcyclicRuntimeHost()
@@ -1771,6 +1811,7 @@ AcyclicPublishResult AcyclicRuntimeHost::publishCompiled(
         std::scoped_lock lock(latencyPlansMutex_);
         latencyPlans_[revision] = result.latency;
         planDiagnostics_[revision] = result.planDiagnostics;
+        energyNodeIds_[revision] = result.runtime->energyNodeIds();
         const auto active = activeRevision_.load(std::memory_order_acquire);
         while (latencyPlans_.size() > 32) {
             const auto candidate = std::ranges::find_if(latencyPlans_, [active, revision](const auto& item) {
@@ -1780,6 +1821,7 @@ AcyclicPublishResult AcyclicRuntimeHost::publishCompiled(
             const auto staleRevision = candidate->first;
             latencyPlans_.erase(candidate);
             planDiagnostics_.erase(staleRevision);
+            energyNodeIds_.erase(staleRevision);
         }
     }
     publishPending(std::move(result.runtime), revision, sampleRate, requestedAtNanoseconds);
@@ -1838,6 +1880,7 @@ void AcyclicRuntimeHost::compilerLoop(const std::stop_token stopToken)
                 std::scoped_lock lock(latencyPlansMutex_);
                 latencyPlans_[request->revision] = result.latency;
                 planDiagnostics_[request->revision] = result.planDiagnostics;
+                energyNodeIds_[request->revision] = result.runtime->energyNodeIds();
                 const auto active = activeRevision_.load(std::memory_order_acquire);
                 while (latencyPlans_.size() > 32) {
                     const auto candidate = std::ranges::find_if(
@@ -1848,6 +1891,7 @@ void AcyclicRuntimeHost::compilerLoop(const std::stop_token stopToken)
                     const auto staleRevision = candidate->first;
                     latencyPlans_.erase(candidate);
                     planDiagnostics_.erase(staleRevision);
+                    energyNodeIds_.erase(staleRevision);
                 }
             }
             publishPending(std::move(result.runtime), request->revision, request->sampleRate,
@@ -1878,7 +1922,9 @@ void AcyclicRuntimeHost::publishPending(
     auto* envelope = new RuntimeEnvelope {
         std::move(runtime), revision, crossfadeSamples,
         std::vector<float>(maximumBlockSize), std::vector<float>(maximumBlockSize),
-        requestedAtNanoseconds };
+        requestedAtNanoseconds,
+        static_cast<std::size_t>(std::max(1.0, std::round(sampleRate / 30.0))),
+        static_cast<std::size_t>(std::max(1.0, std::round(sampleRate / 30.0))), 0 };
     const auto activeRevision = activeRevision_.load(std::memory_order_acquire);
     auto* currentPending = pendingRuntime_.load(std::memory_order_acquire);
     if (revision <= activeRevision
@@ -2008,11 +2054,35 @@ void AcyclicRuntimeHost::process(
                     slot, key, macroValues_[slot].load(std::memory_order_acquire));
         }
     };
+    const auto energyEnabled = energyEnabled_.load(std::memory_order_relaxed);
+    const auto publishEnergy = [this, energyEnabled, frames = outputLeft.size()](RuntimeEnvelope& envelope) noexcept {
+        if (!energyEnabled) return;
+        envelope.energyObservedValues += envelope.runtime->blockEnergyObservedValues();
+        const auto& rms = envelope.runtime->blockEnergyRms();
+        const auto count = std::min(rms.size(), maximumEnergyNodes);
+        for (std::size_t index = 0; index < count; ++index)
+            envelope.pendingEnergyRms[index] = std::max(envelope.pendingEnergyRms[index], rms[index]);
+        if (frames < envelope.energyFramesUntilPublish) {
+            envelope.energyFramesUntilPublish -= frames;
+            return;
+        }
+        energySequence_.fetch_add(1, std::memory_order_acq_rel);
+        for (std::size_t index = 0; index < count; ++index)
+            energyRms_[index].store(envelope.pendingEnergyRms[index], std::memory_order_relaxed);
+        energyNodeCount_.store(count, std::memory_order_relaxed);
+        energyRevision_.store(envelope.revision, std::memory_order_relaxed);
+        energyObservedValues_.store(envelope.energyObservedValues, std::memory_order_relaxed);
+        energyGeneration_.fetch_add(1, std::memory_order_relaxed);
+        energySequence_.fetch_add(1, std::memory_order_release);
+        envelope.pendingEnergyRms.fill(0.0F);
+        envelope.energyFramesUntilPublish = envelope.energyPublishIntervalFrames;
+    };
     applyMacros(*active->runtime);
     if (fadingRuntime_ != nullptr)
         applyMacros(*fadingRuntime_->runtime);
     if (fadingRuntime_ == nullptr) {
-        active->runtime->process(inputLeft, inputRight, outputLeft, outputRight);
+        active->runtime->process(inputLeft, inputRight, outputLeft, outputRight, energyEnabled);
+        publishEnergy(*active);
         return;
     }
 
@@ -2022,8 +2092,9 @@ void AcyclicRuntimeHost::process(
     if (sizesMatch) {
         const auto nextLeft = std::span(active->crossfadeLeft).first(count);
         const auto nextRight = std::span(active->crossfadeRight).first(count);
-        active->runtime->process(inputLeft, inputRight, nextLeft, nextRight);
-        fadingRuntime_->runtime->process(inputLeft, inputRight, outputLeft, outputRight);
+        active->runtime->process(inputLeft, inputRight, nextLeft, nextRight, energyEnabled);
+        fadingRuntime_->runtime->process(inputLeft, inputRight, outputLeft, outputRight, false);
+        publishEnergy(*active);
         const auto total = active->crossfadeSamples;
         for (std::size_t index = 0; index < count; ++index) {
             const auto alpha = std::min(1.0F, static_cast<float>(crossfadePosition_ + index + 1)
@@ -2034,7 +2105,8 @@ void AcyclicRuntimeHost::process(
         crossfadePosition_ = std::min(total, crossfadePosition_ + count);
         crossfadePositionSamples_.store(crossfadePosition_, std::memory_order_release);
     } else {
-        active->runtime->process(inputLeft, inputRight, outputLeft, outputRight);
+        active->runtime->process(inputLeft, inputRight, outputLeft, outputRight, energyEnabled);
+        publishEnergy(*active);
         crossfadePosition_ = active->crossfadeSamples;
     }
 
@@ -2049,6 +2121,46 @@ void AcyclicRuntimeHost::process(
         crossfadePositionSamples_.store(0, std::memory_order_release);
         crossfadeTotalSamples_.store(0, std::memory_order_release);
     }
+}
+
+void AcyclicRuntimeHost::setEnergyTelemetryEnabled(const bool enabled) noexcept
+{
+    energyEnabled_.store(enabled, std::memory_order_release);
+    if (!enabled) {
+        energyNodeCount_.store(0, std::memory_order_release);
+        energyRevision_.store(0, std::memory_order_release);
+    }
+}
+
+GraphEnergySnapshot AcyclicRuntimeHost::energySnapshot() const
+{
+    GraphEnergySnapshot result;
+    result.enabled = energyEnabled_.load(std::memory_order_acquire);
+    if (!result.enabled) return result;
+    std::array<float, maximumEnergyNodes> rms {};
+    std::size_t count = 0;
+    for (int attempt = 0; attempt < 8; ++attempt) {
+        const auto before = energySequence_.load(std::memory_order_acquire);
+        if ((before & 1U) != 0U) continue;
+        count = energyNodeCount_.load(std::memory_order_relaxed);
+        result.revision = energyRevision_.load(std::memory_order_relaxed);
+        result.generation = energyGeneration_.load(std::memory_order_relaxed);
+        result.observedSampleValues = energyObservedValues_.load(std::memory_order_relaxed);
+        for (std::size_t index = 0; index < count; ++index)
+            rms[index] = energyRms_[index].load(std::memory_order_relaxed);
+        if (before == energySequence_.load(std::memory_order_acquire)) break;
+        if (attempt == 7) { result.coherent = false; return result; }
+    }
+    std::scoped_lock lock(latencyPlansMutex_);
+    const auto found = energyNodeIds_.find(result.revision);
+    if (found == energyNodeIds_.end() || found->second.size() < count) {
+        result.coherent = false;
+        return result;
+    }
+    result.nodes.reserve(count);
+    for (std::size_t index = 0; index < count; ++index)
+        result.nodes.push_back({ found->second[index], rms[index] });
+    return result;
 }
 
 std::size_t AcyclicRuntimeHost::activeLatencySamples() const noexcept

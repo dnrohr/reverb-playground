@@ -2,6 +2,7 @@ export interface EnergyTelemetryFrame {
   formatVersion: 1;
   enabled: boolean;
   coherent: boolean;
+  revision: number;
   generation: number;
   observedSampleValues: number;
   nodes: Array<{ nodeId: string; rms: number }>;
@@ -19,7 +20,7 @@ export function parseEnergyTelemetry(value: unknown): EnergyTelemetryFrame {
   const root = object(parsed, 'energy telemetry');
   if (root.formatVersion !== 1 || typeof root.enabled !== 'boolean' || typeof root.coherent !== 'boolean')
     throw new Error('energy telemetry header is invalid');
-  if (!Number.isSafeInteger(root.generation) || Number(root.generation) < 0 || !Number.isSafeInteger(root.observedSampleValues) || Number(root.observedSampleValues) < 0)
+  if (!Number.isSafeInteger(root.revision) || Number(root.revision) < 0 || !Number.isSafeInteger(root.generation) || Number(root.generation) < 0 || !Number.isSafeInteger(root.observedSampleValues) || Number(root.observedSampleValues) < 0)
     throw new Error('energy telemetry counters are invalid');
   if (!Array.isArray(root.nodes)) throw new Error('energy telemetry nodes must be an array');
   const seen = new Set<string>();
@@ -30,7 +31,7 @@ export function parseEnergyTelemetry(value: unknown): EnergyTelemetryFrame {
     seen.add(node.nodeId);
     return { nodeId: node.nodeId, rms: node.rms };
   });
-  return { formatVersion: 1, enabled: root.enabled, coherent: root.coherent, generation: Number(root.generation), observedSampleValues: Number(root.observedSampleValues), nodes };
+  return { formatVersion: 1, enabled: root.enabled, coherent: root.coherent, revision: Number(root.revision), generation: Number(root.generation), observedSampleValues: Number(root.observedSampleValues), nodes };
 }
 
 export function rmsToLevel(rms: number): number {

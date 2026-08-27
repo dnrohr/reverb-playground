@@ -157,3 +157,33 @@ TEST_CASE("Processed WAV export cancels atomically and rejects unsafe or existin
     REQUIRE(unsafeResult.error.find("unsafe output") != std::string::npos);
     REQUIRE_FALSE(unsafe.exists());
 }
+
+TEST_CASE("Selected-loop export renders the source interval once and then its bounded tail")
+{
+    ExportFixture source(48'000.0, 48'000);
+    const auto output = destination("reverb-selected-loop");
+    reverb::render::ProcessedFileExporter exporter;
+    std::string error;
+    REQUIRE(exporter.start({
+        .source = source.file(),
+        .destination = output,
+        .patch = reverb::graph::makeBarrReferenceGraph(),
+        .maximumTailSeconds = 0.5,
+        .wetGain = 1.0,
+        .dryGain = 0.0,
+        .range = reverb::render::FileExportRange::selectedLoop,
+        .sourceStartFrame = 12'000,
+        .sourceEndFrame = 24'000,
+    }, error));
+    const auto result = waitFor(exporter);
+    REQUIRE(result.state == reverb::render::FileExportState::complete);
+    REQUIRE(result.sourceFrames == 12'000);
+    REQUIRE(result.renderedFrames == result.sourceFrames + result.tailFrames);
+
+    juce::AudioFormatManager manager;
+    manager.registerBasicFormats();
+    auto reader = std::unique_ptr<juce::AudioFormatReader>(manager.createReaderFor(output));
+    REQUIRE(reader != nullptr);
+    REQUIRE(reader->lengthInSamples == static_cast<juce::int64>(result.renderedFrames));
+    static_cast<void>(output.deleteFile());
+}

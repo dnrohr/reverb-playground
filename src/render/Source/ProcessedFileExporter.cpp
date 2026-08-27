@@ -84,6 +84,15 @@ bool ProcessedFileExporter::start(ProcessedFileExportRequest request, std::strin
         error = "The source must be a readable mono or stereo WAV, AIFF, or FLAC file.";
         return false;
     }
+    if (request.range == FileExportRange::entireFile) {
+        request.sourceStartFrame = 0;
+        request.sourceEndFrame = reader->lengthInSamples;
+    } else if (request.sourceStartFrame < 0
+        || request.sourceEndFrame <= request.sourceStartFrame
+        || request.sourceEndFrame > reader->lengthInSamples) {
+        error = "Selected Loop requires a valid non-empty range inside the source file.";
+        return false;
+    }
 
     const auto generation = generation_.fetch_add(1, std::memory_order_acq_rel) + 1;
     {
@@ -94,7 +103,8 @@ bool ProcessedFileExporter::start(ProcessedFileExportRequest request, std::strin
     cancelRequested_.store(false, std::memory_order_release);
     progress_.store(0.0, std::memory_order_release);
     renderedFrames_.store(0, std::memory_order_release);
-    sourceFrames_.store(static_cast<std::uint64_t>(reader->lengthInSamples), std::memory_order_release);
+    sourceFrames_.store(static_cast<std::uint64_t>(
+        request.sourceEndFrame - request.sourceStartFrame), std::memory_order_release);
     tailFrames_.store(0, std::memory_order_release);
     state_.store(FileExportState::rendering, std::memory_order_release);
     worker_ = std::thread([this, request = std::move(request), generation] () mutable {
@@ -139,10 +149,11 @@ void ProcessedFileExporter::render(
         auto reader = openReader(request.source);
         if (reader == nullptr) throw std::runtime_error("The source file could not be reopened for export.");
         const auto sourceSampleRate = reader->sampleRate;
-        const auto sourceFileFrames = static_cast<std::uint64_t>(reader->lengthInSamples);
+        const auto selectedSourceFrames = static_cast<std::uint64_t>(
+            request.sourceEndFrame - request.sourceStartFrame);
         const auto sampleRate = request.outputSampleRate;
         const auto totalSourceFrames = static_cast<std::uint64_t>(
-            std::ceil(static_cast<double>(sourceFileFrames) * sampleRate / sourceSampleRate));
+            std::ceil(static_cast<double>(selectedSourceFrames) * sampleRate / sourceSampleRate));
         sourceFrames_.store(totalSourceFrames, std::memory_order_release);
         const auto maximumTailFrames = static_cast<std::uint64_t>(
             std::llround(request.maximumTailSeconds * sampleRate));
@@ -158,6 +169,7 @@ void ProcessedFileExporter::render(
         juce::ResamplingAudioSource resampler(readerSource.get(), false, 2);
         resampler.setResamplingRatio(sourceSampleRate / sampleRate);
         resampler.prepareToPlay(static_cast<int>(blockSize), sampleRate);
+        readerSource->setNextReadPosition(request.sourceStartFrame);
 
         std::unique_ptr<juce::OutputStream> outputStream = temporary.createOutputStream();
         if (outputStream == nullptr) throw std::runtime_error("The temporary export file could not be created.");

@@ -100,6 +100,16 @@ struct PreparedGraphDiagnostics final {
     CompilePhaseTiming compileTiming;
 };
 
+struct GraphEnergyNode final { std::string nodeId; float rms {}; };
+struct GraphEnergySnapshot final {
+    bool enabled {};
+    bool coherent { true };
+    std::uint64_t revision {};
+    std::uint64_t generation {};
+    std::uint64_t observedSampleValues {};
+    std::vector<GraphEnergyNode> nodes;
+};
+
 class PreparedAcyclicRuntime final {
 public:
     ~PreparedAcyclicRuntime();
@@ -112,7 +122,8 @@ public:
         std::span<const float> inputLeft,
         std::span<const float> inputRight,
         std::span<float> outputLeft,
-        std::span<float> outputRight) noexcept;
+        std::span<float> outputRight,
+        bool observeEnergy = false) noexcept;
     void reset() noexcept;
     [[nodiscard]] bool setMacroValue(std::string_view nodeId, double value) noexcept;
     void applyMacroValue(std::size_t slot, std::uint64_t key, double value) noexcept;
@@ -123,6 +134,9 @@ public:
     [[nodiscard]] const DelayMemoryPlan& delayMemoryPlan() const noexcept;
     [[nodiscard]] const GraphLatencyPlan& latencyPlan() const noexcept;
     [[nodiscard]] const PreparedGraphDiagnostics& planDiagnostics() const noexcept;
+    [[nodiscard]] const std::vector<std::string>& energyNodeIds() const noexcept;
+    [[nodiscard]] const std::vector<float>& blockEnergyRms() const noexcept;
+    [[nodiscard]] std::uint64_t blockEnergyObservedValues() const noexcept;
 
 private:
     struct Impl;
@@ -226,6 +240,8 @@ public:
     [[nodiscard]] std::uint64_t activeRevision() const noexcept;
     [[nodiscard]] std::size_t activeLatencySamples() const noexcept;
     [[nodiscard]] bool setMacroValue(std::string_view nodeId, double value) noexcept;
+    void setEnergyTelemetryEnabled(bool enabled) noexcept;
+    [[nodiscard]] GraphEnergySnapshot energySnapshot() const;
 
 private:
     struct RuntimeEnvelope;
@@ -279,6 +295,15 @@ private:
     mutable std::mutex latencyPlansMutex_;
     std::map<std::uint64_t, GraphLatencyPlan> latencyPlans_;
     std::map<std::uint64_t, PreparedGraphDiagnostics> planDiagnostics_;
+    std::map<std::uint64_t, std::vector<std::string>> energyNodeIds_;
+    static constexpr std::size_t maximumEnergyNodes = 256;
+    std::atomic<bool> energyEnabled_ {};
+    std::array<std::atomic<float>, maximumEnergyNodes> energyRms_ {};
+    std::atomic<std::size_t> energyNodeCount_ {};
+    std::atomic<std::uint64_t> energyRevision_ {};
+    std::atomic<std::uint64_t> energyGeneration_ {};
+    std::atomic<std::uint64_t> energyObservedValues_ {};
+    std::atomic<std::uint64_t> energySequence_ {};
     std::mutex pendingPublicationMutex_;
     std::string failure_;
 };

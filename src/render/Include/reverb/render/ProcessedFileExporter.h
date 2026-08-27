@@ -14,6 +14,7 @@ namespace reverb::render {
 
 // Retained as a source-compatible request shorthand; the product UI now uses explicit gains.
 enum class FileExportMode : std::uint8_t { wetOnly, auditionMix };
+enum class FileExportRange : std::uint8_t { entireFile, selectedLoop };
 
 enum class FileExportState : std::uint8_t {
     idle,
@@ -35,6 +36,9 @@ struct ProcessedFileExportRequest final {
     bool overwriteConfirmed {};
     double wetGain { -1.0 };
     double dryGain { -1.0 };
+    FileExportRange range { FileExportRange::entireFile };
+    std::int64_t sourceStartFrame {};
+    std::int64_t sourceEndFrame {};
 };
 
 struct ProcessedFileExportSnapshot final {

@@ -42,7 +42,7 @@ public:
         std::function<juce::String(std::int64_t)> seekAudioFile;
         std::function<juce::String(bool, std::int64_t, std::int64_t)> setAudioFileLoop;
         std::function<juce::String()> audioFileTransportJson;
-        std::function<juce::String(const juce::File&, bool)> startProcessedFileExport;
+        std::function<juce::String(const juce::File&, int, bool)> startProcessedFileExport;
         std::function<void()> cancelProcessedFileExport;
         std::function<juce::String()> processedFileExportJson;
     };
@@ -82,6 +82,7 @@ private:
     juce::TextButton fileStopButton_ { "STOP" };
     juce::TextButton drawerButton_ { "+" };
     juce::ToggleButton loopButton_ { "LOOP" };
+    juce::ComboBox exportRange_;
     juce::TextButton exportButton_ { "EXPORT WAV..." };
     juce::Label fileLabel_;
     juce::Label transportLabel_;

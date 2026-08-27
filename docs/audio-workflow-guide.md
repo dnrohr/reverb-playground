@@ -59,7 +59,7 @@ job.
 
 - Transport does not reverse source sample order or provide varispeed.
 - The waveform is an overview, not a destructive audio editor.
-- Looping is for audition only; export renders the complete source once.
+- Export can render the entire file or the selected loop interval once; both add the bounded graph tail.
 - Export rate and bit depth are currently fixed at 48 kHz / 24-bit stereo.
 - No recent-file list or automatic path reopening is stored.
 - Standalone file transport is intentionally unavailable in the VST3.

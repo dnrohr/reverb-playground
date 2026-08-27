@@ -77,9 +77,12 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
               return juce::String::fromUTF8(error.data(), static_cast<int>(error.size()));
           },
           [&processor] { return processor.audioFileTransportJson(); },
-          [&processor](const juce::File& destination, const bool overwriteConfirmed) {
+          [&processor](const juce::File& destination, const int range, const bool overwriteConfirmed) {
               std::string error;
-              static_cast<void>(processor.startProcessedFileExport(destination, overwriteConfirmed, error));
+              static_cast<void>(processor.startProcessedFileExport(destination,
+                  range == 1 ? reverb::render::FileExportRange::selectedLoop
+                             : reverb::render::FileExportRange::entireFile,
+                  overwriteConfirmed, error));
               return juce::String::fromUTF8(error.data(), static_cast<int>(error.size()));
           },
           [&processor] { processor.cancelProcessedFileExport(); },
