@@ -205,6 +205,17 @@ bounded to 450 min/max buckets; zoom reaches 256x. RT60 is a T30 regression over
 -5 through -35 dB and is withheld when energy, tail, sample count, or slope is
 not defensible.
 
+### Perceptual density inspector
+
+<!-- visualization: density-inspector -->
+
+The optional capture-driven panel plots normalized echo density as a solid
+line, recurrence as a dashed line, and spectral flatness as a dotted line.
+Prominent recurrence windows carry their millisecond lag as text. Separate
+early/middle/late cards retain active peak rate, crest, recurrence, flatness,
+and stereo correlation. Opening the panel triggers bounded response analysis;
+while closed it adds no audio-thread, polling, or background analysis work.
+
 ### Architecture teaching overlays and A/B
 
 <!-- visualization: teaching-overlays -->

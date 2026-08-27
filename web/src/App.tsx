@@ -28,6 +28,7 @@ import researchText from '../../docs/keith-barr-reverb-architectures.md?raw';
 import { teachingTopicFor, type TeachingTopic } from './teaching';
 import { parseImpulseCaptureResult, parseImpulseCaptureStatus, type ImpulseCaptureResult, type ImpulseCaptureStatus } from './impulseCapture';
 import { analyseResponse, decayPoints, frameWindow, rt60Explanation, waveformBuckets } from './responseAnalysis';
+import { analyseDensity } from './densityAnalysis';
 import { decorateEnergy } from './energyDecoration';
 import { parseEnergyTelemetry, shouldRunEnergyTelemetry, smoothEnergy, type EnergyLevels } from './energyTelemetry';
 import { formatBytes, parseRuntimeDiagnostics, type RuntimeDiagnostics } from './runtimeDiagnostics';
@@ -234,6 +235,8 @@ function ResponseViewer({ capture, patchId, gateTeaching, teachingEnabled, onClo
   );
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState(0);
+  const [densityVisible, setDensityVisible] = useState(false);
+  const density = useMemo(() => densityVisible ? analyseDensity(capture) : null, [capture, densityVisible]);
   const window = frameWindow(capture.frameCount, zoom, pan);
   const left = waveformBuckets(capture.left, window, 450);
   const right = waveformBuckets(capture.right, window, 450);
@@ -258,6 +261,7 @@ function ResponseViewer({ capture, patchId, gateTeaching, teachingEnabled, onClo
       <div><span>RT60 / T30 FIT</span><strong>{displayedRt60 === null ? patchId === 'level-gated-room' ? 'NOT MEANINGFUL' : 'NOT ESTIMATED' : `${displayedRt60.toFixed(3)} s`}</strong></div>
     </div>
     <div className="response-navigation">
+      <button type="button" aria-pressed={densityVisible} onClick={() => setDensityVisible((visible) => !visible)}>{densityVisible ? 'HIDE DENSITY' : 'DENSITY INSPECTOR'}</button>
       <button type="button" onClick={() => { setBoundedZoom(16); setPan(0); }}>EARLY / 16×</button>
       <button type="button" disabled={zoom >= 256} onClick={() => setBoundedZoom(zoom * 2)}>ZOOM IN</button>
       <button type="button" disabled={zoom <= 1} onClick={() => setBoundedZoom(zoom / 2)}>ZOOM OUT</button>
@@ -284,6 +288,26 @@ function ResponseViewer({ capture, patchId, gateTeaching, teachingEnabled, onClo
       <path className="fit-band" d="M70 233H970M70 263H970" />
       <text className="axis-label" x="70" y="328">{startMs.toFixed(2)} ms</text><text className="axis-label axis-end" x="970" y="328">{endMs.toFixed(2)} ms</text>
     </svg>
+    {density ? <section className="density-inspector" aria-label="Perceptual density inspector">
+      <header><div><span>DENSITY / 40 ms WINDOWS</span><strong>Temporal buildup and recurrence</strong></div><p>Solid density · dashed recurrence · dotted spectral flatness. Shapes and labels duplicate color.</p></header>
+      <svg className="density-chart" viewBox="0 0 1000 220" role="img" aria-label="Echo density solid line, recurrence dashed line, spectral flatness dotted line, and prominent recurrence markers over time">
+        <g className="density-grid"><path d="M60 20V190H980M60 20H980M60 105H980M60 190H980" /><text x="12" y="24">1.0</text><text x="12" y="109">0.5</text><text x="12" y="194">0.0</text></g>
+        <path className="density-line" d={density.points.map((point, index) => `${index ? 'L' : 'M'}${(60 + 920 * point.startFrame / Math.max(1, capture.frameCount)).toFixed(1)},${(190 - 170 * point.echoDensity).toFixed(1)}`).join('')} />
+        <path className="recurrence-line" d={density.points.map((point, index) => `${index ? 'L' : 'M'}${(60 + 920 * point.startFrame / Math.max(1, capture.frameCount)).toFixed(1)},${(190 - 170 * point.recurrence).toFixed(1)}`).join('')} />
+        <path className="flatness-line" d={density.points.map((point, index) => `${index ? 'L' : 'M'}${(60 + 920 * point.startFrame / Math.max(1, capture.frameCount)).toFixed(1)},${(190 - 170 * point.spectralFlatness).toFixed(1)}`).join('')} />
+        {density.points.filter((point) => point.recurrence >= .55).sort((a, b) => b.recurrence - a.recurrence).slice(0, 3).map((point) => {
+          const markerX = 60 + 920 * point.startFrame / Math.max(1, capture.frameCount);
+          return <g className="recurrence-marker" key={point.startFrame}><path d={`M${markerX.toFixed(1)} 18V190`} /><text x={Math.min(900, markerX + 5)} y="34">REPEAT {point.recurrenceMilliseconds.toFixed(1)} ms</text></g>;
+        })}
+        <text className="axis-label" x="60" y="211">0 ms</text><text className="axis-label axis-end" x="980" y="211">{(capture.frameCount / capture.sampleRate * 1000).toFixed(0)} ms</text>
+      </svg>
+      <div className="density-regions">{density.summaries.map((region) => <section key={region.name}>
+        <strong>{region.name}</strong><span>DENSITY {region.echoDensity.toFixed(2)}</span><span>PEAKS {region.activePeaksPerSecond.toFixed(0)}/s</span>
+        <span>CREST {region.crestFactor.toFixed(2)}</span><span>REPEAT {region.recurrence.toFixed(2)} @ {region.recurrenceMilliseconds.toFixed(1)} ms</span>
+        <span>FLAT {region.spectralFlatness.toFixed(2)}</span><span>STEREO {region.stereoCorrelation.toFixed(2)}</span>
+      </section>)}</div>
+      {teachingEnabled ? <p className="density-teaching"><strong>READ TOGETHER:</strong> Density near 1 with lower crest means a noise-like temporal field. Strong recurrence marks repeating or ringing structure. Flatness describes spectrum, not temporal density; stereo correlation describes width, not quality.</p> : null}
+    </section> : null}
     {teachingOverlay ? <section className="architecture-explanation" aria-label="Architecture explanation">
       <strong>{teachingOverlay.title}</strong><span>{teachingOverlay.explanation}</span>
     </section> : null}

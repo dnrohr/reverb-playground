@@ -49,6 +49,7 @@ REQUIRED_VISUALIZATIONS = (
     "feedback-loops",
     "live-energy",
     "impulse-decay",
+    "density-inspector",
     "teaching-overlays",
     "control-previews",
     "diagnostics",

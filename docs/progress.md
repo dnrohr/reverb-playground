@@ -1245,3 +1245,23 @@ Results:
 - This task changes offline measurement and documentation only. UI unchanged;
   no screenshot or video is required. M19.2 owns the density inspector and its
   visual evidence.
+
+## M19.2 verification
+
+- The captured-response overlay has an explicit Density Inspector toggle.
+  Analysis is constructed lazily only while the panel is open and operates on
+  already captured arrays, so the closed inspector adds no callback, polling,
+  telemetry, or background work.
+- Solid echo-density, dashed recurrence, and dotted spectral-flatness curves
+  remain distinguishable without color. The three strongest qualifying
+  recurrence windows carry text lag markers; early/middle/late cards retain
+  peak rate, crest, recurrence/lag, flatness, and stereo correlation.
+- Teaching mode explains that density, periodicity, coloration, and width are
+  independent evidence rather than one quality score. Browser tests distinguish
+  controlled sparse and dense captures and reject malformed input.
+- Live browser QA covers 1440×900, 900×700, and 640×400. The responsive overlay
+  uses available width, wraps controls, stacks region cards at minimum width,
+  and keeps all content vertically reachable. Reviewed screenshot and video
+  evidence lives under `artifacts/ui/m19-2-density-inspector/`.
+- The deterministic browser-only capture fixture used for visual QA was removed
+  before rebuilding production assets. Native capture remains authoritative.

@@ -1357,7 +1357,7 @@ Acceptance criteria:
 - Each metric has a documented perceptual meaning and limitation.
 - Versioned machine-readable reports preserve current factory baselines.
 
-### M19.2 Add a density inspector
+### M19.2 Add a density inspector — Complete
 
 Tasks: plot density over time, mark prominent recurrence periods, expose early/middle/late summaries, and integrate explanations into teaching mode.
 
