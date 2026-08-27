@@ -1263,7 +1263,7 @@ Acceptance criteria:
 
 ### M18.4 Decide factory specialization versus generic execution
 
-Status: In progress.
+Status: Complete.
 
 Use the completed measurements to determine whether selected factory graphs need ahead-of-time C++ kernels and whether native-code JIT compilation is justified.
 

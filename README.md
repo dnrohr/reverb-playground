@@ -63,6 +63,7 @@ Useful references:
 
 - [Module and visualization reference](docs/module-and-visualization-reference.md)
 - [Processing quality modes](docs/quality-modes.md)
+- [Why the visible graph executor remains the shipping path](docs/factory-specialization-decision.md)
 - [Saving and loading patches](docs/patch-saving-and-loading.md)
 - [Schematic editor interactions](docs/schematic-editor-interactions.md)
 - [Keith Barr reverb architecture research](docs/keith-barr-reverb-architectures.md)

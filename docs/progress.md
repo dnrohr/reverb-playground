@@ -87,7 +87,7 @@ Last updated: 2026-08-26
 | M18.1 Optimize the dual-grain Pitch Shift inner loop | Complete | Prepared ratio/grain/window/addressing state; 56.6-62.7% steady-fixture reduction; separate steady/edit/two-voice/crossfade measurements; full pitch/safety qualification |
 | M18.2 Compile control-rate ramps into block processors | Complete | Tick-bounded ramp segments; explicit block/causal kernels for Gain, Delay, Allpass, Low-pass, and Pitch Shift; direct equivalence tests; exact-commit 75-case matrix |
 | M18.3 Bounded quality modes | Complete | Explicit Draft/Normal/High graph policy; nearest/linear/cubic Pitch Shift interpolation; stable latency and control/telemetry rates; native/web/host/offline persistence; measured cost/artifact fixtures |
-| M18.4 Factory specialization decision | In progress | Compare the direct Barr reference and optimized generic executor, then record the evidence-based AOT/JIT decision and final release envelope |
+| M18.4 Factory specialization decision | Complete | 15 paired Barr direct/generic Release cases are sample-identical with a 1.010x median p95 ratio; no AOT duplication or runtime JIT; documented supported envelope and final package/host qualification |
 
 ## M0.2 verification
 
