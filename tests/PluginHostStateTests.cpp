@@ -482,7 +482,11 @@ TEST_CASE("Energy telemetry follows the active compiled graph revision and is fr
     juce::MidiBuffer midi;
     for (auto block = 0; block < 200; ++block) {
         buffer.clear();
-        if (block % 20 == 0) buffer.setSample(0, 0, 0.1F);
+        // Keep exciting both inputs while the graph compiles asynchronously. This
+        // makes the assertion independent of how quickly a Debug CI runner swaps
+        // the requested revision onto the audio thread.
+        buffer.setSample(0, 0, 0.1F);
+        buffer.setSample(1, 0, 0.1F);
         processor.processBlock(buffer, midi);
         const auto energy = nlohmann::json::parse(processor.energyTelemetryJson().toStdString());
         if (energy.at("revision") == requestedRevision && energy.at("generation").get<int>() > 0) {
