@@ -88,6 +88,8 @@ Last updated: 2026-08-26
 | M18.2 Compile control-rate ramps into block processors | Complete | Tick-bounded ramp segments; explicit block/causal kernels for Gain, Delay, Allpass, Low-pass, and Pitch Shift; direct equivalence tests; exact-commit 75-case matrix |
 | M18.3 Bounded quality modes | Complete | Explicit Draft/Normal/High graph policy; nearest/linear/cubic Pitch Shift interpolation; stable latency and control/telemetry rates; native/web/host/offline persistence; measured cost/artifact fixtures |
 | M18.4 Factory specialization decision | Complete | 15 paired Barr direct/generic Release cases are sample-identical with a 1.010x median p95 ratio; no AOT duplication or runtime JIT; documented supported envelope and final package/host qualification |
+| M18.5.1 Independent Wet/Dry gains | Complete | One smoothed, unnormalized Wet/Dry law shared by live audition and offline export; immediate-dry latency policy; versioned host state and exact legacy master migration |
+| M18.5.2 Audition/capture control cleanup | Complete | Removed master, processed/bypass, export-mix, and capture-mute controls; impulse measurement always isolates its source; post-sum mute/safety retained; reviewed standalone evidence |
 
 ## M0.2 verification
 

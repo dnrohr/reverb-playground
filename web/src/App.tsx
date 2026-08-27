@@ -175,7 +175,6 @@ function LoopInspector({ inspection, activeIndex, onActiveIndex, splitFeedback =
 function MeasurementBar({ sampleRate, onCapture }: { sampleRate: number; onCapture: (capture: ImpulseCaptureResult) => void }) {
   const [length, setLength] = useState(2000);
   const [threshold, setThreshold] = useState(-80);
-  const [muteInput, setMuteInput] = useState(true);
   const [status, setStatus] = useState<ImpulseCaptureStatus | null>(null);
   const [result, setResult] = useState<ImpulseCaptureResult | null>(null);
   const [error, setError] = useState('');
@@ -183,11 +182,11 @@ function MeasurementBar({ sampleRate, onCapture }: { sampleRate: number; onCaptu
   const start = useCallback(async () => {
     setError(''); setResult(null);
     try {
-      const response = await callNative('startImpulseCapture', length, threshold, muteInput);
+      const response = await callNative('startImpulseCapture', length, threshold);
       if (response === undefined) { setError('NATIVE AUDIO REQUIRED FOR CAPTURE'); return; }
       setStatus(parseImpulseCaptureStatus(response));
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Capture could not start'); }
-  }, [length, muteInput, threshold]);
+  }, [length, threshold]);
 
   useEffect(() => {
     if (status?.state !== 'armed' && status?.state !== 'capturing') return;
@@ -211,7 +210,7 @@ function MeasurementBar({ sampleRate, onCapture }: { sampleRate: number; onCaptu
     <div className="measurement-title"><span>MEASURE</span><strong>IMPULSE RESPONSE</strong></div>
     <label>MAX LENGTH <select aria-label="Capture maximum length" value={length} disabled={busy} onChange={(event) => setLength(Number(event.target.value))}><option value={500}>500 ms</option><option value={2000}>2,000 ms</option><option value={5000}>5,000 ms</option><option value={10000}>10,000 ms</option></select></label>
     <label>STOP BELOW <select aria-label="Capture stop threshold" value={threshold} disabled={busy} onChange={(event) => setThreshold(Number(event.target.value))}><option value={-60}>-60 dBFS</option><option value={-80}>-80 dBFS</option><option value={-100}>-100 dBFS</option><option value={-120}>-120 dBFS</option></select></label>
-    <label className="measurement-check"><input type="checkbox" checked={muteInput} disabled={busy} onChange={(event) => setMuteInput(event.target.checked)} /> MUTE LIVE INPUT</label>
+    <span className="measurement-check">INPUT ISOLATED</span>
     <button type="button" disabled={busy || sampleRate <= 0} onClick={() => void start()}>{busy ? 'CAPTURING…' : 'CAPTURE IMPULSE'}</button>
     <div className="measurement-readout" role="status">
       {error || (sampleRate <= 0 ? 'WAITING FOR AUDIO DEVICE' : result ? `${result.frameCount.toLocaleString()} FRAMES / ${(result.frameCount / result.sampleRate * 1000).toFixed(1)} ms / STOP: ${result.stopReason === 'threshold' ? `${result.stopThresholdDb} dBFS` : 'MAX LENGTH'}` : busy && status ? `${status.capturedMilliseconds.toFixed(1)} / ${status.maximumLengthMilliseconds.toFixed(0)} ms` : '0.1 PEAK / READY')}

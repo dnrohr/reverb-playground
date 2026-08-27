@@ -41,10 +41,15 @@ public:
     void setStateInformation(const void* data, int sizeInBytes) override;
 
     void triggerImpulse() noexcept;
-    void setMasterGain(float linearGain) noexcept;
+    void setWetGain(float linearGain) noexcept;
+    void setDryGain(float linearGain) noexcept;
+    // Source compatibility for hosts/tests built against pre-M18.5; no longer exposed by the UI.
+    void setMasterGain(float linearGain) noexcept { setWetGain(linearGain); }
     void setEmergencyMuted(bool muted) noexcept;
     void requestSafetyReset() noexcept;
-    [[nodiscard]] float masterGain() const noexcept;
+    [[nodiscard]] float wetGain() const noexcept;
+    [[nodiscard]] float dryGain() const noexcept;
+    [[nodiscard]] float masterGain() const noexcept { return wetGain(); }
     [[nodiscard]] bool isEmergencyMuted() const noexcept;
     [[nodiscard]] bool isSafetyLatched() const noexcept;
     [[nodiscard]] double activeSampleRate() const noexcept;
@@ -56,21 +61,30 @@ public:
     [[nodiscard]] juce::String audioFileTransportJson() const;
     [[nodiscard]] juce::String publishGraphJson(const juce::String& patchJson);
     [[nodiscard]] juce::String storePatchStateJson(const juce::String& patchJson);
-    juce::String startImpulseCapture(double lengthMilliseconds, double stopThresholdDb, bool muteLiveInput);
+    juce::String startImpulseCapture(double lengthMilliseconds, double stopThresholdDb);
     bool setEnergyTelemetryEnabled(bool enabled) noexcept;
     double setRuntimeParameter(const juce::String& nodeId, const juce::String& parameterId, double value) noexcept;
     bool loadAudioFile(const juce::File& file, std::string& error);
     void setAuditionSourceMode(reverb::audio::AuditionSourceMode mode);
     [[nodiscard]] reverb::audio::AuditionSourceMode auditionSourceMode() const noexcept;
-    void setProcessedAudition(bool processed) noexcept;
-    [[nodiscard]] bool isProcessedAudition() const noexcept;
+    void setProcessedAudition(bool processed) noexcept
+    {
+        setWetGain(processed ? 1.0F : 0.0F);
+        setDryGain(processed ? 0.0F : 1.0F);
+    }
+    [[nodiscard]] bool isProcessedAudition() const noexcept { return dryGain() == 0.0F; }
     void playAudioFile();
     void pauseAudioFile();
     void stopAudioFile();
     bool seekAudioFile(std::int64_t sourceFrame, std::string& error);
     bool setAudioFileLoop(bool enabled, std::int64_t startSourceFrame, std::int64_t endSourceFrame, std::string& error);
-    bool startProcessedFileExport(const juce::File& destination, reverb::render::FileExportMode mode,
+    bool startProcessedFileExport(const juce::File& destination,
         bool overwriteConfirmed, std::string& error);
+    bool startProcessedFileExport(const juce::File& destination, reverb::render::FileExportMode,
+        bool overwriteConfirmed, std::string& error)
+    {
+        return startProcessedFileExport(destination, overwriteConfirmed, error);
+    }
     void cancelProcessedFileExport() noexcept;
     [[nodiscard]] juce::String processedFileExportJson() const;
     // Message-thread synchronization point used by the timer and deterministic host tests.
@@ -101,11 +115,13 @@ private:
     std::atomic<bool> transportGraphResetPending_ {};
     std::atomic<bool> impulseRequested_ {};
     std::atomic<bool> resumeFileOnReturn_ {};
-    std::atomic<bool> processedAudition_ { true };
+    std::atomic<float> wetGainTarget_ { 0.5F };
+    std::atomic<float> dryGainTarget_ { 0.0F };
+    float wetGainCurrent_ { 0.5F };
+    float dryGainCurrent_ { 0.0F };
     std::atomic<bool> graphCaptureMode_ {};
     std::atomic<double> captureLengthMilliseconds_ { 2'000.0 };
     std::atomic<double> captureStopThresholdDb_ { -80.0 };
-    std::atomic<bool> captureMutesLiveInput_ { true };
     std::atomic<reverb::audio::AuditionSourceMode> auditionSourceMode_ {
         reverb::audio::AuditionSourceMode::liveInput
     };

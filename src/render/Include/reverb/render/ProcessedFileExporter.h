@@ -12,10 +12,8 @@
 
 namespace reverb::render {
 
-enum class FileExportMode : std::uint8_t {
-    wetOnly,
-    auditionMix,
-};
+// Retained as a source-compatible request shorthand; the product UI now uses explicit gains.
+enum class FileExportMode : std::uint8_t { wetOnly, auditionMix };
 
 enum class FileExportState : std::uint8_t {
     idle,
@@ -35,6 +33,8 @@ struct ProcessedFileExportRequest final {
     double maximumTailSeconds { 10.0 };
     double silenceThresholdDb { -80.0 };
     bool overwriteConfirmed {};
+    double wetGain { -1.0 };
+    double dryGain { -1.0 };
 };
 
 struct ProcessedFileExportSnapshot final {
@@ -77,7 +77,6 @@ private:
     std::string error_;
 };
 
-[[nodiscard]] const char* fileExportModeName(FileExportMode mode) noexcept;
 [[nodiscard]] const char* fileExportStateName(FileExportState state) noexcept;
 
 } // namespace reverb::render

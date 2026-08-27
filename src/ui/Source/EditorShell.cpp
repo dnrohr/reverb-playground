@@ -31,12 +31,14 @@ EditorShell::EditorShell(Callbacks callbacks)
     formatManager_.registerBasicFormats();
     status_.setJustificationType(juce::Justification::centredLeft);
     styleLabel(status_, text, 13.0F, juce::Font::plain);
-    gainLabel_.setText("MASTER AUDITION GAIN", juce::dontSendNotification);
-    styleLabel(gainLabel_, mutedText, 12.0F, juce::Font::bold);
+    wetGainLabel_.setText("WET", juce::dontSendNotification);
+    dryGainLabel_.setText("DRY", juce::dontSendNotification);
+    styleLabel(wetGainLabel_, mutedText, 12.0F, juce::Font::bold);
+    styleLabel(dryGainLabel_, mutedText, 12.0F, juce::Font::bold);
 
-    const std::array<juce::Component*, 7> components {
-        &status_, &gainLabel_,
-        &deviceButton_, &impulseButton_, &muteButton_, &resetButton_, &gain_,
+    const std::array<juce::Component*, 9> components {
+        &status_, &wetGainLabel_, &dryGainLabel_,
+        &deviceButton_, &impulseButton_, &muteButton_, &resetButton_, &wetGain_, &dryGain_,
     };
     for (auto* component : components)
         addAndMakeVisible(component);
@@ -51,22 +53,28 @@ EditorShell::EditorShell(Callbacks callbacks)
     muteButton_.onClick = [this] { callbacks_.setEmergencyMuted(muteButton_.getToggleState()); };
     resetButton_.onClick = [this] { callbacks_.resetSafety(); };
 
-    gain_.setSliderStyle(juce::Slider::LinearHorizontal);
-    gain_.setTitle("Master audition gain");
-    gain_.setTextBoxStyle(juce::Slider::TextBoxRight, false, 72, 28);
-    gain_.setRange(0.0, 1.0, 0.001);
-    gain_.setValue(callbacks_.masterGain(), juce::dontSendNotification);
-    gain_.setDoubleClickReturnValue(true, 0.5);
-    gain_.setColour(juce::Slider::trackColourId, cyan);
-    gain_.setColour(juce::Slider::thumbColourId, text);
-    gain_.setColour(juce::Slider::textBoxTextColourId, text);
-    gain_.setColour(juce::Slider::textBoxBackgroundColourId, panel);
-    gain_.onValueChange = [this] { callbacks_.setMasterGain(static_cast<float>(gain_.getValue())); };
+    for (auto* slider : { &wetGain_, &dryGain_ }) {
+        slider->setSliderStyle(juce::Slider::LinearHorizontal);
+        slider->setTextBoxStyle(juce::Slider::TextBoxRight, false, 58, 28);
+        slider->setRange(0.0, 1.0, 0.001);
+        slider->setColour(juce::Slider::trackColourId, cyan);
+        slider->setColour(juce::Slider::thumbColourId, text);
+        slider->setColour(juce::Slider::textBoxTextColourId, text);
+        slider->setColour(juce::Slider::textBoxBackgroundColourId, panel);
+    }
+    wetGain_.setTitle("Wet gain");
+    wetGain_.setValue(callbacks_.wetGain(), juce::dontSendNotification);
+    wetGain_.setDoubleClickReturnValue(true, 0.5);
+    wetGain_.onValueChange = [this] { callbacks_.setWetGain(static_cast<float>(wetGain_.getValue())); };
+    dryGain_.setTitle("Dry gain");
+    dryGain_.setValue(callbacks_.dryGain(), juce::dontSendNotification);
+    dryGain_.setDoubleClickReturnValue(true, 0.0);
+    dryGain_.onValueChange = [this] { callbacks_.setDryGain(static_cast<float>(dryGain_.getValue())); };
     muteButton_.setToggleState(callbacks_.emergencyMuted(), juce::dontSendNotification);
 
-    const std::array<juce::Component*, 14> auditionComponents {
+    const std::array<juce::Component*, 12> auditionComponents {
         &sourceMode_, &fileButton_, &filePlayButton_, &fileStopButton_, &drawerButton_,
-        &loopButton_, &processedButton_, &fileLabel_, &transportLabel_, &seek_, &exportMode_,
+        &loopButton_, &fileLabel_, &transportLabel_, &seek_,
         &exportButton_, &exportProgressBar_, &loopRange_,
     };
     for (auto* component : auditionComponents) {
@@ -108,16 +116,6 @@ EditorShell::EditorShell(Callbacks callbacks)
         const auto error = callbacks_.setAudioFileLoop(loopButton_.getToggleState(), start, end);
         if (error.isNotEmpty()) status_.setText(error, juce::dontSendNotification);
     };
-    processedButton_.setClickingTogglesState(true);
-    processedButton_.setToggleState(callbacks_.isProcessedAudition(), juce::dontSendNotification);
-    processedButton_.onClick = [this] {
-        callbacks_.setProcessedAudition(processedButton_.getToggleState());
-        processedButton_.setButtonText(processedButton_.getToggleState() ? "PROCESSED" : "DRY BYPASS");
-    };
-    exportMode_.addItem("WET ONLY", 1);
-    exportMode_.addItem("AUDITION MIX", 2);
-    exportMode_.setSelectedId(1, juce::dontSendNotification);
-    exportMode_.setTitle("Processed-file export mode");
     exportButton_.setColour(juce::TextButton::buttonColourId, amber.darker(0.55F));
     exportButton_.onClick = [this] {
         const auto status = juce::JSON::parse(callbacks_.processedFileExportJson());
@@ -177,11 +175,10 @@ EditorShell::EditorShell(Callbacks callbacks)
                 static_cast<double>(arguments[2])));
         })
         .withNativeFunction("startImpulseCapture", [this](const auto& arguments, auto complete) {
-            if (arguments.size() != 3) { complete(juce::var()); return; }
+            if (arguments.size() != 2) { complete(juce::var()); return; }
             complete(callbacks_.startImpulseCapture(
                 static_cast<double>(arguments[0]),
-                static_cast<double>(arguments[1]),
-                static_cast<bool>(arguments[2])));
+                static_cast<double>(arguments[1])));
         })
         .withNativeFunction("getImpulseCaptureStatus", [this](const auto&, auto complete) {
             complete(callbacks_.impulseCaptureStatusJson());
@@ -309,8 +306,11 @@ void EditorShell::resized()
         muteButton_.setBounds(actions.removeFromLeft(actionWidth)); actions.removeFromLeft(actionGap);
         resetButton_.setBounds(actions);
         auto gainRow = juce::Rectangle<int> { inset, 70, contentWidth, 27 };
-        gainLabel_.setBounds(gainRow.removeFromLeft(154));
-        gain_.setBounds(gainRow);
+        const auto half = gainRow.getWidth() / 2;
+        auto wet = gainRow.removeFromLeft(half).reduced(0, 0); wet.removeFromRight(5);
+        auto dry = gainRow; dry.removeFromLeft(5);
+        wetGainLabel_.setBounds(wet.removeFromLeft(34)); wetGain_.setBounds(wet);
+        dryGainLabel_.setBounds(dry.removeFromLeft(34)); dryGain_.setBounds(dry);
     } else {
         auto topRow = juce::Rectangle<int> { inset, 10, contentWidth, 31 };
         constexpr int actionWidth = 132;
@@ -323,8 +323,10 @@ void EditorShell::resized()
         muteButton_.setBounds(topRow.removeFromLeft(actionWidth)); topRow.removeFromLeft(actionGap);
         resetButton_.setBounds(topRow.removeFromLeft(resetWidth));
         auto gainRow = juce::Rectangle<int> { inset, 43, contentWidth, 32 };
-        gainLabel_.setBounds(gainRow.removeFromLeft(190));
-        gain_.setBounds(gainRow.removeFromLeft(juce::jmin(440, gainRow.getWidth())));
+        wetGainLabel_.setBounds(gainRow.removeFromLeft(34));
+        wetGain_.setBounds(gainRow.removeFromLeft(260)); gainRow.removeFromLeft(12);
+        dryGainLabel_.setBounds(gainRow.removeFromLeft(34));
+        dryGain_.setBounds(gainRow.removeFromLeft(260));
     }
     if (callbacks_.standaloneAuditionAvailable) {
         const auto convert = [](const LayoutRect& item) {
@@ -341,8 +343,6 @@ void EditorShell::resized()
         waveformBounds_ = convert(deck.waveform);
         fileStopButton_.setBounds(convert(deck.stop));
         loopButton_.setBounds(convert(deck.loop));
-        processedButton_.setBounds(convert(deck.processed));
-        exportMode_.setBounds(convert(deck.exportMode));
         exportProgressBar_.setBounds(convert(deck.exportProgress));
         seek_.setBounds(convert(deck.seek));
         loopRange_.setBounds(convert(deck.loopRange));
@@ -382,7 +382,7 @@ void EditorShell::chooseExportFile()
                     destination = destination.withFileExtension(".wav");
                 const auto overwriteConfirmed = destination.existsAsFile();
                 const auto error = callbacks_.startProcessedFileExport(
-                    destination, exportMode_.getSelectedId() - 1, overwriteConfirmed);
+                    destination, overwriteConfirmed);
                 if (error.isNotEmpty()) status_.setText(error, juce::dontSendNotification);
             }
             exportChooser_.reset();
@@ -408,8 +408,8 @@ void EditorShell::setAuditionDrawerExpanded(const bool expanded)
     auditionDrawerExpanded_ = callbacks_.standaloneAuditionAvailable && expanded;
     drawerButton_.setButtonText(auditionDrawerExpanded_ ? juce::String::fromUTF8("\xe2\x88\x92") : "+");
     drawerButton_.setTooltip(auditionDrawerExpanded_ ? "Hide audio-file details" : "Show audio-file details");
-    const std::array<juce::Component*, 7> drawerComponents {
-        &fileStopButton_, &loopButton_, &processedButton_, &exportMode_,
+    const std::array<juce::Component*, 5> drawerComponents {
+        &fileStopButton_, &loopButton_,
         &exportProgressBar_, &seek_, &loopRange_,
     };
     for (auto* component : drawerComponents)
@@ -493,14 +493,11 @@ void EditorShell::updateTransport()
         juce::String(cursorSeconds, 2) + " / " + juce::String(durationSeconds, 2) + " s  |  "
             + state.toUpperCase() + "  |  UNDERRUNS " + juce::String(underruns),
         juce::dontSendNotification);
-    processedButton_.setToggleState(callbacks_.isProcessedAudition(), juce::dontSendNotification);
-    processedButton_.setButtonText(processedButton_.getToggleState() ? "PROCESSED" : "DRY BYPASS");
     const auto exportStatus = juce::JSON::parse(callbacks_.processedFileExportJson());
     const auto exportState = exportStatus.getProperty("state", "idle").toString();
     exportProgress_ = static_cast<double>(exportStatus.getProperty("progress", 0.0));
     exportButton_.setButtonText(exportState == "rendering" ? "CANCEL EXPORT" : "EXPORT WAV...");
     exportButton_.setEnabled(fileFrameCount_ > 0 || exportState == "rendering");
-    exportMode_.setEnabled(exportState != "rendering");
     if (exportState == "failed")
         status_.setText(exportStatus.getProperty("error", "Export failed").toString(), juce::dontSendNotification);
     else if (exportState == "complete")
@@ -516,8 +513,10 @@ void EditorShell::updateTransport()
 
 void EditorShell::timerCallback()
 {
-    if (!gain_.isMouseButtonDown())
-        gain_.setValue(callbacks_.masterGain(), juce::dontSendNotification);
+    if (!wetGain_.isMouseButtonDown())
+        wetGain_.setValue(callbacks_.wetGain(), juce::dontSendNotification);
+    if (!dryGain_.isMouseButtonDown())
+        dryGain_.setValue(callbacks_.dryGain(), juce::dontSendNotification);
     muteButton_.setToggleState(callbacks_.emergencyMuted(), juce::dontSendNotification);
     const auto safetyLatched = callbacks_.isSafetyLatched();
     if (impulseFlashTicks_ > 0 && --impulseFlashTicks_ == 0)

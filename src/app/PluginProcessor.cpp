@@ -29,6 +29,9 @@ void ReverbPlaygroundProcessor::prepareToPlay(
     const double sampleRate, const int maximumExpectedSamplesPerBlock)
 {
     harness_.prepare(sampleRate);
+    harness_.setMasterGain(1.0F);
+    wetGainCurrent_ = wetGainTarget_.load(std::memory_order_acquire);
+    dryGainCurrent_ = dryGainTarget_.load(std::memory_order_acquire);
     const auto maximumBlockSize = static_cast<std::size_t>(std::max(1, maximumExpectedSamplesPerBlock));
     audioFileSource_.prepare(sampleRate, maximumBlockSize);
     graphInputLeft_.assign(maximumBlockSize, 0.0F);
@@ -145,20 +148,23 @@ void ReverbPlaygroundProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
         graphLeftGuard_.reset();
         graphRightGuard_.reset();
     }
-    if (!processedAudition_.load(std::memory_order_acquire)) {
-        if (graphSafetyLatched_.load(std::memory_order_acquire) || harness_.isSafetyLatched()) {
+    if (!graphAudioEnabled_.load(std::memory_order_acquire) || !graphHost_.hasRuntime()) {
+        harness_.process(inputLeft, inputRight, outputLeft, outputRight);
+        if (harness_.isEmergencyMuted() || harness_.isSafetyLatched()) {
             buffer.clear();
             return;
         }
-        std::ranges::copy(inputLeft, outputLeft.begin());
-        std::ranges::copy(inputRight, outputRight.begin());
-        if (harness_.isEmergencyMuted()) {
-            buffer.clear();
-            return;
+        const auto wetTarget = wetGainTarget_.load(std::memory_order_relaxed);
+        const auto dryTarget = dryGainTarget_.load(std::memory_order_relaxed);
+        const auto rampFrames = std::max<std::size_t>(1, std::min(sampleCount,
+            static_cast<std::size_t>(std::max(1.0, activeSampleRate() * 0.010))));
+        const auto wetStep = (wetTarget - wetGainCurrent_) / static_cast<float>(rampFrames);
+        const auto dryStep = (dryTarget - dryGainCurrent_) / static_cast<float>(rampFrames);
+        for (std::size_t index = 0; index < sampleCount; ++index) {
+            if (index < rampFrames) { wetGainCurrent_ += wetStep; dryGainCurrent_ += dryStep; }
+            outputLeft[index] = outputLeft[index] * wetGainCurrent_ + inputLeft[index] * dryGainCurrent_;
+            outputRight[index] = outputRight[index] * wetGainCurrent_ + inputRight[index] * dryGainCurrent_;
         }
-        const auto gain = harness_.masterGain();
-        for (auto& sample : outputLeft) sample *= gain;
-        for (auto& sample : outputRight) sample *= gain;
         const auto leftStatus = graphLeftGuard_.inspectAndMute(outputLeft);
         const auto rightStatus = graphRightGuard_.inspectAndMute(outputRight);
         if (leftStatus.violation != reverb::dsp::SafetyViolation::none
@@ -166,10 +172,6 @@ void ReverbPlaygroundProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
             graphSafetyLatched_.store(true, std::memory_order_release);
             buffer.clear();
         }
-        return;
-    }
-    if (!graphAudioEnabled_.load(std::memory_order_acquire) || !graphHost_.hasRuntime()) {
-        harness_.process(inputLeft, inputRight, outputLeft, outputRight);
         return;
     }
 
@@ -198,9 +200,9 @@ void ReverbPlaygroundProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
     auto renderLeft = inputLeft;
     auto renderRight = inputRight;
     const auto manualImpulse = graphImpulsePending_.exchange(false, std::memory_order_acq_rel);
-    if ((captureStarted || manualImpulse || (captureActive && captureConfig.muteLiveInput))
+    if ((captureStarted || manualImpulse || captureActive)
         && sampleCount <= graphInputLeft_.size()) {
-        if (captureActive && captureConfig.muteLiveInput) {
+        if (captureActive) {
             std::ranges::fill(graphInputLeft_, 0.0F);
             std::ranges::fill(graphInputRight_, 0.0F);
         } else {
@@ -220,9 +222,17 @@ void ReverbPlaygroundProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
         finishGraphDiagnostics();
         return;
     }
-    const auto gain = harness_.masterGain();
-    for (auto& sample : outputLeft) sample *= gain;
-    for (auto& sample : outputRight) sample *= gain;
+    const auto wetTarget = wetGainTarget_.load(std::memory_order_relaxed);
+    const auto dryTarget = dryGainTarget_.load(std::memory_order_relaxed);
+    const auto rampFrames = std::max<std::size_t>(1, std::min(sampleCount,
+        static_cast<std::size_t>(std::max(1.0, activeSampleRate() * 0.010))));
+    const auto wetStep = (wetTarget - wetGainCurrent_) / static_cast<float>(rampFrames);
+    const auto dryStep = (dryTarget - dryGainCurrent_) / static_cast<float>(rampFrames);
+    for (std::size_t index = 0; index < sampleCount; ++index) {
+        if (index < rampFrames) { wetGainCurrent_ += wetStep; dryGainCurrent_ += dryStep; }
+        outputLeft[index] = outputLeft[index] * wetGainCurrent_ + inputLeft[index] * dryGainCurrent_;
+        outputRight[index] = outputRight[index] * wetGainCurrent_ + inputRight[index] * dryGainCurrent_;
+    }
     const auto leftStatus = graphLeftGuard_.inspectAndMute(outputLeft);
     const auto rightStatus = graphRightGuard_.inspectAndMute(outputRight);
     if (leftStatus.violation != reverb::dsp::SafetyViolation::none
@@ -267,8 +277,9 @@ void ReverbPlaygroundProcessor::changeProgramName(int, const juce::String&) {}
 void ReverbPlaygroundProcessor::getStateInformation(juce::MemoryBlock& destinationData)
 {
     juce::ValueTree state("ReverbPlayground");
-    state.setProperty("formatVersion", 1, nullptr);
-    state.setProperty("masterGain", harness_.masterGain(), nullptr);
+    state.setProperty("formatVersion", 2, nullptr);
+    state.setProperty("wetGain", wetGain(), nullptr);
+    state.setProperty("dryGain", dryGain(), nullptr);
     state.setProperty("emergencyMuted", harness_.isEmergencyMuted(), nullptr);
     if (const auto patch = hostPatchState_.snapshot(); patch.has_value())
         state.setProperty("graphPatchJson", juce::String::fromUTF8(patch->data(), static_cast<int>(patch->size())), nullptr);
@@ -288,7 +299,12 @@ void ReverbPlaygroundProcessor::setStateInformation(const void* data, const int 
             return;
     }
 
-    harness_.setMasterGain(static_cast<float>(state.getProperty("masterGain", 0.5F)));
+    const auto restoredWet = state.hasProperty("wetGain")
+        ? static_cast<float>(state.getProperty("wetGain"))
+        : static_cast<float>(state.getProperty("masterGain", 0.5F));
+    setWetGain(restoredWet);
+    setDryGain(static_cast<float>(state.getProperty("dryGain", 0.0F)));
+    harness_.setMasterGain(1.0F);
     harness_.setEmergencyMuted(static_cast<bool>(state.getProperty("emergencyMuted", false)));
     if (patchJson.isNotEmpty()) {
         const auto sampleRate = graphSampleRate_.load(std::memory_order_acquire);
@@ -309,14 +325,22 @@ void ReverbPlaygroundProcessor::triggerImpulse() noexcept
     auditionSourceMode_.store(reverb::audio::AuditionSourceMode::testImpulse, std::memory_order_release);
     impulseRequested_.store(true, std::memory_order_release);
 }
-void ReverbPlaygroundProcessor::setMasterGain(const float value) noexcept { harness_.setMasterGain(value); }
+void ReverbPlaygroundProcessor::setWetGain(const float value) noexcept
+{
+    wetGainTarget_.store(std::clamp(value, 0.0F, 1.0F), std::memory_order_release);
+}
+void ReverbPlaygroundProcessor::setDryGain(const float value) noexcept
+{
+    dryGainTarget_.store(std::clamp(value, 0.0F, 1.0F), std::memory_order_release);
+}
 void ReverbPlaygroundProcessor::setEmergencyMuted(const bool muted) noexcept { harness_.setEmergencyMuted(muted); }
 void ReverbPlaygroundProcessor::requestSafetyReset() noexcept
 {
     harness_.requestSafetyReset();
     graphSafetyResetPending_.store(true, std::memory_order_release);
 }
-float ReverbPlaygroundProcessor::masterGain() const noexcept { return harness_.masterGain(); }
+float ReverbPlaygroundProcessor::wetGain() const noexcept { return wetGainTarget_.load(std::memory_order_acquire); }
+float ReverbPlaygroundProcessor::dryGain() const noexcept { return dryGainTarget_.load(std::memory_order_acquire); }
 bool ReverbPlaygroundProcessor::isEmergencyMuted() const noexcept { return harness_.isEmergencyMuted(); }
 bool ReverbPlaygroundProcessor::isSafetyLatched() const noexcept
 {
@@ -363,15 +387,14 @@ double ReverbPlaygroundProcessor::setRuntimeParameter(
 
 juce::String ReverbPlaygroundProcessor::startImpulseCapture(
     const double lengthMilliseconds,
-    const double stopThresholdDb,
-    const bool muteLiveInput)
+    const double stopThresholdDb)
 {
     const auto graphMode = graphAudioEnabled_.load(std::memory_order_acquire);
     graphCaptureMode_.store(graphMode, std::memory_order_release);
     const reverb::dsp::ImpulseCaptureConfig requested {
         .maximumLengthMilliseconds = lengthMilliseconds,
         .stopThresholdDb = stopThresholdDb,
-        .muteLiveInput = muteLiveInput,
+        .muteLiveInput = true,
         .impulseLevel = 0.1F,
     };
     const auto bounded = graphMode
@@ -379,7 +402,6 @@ juce::String ReverbPlaygroundProcessor::startImpulseCapture(
         : harness_.requestImpulseCapture(requested);
     captureLengthMilliseconds_.store(bounded.maximumLengthMilliseconds, std::memory_order_release);
     captureStopThresholdDb_.store(bounded.stopThresholdDb, std::memory_order_release);
-    captureMutesLiveInput_.store(bounded.muteLiveInput, std::memory_order_release);
     return impulseCaptureStatusJson();
 }
 
@@ -399,7 +421,8 @@ juce::String ReverbPlaygroundProcessor::impulseCaptureStatusJson() const
         { "capturedMilliseconds", sampleRate > 0.0 ? 1'000.0 * static_cast<double>(frames) / sampleRate : 0.0 },
         { "maximumLengthMilliseconds", captureLengthMilliseconds_.load(std::memory_order_acquire) },
         { "stopThresholdDb", captureStopThresholdDb_.load(std::memory_order_acquire) },
-        { "muteLiveInput", captureMutesLiveInput_.load(std::memory_order_acquire) },
+        { "muteLiveInput", true },
+        { "inputIsolated", true },
         { "impulseLevel", 0.1 },
     };
     const auto text = json.dump();
@@ -662,16 +685,11 @@ void ReverbPlaygroundProcessor::setAuditionSourceMode(
     auditionSourceMode_.store(mode, std::memory_order_release);
 }
 
-void ReverbPlaygroundProcessor::setProcessedAudition(const bool processed) noexcept
-{
-    processedAudition_.store(processed, std::memory_order_release);
-}
-
 void ReverbPlaygroundProcessor::synchronizeHostLatencyForCurrentGraph()
 {
     jassert(juce::MessageManager::getInstance()->isThisTheMessageThread());
     const auto graphLatency = graphAudioEnabled_.load(std::memory_order_acquire)
-        && processedAudition_.load(std::memory_order_acquire)
+        && dryGain() <= 0.000001F
         ? graphHost_.activeLatencySamples() : 0;
     const auto bounded = static_cast<int>(std::min<std::size_t>(
         graphLatency, static_cast<std::size_t>(std::numeric_limits<int>::max())));
@@ -681,11 +699,6 @@ void ReverbPlaygroundProcessor::synchronizeHostLatencyForCurrentGraph()
 void ReverbPlaygroundProcessor::timerCallback()
 {
     synchronizeHostLatencyForCurrentGraph();
-}
-
-bool ReverbPlaygroundProcessor::isProcessedAudition() const noexcept
-{
-    return processedAudition_.load(std::memory_order_acquire);
 }
 
 reverb::audio::AuditionSourceMode ReverbPlaygroundProcessor::auditionSourceMode() const noexcept
@@ -734,7 +747,6 @@ bool ReverbPlaygroundProcessor::setAudioFileLoop(
 
 bool ReverbPlaygroundProcessor::startProcessedFileExport(
     const juce::File& destination,
-    const reverb::render::FileExportMode mode,
     const bool overwriteConfirmed,
     std::string& error)
 {
@@ -743,12 +755,14 @@ bool ReverbPlaygroundProcessor::startProcessedFileExport(
         .source = loadedAudioFile_,
         .destination = destination,
         .patch = patch,
-        .mode = mode,
+        .mode = reverb::render::FileExportMode::wetOnly,
         .outputSampleRate = 48'000.0,
-        .auditionGain = static_cast<double>(masterGain()),
+        .auditionGain = 1.0,
         .maximumTailSeconds = 10.0,
         .silenceThresholdDb = -80.0,
         .overwriteConfirmed = overwriteConfirmed,
+        .wetGain = static_cast<double>(wetGain()),
+        .dryGain = static_cast<double>(dryGain()),
     }, error);
 }
 

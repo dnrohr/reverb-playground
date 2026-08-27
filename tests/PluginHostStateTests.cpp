@@ -444,7 +444,27 @@ TEST_CASE("Legacy host state without a graph restores safe audition controls")
 
     ReverbPlaygroundProcessor restored;
     restored.setStateInformation(bytes.getData(), static_cast<int>(bytes.getSize()));
-    REQUIRE(restored.masterGain() == Catch::Approx(0.25F));
+    REQUIRE(restored.wetGain() == Catch::Approx(0.25F));
+    REQUIRE(restored.dryGain() == Catch::Approx(0.0F));
     REQUIRE_FALSE(restored.isEmergencyMuted());
     REQUIRE_FALSE(nlohmann::json::parse(restored.runtimeSnapshotJson().toStdString()).contains("restoredPatch"));
+}
+
+TEST_CASE("Host state stores independent wet and dry gains without the obsolete master gain")
+{
+    ReverbPlaygroundProcessor source;
+    source.setWetGain(0.73F);
+    source.setDryGain(0.21F);
+    juce::MemoryBlock bytes;
+    source.getStateInformation(bytes);
+    const auto state = juce::ValueTree::readFromData(bytes.getData(), bytes.getSize());
+    REQUIRE(static_cast<int>(state.getProperty("formatVersion")) == 2);
+    REQUIRE_FALSE(state.hasProperty("masterGain"));
+    REQUIRE(static_cast<float>(state.getProperty("wetGain")) == Catch::Approx(0.73F));
+    REQUIRE(static_cast<float>(state.getProperty("dryGain")) == Catch::Approx(0.21F));
+
+    ReverbPlaygroundProcessor restored;
+    restored.setStateInformation(bytes.getData(), static_cast<int>(bytes.getSize()));
+    REQUIRE(restored.wetGain() == Catch::Approx(0.73F));
+    REQUIRE(restored.dryGain() == Catch::Approx(0.21F));
 }

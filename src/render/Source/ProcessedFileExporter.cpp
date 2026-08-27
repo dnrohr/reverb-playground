@@ -63,13 +63,19 @@ bool ProcessedFileExporter::start(ProcessedFileExportRequest request, std::strin
         error = "Choose a destination different from the source file.";
         return false;
     }
+    const auto explicitGains = request.wetGain >= 0.0 && request.dryGain >= 0.0;
+    if (!explicitGains) {
+        request.wetGain = request.mode == FileExportMode::wetOnly ? request.auditionGain : 0.5 * request.auditionGain;
+        request.dryGain = request.mode == FileExportMode::auditionMix ? 0.5 * request.auditionGain : 0.0;
+    }
     if (!std::isfinite(request.maximumTailSeconds) || request.maximumTailSeconds < 0.5
         || request.maximumTailSeconds > 60.0 || !std::isfinite(request.silenceThresholdDb)
         || request.silenceThresholdDb < -120.0 || request.silenceThresholdDb > -40.0
-        || !std::isfinite(request.auditionGain) || request.auditionGain < 0.0
-        || request.auditionGain > 1.0 || !std::isfinite(request.outputSampleRate)
+        || !std::isfinite(request.wetGain) || request.wetGain < 0.0 || request.wetGain > 1.0
+        || !std::isfinite(request.dryGain) || request.dryGain < 0.0 || request.dryGain > 1.0
+        || !std::isfinite(request.outputSampleRate)
         || request.outputSampleRate < 8'000.0 || request.outputSampleRate > 192'000.0) {
-        error = "Export tail, silence threshold, or audition gain is outside the supported range.";
+        error = "Export tail, silence threshold, or wet/dry gain is outside the supported range.";
         return false;
     }
     auto reader = openReader(request.source);
@@ -192,10 +198,8 @@ void ProcessedFileExporter::render(
                 auto* wet = output.getWritePointer(channel);
                 const auto* dry = input.getReadPointer(channel);
                 for (auto frame = 0; frame < count; ++frame) {
-                    auto sample = wet[frame];
-                    if (request.mode == FileExportMode::auditionMix)
-                        sample = 0.5F * (sample + dry[frame]);
-                    sample *= static_cast<float>(request.auditionGain);
+                    const auto sample = wet[frame] * static_cast<float>(request.wetGain)
+                        + dry[frame] * static_cast<float>(request.dryGain);
                     if (!std::isfinite(sample) || std::abs(sample) > hardSafetyCeiling)
                         throw std::runtime_error("Export stopped because the graph produced unsafe output.");
                     wet[frame] = sample;
@@ -240,11 +244,6 @@ void ProcessedFileExporter::render(
         }
         state_.store(FileExportState::failed, std::memory_order_release);
     }
-}
-
-const char* fileExportModeName(const FileExportMode mode) noexcept
-{
-    return mode == FileExportMode::wetOnly ? "wet-only" : "audition-mix";
 }
 
 const char* fileExportStateName(const FileExportState state) noexcept

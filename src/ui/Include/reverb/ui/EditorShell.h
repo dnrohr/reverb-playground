@@ -13,17 +13,19 @@ class EditorShell final : public juce::Component,
 public:
     struct Callbacks final {
         std::function<void()> triggerImpulse;
-        std::function<void(float)> setMasterGain;
+        std::function<void(float)> setWetGain;
+        std::function<void(float)> setDryGain;
         std::function<void(bool)> setEmergencyMuted;
         std::function<void()> resetSafety;
         std::function<void()> chooseAudioDevice;
         std::function<juce::String()> statusText;
-        std::function<float()> masterGain;
+        std::function<float()> wetGain;
+        std::function<float()> dryGain;
         std::function<bool()> emergencyMuted;
         std::function<bool()> isSafetyLatched;
         std::function<juce::String()> runtimeSnapshotJson;
         std::function<double(const juce::String&, const juce::String&, double)> setRuntimeParameter;
-        std::function<juce::String(double, double, bool)> startImpulseCapture;
+        std::function<juce::String(double, double)> startImpulseCapture;
         std::function<juce::String()> impulseCaptureStatusJson;
         std::function<juce::String()> impulseCaptureJson;
         std::function<bool(bool)> setEnergyTelemetryEnabled;
@@ -40,9 +42,7 @@ public:
         std::function<juce::String(std::int64_t)> seekAudioFile;
         std::function<juce::String(bool, std::int64_t, std::int64_t)> setAudioFileLoop;
         std::function<juce::String()> audioFileTransportJson;
-        std::function<void(bool)> setProcessedAudition;
-        std::function<bool()> isProcessedAudition;
-        std::function<juce::String(const juce::File&, int, bool)> startProcessedFileExport;
+        std::function<juce::String(const juce::File&, bool)> startProcessedFileExport;
         std::function<void()> cancelProcessedFileExport;
         std::function<juce::String()> processedFileExportJson;
     };
@@ -68,20 +68,20 @@ private:
 
     Callbacks callbacks_;
     juce::Label status_;
-    juce::Label gainLabel_;
+    juce::Label wetGainLabel_;
+    juce::Label dryGainLabel_;
     juce::TextButton deviceButton_ { "AUDIO DEVICE..." };
     juce::TextButton impulseButton_ { "TRIGGER IMPULSE" };
     juce::TextButton muteButton_ { "EMERGENCY MUTE" };
     juce::TextButton resetButton_ { "RESET SAFETY" };
-    juce::Slider gain_;
+    juce::Slider wetGain_;
+    juce::Slider dryGain_;
     juce::ComboBox sourceMode_;
     juce::TextButton fileButton_ { "LOAD FILE..." };
     juce::TextButton filePlayButton_ { "PLAY" };
     juce::TextButton fileStopButton_ { "STOP" };
     juce::TextButton drawerButton_ { "+" };
     juce::ToggleButton loopButton_ { "LOOP" };
-    juce::ToggleButton processedButton_ { "PROCESSED" };
-    juce::ComboBox exportMode_;
     juce::TextButton exportButton_ { "EXPORT WAV..." };
     juce::Label fileLabel_;
     juce::Label transportLabel_;

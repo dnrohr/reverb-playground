@@ -42,23 +42,25 @@ They are never embedded in a patch or VST3 state.
 
 ## Safe audition sequence
 
-Start with Master Audition Gain near 0.5 and confirm Emergency Mute is available.
-Load the source, choose a short loop, and compare Processed with Dry Bypass.
+Start with Wet Gain near 0.5, Dry Gain at 0, and confirm Emergency Mute is available.
+Load the source, choose a short loop, then raise Dry Gain to compare the immediate
+source against the graph output.
 Watch the underrun and graph-safety diagnostics while editing. For feedback-heavy
 shimmer or reverse-cosmic designs, raise controls gradually. If safety latches,
 mute, undo or reduce the risky return, then reset safety.
 
-For export, choose Wet Only when another application will perform the dry/wet
-blend. Choose Audition Mix for the standalone's documented 50/50 dry/processed
-blend. The export captures the current graph and Master Audition Gain at start;
-later live edits do not mutate an in-flight job.
+Live audition and export use the same explicit formula: `Wet Gain × graph output
++ Dry Gain × selected source`. The gains are independent, linear, and are not
+silently normalized, so their sum can exceed unity. The export captures both
+gains and the current graph at start; later live edits do not mutate an in-flight
+job.
 
 ## Current limitations
 
 - Transport does not reverse source sample order or provide varispeed.
 - The waveform is an overview, not a destructive audio editor.
 - Looping is for audition only; export renders the complete source once.
-- Export rate/bit depth and the 50/50 Audition Mix ratio are fixed in M14.
+- Export rate and bit depth are currently fixed at 48 kHz / 24-bit stereo.
 - No recent-file list or automatic path reopening is stored.
 - Standalone file transport is intentionally unavailable in the VST3.
 

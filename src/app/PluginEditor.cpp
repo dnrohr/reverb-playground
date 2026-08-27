@@ -8,7 +8,8 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
     : AudioProcessorEditor(processor)
     , shell_({
           [&processor] { processor.triggerImpulse(); },
-          [&processor](const float gain) { processor.setMasterGain(gain); },
+          [&processor](const float gain) { processor.setWetGain(gain); },
+          [&processor](const float gain) { processor.setDryGain(gain); },
           [&processor](const bool muted) { processor.setEmergencyMuted(muted); },
           [&processor] { processor.requestSafetyReset(); },
           [] {
@@ -34,15 +35,16 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
                   ? juce::String::fromUTF8("\xe2\x97\x8f  HOST AUDIO  /  ") + juce::String(rate / 1000.0, 1) + " kHz"
                   : juce::String::fromUTF8("\xe2\x97\x8b  WAITING FOR HOST AUDIO");
           },
-          [&processor] { return processor.masterGain(); },
+          [&processor] { return processor.wetGain(); },
+          [&processor] { return processor.dryGain(); },
           [&processor] { return processor.isEmergencyMuted(); },
           [&processor] { return processor.isSafetyLatched(); },
           [&processor] { return processor.runtimeSnapshotJson(); },
           [&processor](const auto& node, const auto& parameter, const double value) {
               return processor.setRuntimeParameter(node, parameter, value);
           },
-          [&processor](const double length, const double threshold, const bool muteInput) {
-              return processor.startImpulseCapture(length, threshold, muteInput);
+          [&processor](const double length, const double threshold) {
+              return processor.startImpulseCapture(length, threshold);
           },
           [&processor] { return processor.impulseCaptureStatusJson(); },
           [&processor] { return processor.impulseCaptureJson(); },
@@ -75,16 +77,9 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
               return juce::String::fromUTF8(error.data(), static_cast<int>(error.size()));
           },
           [&processor] { return processor.audioFileTransportJson(); },
-          [&processor](const bool processed) { processor.setProcessedAudition(processed); },
-          [&processor] { return processor.isProcessedAudition(); },
-          [&processor](const juce::File& destination, const int mode, const bool overwriteConfirmed) {
+          [&processor](const juce::File& destination, const bool overwriteConfirmed) {
               std::string error;
-              static_cast<void>(processor.startProcessedFileExport(
-                  destination,
-                  mode == 0 ? reverb::render::FileExportMode::wetOnly
-                            : reverb::render::FileExportMode::auditionMix,
-                  overwriteConfirmed,
-                  error));
+              static_cast<void>(processor.startProcessedFileExport(destination, overwriteConfirmed, error));
               return juce::String::fromUTF8(error.data(), static_cast<int>(error.size()));
           },
           [&processor] { processor.cancelProcessedFileExport(); },
