@@ -1347,7 +1347,7 @@ Milestone exit criteria:
 
 ## M19. Perceptual density measurement
 
-### M19.1 Add deterministic density analysis
+### M19.1 Add deterministic density analysis — Complete
 
 Tasks: measure windowed echo density, active-peak count, crest factor, kurtosis, energy variation, autocorrelation recurrence, spectral flatness, and early/middle/late stereo correlation; qualify sparse and dense reference fixtures; baseline every factory.
 

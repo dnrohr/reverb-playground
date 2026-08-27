@@ -9,6 +9,7 @@ add_executable(reverb_tests
     DelayMemoryPlanTests.cpp
     DspGainTests.cpp
     DspPrimitivesTests.cpp
+    DensityMeasurementsTests.cpp
     EnergyTelemetryTests.cpp
     EnvelopeGateTests.cpp
     EnvelopeGateRuntimeTests.cpp
@@ -91,3 +92,10 @@ add_test(
         --output ${CMAKE_CURRENT_BINARY_DIR}/performance-matrix-smoke.json
         --smoke
         --blocks 5)
+
+add_test(
+    NAME "Density baseline CLI writes a smoke report"
+    COMMAND reverb_density_baseline_cli
+        --factory-directory ${CMAKE_SOURCE_DIR}/factory-patches
+        --output ${CMAKE_CURRENT_BINARY_DIR}/density-baseline-smoke.json
+        --smoke)

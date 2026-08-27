@@ -1224,3 +1224,24 @@ Results:
   [`artifacts/ui/compact-audition-drawer/`](../artifacts/ui/compact-audition-drawer/):
   the default collapsed view, the open drawer at the 640x400 minimum, and an
   open/resize/close workflow video.
+
+## M19.1 verification
+
+- The offline density analyzer publishes overlapping 40 ms/20 ms-hop curves
+  for normalized echo density, active peak rate, crest factor, kurtosis, energy
+  variation, 1...30 ms autocorrelation recurrence and lag, spectral flatness,
+  and stereo correlation. Equal-third early/middle/late summaries preserve each
+  dimension separately; there is deliberately no composite quality score.
+- Controlled sparse-tap and deterministic dense noise-like fixtures are
+  measurably distinct at 44.1, 48, and 96 kHz. Cross-rate tests bound echo
+  density, crest, kurtosis, and stereo-correlation drift.
+- The checked `factory-density-baseline-v1.json` report contains the complete
+  window curves and summaries for all eight released factory families at every
+  qualified rate (24 entries). Its catalog coverage, finite metrics, schema,
+  and region/window completeness are executable test obligations.
+- [Perceptual density measurement](perceptual-density-measurement.md) defines
+  each metric's perceptual meaning and limitations, deterministic boundaries,
+  silence behavior, and exact regeneration command.
+- This task changes offline measurement and documentation only. UI unchanged;
+  no screenshot or video is required. M19.2 owns the density inspector and its
+  visual evidence.

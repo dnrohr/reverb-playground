@@ -1,4 +1,5 @@
 add_library(reverb_render STATIC
+    Source/DensityMeasurements.cpp
     Source/EnvelopeMeasurements.cpp
     Source/GravityReference.cpp
     Source/OfflineRenderer.cpp
@@ -77,6 +78,14 @@ add_executable(reverb_performance_matrix_cli
     Source/PerformanceMatrixCli.cpp)
 
 target_link_libraries(reverb_performance_matrix_cli
+    PRIVATE
+        reverb_project_options
+        reverb_render)
+
+add_executable(reverb_density_baseline_cli
+    Source/DensityBaselineCli.cpp)
+
+target_link_libraries(reverb_density_baseline_cli
     PRIVATE
         reverb_project_options
         reverb_render)
