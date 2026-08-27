@@ -1,5 +1,6 @@
 #include <reverb/render/PerformanceMatrix.h>
 
+#include <reverb/dsp/BarrReference.h>
 #include <reverb/graph/AcyclicRuntime.h>
 #include <reverb/graph/BarrReferenceGraph.h>
 #include <reverb/graph/GravityDiffusionGraph.h>
@@ -261,6 +262,85 @@ void writePerformanceMatrix(
     if (!stream) throw std::runtime_error("could not open performance output");
     stream << performanceMatrixJson(results, std::move(machineLabel), std::move(toolchain), std::move(buildCommit));
     if (!stream) throw std::runtime_error("could not write performance output");
+}
+
+BarrExecutionComparison measureBarrExecutionComparison(
+    const double sampleRate, const std::size_t blockSize, const std::size_t measuredBlocks)
+{
+    if (sampleRate <= 0.0 || blockSize == 0 || measuredBlocks < 20)
+        throw std::invalid_argument("Barr comparison requires a positive rate/block and at least 20 blocks");
+    std::vector<float> inputLeft(blockSize), inputRight(blockSize), directLeft(blockSize),
+        directRight(blockSize), genericLeft(blockSize), genericRight(blockSize);
+    std::uint32_t noise = 0x4d595df4U;
+    for (std::size_t index = 0; index < blockSize; ++index) {
+        noise = noise * 1664525U + 1013904223U;
+        inputLeft[index] = static_cast<float>((static_cast<double>(noise)
+            / static_cast<double>(std::numeric_limits<std::uint32_t>::max()) - 0.5) * 0.1);
+        inputRight[index] = static_cast<float>(0.05 * std::sin(
+            2.0 * 3.14159265358979323846 * 311.0 * static_cast<double>(index) / sampleRate));
+    }
+    reverb::dsp::BarrReference direct;
+    direct.prepare(sampleRate);
+    reverb::graph::AcyclicRuntimeHost generic;
+    const auto publication = generic.compileFeedbackAndPublish(
+        reverb::graph::makeBarrReferenceGraph(), sampleRate, blockSize);
+    if (!publication.valid()) throw std::runtime_error("Barr generic comparison failed to compile");
+    const auto runDirect = [&] { direct.process(inputLeft, inputRight, directLeft, directRight); };
+    const auto runGeneric = [&] { generic.process(inputLeft, inputRight, genericLeft, genericRight); };
+    runGeneric();
+    runDirect();
+    for (auto warmup = 0; warmup < 32; ++warmup) { runDirect(); runGeneric(); }
+    auto equivalent = directLeft == genericLeft && directRight == genericRight;
+    std::vector<double> directTimes, genericTimes;
+    directTimes.reserve(measuredBlocks);
+    genericTimes.reserve(measuredBlocks);
+    for (std::size_t block = 0; block < measuredBlocks; ++block) {
+        auto started = Clock::now();
+        runDirect();
+        directTimes.push_back(elapsedMicroseconds(started));
+        started = Clock::now();
+        runGeneric();
+        genericTimes.push_back(elapsedMicroseconds(started));
+        equivalent = equivalent && directLeft == genericLeft && directRight == genericRight;
+    }
+    const auto deadline = static_cast<double>(blockSize) * 1'000'000.0 / sampleRate;
+    BarrExecutionComparison result;
+    result.sampleRate = sampleRate;
+    result.blockSize = blockSize;
+    result.measuredBlocks = measuredBlocks;
+    result.directReference = distribution(directTimes, deadline);
+    result.optimizedGeneric = distribution(genericTimes, deadline);
+    result.genericToDirectP95Ratio = result.directReference.percentile95Microseconds > 0.0
+        ? result.optimizedGeneric.percentile95Microseconds / result.directReference.percentile95Microseconds : 0.0;
+    result.sampleEquivalent = equivalent;
+    result.finiteOutput = std::ranges::all_of(genericLeft, [](float value) { return std::isfinite(value); })
+        && std::ranges::all_of(genericRight, [](float value) { return std::isfinite(value); });
+    return result;
+}
+
+std::string barrExecutionComparisonJson(
+    const std::vector<BarrExecutionComparison>& results,
+    std::string machineLabel,
+    std::string toolchain,
+    std::string buildCommit)
+{
+    auto cases = nlohmann::ordered_json::array();
+    for (const auto& result : results) cases.push_back({
+        { "sampleRate", result.sampleRate }, { "blockSize", result.blockSize },
+        { "measuredBlocks", result.measuredBlocks },
+        { "directReference", distributionJson(result.directReference) },
+        { "optimizedGeneric", distributionJson(result.optimizedGeneric) },
+        { "genericToDirectP95Ratio", result.genericToDirectP95Ratio },
+        { "sampleEquivalent", result.sampleEquivalent }, { "finiteOutput", result.finiteOutput },
+    });
+    return nlohmann::ordered_json {
+        { "formatVersion", 1 }, { "measurement", "barr-direct-versus-optimized-generic" },
+        { "scope", "same-machine paired callback timing; no additional specialized prototype" },
+        { "machine", std::move(machineLabel) }, { "toolchain", std::move(toolchain) },
+        { "buildConfiguration", "Release" }, { "buildCommit", std::move(buildCommit) },
+        { "source", "identical deterministic LCG noise plus 311 Hz sine" },
+        { "cases", std::move(cases) },
+    }.dump(2) + "\n";
 }
 
 } // namespace reverb::render

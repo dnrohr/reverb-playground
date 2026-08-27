@@ -45,6 +45,40 @@ TEST_CASE("Headless performance matrix separates normal and topology-crossfade m
     REQUIRE(measured.at("budgets").contains("withinNormalBudget"));
 }
 
+TEST_CASE("Barr direct and optimized generic execution use identical paired fixtures")
+{
+    const auto result = reverb::render::measureBarrExecutionComparison(48'000.0, 128, 20);
+    REQUIRE(result.directReference.sampleCount == 20);
+    REQUIRE(result.optimizedGeneric.sampleCount == 20);
+    REQUIRE(result.directReference.percentile95Microseconds > 0.0);
+    REQUIRE(result.optimizedGeneric.percentile95Microseconds > 0.0);
+    REQUIRE(result.genericToDirectP95Ratio > 0.0);
+    REQUIRE(result.sampleEquivalent);
+    REQUIRE(result.finiteOutput);
+    const auto json = nlohmann::json::parse(reverb::render::barrExecutionComparisonJson(
+        { result }, "test", "test", "test"));
+    REQUIRE(json.at("measurement") == "barr-direct-versus-optimized-generic");
+    REQUIRE(json.at("cases").front().at("sampleEquivalent") == true);
+}
+
+TEST_CASE("Published M18 specialization evidence covers the supported Barr envelope")
+{
+    std::ifstream stream(std::filesystem::path(REVERB_MEASUREMENTS_DIR)
+        / "barr-execution-comparison-m18-4.json");
+    REQUIRE(stream.good());
+    const auto report = nlohmann::json::parse(stream);
+    REQUIRE(report.at("measurement") == "barr-direct-versus-optimized-generic");
+    REQUIRE(report.at("buildConfiguration") == "Release");
+    REQUIRE(report.at("cases").size() == 15);
+    for (const auto& measured : report.at("cases")) {
+        REQUIRE(measured.at("measuredBlocks").get<std::size_t>() >= 2'000);
+        REQUIRE(measured.at("sampleEquivalent").get<bool>());
+        REQUIRE(measured.at("finiteOutput").get<bool>());
+        REQUIRE(measured.at("directReference").at("underruns") == 0);
+        REQUIRE(measured.at("optimizedGeneric").at("underruns") == 0);
+    }
+}
+
 TEST_CASE("Published performance baseline covers every flagship graph rate and block size")
 {
     const auto path = std::filesystem::path(REVERB_MEASUREMENTS_DIR)

@@ -63,6 +63,17 @@ struct PerformanceCaseResult final {
     bool withinCrossfadeBudget {};
 };
 
+struct BarrExecutionComparison final {
+    double sampleRate {};
+    std::size_t blockSize {};
+    std::size_t measuredBlocks {};
+    CallbackDistribution directReference;
+    CallbackDistribution optimizedGeneric;
+    double genericToDirectP95Ratio {};
+    bool sampleEquivalent {};
+    bool finiteOutput {};
+};
+
 [[nodiscard]] PerformanceCaseResult measurePerformanceCase(const PerformanceCaseRequest& request);
 [[nodiscard]] std::string performanceMatrixJson(
     const std::vector<PerformanceCaseResult>& results,
@@ -72,6 +83,13 @@ struct PerformanceCaseResult final {
 void writePerformanceMatrix(
     const std::filesystem::path& output,
     const std::vector<PerformanceCaseResult>& results,
+    std::string machineLabel,
+    std::string toolchain,
+    std::string buildCommit);
+[[nodiscard]] BarrExecutionComparison measureBarrExecutionComparison(
+    double sampleRate, std::size_t blockSize, std::size_t measuredBlocks = 2'000);
+[[nodiscard]] std::string barrExecutionComparisonJson(
+    const std::vector<BarrExecutionComparison>& results,
     std::string machineLabel,
     std::string toolchain,
     std::string buildCommit);

@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -57,16 +58,34 @@ int main(int argc, char** argv)
     try {
         std::filesystem::path output;
         auto smoke = false;
+        auto barrComparison = false;
         std::size_t measuredBlocks = 200;
         for (auto index = 1; index < argc; ++index) {
             const std::string argument = argv[index];
             if (argument == "--output" && index + 1 < argc) output = argv[++index];
             else if (argument == "--smoke") smoke = true;
+            else if (argument == "--barr-comparison") barrComparison = true;
             else if (argument == "--blocks" && index + 1 < argc)
                 measuredBlocks = static_cast<std::size_t>(std::stoull(argv[++index]));
-            else throw std::invalid_argument("usage: reverb_performance_matrix_cli --output <json> [--smoke] [--blocks N]");
+            else throw std::invalid_argument("usage: reverb_performance_matrix_cli --output <json> [--smoke|--barr-comparison] [--blocks N]");
         }
         if (output.empty()) throw std::invalid_argument("--output is required");
+
+        if (barrComparison) {
+            const std::array rates { 44'100.0, 48'000.0, 96'000.0 };
+            const std::array<std::size_t, 5> blocks { 32, 64, 128, 256, 512 };
+            std::vector<reverb::render::BarrExecutionComparison> comparisons;
+            for (const auto rate : rates)
+                for (const auto block : blocks)
+                    comparisons.push_back(reverb::render::measureBarrExecutionComparison(
+                        rate, block, std::max<std::size_t>(20, measuredBlocks)));
+            std::ofstream stream(output, std::ios::binary | std::ios::trunc);
+            if (!stream) throw std::runtime_error("could not open comparison output");
+            stream << reverb::render::barrExecutionComparisonJson(
+                comparisons, machineLabel(), toolchain(), buildCommit());
+            std::cout << "wrote " << comparisons.size() << " Barr comparison cases to " << output.string() << '\n';
+            return 0;
+        }
 
         const std::array graphs {
             "barr-reference", "gravity-diffusion", "safe-parallel-shimmer",
