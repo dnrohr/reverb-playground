@@ -1292,26 +1292,29 @@ Milestone exit criteria:
 
 Resolve the current control-semantic gaps before density measurements depend on audition and Energy behavior.
 
-### M18.5.1 Make live dry/wet comparison explicit
+### M18.5.1 Replace audition modes with independent Wet and Dry gains
 
-Tasks: replace the ambiguous processed/dry behavior with clearly named Dry, Wet, and Audition Mix states; define the live mix law; make the state equally clear for loaded audio and live input; distinguish impulse-capture input muting from audition muting.
-
-Acceptance criteria:
-
-- Dry emits the selected source without graph processing, Wet emits graph output only, and Audition Mix emits the documented dry/wet blend.
-- Switching is click-safe and its latency policy is explicit.
-- `Mute Live Input` is shown only in impulse-capture context and explains that it does not mute loaded audio or provide dry/wet control.
-- Automated fixtures make all three live states measurably distinct.
-
-### M18.5.2 Clarify master gain and export semantics
-
-Tasks: rename or remove redundant audition gain; decide whether export follows it; label export-only controls as export-only; disclose the 50/50 Audition Mix law or replace it with an explicit mix value.
+Tasks: remove Processed/Dry Bypass and the Wet Only/Audition Mix choice; add independent linear Wet Gain and Dry Gain controls shared by live audition and export; default new state to Wet 0.5 and Dry 0.0 to preserve the current default Master Audition Gain loudness; smooth continuous changes; define summing, clipping, and host-latency behavior explicitly.
 
 Acceptance criteria:
 
-- The UI states exactly which paths Master/Audition Gain affects.
-- Live audition and exported samples follow one documented, tested gain policy.
-- Wet-only and mixed export fixtures are measurably distinct and loudness behavior is documented.
+- Output is `Wet Gain x graph output + Dry Gain x selected source`, using two independent 0...1 linear gains with no hidden normalization.
+- Wet 1/Dry 0 is wet-only, Wet 0/Dry 1 is dry-only, and nonzero values for both create the same documented mix in live audition and export.
+- Continuous gain edits are click-safe and deterministic; independent gains may sum above unity, so metering/safety and documentation disclose headroom rather than silently scaling the result.
+- Dry remains immediate while wet retains the graph's visible latency/predelay; host latency follows an explicit earliest-audible-path policy and never silently delays dry by a long Pitch Shift path.
+- Automated fixtures make wet-only, dry-only, and combined output measurably distinct and verify saved-state compatibility with the retired master/processed controls.
+
+### M18.5.2 Remove redundant audition and capture controls
+
+Tasks: remove Master Audition Gain, the processed toggle, export mix mode, and `Mute Live Input`; make impulse capture always silence every selected audition source while injecting its measurement impulse; retain Emergency Mute as the explicit safety control; migrate legacy master gain conservatively without changing old projects unexpectedly.
+
+Acceptance criteria:
+
+- Impulse capture never includes live input, loaded audio, or test-source leakage and therefore needs no user-facing input-mute option.
+- Master Audition Gain, Processed/Dry Bypass, Wet Only, and Audition Mix no longer appear in the UI or new saved state.
+- Existing `masterGain` host state migrates exactly to Wet Gain with Dry Gain 0.0, while new state stores both gains explicitly.
+- Emergency Mute and the numerical safety latch remain after the wet/dry sum.
+- Live audition and exported samples use the same tested Wet/Dry law.
 
 ### M18.5.3 Define loop-range export
 
