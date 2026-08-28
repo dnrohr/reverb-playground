@@ -193,7 +193,7 @@ double normalize(RenderResult& audio) noexcept
 
 DenseQualificationCase analyse(const DenseProgramKind program, const DenseSettingKind setting,
     const std::string& design, const std::span<const float> sourceLeft,
-    const std::span<const float> sourceRight, RenderResult& audio)
+    const std::span<const float> sourceRight, const DensityRegion& response, RenderResult& audio)
 {
     DenseQualificationCase result;
     result.program = program;
@@ -210,13 +210,12 @@ DenseQualificationCase analyse(const DenseProgramKind program, const DenseSettin
     result.finite = rawRms > 0.0 && std::ranges::all_of(audio.left,
         [](const auto value) { return std::isfinite(value); }) && std::ranges::all_of(audio.right,
         [](const auto value) { return std::isfinite(value); });
-    const auto density = measureDensity(audio.left, audio.right, sampleRate);
-    const auto& late = density.regions.back();
-    result.echoDensity = late.echoDensity;
-    result.recurrence = late.recurrence;
-    result.spectralFlatness = late.spectralFlatness;
-    result.crestFactor = late.crestFactor;
-    result.stereoCorrelation = late.stereoCorrelation;
+    result.echoDensity = response.echoDensity;
+    result.recurrence = response.recurrence;
+    result.spectralFlatness = response.spectralFlatness;
+    const auto programDensity = measureDensity(audio.left, audio.right, sampleRate);
+    result.crestFactor = programDensity.regions.back().crestFactor;
+    result.stereoCorrelation = response.stereoCorrelation;
     double stereoEnergy {}, monoEnergy {};
     for (std::size_t frame = 0; frame < audio.left.size(); ++frame) {
         const auto left = static_cast<double>(audio.left[frame]);
@@ -269,9 +268,15 @@ DenseQualificationReport qualifyDenseReverbs()
     for (const auto [program, setting] : programSettings) {
         const auto [sourceLeft, sourceRight] = programInput(program, frames);
         for (const auto* design : designIds) {
-            auto audio = render(graphFor(design, setting), sourceLeft, sourceRight);
+            const auto graph = graphFor(design, setting);
+            std::vector<float> impulseLeft(frames), impulseRight(frames);
+            impulseLeft.front() = impulseRight.front() = 0.1F;
+            const auto responseAudio = render(graph, impulseLeft, impulseRight);
+            const auto response = measureDensity(
+                responseAudio.left, responseAudio.right, sampleRate).regions.back();
+            auto audio = render(graph, sourceLeft, sourceRight);
             report.cases.push_back(analyse(
-                program, setting, design, sourceLeft, sourceRight, audio));
+                program, setting, design, sourceLeft, sourceRight, response, audio));
         }
     }
     return report;
@@ -323,8 +328,15 @@ void writeDenseQualificationArtifacts(
         const auto [sourceLeft, sourceRight] = programInput(program, frames);
         std::vector<float> reelLeft, reelRight;
         for (const auto* design : designIds) {
-            auto audio = render(graphFor(design, setting), sourceLeft, sourceRight);
-            report.cases.push_back(analyse(program, setting, design, sourceLeft, sourceRight, audio));
+            const auto graph = graphFor(design, setting);
+            std::vector<float> impulseLeft(frames), impulseRight(frames);
+            impulseLeft.front() = impulseRight.front() = 0.1F;
+            const auto responseAudio = render(graph, impulseLeft, impulseRight);
+            const auto response = measureDensity(
+                responseAudio.left, responseAudio.right, sampleRate).regions.back();
+            auto audio = render(graph, sourceLeft, sourceRight);
+            report.cases.push_back(analyse(
+                program, setting, design, sourceLeft, sourceRight, response, audio));
             reelLeft.insert(reelLeft.end(), audio.left.begin(), audio.left.end());
             reelRight.insert(reelRight.end(), audio.right.begin(), audio.right.end());
             reelLeft.insert(reelLeft.end(), gap, 0.0F);
