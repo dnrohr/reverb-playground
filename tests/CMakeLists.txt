@@ -8,6 +8,7 @@ add_executable(reverb_tests
     ControlModulationTests.cpp
     DelayMemoryPlanTests.cpp
     DenseFigureEightTests.cpp
+    DelaySetTuningTests.cpp
     DspGainTests.cpp
     DspPrimitivesTests.cpp
     DensityMeasurementsTests.cpp
@@ -101,3 +102,8 @@ add_test(
         --factory-directory ${CMAKE_SOURCE_DIR}/factory-patches
         --output ${CMAKE_CURRENT_BINARY_DIR}/density-baseline-smoke.json
         --smoke)
+
+add_test(
+    NAME "Delay-set tuning CLI writes deterministic candidates"
+    COMMAND reverb_delay_set_tuning_cli
+        --output ${CMAKE_CURRENT_BINARY_DIR}/delay-set-candidates-smoke.json)

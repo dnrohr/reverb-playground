@@ -89,3 +89,11 @@ target_link_libraries(reverb_density_baseline_cli
     PRIVATE
         reverb_project_options
         reverb_render)
+
+add_executable(reverb_delay_set_tuning_cli
+    Source/DelaySetTuningCli.cpp)
+
+target_link_libraries(reverb_delay_set_tuning_cli
+    PRIVATE
+        reverb_project_options
+        reverb_graph)

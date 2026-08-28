@@ -1,0 +1,698 @@
+{
+  "schemaVersion": 1,
+  "algorithm": "deterministic-delay-set-search-v1",
+  "config": {
+    "minimumMilliseconds": 35.0,
+    "maximumMilliseconds": 120.0,
+    "minimumSpacingMilliseconds": 4.0,
+    "modulationMarginMilliseconds": 2.0,
+    "sampleRate": 96000.0,
+    "rt60Seconds": 2.4,
+    "delayMemoryBudgetBytes": 4194304,
+    "attempts": 4096,
+    "resultLimit": 32,
+    "seed": 21182445076759630
+  },
+  "attempted": 4096,
+  "rejections": {
+    "invalidConfiguration": 0,
+    "duplicateOrUnordered": 19,
+    "insufficientSpacing": 1879,
+    "modulationMargin": 0,
+    "memoryBudget": 0
+  },
+  "ranked": [
+    {
+      "delayMilliseconds": [
+        35.2,
+        44.7,
+        53.4,
+        113.2
+      ],
+      "rt60Gains": [
+        0.9036494737223014,
+        0.8792755562623965,
+        0.8575313378969893,
+        0.7219381629371593
+      ],
+      "requiredDelayMemoryBytes": 97804,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        35.2,
+        45.9,
+        72.7,
+        110.3
+      ],
+      "rt60Gains": [
+        0.9036494737223014,
+        0.8762438846049468,
+        0.8111945048032974,
+        0.7279893065512548
+      ],
+      "requiredDelayMemoryBytes": 104560,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        35.2,
+        57.7,
+        63.0,
+        78.2
+      ],
+      "rt60Gains": [
+        0.9036494737223014,
+        0.8469835975785315,
+        0.8341612282410429,
+        0.7984541821763518
+      ],
+      "requiredDelayMemoryBytes": 93040,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        35.2,
+        61.0,
+        76.8,
+        81.3
+      ],
+      "rt60Gains": [
+        0.9036494737223014,
+        0.8389768935652858,
+        0.8016780633876791,
+        0.7913616496498564
+      ],
+      "requiredDelayMemoryBytes": 100792,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        35.2,
+        72.8,
+        98.5,
+        109.7
+      ],
+      "rt60Gains": [
+        0.9036494737223014,
+        0.8109610578538408,
+        0.7531387617741769,
+        0.7292475857179517
+      ],
+      "requiredDelayMemoryBytes": 124564,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        35.3,
+        45.9,
+        68.7,
+        117.3
+      ],
+      "rt60Gains": [
+        0.9033894199229112,
+        0.8762438846049468,
+        0.8205876944675482,
+        0.7134688227325477
+      ],
+      "requiredDelayMemoryBytes": 105748,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        35.3,
+        50.3,
+        67.3,
+        114.1
+      ],
+      "rt60Gains": [
+        0.9033894199229112,
+        0.8652169123864968,
+        0.8239009431291427,
+        0.7200704684685582
+      ],
+      "requiredDelayMemoryBytes": 105668,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        35.3,
+        54.9,
+        99.8,
+        117.8
+      ],
+      "rt60Gains": [
+        0.9033894199229112,
+        0.8538370579881027,
+        0.7503260074089418,
+        0.7124427970222603
+      ],
+      "requiredDelayMemoryBytes": 121336,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        35.3,
+        81.9,
+        107.8,
+        112.7
+      ],
+      "rt60Gains": [
+        0.9033894199229112,
+        0.7899961958635446,
+        0.7332465022911833,
+        0.7229778634148779
+      ],
+      "requiredDelayMemoryBytes": 132820,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        35.4,
+        54.3,
+        67.8,
+        92.2
+      ],
+      "rt60Gains": [
+        0.9031294409622506,
+        0.855312856289193,
+        0.8227161071230745,
+        0.7669198876956045
+      ],
+      "requiredDelayMemoryBytes": 99028,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        35.7,
+        75.8,
+        104.0,
+        112.7
+      ],
+      "rt60Gains": [
+        0.9023499528973048,
+        0.8039888021605365,
+        0.7413102413009175,
+        0.7229778634148779
+      ],
+      "requiredDelayMemoryBytes": 129172,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        35.7,
+        86.5,
+        101.3,
+        105.3
+      ],
+      "rt60Gains": [
+        0.9023499528973048,
+        0.7796056896731197,
+        0.7470935724275174,
+        0.7385416630215301
+      ],
+      "requiredDelayMemoryBytes": 129400,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        35.9,
+        45.3,
+        77.2,
+        111.8
+      ],
+      "rt60Gains": [
+        0.901830667986305,
+        0.8777584115561284,
+        0.8007556285067009,
+        0.7248530989863254
+      ],
+      "requiredDelayMemoryBytes": 106900,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        36.2,
+        46.7,
+        99.7,
+        111.4
+      ],
+      "rt60Gains": [
+        0.9010523008880643,
+        0.8742285795944774,
+        0.7505419996761797,
+        0.7256880975280615
+      ],
+      "requiredDelayMemoryBytes": 116044,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        36.3,
+        60.9,
+        77.7,
+        111.8
+      ],
+      "rt60Gains": [
+        0.9007929945075382,
+        0.8392184052810095,
+        0.7996040773297923,
+        0.7248530989863254
+      ],
+      "requiredDelayMemoryBytes": 113236,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        36.7,
+        65.3,
+        89.7,
+        94.8
+      ],
+      "rt60Gains": [
+        0.8997565150070723,
+        0.8286573751810188,
+        0.7724582217482845,
+        0.7612021390057184
+      ],
+      "requiredDelayMemoryBytes": 113160,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        36.7,
+        75.2,
+        88.0,
+        115.2
+      ],
+      "rt60Gains": [
+        0.8997565150070723,
+        0.8053784411990665,
+        0.7762471166286917,
+        0.7177942912713617
+      ],
+      "requiredDelayMemoryBytes": 124144,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        36.8,
+        46.7,
+        77.7,
+        105.9
+      ],
+      "rt60Gains": [
+        0.8994975815300352,
+        0.8742285795944774,
+        0.7996040773297923,
+        0.7372673474029151
+      ],
+      "requiredDelayMemoryBytes": 105712,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        36.8,
+        51.8,
+        61.5,
+        108.8
+      ],
+      "rt60Gains": [
+        0.8994975815300352,
+        0.8614895227098733,
+        0.8377703771265741,
+        0.7311390834834175
+      ],
+      "requiredDelayMemoryBytes": 102556,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        36.8,
+        67.9,
+        72.3,
+        103.8
+      ],
+      "rt60Gains": [
+        0.8994975815300352,
+        0.8224793444670907,
+        0.8121289648056377,
+        0.7417370966256946
+      ],
+      "requiredDelayMemoryBytes": 110968,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        36.8,
+        69.4,
+        80.7,
+        103.8
+      ],
+      "rt60Gains": [
+        0.8994975815300352,
+        0.8189360699726675,
+        0.7927294635285994,
+        0.7417370966256946
+      ],
+      "requiredDelayMemoryBytes": 114772,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        37.0,
+        59.3,
+        68.8,
+        98.3
+      ],
+      "rt60Gains": [
+        0.8989799381034803,
+        0.8430920614375559,
+        0.8203515443298183,
+        0.753572428102859
+      ],
+      "requiredDelayMemoryBytes": 104284,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        37.2,
+        63.8,
+        72.2,
+        97.9
+      ],
+      "rt60Gains": [
+        0.8984625925706858,
+        0.8322427106543879,
+        0.8123627479541171,
+        0.7544405100348234
+      ],
+      "requiredDelayMemoryBytes": 107248,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        37.3,
+        55.8,
+        72.7,
+        106.7
+      ],
+      "rt60Gains": [
+        0.8982040314608724,
+        0.8516281336893745,
+        0.8111945048032974,
+        0.735571679558173
+      ],
+      "requiredDelayMemoryBytes": 107784,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        37.3,
+        61.6,
+        67.2,
+        98.2
+      ],
+      "rt60Gains": [
+        0.8982040314608724,
+        0.8375292821268826,
+        0.8241381150130023,
+        0.753789354899567
+      ],
+      "requiredDelayMemoryBytes": 104636,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        37.5,
+        73.2,
+        90.2,
+        99.3
+      ],
+      "rt60Gains": [
+        0.8976871324473142,
+        0.8100279416803505,
+        0.7713473645245572,
+        0.7514065906893351
+      ],
+      "requiredDelayMemoryBytes": 118420,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        37.5,
+        87.2,
+        96.8,
+        116.8
+      ],
+      "rt60Gains": [
+        0.8976871324473142,
+        0.778036551039804,
+        0.7568328950209744,
+        0.7144963260755134
+      ],
+      "requiredDelayMemoryBytes": 133048,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        37.8,
+        58.7,
+        96.7,
+        111.7
+      ],
+      "rt60Gains": [
+        0.8969123416210373,
+        0.844549287755261,
+        0.7570507603905627,
+        0.7250617585059457
+      ],
+      "requiredDelayMemoryBytes": 120228,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        38.0,
+        80.8,
+        88.7,
+        117.2
+      ],
+      "rt60Gains": [
+        0.89639618594995,
+        0.7925013304804718,
+        0.7746847379084791,
+        0.7136742051224741
+      ],
+      "requiredDelayMemoryBytes": 127828,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        38.2,
+        46.9,
+        61.7,
+        116.8
+      ],
+      "rt60Gains": [
+        0.8958803273164486,
+        0.8737254779888414,
+        0.8372882565099246,
+        0.7144963260755134
+      ],
+      "requiredDelayMemoryBytes": 104368,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        38.2,
+        50.6,
+        59.3,
+        106.2
+      ],
+      "rt60Gains": [
+        0.8958803273164486,
+        0.8644701465008935,
+        0.8430920614375559,
+        0.7366310143681262
+      ],
+      "requiredDelayMemoryBytes": 100796,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    },
+    {
+      "delayMilliseconds": [
+        38.3,
+        46.8,
+        58.8,
+        68.9
+      ],
+      "rt60Gains": [
+        0.8956225093353702,
+        0.8739769925905891,
+        0.8443062419090123,
+        0.820115462151781
+      ],
+      "requiredDelayMemoryBytes": 84856,
+      "score": {
+        "commonFactorPenalty": 0.0,
+        "repeatedDifferencePenalty": 0.0,
+        "nearPeriodPenalty": 0.0,
+        "totalPenalty": 0.0
+      }
+    }
+  ]
+}

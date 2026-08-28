@@ -1426,7 +1426,7 @@ Acceptance criteria:
 
 ## M22. Assisted delay-set tuning
 
-### M22.1 Generate deterministic candidates
+### M22.1 Generate deterministic candidates — Complete
 
 Tasks: search bounded delay ranges; penalize common factors, repeated differences, and near periods; calculate RT60 gains; enforce memory/modulation margins; record the seed and rejection reasons.
 

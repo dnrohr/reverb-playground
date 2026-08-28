@@ -1348,3 +1348,19 @@ Results:
   and [640×400 compact layout](../artifacts/ui/m21-four-line-fdn/four-line-dense-room-640x400.png).
   Browser interaction proved 16 coefficient Gains and 12 matrix Sums in the
   expanded view and no document-level horizontal overflow at 640×400.
+
+## M22.1 verification
+
+- A fixed-seed four-line search ranks bounded 0.1 ms delay sets while retaining
+  independent common-factor, repeated-difference, and near-period penalties.
+- Eligibility is decided before rendering: invalid configuration, duplicate
+  samples, insufficient spacing, missing modulation margin, and planned delay
+  memory overflow have explicit rejection counters. Every accepted candidate
+  includes planned bytes and four delay-aware RT60 gains.
+- Repeated searches serialize byte-identically. Intentionally good and poor
+  fixtures distinguish all three penalty dimensions, and invalid/one-byte
+  budget searches return no candidate.
+- The checked-in [candidate report](../artifacts/measurements/m22-delay-set-candidates.json)
+  records schema, algorithm, complete configuration, 64-bit seed, attempts,
+  rejection counts, ranked delay sets, component scores, gains, and memory.
+  This task changes no UI, so no screenshot or video is required.

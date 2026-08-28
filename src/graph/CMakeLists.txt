@@ -1,6 +1,7 @@
 add_library(reverb_graph STATIC
     Source/FourLineFdnGraph.cpp
     Source/DenseFigureEightGraph.cpp
+    Source/DelaySetTuning.cpp
     Source/AcyclicRuntime.cpp
     Source/BarrReferenceGraph.cpp
     Source/ControlRate.cpp
