@@ -93,6 +93,7 @@ Last updated: 2026-08-26
 | M18.5.3 Loop-range export | Complete | Explicit Entire File/Selected Loop selector; source-frame seek and exact one-pass interval; tail begins at selected end; deterministic duration fixture |
 | M18.5.4 Compiled-graph Energy | Complete | Bounded per-operation RMS lanes, coherent 30 Hz revision-tagged publication, incoming-revision topology handling, stale-frame rejection, and a zero-observation disabled path |
 | M23.1 Dense processor-family profile | Complete | Exact-commit 30-case Release baseline separates normal, telemetry, and crossfade timing and attributes delay, matrix, damping, modulation, and routing costs; Four-Line routing/dispatch is dominant |
+| M23.2 Reusable dense-network kernels | Complete | Generic feedback-region gain/sum/filter fusion prepares 10 Four-Line kernels with a tested fallback; all 30 dense cases improve by at least 15% median and p95, with bounded audio equivalence |
 
 ## M0.2 verification
 
@@ -1416,3 +1417,19 @@ Results:
   and [analysis/decision](dense-network-performance-profile.md) establish the
   M23.2 gate. This profiler-only task changes no UI, so no screenshot or video
   is required.
+
+## M23.2 verification
+
+- Static gain, sum, and low-pass patterns now fuse inside one feedback/causal
+  region when dependency and fan-out rules prove the transformation safe.
+  Factory identity is irrelevant, so the kernel remains reusable and the
+  visible graph is still the semantic source.
+- The explicit generic fallback prepares zero sample-wise fused kernels. A
+  deterministic 128,000-sample paired render bounds optimized/generic output
+  error below `1e-5`; existing partition, reset, finite-output, fixed-storage,
+  telemetry, and crossfade coverage remains green.
+- The exact-commit [optimized 30-case report](../artifacts/measurements/dense-network-profile-m23-2.json)
+  measures 2,000 callbacks per case. Every Dense Figure Eight and Four-Line
+  rate/block case improves at least 15% in both median and p95 timing. Four-Line
+  averages 37.42% median and 39.05% p95 improvement.
+- No UI changed, so screenshot or video evidence is not required.

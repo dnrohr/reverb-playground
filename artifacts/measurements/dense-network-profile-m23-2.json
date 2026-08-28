@@ -1,0 +1,3612 @@
+{
+  "formatVersion": 1,
+  "scope": "single-machine pre-optimization baseline; values are not cross-machine comparable",
+  "machine": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel; logical threads 20",
+  "toolchain": "MSVC 1944",
+  "buildConfiguration": "Release",
+  "buildCommit": "5e19c7850d08",
+  "source": "deterministic LCG noise plus 311 Hz sine; source preparation excluded from callback timing",
+  "familyAttribution": "Measured normal callback time apportioned by prepared-plan scalar work plus routing units; telemetry and crossfade are independently timed, and attributed family values are not independent stopwatch measurements",
+  "cases": [
+    {
+      "graphId": "dense-figure-eight",
+      "sampleRate": 44100.0,
+      "blockSize": 32,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 9.3,
+        "percentile95Microseconds": 9.9,
+        "peakMicroseconds": 128.0,
+        "medianLoadPercent": 1.2816562500000002,
+        "percentile95LoadPercent": 1.36434375,
+        "peakLoadPercent": 17.64,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 10.1,
+        "percentile95Microseconds": 10.9,
+        "peakMicroseconds": 125.4,
+        "medianLoadPercent": 1.3919062500000001,
+        "percentile95LoadPercent": 1.50215625,
+        "peakLoadPercent": 17.2816875,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 280,
+        "medianMicroseconds": 17.3,
+        "percentile95Microseconds": 21.2,
+        "peakMicroseconds": 89.1,
+        "medianLoadPercent": 2.38415625,
+        "percentile95LoadPercent": 2.921625,
+        "peakLoadPercent": 12.279093750000001,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.086021505376344,
+      "crossfadeMedianOverheadRatio": 1.8602150537634408,
+      "compile": {
+        "validationMicroseconds": 340,
+        "schedulingMicroseconds": 125,
+        "preparationMicroseconds": 229,
+        "totalMicroseconds": 698,
+        "requestToActiveMicroseconds": 731
+      },
+      "graph": {
+        "latencySamples": 8502,
+        "preparedMemoryBytes": 279284,
+        "delayMemoryBytes": 275444,
+        "nodeCount": 40,
+        "connectionCount": 50,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 36,
+        "logicalSignalCount": 41,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 30,
+        "peakLiveBufferCount": 30,
+        "bufferBytesSaved": 1408,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 3,
+        "fusedNodeCount": 6,
+        "sampleWiseFusedKernelCount": 2,
+        "simdKernelCount": 3,
+        "estimatedOperationsPerSample": 220,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "delay",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 12,
+            "attributedMedianMicroseconds": 0.40729927007299277,
+            "attributedPercentile95Microseconds": 0.4335766423357665,
+            "attributedSharePercent": 4.37956204379562
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 4.344525547445255,
+            "attributedPercentile95Microseconds": 4.624817518248175,
+            "attributedSharePercent": 46.715328467153284
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 15,
+            "modelUnitsPerSample": 30,
+            "attributedMedianMicroseconds": 1.018248175182482,
+            "attributedPercentile95Microseconds": 1.0839416058394162,
+            "attributedSharePercent": 10.948905109489052
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.06788321167883211,
+            "attributedPercentile95Microseconds": 0.07226277372262774,
+            "attributedSharePercent": 0.7299270072992701
+          },
+          {
+            "family": "routing",
+            "nodeCount": 74,
+            "modelUnitsPerSample": 102,
+            "attributedMedianMicroseconds": 3.462043795620438,
+            "attributedPercentile95Microseconds": 3.6854014598540146,
+            "attributedSharePercent": 37.22627737226277
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "dense-figure-eight",
+      "sampleRate": 44100.0,
+      "blockSize": 64,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 19.7,
+        "percentile95Microseconds": 21.6,
+        "peakMicroseconds": 173.0,
+        "medianLoadPercent": 1.3574531250000001,
+        "percentile95LoadPercent": 1.488375,
+        "peakLoadPercent": 11.920781250000001,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 21.1,
+        "percentile95Microseconds": 22.7,
+        "peakMicroseconds": 189.3,
+        "medianLoadPercent": 1.453921875,
+        "percentile95LoadPercent": 1.564171875,
+        "peakLoadPercent": 13.043953125,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 140,
+        "medianMicroseconds": 35.6,
+        "percentile95Microseconds": 39.2,
+        "peakMicroseconds": 47.2,
+        "medianLoadPercent": 2.4530625,
+        "percentile95LoadPercent": 2.701125,
+        "peakLoadPercent": 3.2523750000000002,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.071065989847716,
+      "crossfadeMedianOverheadRatio": 1.8071065989847717,
+      "compile": {
+        "validationMicroseconds": 460,
+        "schedulingMicroseconds": 218,
+        "preparationMicroseconds": 232,
+        "totalMicroseconds": 913,
+        "requestToActiveMicroseconds": 933
+      },
+      "graph": {
+        "latencySamples": 8502,
+        "preparedMemoryBytes": 283124,
+        "delayMemoryBytes": 275444,
+        "nodeCount": 40,
+        "connectionCount": 50,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 36,
+        "logicalSignalCount": 41,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 30,
+        "peakLiveBufferCount": 30,
+        "bufferBytesSaved": 2816,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 3,
+        "fusedNodeCount": 6,
+        "sampleWiseFusedKernelCount": 2,
+        "simdKernelCount": 3,
+        "estimatedOperationsPerSample": 220,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "delay",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 12,
+            "attributedMedianMicroseconds": 0.8627737226277372,
+            "attributedPercentile95Microseconds": 0.9459854014598541,
+            "attributedSharePercent": 4.37956204379562
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 9.202919708029196,
+            "attributedPercentile95Microseconds": 10.09051094890511,
+            "attributedSharePercent": 46.715328467153284
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 15,
+            "modelUnitsPerSample": 30,
+            "attributedMedianMicroseconds": 2.156934306569343,
+            "attributedPercentile95Microseconds": 2.3649635036496353,
+            "attributedSharePercent": 10.948905109489052
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.14379562043795618,
+            "attributedPercentile95Microseconds": 0.15766423357664233,
+            "attributedSharePercent": 0.7299270072992701
+          },
+          {
+            "family": "routing",
+            "nodeCount": 74,
+            "modelUnitsPerSample": 102,
+            "attributedMedianMicroseconds": 7.333576642335766,
+            "attributedPercentile95Microseconds": 8.04087591240876,
+            "attributedSharePercent": 37.22627737226277
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "dense-figure-eight",
+      "sampleRate": 44100.0,
+      "blockSize": 128,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 40.0,
+        "percentile95Microseconds": 42.6,
+        "peakMicroseconds": 163.3,
+        "medianLoadPercent": 1.378125,
+        "percentile95LoadPercent": 1.467703125,
+        "peakLoadPercent": 5.626195312500001,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 40.5,
+        "percentile95Microseconds": 45.8,
+        "peakMicroseconds": 273.9,
+        "medianLoadPercent": 1.3953515625000001,
+        "percentile95LoadPercent": 1.577953125,
+        "peakLoadPercent": 9.4367109375,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 71.8,
+        "percentile95Microseconds": 81.8,
+        "peakMicroseconds": 90.6,
+        "medianLoadPercent": 2.4737343750000003,
+        "percentile95LoadPercent": 2.818265625,
+        "peakLoadPercent": 3.121453125,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0125,
+      "crossfadeMedianOverheadRatio": 1.795,
+      "compile": {
+        "validationMicroseconds": 479,
+        "schedulingMicroseconds": 94,
+        "preparationMicroseconds": 183,
+        "totalMicroseconds": 760,
+        "requestToActiveMicroseconds": 780
+      },
+      "graph": {
+        "latencySamples": 8502,
+        "preparedMemoryBytes": 290804,
+        "delayMemoryBytes": 275444,
+        "nodeCount": 40,
+        "connectionCount": 50,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 36,
+        "logicalSignalCount": 41,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 30,
+        "peakLiveBufferCount": 30,
+        "bufferBytesSaved": 5632,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 3,
+        "fusedNodeCount": 6,
+        "sampleWiseFusedKernelCount": 2,
+        "simdKernelCount": 3,
+        "estimatedOperationsPerSample": 220,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "delay",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 12,
+            "attributedMedianMicroseconds": 1.7518248175182483,
+            "attributedPercentile95Microseconds": 1.8656934306569344,
+            "attributedSharePercent": 4.37956204379562
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 18.686131386861312,
+            "attributedPercentile95Microseconds": 19.900729927007298,
+            "attributedSharePercent": 46.715328467153284
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 15,
+            "modelUnitsPerSample": 30,
+            "attributedMedianMicroseconds": 4.37956204379562,
+            "attributedPercentile95Microseconds": 4.664233576642336,
+            "attributedSharePercent": 10.948905109489052
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.291970802919708,
+            "attributedPercentile95Microseconds": 0.310948905109489,
+            "attributedSharePercent": 0.7299270072992701
+          },
+          {
+            "family": "routing",
+            "nodeCount": 74,
+            "modelUnitsPerSample": 102,
+            "attributedMedianMicroseconds": 14.89051094890511,
+            "attributedPercentile95Microseconds": 15.858394160583941,
+            "attributedSharePercent": 37.22627737226277
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "dense-figure-eight",
+      "sampleRate": 44100.0,
+      "blockSize": 256,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 80.3,
+        "percentile95Microseconds": 87.2,
+        "peakMicroseconds": 258.4,
+        "medianLoadPercent": 1.38329296875,
+        "percentile95LoadPercent": 1.50215625,
+        "peakLoadPercent": 4.4513437499999995,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 84.9,
+        "percentile95Microseconds": 91.7,
+        "peakMicroseconds": 475.9,
+        "medianLoadPercent": 1.46253515625,
+        "percentile95LoadPercent": 1.57967578125,
+        "peakLoadPercent": 8.19812109375,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 144.2,
+        "percentile95Microseconds": 157.4,
+        "peakMicroseconds": 160.6,
+        "medianLoadPercent": 2.4840703124999997,
+        "percentile95LoadPercent": 2.7114609375,
+        "peakLoadPercent": 2.7665859375,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0572851805728518,
+      "crossfadeMedianOverheadRatio": 1.7957658779576586,
+      "compile": {
+        "validationMicroseconds": 260,
+        "schedulingMicroseconds": 93,
+        "preparationMicroseconds": 206,
+        "totalMicroseconds": 564,
+        "requestToActiveMicroseconds": 599
+      },
+      "graph": {
+        "latencySamples": 8502,
+        "preparedMemoryBytes": 306164,
+        "delayMemoryBytes": 275444,
+        "nodeCount": 40,
+        "connectionCount": 50,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 36,
+        "logicalSignalCount": 41,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 30,
+        "peakLiveBufferCount": 30,
+        "bufferBytesSaved": 11264,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 3,
+        "fusedNodeCount": 6,
+        "sampleWiseFusedKernelCount": 2,
+        "simdKernelCount": 3,
+        "estimatedOperationsPerSample": 220,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "delay",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 12,
+            "attributedMedianMicroseconds": 3.5167883211678834,
+            "attributedPercentile95Microseconds": 3.8189781021897815,
+            "attributedSharePercent": 4.37956204379562
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 37.512408759124085,
+            "attributedPercentile95Microseconds": 40.73576642335767,
+            "attributedSharePercent": 46.715328467153284
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 15,
+            "modelUnitsPerSample": 30,
+            "attributedMedianMicroseconds": 8.791970802919709,
+            "attributedPercentile95Microseconds": 9.547445255474454,
+            "attributedSharePercent": 10.948905109489052
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.5861313868613138,
+            "attributedPercentile95Microseconds": 0.6364963503649635,
+            "attributedSharePercent": 0.7299270072992701
+          },
+          {
+            "family": "routing",
+            "nodeCount": 74,
+            "modelUnitsPerSample": 102,
+            "attributedMedianMicroseconds": 29.892700729927004,
+            "attributedPercentile95Microseconds": 32.46131386861314,
+            "attributedSharePercent": 37.22627737226277
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "dense-figure-eight",
+      "sampleRate": 44100.0,
+      "blockSize": 512,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 162.0,
+        "percentile95Microseconds": 186.1,
+        "peakMicroseconds": 723.9,
+        "medianLoadPercent": 1.3953515625000001,
+        "percentile95LoadPercent": 1.602931640625,
+        "peakLoadPercent": 6.235154296875001,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 173.2,
+        "percentile95Microseconds": 229.3,
+        "peakMicroseconds": 665.5,
+        "medianLoadPercent": 1.4918203125,
+        "percentile95LoadPercent": 1.9750253906250002,
+        "peakLoadPercent": 5.732138671875,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 20,
+        "medianMicroseconds": 282.7,
+        "percentile95Microseconds": 309.0,
+        "peakMicroseconds": 389.9,
+        "medianLoadPercent": 2.434974609375,
+        "percentile95LoadPercent": 2.66150390625,
+        "peakLoadPercent": 3.358318359375,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0691358024691358,
+      "crossfadeMedianOverheadRatio": 1.7450617283950616,
+      "compile": {
+        "validationMicroseconds": 202,
+        "schedulingMicroseconds": 92,
+        "preparationMicroseconds": 187,
+        "totalMicroseconds": 485,
+        "requestToActiveMicroseconds": 507
+      },
+      "graph": {
+        "latencySamples": 8502,
+        "preparedMemoryBytes": 336884,
+        "delayMemoryBytes": 275444,
+        "nodeCount": 40,
+        "connectionCount": 50,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 36,
+        "logicalSignalCount": 41,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 30,
+        "peakLiveBufferCount": 30,
+        "bufferBytesSaved": 22528,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 3,
+        "fusedNodeCount": 6,
+        "sampleWiseFusedKernelCount": 2,
+        "simdKernelCount": 3,
+        "estimatedOperationsPerSample": 220,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "delay",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 12,
+            "attributedMedianMicroseconds": 7.094890510948906,
+            "attributedPercentile95Microseconds": 8.15036496350365,
+            "attributedSharePercent": 4.37956204379562
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 75.67883211678831,
+            "attributedPercentile95Microseconds": 86.93722627737226,
+            "attributedSharePercent": 46.715328467153284
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 15,
+            "modelUnitsPerSample": 30,
+            "attributedMedianMicroseconds": 17.737226277372265,
+            "attributedPercentile95Microseconds": 20.375912408759124,
+            "attributedSharePercent": 10.948905109489052
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 1.1824817518248174,
+            "attributedPercentile95Microseconds": 1.3583941605839416,
+            "attributedSharePercent": 0.7299270072992701
+          },
+          {
+            "family": "routing",
+            "nodeCount": 74,
+            "modelUnitsPerSample": 102,
+            "attributedMedianMicroseconds": 60.30656934306569,
+            "attributedPercentile95Microseconds": 69.27810218978102,
+            "attributedSharePercent": 37.22627737226277
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "dense-figure-eight",
+      "sampleRate": 48000.0,
+      "blockSize": 32,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 9.9,
+        "percentile95Microseconds": 10.2,
+        "peakMicroseconds": 22.1,
+        "medianLoadPercent": 1.485,
+        "percentile95LoadPercent": 1.53,
+        "peakLoadPercent": 3.3150000000000004,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 11.3,
+        "percentile95Microseconds": 11.7,
+        "peakMicroseconds": 136.1,
+        "medianLoadPercent": 1.695,
+        "percentile95LoadPercent": 1.7550000000000001,
+        "peakLoadPercent": 20.415000000000003,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 300,
+        "medianMicroseconds": 18.9,
+        "percentile95Microseconds": 21.5,
+        "peakMicroseconds": 30.2,
+        "medianLoadPercent": 2.835,
+        "percentile95LoadPercent": 3.225,
+        "peakLoadPercent": 4.53,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.1414141414141414,
+      "crossfadeMedianOverheadRatio": 1.909090909090909,
+      "compile": {
+        "validationMicroseconds": 247,
+        "schedulingMicroseconds": 98,
+        "preparationMicroseconds": 225,
+        "totalMicroseconds": 575,
+        "requestToActiveMicroseconds": 600
+      },
+      "graph": {
+        "latencySamples": 9255,
+        "preparedMemoryBytes": 303640,
+        "delayMemoryBytes": 299800,
+        "nodeCount": 40,
+        "connectionCount": 50,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 36,
+        "logicalSignalCount": 41,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 30,
+        "peakLiveBufferCount": 30,
+        "bufferBytesSaved": 1408,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 3,
+        "fusedNodeCount": 6,
+        "sampleWiseFusedKernelCount": 2,
+        "simdKernelCount": 3,
+        "estimatedOperationsPerSample": 220,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "delay",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 12,
+            "attributedMedianMicroseconds": 0.4335766423357665,
+            "attributedPercentile95Microseconds": 0.4467153284671533,
+            "attributedSharePercent": 4.37956204379562
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 4.624817518248175,
+            "attributedPercentile95Microseconds": 4.764963503649635,
+            "attributedSharePercent": 46.715328467153284
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 15,
+            "modelUnitsPerSample": 30,
+            "attributedMedianMicroseconds": 1.0839416058394162,
+            "attributedPercentile95Microseconds": 1.1167883211678833,
+            "attributedSharePercent": 10.948905109489052
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.07226277372262774,
+            "attributedPercentile95Microseconds": 0.07445255474452554,
+            "attributedSharePercent": 0.7299270072992701
+          },
+          {
+            "family": "routing",
+            "nodeCount": 74,
+            "modelUnitsPerSample": 102,
+            "attributedMedianMicroseconds": 3.6854014598540146,
+            "attributedPercentile95Microseconds": 3.7970802919708024,
+            "attributedSharePercent": 37.22627737226277
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "dense-figure-eight",
+      "sampleRate": 48000.0,
+      "blockSize": 64,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 19.9,
+        "percentile95Microseconds": 20.9,
+        "peakMicroseconds": 271.1,
+        "medianLoadPercent": 1.4925,
+        "percentile95LoadPercent": 1.5675000000000001,
+        "peakLoadPercent": 20.332500000000003,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 21.1,
+        "percentile95Microseconds": 21.9,
+        "peakMicroseconds": 287.1,
+        "medianLoadPercent": 1.5825,
+        "percentile95LoadPercent": 1.6425,
+        "peakLoadPercent": 21.532500000000002,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 160,
+        "medianMicroseconds": 36.6,
+        "percentile95Microseconds": 41.4,
+        "peakMicroseconds": 51.1,
+        "medianLoadPercent": 2.745,
+        "percentile95LoadPercent": 3.105,
+        "peakLoadPercent": 3.8325,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0603015075376885,
+      "crossfadeMedianOverheadRatio": 1.8391959798994977,
+      "compile": {
+        "validationMicroseconds": 209,
+        "schedulingMicroseconds": 93,
+        "preparationMicroseconds": 183,
+        "totalMicroseconds": 489,
+        "requestToActiveMicroseconds": 526
+      },
+      "graph": {
+        "latencySamples": 9255,
+        "preparedMemoryBytes": 307480,
+        "delayMemoryBytes": 299800,
+        "nodeCount": 40,
+        "connectionCount": 50,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 36,
+        "logicalSignalCount": 41,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 30,
+        "peakLiveBufferCount": 30,
+        "bufferBytesSaved": 2816,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 3,
+        "fusedNodeCount": 6,
+        "sampleWiseFusedKernelCount": 2,
+        "simdKernelCount": 3,
+        "estimatedOperationsPerSample": 220,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "delay",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 12,
+            "attributedMedianMicroseconds": 0.8715328467153285,
+            "attributedPercentile95Microseconds": 0.9153284671532846,
+            "attributedSharePercent": 4.37956204379562
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 9.296350364963503,
+            "attributedPercentile95Microseconds": 9.763503649635036,
+            "attributedSharePercent": 46.715328467153284
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 15,
+            "modelUnitsPerSample": 30,
+            "attributedMedianMicroseconds": 2.178832116788321,
+            "attributedPercentile95Microseconds": 2.2883211678832116,
+            "attributedSharePercent": 10.948905109489052
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.14525547445255474,
+            "attributedPercentile95Microseconds": 0.15255474452554743,
+            "attributedSharePercent": 0.7299270072992701
+          },
+          {
+            "family": "routing",
+            "nodeCount": 74,
+            "modelUnitsPerSample": 102,
+            "attributedMedianMicroseconds": 7.408029197080292,
+            "attributedPercentile95Microseconds": 7.780291970802919,
+            "attributedSharePercent": 37.22627737226277
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "dense-figure-eight",
+      "sampleRate": 48000.0,
+      "blockSize": 128,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 39.3,
+        "percentile95Microseconds": 41.6,
+        "peakMicroseconds": 229.7,
+        "medianLoadPercent": 1.47375,
+        "percentile95LoadPercent": 1.56,
+        "peakLoadPercent": 8.613750000000001,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 41.5,
+        "percentile95Microseconds": 42.9,
+        "peakMicroseconds": 155.9,
+        "medianLoadPercent": 1.5562500000000001,
+        "percentile95LoadPercent": 1.6087500000000001,
+        "peakLoadPercent": 5.84625,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 66.0,
+        "percentile95Microseconds": 75.9,
+        "peakMicroseconds": 86.6,
+        "medianLoadPercent": 2.475,
+        "percentile95LoadPercent": 2.8462500000000004,
+        "peakLoadPercent": 3.2475,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0559796437659035,
+      "crossfadeMedianOverheadRatio": 1.6793893129770994,
+      "compile": {
+        "validationMicroseconds": 200,
+        "schedulingMicroseconds": 92,
+        "preparationMicroseconds": 187,
+        "totalMicroseconds": 483,
+        "requestToActiveMicroseconds": 515
+      },
+      "graph": {
+        "latencySamples": 9255,
+        "preparedMemoryBytes": 315160,
+        "delayMemoryBytes": 299800,
+        "nodeCount": 40,
+        "connectionCount": 50,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 36,
+        "logicalSignalCount": 41,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 30,
+        "peakLiveBufferCount": 30,
+        "bufferBytesSaved": 5632,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 3,
+        "fusedNodeCount": 6,
+        "sampleWiseFusedKernelCount": 2,
+        "simdKernelCount": 3,
+        "estimatedOperationsPerSample": 220,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "delay",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 12,
+            "attributedMedianMicroseconds": 1.7211678832116788,
+            "attributedPercentile95Microseconds": 1.8218978102189782,
+            "attributedSharePercent": 4.37956204379562
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 18.35912408759124,
+            "attributedPercentile95Microseconds": 19.433576642335765,
+            "attributedSharePercent": 46.715328467153284
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 15,
+            "modelUnitsPerSample": 30,
+            "attributedMedianMicroseconds": 4.302919708029197,
+            "attributedPercentile95Microseconds": 4.554744525547446,
+            "attributedSharePercent": 10.948905109489052
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.28686131386861313,
+            "attributedPercentile95Microseconds": 0.30364963503649633,
+            "attributedSharePercent": 0.7299270072992701
+          },
+          {
+            "family": "routing",
+            "nodeCount": 74,
+            "modelUnitsPerSample": 102,
+            "attributedMedianMicroseconds": 14.629927007299269,
+            "attributedPercentile95Microseconds": 15.486131386861313,
+            "attributedSharePercent": 37.22627737226277
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "dense-figure-eight",
+      "sampleRate": 48000.0,
+      "blockSize": 256,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 79.0,
+        "percentile95Microseconds": 84.0,
+        "peakMicroseconds": 371.6,
+        "medianLoadPercent": 1.4812500000000002,
+        "percentile95LoadPercent": 1.5750000000000002,
+        "peakLoadPercent": 6.9675,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 83.0,
+        "percentile95Microseconds": 91.6,
+        "peakMicroseconds": 398.2,
+        "medianLoadPercent": 1.5562500000000001,
+        "percentile95LoadPercent": 1.7175,
+        "peakLoadPercent": 7.4662500000000005,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 128.0,
+        "percentile95Microseconds": 152.0,
+        "peakMicroseconds": 157.1,
+        "medianLoadPercent": 2.4000000000000004,
+        "percentile95LoadPercent": 2.85,
+        "peakLoadPercent": 2.945625,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0506329113924051,
+      "crossfadeMedianOverheadRatio": 1.620253164556962,
+      "compile": {
+        "validationMicroseconds": 201,
+        "schedulingMicroseconds": 88,
+        "preparationMicroseconds": 210,
+        "totalMicroseconds": 503,
+        "requestToActiveMicroseconds": 522
+      },
+      "graph": {
+        "latencySamples": 9255,
+        "preparedMemoryBytes": 330520,
+        "delayMemoryBytes": 299800,
+        "nodeCount": 40,
+        "connectionCount": 50,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 36,
+        "logicalSignalCount": 41,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 30,
+        "peakLiveBufferCount": 30,
+        "bufferBytesSaved": 11264,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 3,
+        "fusedNodeCount": 6,
+        "sampleWiseFusedKernelCount": 2,
+        "simdKernelCount": 3,
+        "estimatedOperationsPerSample": 220,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "delay",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 12,
+            "attributedMedianMicroseconds": 3.45985401459854,
+            "attributedPercentile95Microseconds": 3.678832116788321,
+            "attributedSharePercent": 4.37956204379562
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 36.90510948905109,
+            "attributedPercentile95Microseconds": 39.24087591240876,
+            "attributedSharePercent": 46.715328467153284
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 15,
+            "modelUnitsPerSample": 30,
+            "attributedMedianMicroseconds": 8.64963503649635,
+            "attributedPercentile95Microseconds": 9.197080291970803,
+            "attributedSharePercent": 10.948905109489052
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.5766423357664233,
+            "attributedPercentile95Microseconds": 0.6131386861313869,
+            "attributedSharePercent": 0.7299270072992701
+          },
+          {
+            "family": "routing",
+            "nodeCount": 74,
+            "modelUnitsPerSample": 102,
+            "attributedMedianMicroseconds": 29.40875912408759,
+            "attributedPercentile95Microseconds": 31.27007299270073,
+            "attributedSharePercent": 37.22627737226277
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "dense-figure-eight",
+      "sampleRate": 48000.0,
+      "blockSize": 512,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 162.3,
+        "percentile95Microseconds": 173.1,
+        "peakMicroseconds": 591.4,
+        "medianLoadPercent": 1.5215625000000002,
+        "percentile95LoadPercent": 1.6228125,
+        "peakLoadPercent": 5.5443750000000005,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 171.2,
+        "percentile95Microseconds": 186.2,
+        "peakMicroseconds": 682.5,
+        "medianLoadPercent": 1.605,
+        "percentile95LoadPercent": 1.7456250000000002,
+        "peakLoadPercent": 6.3984375,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 20,
+        "medianMicroseconds": 288.2,
+        "percentile95Microseconds": 434.3,
+        "peakMicroseconds": 449.2,
+        "medianLoadPercent": 2.7018750000000002,
+        "percentile95LoadPercent": 4.071562500000001,
+        "peakLoadPercent": 4.211250000000001,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0548367221195316,
+      "crossfadeMedianOverheadRatio": 1.7757239679605668,
+      "compile": {
+        "validationMicroseconds": 231,
+        "schedulingMicroseconds": 98,
+        "preparationMicroseconds": 210,
+        "totalMicroseconds": 544,
+        "requestToActiveMicroseconds": 569
+      },
+      "graph": {
+        "latencySamples": 9255,
+        "preparedMemoryBytes": 361240,
+        "delayMemoryBytes": 299800,
+        "nodeCount": 40,
+        "connectionCount": 50,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 36,
+        "logicalSignalCount": 41,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 30,
+        "peakLiveBufferCount": 30,
+        "bufferBytesSaved": 22528,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 3,
+        "fusedNodeCount": 6,
+        "sampleWiseFusedKernelCount": 2,
+        "simdKernelCount": 3,
+        "estimatedOperationsPerSample": 220,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "delay",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 12,
+            "attributedMedianMicroseconds": 7.108029197080293,
+            "attributedPercentile95Microseconds": 7.581021897810219,
+            "attributedSharePercent": 4.37956204379562
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 75.81897810218979,
+            "attributedPercentile95Microseconds": 80.86423357664233,
+            "attributedSharePercent": 46.715328467153284
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 15,
+            "modelUnitsPerSample": 30,
+            "attributedMedianMicroseconds": 17.770072992700733,
+            "attributedPercentile95Microseconds": 18.952554744525546,
+            "attributedSharePercent": 10.948905109489052
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 1.1846715328467154,
+            "attributedPercentile95Microseconds": 1.2635036496350365,
+            "attributedSharePercent": 0.7299270072992701
+          },
+          {
+            "family": "routing",
+            "nodeCount": 74,
+            "modelUnitsPerSample": 102,
+            "attributedMedianMicroseconds": 60.418248175182484,
+            "attributedPercentile95Microseconds": 64.43868613138686,
+            "attributedSharePercent": 37.22627737226277
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "dense-figure-eight",
+      "sampleRate": 96000.0,
+      "blockSize": 32,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 9.3,
+        "percentile95Microseconds": 10.3,
+        "peakMicroseconds": 169.3,
+        "medianLoadPercent": 2.7900000000000005,
+        "percentile95LoadPercent": 3.0900000000000003,
+        "peakLoadPercent": 50.790000000000006,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 10.0,
+        "percentile95Microseconds": 10.8,
+        "peakMicroseconds": 48.3,
+        "medianLoadPercent": 3.0,
+        "percentile95LoadPercent": 3.24,
+        "peakLoadPercent": 14.49,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 600,
+        "medianMicroseconds": 17.3,
+        "percentile95Microseconds": 20.4,
+        "peakMicroseconds": 46.6,
+        "medianLoadPercent": 5.19,
+        "percentile95LoadPercent": 6.12,
+        "peakLoadPercent": 13.98,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.075268817204301,
+      "crossfadeMedianOverheadRatio": 1.8602150537634408,
+      "compile": {
+        "validationMicroseconds": 206,
+        "schedulingMicroseconds": 98,
+        "preparationMicroseconds": 270,
+        "totalMicroseconds": 578,
+        "requestToActiveMicroseconds": 597
+      },
+      "graph": {
+        "latencySamples": 18509,
+        "preparedMemoryBytes": 603392,
+        "delayMemoryBytes": 599552,
+        "nodeCount": 40,
+        "connectionCount": 50,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 36,
+        "logicalSignalCount": 41,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 30,
+        "peakLiveBufferCount": 30,
+        "bufferBytesSaved": 1408,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 3,
+        "fusedNodeCount": 6,
+        "sampleWiseFusedKernelCount": 2,
+        "simdKernelCount": 3,
+        "estimatedOperationsPerSample": 220,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "delay",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 12,
+            "attributedMedianMicroseconds": 0.40729927007299277,
+            "attributedPercentile95Microseconds": 0.451094890510949,
+            "attributedSharePercent": 4.37956204379562
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 4.344525547445255,
+            "attributedPercentile95Microseconds": 4.8116788321167885,
+            "attributedSharePercent": 46.715328467153284
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 15,
+            "modelUnitsPerSample": 30,
+            "attributedMedianMicroseconds": 1.018248175182482,
+            "attributedPercentile95Microseconds": 1.1277372262773724,
+            "attributedSharePercent": 10.948905109489052
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.06788321167883211,
+            "attributedPercentile95Microseconds": 0.07518248175182482,
+            "attributedSharePercent": 0.7299270072992701
+          },
+          {
+            "family": "routing",
+            "nodeCount": 74,
+            "modelUnitsPerSample": 102,
+            "attributedMedianMicroseconds": 3.462043795620438,
+            "attributedPercentile95Microseconds": 3.834306569343066,
+            "attributedSharePercent": 37.22627737226277
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "dense-figure-eight",
+      "sampleRate": 96000.0,
+      "blockSize": 64,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 19.0,
+        "percentile95Microseconds": 20.1,
+        "peakMicroseconds": 223.7,
+        "medianLoadPercent": 2.85,
+        "percentile95LoadPercent": 3.0150000000000006,
+        "peakLoadPercent": 33.555,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 19.5,
+        "percentile95Microseconds": 21.2,
+        "peakMicroseconds": 206.1,
+        "medianLoadPercent": 2.9250000000000003,
+        "percentile95LoadPercent": 3.18,
+        "peakLoadPercent": 30.915000000000003,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 300,
+        "medianMicroseconds": 33.5,
+        "percentile95Microseconds": 39.1,
+        "peakMicroseconds": 51.8,
+        "medianLoadPercent": 5.025,
+        "percentile95LoadPercent": 5.865,
+        "peakLoadPercent": 7.7700000000000005,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0263157894736843,
+      "crossfadeMedianOverheadRatio": 1.763157894736842,
+      "compile": {
+        "validationMicroseconds": 219,
+        "schedulingMicroseconds": 98,
+        "preparationMicroseconds": 365,
+        "totalMicroseconds": 687,
+        "requestToActiveMicroseconds": 709
+      },
+      "graph": {
+        "latencySamples": 18509,
+        "preparedMemoryBytes": 607232,
+        "delayMemoryBytes": 599552,
+        "nodeCount": 40,
+        "connectionCount": 50,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 36,
+        "logicalSignalCount": 41,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 30,
+        "peakLiveBufferCount": 30,
+        "bufferBytesSaved": 2816,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 3,
+        "fusedNodeCount": 6,
+        "sampleWiseFusedKernelCount": 2,
+        "simdKernelCount": 3,
+        "estimatedOperationsPerSample": 220,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "delay",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 12,
+            "attributedMedianMicroseconds": 0.832116788321168,
+            "attributedPercentile95Microseconds": 0.8802919708029198,
+            "attributedSharePercent": 4.37956204379562
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 8.875912408759124,
+            "attributedPercentile95Microseconds": 9.38978102189781,
+            "attributedSharePercent": 46.715328467153284
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 15,
+            "modelUnitsPerSample": 30,
+            "attributedMedianMicroseconds": 2.0802919708029197,
+            "attributedPercentile95Microseconds": 2.2007299270072997,
+            "attributedSharePercent": 10.948905109489052
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.1386861313868613,
+            "attributedPercentile95Microseconds": 0.1467153284671533,
+            "attributedSharePercent": 0.7299270072992701
+          },
+          {
+            "family": "routing",
+            "nodeCount": 74,
+            "modelUnitsPerSample": 102,
+            "attributedMedianMicroseconds": 7.072992700729927,
+            "attributedPercentile95Microseconds": 7.4824817518248175,
+            "attributedSharePercent": 37.22627737226277
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "dense-figure-eight",
+      "sampleRate": 96000.0,
+      "blockSize": 128,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 37.1,
+        "percentile95Microseconds": 43.2,
+        "peakMicroseconds": 332.9,
+        "medianLoadPercent": 2.7825,
+        "percentile95LoadPercent": 3.24,
+        "peakLoadPercent": 24.9675,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 41.5,
+        "percentile95Microseconds": 45.1,
+        "peakMicroseconds": 267.6,
+        "medianLoadPercent": 3.1125000000000003,
+        "percentile95LoadPercent": 3.3825000000000003,
+        "peakLoadPercent": 20.070000000000004,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 160,
+        "medianMicroseconds": 70.2,
+        "percentile95Microseconds": 80.5,
+        "peakMicroseconds": 306.1,
+        "medianLoadPercent": 5.265000000000001,
+        "percentile95LoadPercent": 6.0375000000000005,
+        "peakLoadPercent": 22.957500000000003,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.118598382749326,
+      "crossfadeMedianOverheadRatio": 1.8921832884097034,
+      "compile": {
+        "validationMicroseconds": 203,
+        "schedulingMicroseconds": 89,
+        "preparationMicroseconds": 299,
+        "totalMicroseconds": 595,
+        "requestToActiveMicroseconds": 615
+      },
+      "graph": {
+        "latencySamples": 18509,
+        "preparedMemoryBytes": 614912,
+        "delayMemoryBytes": 599552,
+        "nodeCount": 40,
+        "connectionCount": 50,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 36,
+        "logicalSignalCount": 41,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 30,
+        "peakLiveBufferCount": 30,
+        "bufferBytesSaved": 5632,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 3,
+        "fusedNodeCount": 6,
+        "sampleWiseFusedKernelCount": 2,
+        "simdKernelCount": 3,
+        "estimatedOperationsPerSample": 220,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "delay",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 12,
+            "attributedMedianMicroseconds": 1.6248175182481752,
+            "attributedPercentile95Microseconds": 1.8919708029197082,
+            "attributedSharePercent": 4.37956204379562
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 17.33138686131387,
+            "attributedPercentile95Microseconds": 20.18102189781022,
+            "attributedSharePercent": 46.715328467153284
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 15,
+            "modelUnitsPerSample": 30,
+            "attributedMedianMicroseconds": 4.062043795620438,
+            "attributedPercentile95Microseconds": 4.7299270072992705,
+            "attributedSharePercent": 10.948905109489052
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.2708029197080292,
+            "attributedPercentile95Microseconds": 0.31532846715328466,
+            "attributedSharePercent": 0.7299270072992701
+          },
+          {
+            "family": "routing",
+            "nodeCount": 74,
+            "modelUnitsPerSample": 102,
+            "attributedMedianMicroseconds": 13.81094890510949,
+            "attributedPercentile95Microseconds": 16.08175182481752,
+            "attributedSharePercent": 37.22627737226277
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "dense-figure-eight",
+      "sampleRate": 96000.0,
+      "blockSize": 256,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 80.0,
+        "percentile95Microseconds": 88.0,
+        "peakMicroseconds": 247.1,
+        "medianLoadPercent": 3.0,
+        "percentile95LoadPercent": 3.3000000000000003,
+        "peakLoadPercent": 9.266250000000001,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 79.5,
+        "percentile95Microseconds": 85.1,
+        "peakMicroseconds": 271.7,
+        "medianLoadPercent": 2.98125,
+        "percentile95LoadPercent": 3.19125,
+        "peakLoadPercent": 10.18875,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 135.2,
+        "percentile95Microseconds": 147.9,
+        "peakMicroseconds": 207.6,
+        "medianLoadPercent": 5.069999999999999,
+        "percentile95LoadPercent": 5.546250000000001,
+        "peakLoadPercent": 7.785,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 0.99375,
+      "crossfadeMedianOverheadRatio": 1.69,
+      "compile": {
+        "validationMicroseconds": 193,
+        "schedulingMicroseconds": 93,
+        "preparationMicroseconds": 308,
+        "totalMicroseconds": 599,
+        "requestToActiveMicroseconds": 682
+      },
+      "graph": {
+        "latencySamples": 18509,
+        "preparedMemoryBytes": 630272,
+        "delayMemoryBytes": 599552,
+        "nodeCount": 40,
+        "connectionCount": 50,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 36,
+        "logicalSignalCount": 41,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 30,
+        "peakLiveBufferCount": 30,
+        "bufferBytesSaved": 11264,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 3,
+        "fusedNodeCount": 6,
+        "sampleWiseFusedKernelCount": 2,
+        "simdKernelCount": 3,
+        "estimatedOperationsPerSample": 220,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "delay",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 12,
+            "attributedMedianMicroseconds": 3.5036496350364965,
+            "attributedPercentile95Microseconds": 3.854014598540146,
+            "attributedSharePercent": 4.37956204379562
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 37.372262773722625,
+            "attributedPercentile95Microseconds": 41.10948905109489,
+            "attributedSharePercent": 46.715328467153284
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 15,
+            "modelUnitsPerSample": 30,
+            "attributedMedianMicroseconds": 8.75912408759124,
+            "attributedPercentile95Microseconds": 9.635036496350365,
+            "attributedSharePercent": 10.948905109489052
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.583941605839416,
+            "attributedPercentile95Microseconds": 0.6423357664233577,
+            "attributedSharePercent": 0.7299270072992701
+          },
+          {
+            "family": "routing",
+            "nodeCount": 74,
+            "modelUnitsPerSample": 102,
+            "attributedMedianMicroseconds": 29.78102189781022,
+            "attributedPercentile95Microseconds": 32.75912408759124,
+            "attributedSharePercent": 37.22627737226277
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "dense-figure-eight",
+      "sampleRate": 96000.0,
+      "blockSize": 512,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 158.0,
+        "percentile95Microseconds": 169.4,
+        "peakMicroseconds": 684.5,
+        "medianLoadPercent": 2.9625000000000004,
+        "percentile95LoadPercent": 3.17625,
+        "peakLoadPercent": 12.834375000000001,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 165.1,
+        "percentile95Microseconds": 183.5,
+        "peakMicroseconds": 640.8,
+        "medianLoadPercent": 3.095625,
+        "percentile95LoadPercent": 3.4406250000000003,
+        "peakLoadPercent": 12.014999999999999,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 280.4,
+        "percentile95Microseconds": 311.7,
+        "peakMicroseconds": 332.3,
+        "medianLoadPercent": 5.257499999999999,
+        "percentile95LoadPercent": 5.844375,
+        "peakLoadPercent": 6.230625000000001,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0449367088607595,
+      "crossfadeMedianOverheadRatio": 1.7746835443037974,
+      "compile": {
+        "validationMicroseconds": 198,
+        "schedulingMicroseconds": 88,
+        "preparationMicroseconds": 242,
+        "totalMicroseconds": 532,
+        "requestToActiveMicroseconds": 553
+      },
+      "graph": {
+        "latencySamples": 18509,
+        "preparedMemoryBytes": 660992,
+        "delayMemoryBytes": 599552,
+        "nodeCount": 40,
+        "connectionCount": 50,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 36,
+        "logicalSignalCount": 41,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 30,
+        "peakLiveBufferCount": 30,
+        "bufferBytesSaved": 22528,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 3,
+        "fusedNodeCount": 6,
+        "sampleWiseFusedKernelCount": 2,
+        "simdKernelCount": 3,
+        "estimatedOperationsPerSample": 220,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "delay",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 12,
+            "attributedMedianMicroseconds": 6.91970802919708,
+            "attributedPercentile95Microseconds": 7.418978102189782,
+            "attributedSharePercent": 4.37956204379562
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 73.81021897810218,
+            "attributedPercentile95Microseconds": 79.13576642335767,
+            "attributedSharePercent": 46.715328467153284
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 15,
+            "modelUnitsPerSample": 30,
+            "attributedMedianMicroseconds": 17.2992700729927,
+            "attributedPercentile95Microseconds": 18.547445255474454,
+            "attributedSharePercent": 10.948905109489052
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 1.1532846715328466,
+            "attributedPercentile95Microseconds": 1.2364963503649635,
+            "attributedSharePercent": 0.7299270072992701
+          },
+          {
+            "family": "routing",
+            "nodeCount": 74,
+            "modelUnitsPerSample": 102,
+            "attributedMedianMicroseconds": 58.81751824817518,
+            "attributedPercentile95Microseconds": 63.06131386861314,
+            "attributedSharePercent": 37.22627737226277
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "four-line-fdn",
+      "sampleRate": 44100.0,
+      "blockSize": 32,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 22.5,
+        "percentile95Microseconds": 23.7,
+        "peakMicroseconds": 280.3,
+        "medianLoadPercent": 3.1007812500000003,
+        "percentile95LoadPercent": 3.2661562500000003,
+        "peakLoadPercent": 38.62884375,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 23.7,
+        "percentile95Microseconds": 25.9,
+        "peakMicroseconds": 153.2,
+        "medianLoadPercent": 3.2661562500000003,
+        "percentile95LoadPercent": 3.5693437500000003,
+        "peakLoadPercent": 21.112875,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 280,
+        "medianMicroseconds": 39.5,
+        "percentile95Microseconds": 47.5,
+        "peakMicroseconds": 72.2,
+        "medianLoadPercent": 5.44359375,
+        "percentile95LoadPercent": 6.54609375,
+        "peakLoadPercent": 9.9500625,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0533333333333332,
+      "crossfadeMedianOverheadRatio": 1.7555555555555555,
+      "compile": {
+        "validationMicroseconds": 445,
+        "schedulingMicroseconds": 442,
+        "preparationMicroseconds": 383,
+        "totalMicroseconds": 1278,
+        "requestToActiveMicroseconds": 1399
+      },
+      "graph": {
+        "latencySamples": 4282,
+        "preparedMemoryBytes": 281324,
+        "delayMemoryBytes": 273900,
+        "nodeCount": 84,
+        "connectionCount": 118,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 80,
+        "logicalSignalCount": 85,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 58,
+        "peakLiveBufferCount": 58,
+        "bufferBytesSaved": 3456,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 11,
+        "fusedNodeCount": 22,
+        "sampleWiseFusedKernelCount": 10,
+        "simdKernelCount": 5,
+        "estimatedOperationsPerSample": 404,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "routing",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 4,
+            "modelUnitsPerSample": 24,
+            "attributedMedianMicroseconds": 1.0266159695817492,
+            "attributedPercentile95Microseconds": 1.0813688212927757,
+            "attributedSharePercent": 4.562737642585551
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 5.475285171102661,
+            "attributedPercentile95Microseconds": 5.767300380228137,
+            "attributedSharePercent": 24.334600760456272
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 57,
+            "modelUnitsPerSample": 114,
+            "attributedMedianMicroseconds": 4.8764258555133075,
+            "attributedPercentile95Microseconds": 5.136501901140684,
+            "attributedSharePercent": 21.673003802281368
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.08555133079847908,
+            "attributedPercentile95Microseconds": 0.09011406844106463,
+            "attributedSharePercent": 0.38022813688212925
+          },
+          {
+            "family": "routing",
+            "nodeCount": 186,
+            "modelUnitsPerSample": 258,
+            "attributedMedianMicroseconds": 11.036121673003802,
+            "attributedPercentile95Microseconds": 11.624714828897337,
+            "attributedSharePercent": 49.049429657794676
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "four-line-fdn",
+      "sampleRate": 44100.0,
+      "blockSize": 64,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 45.9,
+        "percentile95Microseconds": 48.3,
+        "peakMicroseconds": 241.2,
+        "medianLoadPercent": 3.162796875,
+        "percentile95LoadPercent": 3.3281718750000002,
+        "peakLoadPercent": 16.6201875,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 49.7,
+        "percentile95Microseconds": 55.3,
+        "peakMicroseconds": 194.0,
+        "medianLoadPercent": 3.4246406250000003,
+        "percentile95LoadPercent": 3.8105156250000003,
+        "peakLoadPercent": 13.367812500000001,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 140,
+        "medianMicroseconds": 79.1,
+        "percentile95Microseconds": 90.7,
+        "peakMicroseconds": 108.5,
+        "medianLoadPercent": 5.450484374999999,
+        "percentile95LoadPercent": 6.249796875,
+        "peakLoadPercent": 7.476328125,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0827886710239651,
+      "crossfadeMedianOverheadRatio": 1.7233115468409586,
+      "compile": {
+        "validationMicroseconds": 448,
+        "schedulingMicroseconds": 210,
+        "preparationMicroseconds": 371,
+        "totalMicroseconds": 1036,
+        "requestToActiveMicroseconds": 1070
+      },
+      "graph": {
+        "latencySamples": 4282,
+        "preparedMemoryBytes": 288748,
+        "delayMemoryBytes": 273900,
+        "nodeCount": 84,
+        "connectionCount": 118,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 80,
+        "logicalSignalCount": 85,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 58,
+        "peakLiveBufferCount": 58,
+        "bufferBytesSaved": 6912,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 11,
+        "fusedNodeCount": 22,
+        "sampleWiseFusedKernelCount": 10,
+        "simdKernelCount": 5,
+        "estimatedOperationsPerSample": 404,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "routing",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 4,
+            "modelUnitsPerSample": 24,
+            "attributedMedianMicroseconds": 2.094296577946768,
+            "attributedPercentile95Microseconds": 2.203802281368821,
+            "attributedSharePercent": 4.562737642585551
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 11.16958174904943,
+            "attributedPercentile95Microseconds": 11.75361216730038,
+            "attributedSharePercent": 24.334600760456272
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 57,
+            "modelUnitsPerSample": 114,
+            "attributedMedianMicroseconds": 9.947908745247148,
+            "attributedPercentile95Microseconds": 10.4680608365019,
+            "attributedSharePercent": 21.673003802281368
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.17452471482889734,
+            "attributedPercentile95Microseconds": 0.18365019011406844,
+            "attributedSharePercent": 0.38022813688212925
+          },
+          {
+            "family": "routing",
+            "nodeCount": 186,
+            "modelUnitsPerSample": 258,
+            "attributedMedianMicroseconds": 22.513688212927754,
+            "attributedPercentile95Microseconds": 23.690874524714825,
+            "attributedSharePercent": 49.049429657794676
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "four-line-fdn",
+      "sampleRate": 44100.0,
+      "blockSize": 128,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 91.4,
+        "percentile95Microseconds": 99.4,
+        "peakMicroseconds": 517.1,
+        "medianLoadPercent": 3.149015625,
+        "percentile95LoadPercent": 3.4246406250000003,
+        "peakLoadPercent": 17.8157109375,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 92.1,
+        "percentile95Microseconds": 102.0,
+        "peakMicroseconds": 640.6,
+        "medianLoadPercent": 3.1731328125,
+        "percentile95LoadPercent": 3.51421875,
+        "peakLoadPercent": 22.070671875000002,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 161.8,
+        "percentile95Microseconds": 189.2,
+        "peakMicroseconds": 375.4,
+        "medianLoadPercent": 5.574515625000001,
+        "percentile95LoadPercent": 6.5185312500000006,
+        "peakLoadPercent": 12.933703125000001,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0076586433260393,
+      "crossfadeMedianOverheadRatio": 1.7702407002188183,
+      "compile": {
+        "validationMicroseconds": 478,
+        "schedulingMicroseconds": 242,
+        "preparationMicroseconds": 395,
+        "totalMicroseconds": 1123,
+        "requestToActiveMicroseconds": 1206
+      },
+      "graph": {
+        "latencySamples": 4282,
+        "preparedMemoryBytes": 303596,
+        "delayMemoryBytes": 273900,
+        "nodeCount": 84,
+        "connectionCount": 118,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 80,
+        "logicalSignalCount": 85,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 58,
+        "peakLiveBufferCount": 58,
+        "bufferBytesSaved": 13824,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 11,
+        "fusedNodeCount": 22,
+        "sampleWiseFusedKernelCount": 10,
+        "simdKernelCount": 5,
+        "estimatedOperationsPerSample": 404,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "routing",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 4,
+            "modelUnitsPerSample": 24,
+            "attributedMedianMicroseconds": 4.170342205323195,
+            "attributedPercentile95Microseconds": 4.535361216730038,
+            "attributedSharePercent": 4.562737642585551
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 22.241825095057035,
+            "attributedPercentile95Microseconds": 24.18859315589354,
+            "attributedSharePercent": 24.334600760456272
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 57,
+            "modelUnitsPerSample": 114,
+            "attributedMedianMicroseconds": 19.80912547528517,
+            "attributedPercentile95Microseconds": 21.542965779467682,
+            "attributedSharePercent": 21.673003802281368
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.34752851711026617,
+            "attributedPercentile95Microseconds": 0.37794676806083655,
+            "attributedSharePercent": 0.38022813688212925
+          },
+          {
+            "family": "routing",
+            "nodeCount": 186,
+            "modelUnitsPerSample": 258,
+            "attributedMedianMicroseconds": 44.83117870722433,
+            "attributedPercentile95Microseconds": 48.75513307984791,
+            "attributedSharePercent": 49.049429657794676
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "four-line-fdn",
+      "sampleRate": 44100.0,
+      "blockSize": 256,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 183.4,
+        "percentile95Microseconds": 200.0,
+        "peakMicroseconds": 777.4,
+        "medianLoadPercent": 3.1593515625,
+        "percentile95LoadPercent": 3.4453125,
+        "peakLoadPercent": 13.391929687500001,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 190.2,
+        "percentile95Microseconds": 212.9,
+        "peakMicroseconds": 542.3,
+        "medianLoadPercent": 3.2764921875,
+        "percentile95LoadPercent": 3.66753515625,
+        "peakLoadPercent": 9.341964843749999,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 312.1,
+        "percentile95Microseconds": 441.6,
+        "peakMicroseconds": 731.8,
+        "medianLoadPercent": 5.37641015625,
+        "percentile95LoadPercent": 7.6072500000000005,
+        "peakLoadPercent": 12.606398437500001,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0370774263904035,
+      "crossfadeMedianOverheadRatio": 1.7017448200654308,
+      "compile": {
+        "validationMicroseconds": 447,
+        "schedulingMicroseconds": 221,
+        "preparationMicroseconds": 395,
+        "totalMicroseconds": 1070,
+        "requestToActiveMicroseconds": 1150
+      },
+      "graph": {
+        "latencySamples": 4282,
+        "preparedMemoryBytes": 333292,
+        "delayMemoryBytes": 273900,
+        "nodeCount": 84,
+        "connectionCount": 118,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 80,
+        "logicalSignalCount": 85,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 58,
+        "peakLiveBufferCount": 58,
+        "bufferBytesSaved": 27648,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 11,
+        "fusedNodeCount": 22,
+        "sampleWiseFusedKernelCount": 10,
+        "simdKernelCount": 5,
+        "estimatedOperationsPerSample": 404,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "routing",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 4,
+            "modelUnitsPerSample": 24,
+            "attributedMedianMicroseconds": 8.368060836501902,
+            "attributedPercentile95Microseconds": 9.125475285171103,
+            "attributedSharePercent": 4.562737642585551
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 44.62965779467681,
+            "attributedPercentile95Microseconds": 48.669201520912544,
+            "attributedSharePercent": 24.334600760456272
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 57,
+            "modelUnitsPerSample": 114,
+            "attributedMedianMicroseconds": 39.74828897338403,
+            "attributedPercentile95Microseconds": 43.346007604562736,
+            "attributedSharePercent": 21.673003802281368
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.6973384030418252,
+            "attributedPercentile95Microseconds": 0.7604562737642585,
+            "attributedSharePercent": 0.38022813688212925
+          },
+          {
+            "family": "routing",
+            "nodeCount": 186,
+            "modelUnitsPerSample": 258,
+            "attributedMedianMicroseconds": 89.95665399239543,
+            "attributedPercentile95Microseconds": 98.09885931558935,
+            "attributedSharePercent": 49.049429657794676
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "four-line-fdn",
+      "sampleRate": 44100.0,
+      "blockSize": 512,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 376.7,
+        "percentile95Microseconds": 414.0,
+        "peakMicroseconds": 885.6,
+        "medianLoadPercent": 3.244623046875,
+        "percentile95LoadPercent": 3.5658984375,
+        "peakLoadPercent": 7.627921875,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 395.8,
+        "percentile95Microseconds": 453.4,
+        "peakMicroseconds": 1274.4,
+        "medianLoadPercent": 3.40913671875,
+        "percentile95LoadPercent": 3.9052617187500003,
+        "peakLoadPercent": 10.976765625000002,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 20,
+        "medianMicroseconds": 634.6,
+        "percentile95Microseconds": 704.8,
+        "peakMicroseconds": 878.4,
+        "medianLoadPercent": 5.4659882812500005,
+        "percentile95LoadPercent": 6.070640625,
+        "peakLoadPercent": 7.56590625,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0507034775683568,
+      "crossfadeMedianOverheadRatio": 1.6846296787894877,
+      "compile": {
+        "validationMicroseconds": 469,
+        "schedulingMicroseconds": 208,
+        "preparationMicroseconds": 473,
+        "totalMicroseconds": 1156,
+        "requestToActiveMicroseconds": 1195
+      },
+      "graph": {
+        "latencySamples": 4282,
+        "preparedMemoryBytes": 392684,
+        "delayMemoryBytes": 273900,
+        "nodeCount": 84,
+        "connectionCount": 118,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 80,
+        "logicalSignalCount": 85,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 58,
+        "peakLiveBufferCount": 58,
+        "bufferBytesSaved": 55296,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 11,
+        "fusedNodeCount": 22,
+        "sampleWiseFusedKernelCount": 10,
+        "simdKernelCount": 5,
+        "estimatedOperationsPerSample": 404,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "routing",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 4,
+            "modelUnitsPerSample": 24,
+            "attributedMedianMicroseconds": 17.187832699619772,
+            "attributedPercentile95Microseconds": 18.88973384030418,
+            "attributedSharePercent": 4.562737642585551
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 91.66844106463878,
+            "attributedPercentile95Microseconds": 100.74524714828897,
+            "attributedSharePercent": 24.334600760456272
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 57,
+            "modelUnitsPerSample": 114,
+            "attributedMedianMicroseconds": 81.6422053231939,
+            "attributedPercentile95Microseconds": 89.72623574144487,
+            "attributedSharePercent": 21.673003802281368
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 1.432319391634981,
+            "attributedPercentile95Microseconds": 1.5741444866920151,
+            "attributedSharePercent": 0.38022813688212925
+          },
+          {
+            "family": "routing",
+            "nodeCount": 186,
+            "modelUnitsPerSample": 258,
+            "attributedMedianMicroseconds": 184.76920152091253,
+            "attributedPercentile95Microseconds": 203.06463878326994,
+            "attributedSharePercent": 49.049429657794676
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "four-line-fdn",
+      "sampleRate": 48000.0,
+      "blockSize": 32,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 21.7,
+        "percentile95Microseconds": 23.1,
+        "peakMicroseconds": 156.3,
+        "medianLoadPercent": 3.2550000000000003,
+        "percentile95LoadPercent": 3.4650000000000003,
+        "peakLoadPercent": 23.445000000000004,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 23.3,
+        "percentile95Microseconds": 23.9,
+        "peakMicroseconds": 339.9,
+        "medianLoadPercent": 3.495,
+        "percentile95LoadPercent": 3.5850000000000004,
+        "peakLoadPercent": 50.985,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 300,
+        "medianMicroseconds": 37.8,
+        "percentile95Microseconds": 45.9,
+        "peakMicroseconds": 105.1,
+        "medianLoadPercent": 5.67,
+        "percentile95LoadPercent": 6.885000000000001,
+        "peakLoadPercent": 15.765,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0737327188940093,
+      "crossfadeMedianOverheadRatio": 1.7419354838709677,
+      "compile": {
+        "validationMicroseconds": 452,
+        "schedulingMicroseconds": 232,
+        "preparationMicroseconds": 459,
+        "totalMicroseconds": 1150,
+        "requestToActiveMicroseconds": 1214
+      },
+      "graph": {
+        "latencySamples": 4661,
+        "preparedMemoryBytes": 305544,
+        "delayMemoryBytes": 298120,
+        "nodeCount": 84,
+        "connectionCount": 118,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 80,
+        "logicalSignalCount": 85,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 58,
+        "peakLiveBufferCount": 58,
+        "bufferBytesSaved": 3456,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 11,
+        "fusedNodeCount": 22,
+        "sampleWiseFusedKernelCount": 10,
+        "simdKernelCount": 5,
+        "estimatedOperationsPerSample": 404,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "routing",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 4,
+            "modelUnitsPerSample": 24,
+            "attributedMedianMicroseconds": 0.9901140684410646,
+            "attributedPercentile95Microseconds": 1.0539923954372625,
+            "attributedSharePercent": 4.562737642585551
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 5.280608365019011,
+            "attributedPercentile95Microseconds": 5.6212927756654,
+            "attributedSharePercent": 24.334600760456272
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 57,
+            "modelUnitsPerSample": 114,
+            "attributedMedianMicroseconds": 4.703041825095057,
+            "attributedPercentile95Microseconds": 5.006463878326996,
+            "attributedSharePercent": 21.673003802281368
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.08250950570342205,
+            "attributedPercentile95Microseconds": 0.08783269961977187,
+            "attributedSharePercent": 0.38022813688212925
+          },
+          {
+            "family": "routing",
+            "nodeCount": 186,
+            "modelUnitsPerSample": 258,
+            "attributedMedianMicroseconds": 10.643726235741443,
+            "attributedPercentile95Microseconds": 11.33041825095057,
+            "attributedSharePercent": 49.049429657794676
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "four-line-fdn",
+      "sampleRate": 48000.0,
+      "blockSize": 64,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 44.2,
+        "percentile95Microseconds": 53.2,
+        "peakMicroseconds": 446.5,
+        "medianLoadPercent": 3.3150000000000004,
+        "percentile95LoadPercent": 3.99,
+        "peakLoadPercent": 33.487500000000004,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 47.7,
+        "percentile95Microseconds": 53.2,
+        "peakMicroseconds": 302.7,
+        "medianLoadPercent": 3.5775,
+        "percentile95LoadPercent": 3.99,
+        "peakLoadPercent": 22.7025,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 160,
+        "medianMicroseconds": 76.2,
+        "percentile95Microseconds": 95.1,
+        "peakMicroseconds": 333.3,
+        "medianLoadPercent": 5.715000000000001,
+        "percentile95LoadPercent": 7.1325,
+        "peakLoadPercent": 24.997500000000002,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.079185520361991,
+      "crossfadeMedianOverheadRatio": 1.7239819004524886,
+      "compile": {
+        "validationMicroseconds": 435,
+        "schedulingMicroseconds": 317,
+        "preparationMicroseconds": 443,
+        "totalMicroseconds": 1202,
+        "requestToActiveMicroseconds": 1244
+      },
+      "graph": {
+        "latencySamples": 4661,
+        "preparedMemoryBytes": 312968,
+        "delayMemoryBytes": 298120,
+        "nodeCount": 84,
+        "connectionCount": 118,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 80,
+        "logicalSignalCount": 85,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 58,
+        "peakLiveBufferCount": 58,
+        "bufferBytesSaved": 6912,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 11,
+        "fusedNodeCount": 22,
+        "sampleWiseFusedKernelCount": 10,
+        "simdKernelCount": 5,
+        "estimatedOperationsPerSample": 404,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "routing",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 4,
+            "modelUnitsPerSample": 24,
+            "attributedMedianMicroseconds": 2.0167300380228137,
+            "attributedPercentile95Microseconds": 2.4273764258555137,
+            "attributedSharePercent": 4.562737642585551
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 10.755893536121674,
+            "attributedPercentile95Microseconds": 12.946007604562737,
+            "attributedSharePercent": 24.334600760456272
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 57,
+            "modelUnitsPerSample": 114,
+            "attributedMedianMicroseconds": 9.579467680608365,
+            "attributedPercentile95Microseconds": 11.530038022813688,
+            "attributedSharePercent": 21.673003802281368
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.16806083650190115,
+            "attributedPercentile95Microseconds": 0.20228136882129277,
+            "attributedSharePercent": 0.38022813688212925
+          },
+          {
+            "family": "routing",
+            "nodeCount": 186,
+            "modelUnitsPerSample": 258,
+            "attributedMedianMicroseconds": 21.67984790874525,
+            "attributedPercentile95Microseconds": 26.094296577946768,
+            "attributedSharePercent": 49.049429657794676
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "four-line-fdn",
+      "sampleRate": 48000.0,
+      "blockSize": 128,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 87.8,
+        "percentile95Microseconds": 96.8,
+        "peakMicroseconds": 286.5,
+        "medianLoadPercent": 3.2925,
+        "percentile95LoadPercent": 3.6300000000000003,
+        "peakLoadPercent": 10.74375,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 92.6,
+        "percentile95Microseconds": 101.4,
+        "peakMicroseconds": 404.1,
+        "medianLoadPercent": 3.4725,
+        "percentile95LoadPercent": 3.8025,
+        "peakLoadPercent": 15.15375,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 163.6,
+        "percentile95Microseconds": 185.4,
+        "peakMicroseconds": 208.3,
+        "medianLoadPercent": 6.135000000000001,
+        "percentile95LoadPercent": 6.952500000000001,
+        "peakLoadPercent": 7.81125,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0546697038724373,
+      "crossfadeMedianOverheadRatio": 1.8633257403189065,
+      "compile": {
+        "validationMicroseconds": 440,
+        "schedulingMicroseconds": 194,
+        "preparationMicroseconds": 889,
+        "totalMicroseconds": 1530,
+        "requestToActiveMicroseconds": 1567
+      },
+      "graph": {
+        "latencySamples": 4661,
+        "preparedMemoryBytes": 327816,
+        "delayMemoryBytes": 298120,
+        "nodeCount": 84,
+        "connectionCount": 118,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 80,
+        "logicalSignalCount": 85,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 58,
+        "peakLiveBufferCount": 58,
+        "bufferBytesSaved": 13824,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 11,
+        "fusedNodeCount": 22,
+        "sampleWiseFusedKernelCount": 10,
+        "simdKernelCount": 5,
+        "estimatedOperationsPerSample": 404,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "routing",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 4,
+            "modelUnitsPerSample": 24,
+            "attributedMedianMicroseconds": 4.0060836501901145,
+            "attributedPercentile95Microseconds": 4.416730038022814,
+            "attributedSharePercent": 4.562737642585551
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 21.365779467680607,
+            "attributedPercentile95Microseconds": 23.555893536121673,
+            "attributedSharePercent": 24.334600760456272
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 57,
+            "modelUnitsPerSample": 114,
+            "attributedMedianMicroseconds": 19.02889733840304,
+            "attributedPercentile95Microseconds": 20.979467680608362,
+            "attributedSharePercent": 21.673003802281368
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.3338403041825095,
+            "attributedPercentile95Microseconds": 0.36806083650190113,
+            "attributedSharePercent": 0.38022813688212925
+          },
+          {
+            "family": "routing",
+            "nodeCount": 186,
+            "modelUnitsPerSample": 258,
+            "attributedMedianMicroseconds": 43.06539923954372,
+            "attributedPercentile95Microseconds": 47.47984790874524,
+            "attributedSharePercent": 49.049429657794676
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "four-line-fdn",
+      "sampleRate": 48000.0,
+      "blockSize": 256,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 180.5,
+        "percentile95Microseconds": 216.0,
+        "peakMicroseconds": 691.1,
+        "medianLoadPercent": 3.3843750000000004,
+        "percentile95LoadPercent": 4.05,
+        "peakLoadPercent": 12.958125,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 180.5,
+        "percentile95Microseconds": 211.4,
+        "peakMicroseconds": 594.5,
+        "medianLoadPercent": 3.3843750000000004,
+        "percentile95LoadPercent": 3.96375,
+        "peakLoadPercent": 11.146875000000001,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 302.2,
+        "percentile95Microseconds": 392.7,
+        "peakMicroseconds": 548.1,
+        "medianLoadPercent": 5.666250000000001,
+        "percentile95LoadPercent": 7.363125,
+        "peakLoadPercent": 10.276875,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0,
+      "crossfadeMedianOverheadRatio": 1.6742382271468144,
+      "compile": {
+        "validationMicroseconds": 504,
+        "schedulingMicroseconds": 223,
+        "preparationMicroseconds": 468,
+        "totalMicroseconds": 1201,
+        "requestToActiveMicroseconds": 1264
+      },
+      "graph": {
+        "latencySamples": 4661,
+        "preparedMemoryBytes": 357512,
+        "delayMemoryBytes": 298120,
+        "nodeCount": 84,
+        "connectionCount": 118,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 80,
+        "logicalSignalCount": 85,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 58,
+        "peakLiveBufferCount": 58,
+        "bufferBytesSaved": 27648,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 11,
+        "fusedNodeCount": 22,
+        "sampleWiseFusedKernelCount": 10,
+        "simdKernelCount": 5,
+        "estimatedOperationsPerSample": 404,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "routing",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 4,
+            "modelUnitsPerSample": 24,
+            "attributedMedianMicroseconds": 8.235741444866921,
+            "attributedPercentile95Microseconds": 9.855513307984792,
+            "attributedSharePercent": 4.562737642585551
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 43.92395437262358,
+            "attributedPercentile95Microseconds": 52.56273764258555,
+            "attributedSharePercent": 24.334600760456272
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 57,
+            "modelUnitsPerSample": 114,
+            "attributedMedianMicroseconds": 39.11977186311787,
+            "attributedPercentile95Microseconds": 46.81368821292776,
+            "attributedSharePercent": 21.673003802281368
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.6863117870722434,
+            "attributedPercentile95Microseconds": 0.8212927756653993,
+            "attributedSharePercent": 0.38022813688212925
+          },
+          {
+            "family": "routing",
+            "nodeCount": 186,
+            "modelUnitsPerSample": 258,
+            "attributedMedianMicroseconds": 88.53422053231938,
+            "attributedPercentile95Microseconds": 105.94676806083649,
+            "attributedSharePercent": 49.049429657794676
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "four-line-fdn",
+      "sampleRate": 48000.0,
+      "blockSize": 512,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 373.5,
+        "percentile95Microseconds": 447.1,
+        "peakMicroseconds": 969.5,
+        "medianLoadPercent": 3.5015625000000004,
+        "percentile95LoadPercent": 4.1915625,
+        "peakLoadPercent": 9.0890625,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 385.3,
+        "percentile95Microseconds": 468.4,
+        "peakMicroseconds": 1085.8,
+        "medianLoadPercent": 3.6121875,
+        "percentile95LoadPercent": 4.39125,
+        "peakLoadPercent": 10.179375,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 20,
+        "medianMicroseconds": 624.9,
+        "percentile95Microseconds": 659.6,
+        "peakMicroseconds": 691.6,
+        "medianLoadPercent": 5.8584375,
+        "percentile95LoadPercent": 6.183750000000001,
+        "peakLoadPercent": 6.483750000000001,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0315930388219545,
+      "crossfadeMedianOverheadRatio": 1.6730923694779116,
+      "compile": {
+        "validationMicroseconds": 466,
+        "schedulingMicroseconds": 216,
+        "preparationMicroseconds": 470,
+        "totalMicroseconds": 1158,
+        "requestToActiveMicroseconds": 1198
+      },
+      "graph": {
+        "latencySamples": 4661,
+        "preparedMemoryBytes": 416904,
+        "delayMemoryBytes": 298120,
+        "nodeCount": 84,
+        "connectionCount": 118,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 80,
+        "logicalSignalCount": 85,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 58,
+        "peakLiveBufferCount": 58,
+        "bufferBytesSaved": 55296,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 11,
+        "fusedNodeCount": 22,
+        "sampleWiseFusedKernelCount": 10,
+        "simdKernelCount": 5,
+        "estimatedOperationsPerSample": 404,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "routing",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 4,
+            "modelUnitsPerSample": 24,
+            "attributedMedianMicroseconds": 17.041825095057035,
+            "attributedPercentile95Microseconds": 20.400000000000002,
+            "attributedSharePercent": 4.562737642585551
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 90.88973384030419,
+            "attributedPercentile95Microseconds": 108.80000000000001,
+            "attributedSharePercent": 24.334600760456272
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 57,
+            "modelUnitsPerSample": 114,
+            "attributedMedianMicroseconds": 80.94866920152091,
+            "attributedPercentile95Microseconds": 96.9,
+            "attributedSharePercent": 21.673003802281368
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 1.420152091254753,
+            "attributedPercentile95Microseconds": 1.7000000000000002,
+            "attributedSharePercent": 0.38022813688212925
+          },
+          {
+            "family": "routing",
+            "nodeCount": 186,
+            "modelUnitsPerSample": 258,
+            "attributedMedianMicroseconds": 183.1996197718631,
+            "attributedPercentile95Microseconds": 219.3,
+            "attributedSharePercent": 49.049429657794676
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "four-line-fdn",
+      "sampleRate": 96000.0,
+      "blockSize": 32,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 20.7,
+        "percentile95Microseconds": 23.2,
+        "peakMicroseconds": 221.3,
+        "medianLoadPercent": 6.21,
+        "percentile95LoadPercent": 6.96,
+        "peakLoadPercent": 66.39,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 22.6,
+        "percentile95Microseconds": 24.7,
+        "peakMicroseconds": 283.3,
+        "medianLoadPercent": 6.78,
+        "percentile95LoadPercent": 7.41,
+        "peakLoadPercent": 84.99000000000001,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 600,
+        "medianMicroseconds": 39.7,
+        "percentile95Microseconds": 48.5,
+        "peakMicroseconds": 243.3,
+        "medianLoadPercent": 11.910000000000002,
+        "percentile95LoadPercent": 14.55,
+        "peakLoadPercent": 72.99000000000001,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0917874396135268,
+      "crossfadeMedianOverheadRatio": 1.917874396135266,
+      "compile": {
+        "validationMicroseconds": 455,
+        "schedulingMicroseconds": 239,
+        "preparationMicroseconds": 479,
+        "totalMicroseconds": 1180,
+        "requestToActiveMicroseconds": 1262
+      },
+      "graph": {
+        "latencySamples": 9322,
+        "preparedMemoryBytes": 603600,
+        "delayMemoryBytes": 596176,
+        "nodeCount": 84,
+        "connectionCount": 118,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 80,
+        "logicalSignalCount": 85,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 58,
+        "peakLiveBufferCount": 58,
+        "bufferBytesSaved": 3456,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 11,
+        "fusedNodeCount": 22,
+        "sampleWiseFusedKernelCount": 10,
+        "simdKernelCount": 5,
+        "estimatedOperationsPerSample": 404,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "routing",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 4,
+            "modelUnitsPerSample": 24,
+            "attributedMedianMicroseconds": 0.9444866920152091,
+            "attributedPercentile95Microseconds": 1.058555133079848,
+            "attributedSharePercent": 4.562737642585551
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 5.037262357414448,
+            "attributedPercentile95Microseconds": 5.645627376425855,
+            "attributedSharePercent": 24.334600760456272
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 57,
+            "modelUnitsPerSample": 114,
+            "attributedMedianMicroseconds": 4.486311787072243,
+            "attributedPercentile95Microseconds": 5.028136882129277,
+            "attributedSharePercent": 21.673003802281368
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.07870722433460076,
+            "attributedPercentile95Microseconds": 0.08821292775665399,
+            "attributedSharePercent": 0.38022813688212925
+          },
+          {
+            "family": "routing",
+            "nodeCount": 186,
+            "modelUnitsPerSample": 258,
+            "attributedMedianMicroseconds": 10.153231939163497,
+            "attributedPercentile95Microseconds": 11.379467680608364,
+            "attributedSharePercent": 49.049429657794676
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "four-line-fdn",
+      "sampleRate": 96000.0,
+      "blockSize": 64,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 44.2,
+        "percentile95Microseconds": 47.1,
+        "peakMicroseconds": 320.7,
+        "medianLoadPercent": 6.630000000000001,
+        "percentile95LoadPercent": 7.065,
+        "peakLoadPercent": 48.105000000000004,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 45.2,
+        "percentile95Microseconds": 48.1,
+        "peakMicroseconds": 319.4,
+        "medianLoadPercent": 6.78,
+        "percentile95LoadPercent": 7.215000000000001,
+        "peakLoadPercent": 47.91,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 300,
+        "medianMicroseconds": 74.3,
+        "percentile95Microseconds": 86.0,
+        "peakMicroseconds": 168.5,
+        "medianLoadPercent": 11.145000000000001,
+        "percentile95LoadPercent": 12.9,
+        "peakLoadPercent": 25.275000000000002,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0226244343891402,
+      "crossfadeMedianOverheadRatio": 1.680995475113122,
+      "compile": {
+        "validationMicroseconds": 460,
+        "schedulingMicroseconds": 223,
+        "preparationMicroseconds": 501,
+        "totalMicroseconds": 1192,
+        "requestToActiveMicroseconds": 1264
+      },
+      "graph": {
+        "latencySamples": 9322,
+        "preparedMemoryBytes": 611024,
+        "delayMemoryBytes": 596176,
+        "nodeCount": 84,
+        "connectionCount": 118,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 80,
+        "logicalSignalCount": 85,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 58,
+        "peakLiveBufferCount": 58,
+        "bufferBytesSaved": 6912,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 11,
+        "fusedNodeCount": 22,
+        "sampleWiseFusedKernelCount": 10,
+        "simdKernelCount": 5,
+        "estimatedOperationsPerSample": 404,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "routing",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 4,
+            "modelUnitsPerSample": 24,
+            "attributedMedianMicroseconds": 2.0167300380228137,
+            "attributedPercentile95Microseconds": 2.149049429657795,
+            "attributedSharePercent": 4.562737642585551
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 10.755893536121674,
+            "attributedPercentile95Microseconds": 11.461596958174905,
+            "attributedSharePercent": 24.334600760456272
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 57,
+            "modelUnitsPerSample": 114,
+            "attributedMedianMicroseconds": 9.579467680608365,
+            "attributedPercentile95Microseconds": 10.207984790874525,
+            "attributedSharePercent": 21.673003802281368
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.16806083650190115,
+            "attributedPercentile95Microseconds": 0.1790874524714829,
+            "attributedSharePercent": 0.38022813688212925
+          },
+          {
+            "family": "routing",
+            "nodeCount": 186,
+            "modelUnitsPerSample": 258,
+            "attributedMedianMicroseconds": 21.67984790874525,
+            "attributedPercentile95Microseconds": 23.10228136882129,
+            "attributedSharePercent": 49.049429657794676
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "four-line-fdn",
+      "sampleRate": 96000.0,
+      "blockSize": 128,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 90.1,
+        "percentile95Microseconds": 97.6,
+        "peakMicroseconds": 386.1,
+        "medianLoadPercent": 6.7575,
+        "percentile95LoadPercent": 7.32,
+        "peakLoadPercent": 28.957500000000003,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 94.8,
+        "percentile95Microseconds": 100.5,
+        "peakMicroseconds": 284.8,
+        "medianLoadPercent": 7.11,
+        "percentile95LoadPercent": 7.5375000000000005,
+        "peakLoadPercent": 21.360000000000003,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 160,
+        "medianMicroseconds": 157.9,
+        "percentile95Microseconds": 173.5,
+        "peakMicroseconds": 276.3,
+        "medianLoadPercent": 11.842500000000001,
+        "percentile95LoadPercent": 13.012500000000001,
+        "peakLoadPercent": 20.7225,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.0521642619311875,
+      "crossfadeMedianOverheadRatio": 1.7524972253052167,
+      "compile": {
+        "validationMicroseconds": 471,
+        "schedulingMicroseconds": 219,
+        "preparationMicroseconds": 529,
+        "totalMicroseconds": 1226,
+        "requestToActiveMicroseconds": 1264
+      },
+      "graph": {
+        "latencySamples": 9322,
+        "preparedMemoryBytes": 625872,
+        "delayMemoryBytes": 596176,
+        "nodeCount": 84,
+        "connectionCount": 118,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 80,
+        "logicalSignalCount": 85,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 58,
+        "peakLiveBufferCount": 58,
+        "bufferBytesSaved": 13824,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 11,
+        "fusedNodeCount": 22,
+        "sampleWiseFusedKernelCount": 10,
+        "simdKernelCount": 5,
+        "estimatedOperationsPerSample": 404,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "routing",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 4,
+            "modelUnitsPerSample": 24,
+            "attributedMedianMicroseconds": 4.111026615969582,
+            "attributedPercentile95Microseconds": 4.453231939163498,
+            "attributedSharePercent": 4.562737642585551
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 21.9254752851711,
+            "attributedPercentile95Microseconds": 23.75057034220532,
+            "attributedSharePercent": 24.334600760456272
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 57,
+            "modelUnitsPerSample": 114,
+            "attributedMedianMicroseconds": 19.52737642585551,
+            "attributedPercentile95Microseconds": 21.152851711026614,
+            "attributedSharePercent": 21.673003802281368
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.34258555133079843,
+            "attributedPercentile95Microseconds": 0.37110266159695815,
+            "attributedSharePercent": 0.38022813688212925
+          },
+          {
+            "family": "routing",
+            "nodeCount": 186,
+            "modelUnitsPerSample": 258,
+            "attributedMedianMicroseconds": 44.193536121673,
+            "attributedPercentile95Microseconds": 47.8722433460076,
+            "attributedSharePercent": 49.049429657794676
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "four-line-fdn",
+      "sampleRate": 96000.0,
+      "blockSize": 256,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 181.5,
+        "percentile95Microseconds": 200.7,
+        "peakMicroseconds": 490.2,
+        "medianLoadPercent": 6.80625,
+        "percentile95LoadPercent": 7.52625,
+        "peakLoadPercent": 18.3825,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 183.8,
+        "percentile95Microseconds": 217.8,
+        "peakMicroseconds": 704.9,
+        "medianLoadPercent": 6.8925,
+        "percentile95LoadPercent": 8.1675,
+        "peakLoadPercent": 26.43375,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 80,
+        "medianMicroseconds": 316.3,
+        "percentile95Microseconds": 342.8,
+        "peakMicroseconds": 385.5,
+        "medianLoadPercent": 11.86125,
+        "percentile95LoadPercent": 12.855,
+        "peakLoadPercent": 14.45625,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.01267217630854,
+      "crossfadeMedianOverheadRatio": 1.7426997245179063,
+      "compile": {
+        "validationMicroseconds": 484,
+        "schedulingMicroseconds": 228,
+        "preparationMicroseconds": 514,
+        "totalMicroseconds": 1294,
+        "requestToActiveMicroseconds": 1341
+      },
+      "graph": {
+        "latencySamples": 9322,
+        "preparedMemoryBytes": 655568,
+        "delayMemoryBytes": 596176,
+        "nodeCount": 84,
+        "connectionCount": 118,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 80,
+        "logicalSignalCount": 85,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 58,
+        "peakLiveBufferCount": 58,
+        "bufferBytesSaved": 27648,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 11,
+        "fusedNodeCount": 22,
+        "sampleWiseFusedKernelCount": 10,
+        "simdKernelCount": 5,
+        "estimatedOperationsPerSample": 404,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "routing",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 4,
+            "modelUnitsPerSample": 24,
+            "attributedMedianMicroseconds": 8.281368821292777,
+            "attributedPercentile95Microseconds": 9.1574144486692,
+            "attributedSharePercent": 4.562737642585551
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 44.167300380228134,
+            "attributedPercentile95Microseconds": 48.83954372623574,
+            "attributedSharePercent": 24.334600760456272
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 57,
+            "modelUnitsPerSample": 114,
+            "attributedMedianMicroseconds": 39.336501901140686,
+            "attributedPercentile95Microseconds": 43.49771863117871,
+            "attributedSharePercent": 21.673003802281368
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 0.6901140684410646,
+            "attributedPercentile95Microseconds": 0.7631178707224334,
+            "attributedSharePercent": 0.38022813688212925
+          },
+          {
+            "family": "routing",
+            "nodeCount": 186,
+            "modelUnitsPerSample": 258,
+            "attributedMedianMicroseconds": 89.02471482889733,
+            "attributedPercentile95Microseconds": 98.4422053231939,
+            "attributedSharePercent": 49.049429657794676
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    },
+    {
+      "graphId": "four-line-fdn",
+      "sampleRate": 96000.0,
+      "blockSize": 512,
+      "measuredBlocks": 2000,
+      "crossfadeRepetitions": 20,
+      "normal": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 360.1,
+        "percentile95Microseconds": 417.4,
+        "peakMicroseconds": 830.5,
+        "medianLoadPercent": 6.751875,
+        "percentile95LoadPercent": 7.826250000000001,
+        "peakLoadPercent": 15.571875,
+        "underruns": 0
+      },
+      "telemetryEnabled": {
+        "sampleCount": 2000,
+        "medianMicroseconds": 374.2,
+        "percentile95Microseconds": 444.4,
+        "peakMicroseconds": 1241.3,
+        "medianLoadPercent": 7.01625,
+        "percentile95LoadPercent": 8.332500000000001,
+        "peakLoadPercent": 23.274375000000003,
+        "underruns": 0
+      },
+      "topologyCrossfade": {
+        "sampleCount": 40,
+        "medianMicroseconds": 623.8,
+        "percentile95Microseconds": 710.8,
+        "peakMicroseconds": 836.7,
+        "medianLoadPercent": 11.69625,
+        "percentile95LoadPercent": 13.3275,
+        "peakLoadPercent": 15.688125000000001,
+        "underruns": 0
+      },
+      "telemetryMedianOverheadRatio": 1.039155790058317,
+      "crossfadeMedianOverheadRatio": 1.7322965842821436,
+      "compile": {
+        "validationMicroseconds": 454,
+        "schedulingMicroseconds": 226,
+        "preparationMicroseconds": 498,
+        "totalMicroseconds": 1184,
+        "requestToActiveMicroseconds": 1233
+      },
+      "graph": {
+        "latencySamples": 9322,
+        "preparedMemoryBytes": 714960,
+        "delayMemoryBytes": 596176,
+        "nodeCount": 84,
+        "connectionCount": 118,
+        "feedbackRegionCount": 1,
+        "blockWiseRegionCount": 1,
+        "sampleWiseRegionCount": 1,
+        "logicalAudioBufferCount": 80,
+        "logicalSignalCount": 85,
+        "elidedNonAudioBufferCount": 5,
+        "physicalAudioBufferCount": 58,
+        "peakLiveBufferCount": 58,
+        "bufferBytesSaved": 55296,
+        "inPlaceAliasCount": 0,
+        "copiesAvoided": 0,
+        "fusedKernelCount": 11,
+        "fusedNodeCount": 22,
+        "sampleWiseFusedKernelCount": 10,
+        "simdKernelCount": 5,
+        "estimatedOperationsPerSample": 404,
+        "executionDomain": "hybrid",
+        "dominantProcessorFamily": "routing",
+        "processorFamilies": [
+          {
+            "family": "damping",
+            "nodeCount": 4,
+            "modelUnitsPerSample": 24,
+            "attributedMedianMicroseconds": 16.430418250950574,
+            "attributedPercentile95Microseconds": 19.044866920152092,
+            "attributedSharePercent": 4.562737642585551
+          },
+          {
+            "family": "delay",
+            "nodeCount": 16,
+            "modelUnitsPerSample": 128,
+            "attributedMedianMicroseconds": 87.62889733840305,
+            "attributedPercentile95Microseconds": 101.57262357414449,
+            "attributedSharePercent": 24.334600760456272
+          },
+          {
+            "family": "matrix",
+            "nodeCount": 57,
+            "modelUnitsPerSample": 114,
+            "attributedMedianMicroseconds": 78.04448669201521,
+            "attributedPercentile95Microseconds": 90.46311787072243,
+            "attributedSharePercent": 21.673003802281368
+          },
+          {
+            "family": "modulation",
+            "nodeCount": 2,
+            "modelUnitsPerSample": 2,
+            "attributedMedianMicroseconds": 1.3692015209125477,
+            "attributedPercentile95Microseconds": 1.5870722433460076,
+            "attributedSharePercent": 0.38022813688212925
+          },
+          {
+            "family": "routing",
+            "nodeCount": 186,
+            "modelUnitsPerSample": 258,
+            "attributedMedianMicroseconds": 176.62699619771863,
+            "attributedPercentile95Microseconds": 204.73231939163495,
+            "attributedSharePercent": 49.049429657794676
+          }
+        ]
+      },
+      "finiteOutput": true,
+      "budgets": {
+        "normalP95LoadPercentMaximum": 80.0,
+        "crossfadeP95LoadPercentMaximum": 160.0,
+        "withinNormalBudget": true,
+        "withinCrossfadeBudget": true
+      }
+    }
+  ]
+}

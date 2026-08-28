@@ -289,3 +289,42 @@ TEST_CASE("Published M23 dense profile identifies a dominant family at every sup
                 REQUIRE(cases.contains(std::string(graph) + "/" + std::to_string(rate)
                     + "/" + std::to_string(block)));
 }
+
+TEST_CASE("M23 feedback-region kernels clear the retained performance gate across the dense matrix")
+{
+    const auto directory = std::filesystem::path(REVERB_MEASUREMENTS_DIR);
+    std::ifstream baselineStream(directory / "dense-network-profile-m23-1.json");
+    std::ifstream optimizedStream(directory / "dense-network-profile-m23-2.json");
+    REQUIRE(baselineStream.good());
+    REQUIRE(optimizedStream.good());
+    const auto baseline = nlohmann::json::parse(baselineStream);
+    const auto optimized = nlohmann::json::parse(optimizedStream);
+    REQUIRE(optimized.at("buildCommit") == "5e19c7850d08");
+    REQUIRE(optimized.at("cases").size() == 30);
+
+    std::map<std::string, const nlohmann::json*> baselineCases;
+    for (const auto& measured : baseline.at("cases")) {
+        const auto key = measured.at("graphId").get<std::string>() + "/"
+            + std::to_string(measured.at("sampleRate").get<int>()) + "/"
+            + std::to_string(measured.at("blockSize").get<int>());
+        baselineCases.emplace(key, &measured);
+    }
+    for (const auto& measured : optimized.at("cases")) {
+        const auto key = measured.at("graphId").get<std::string>() + "/"
+            + std::to_string(measured.at("sampleRate").get<int>()) + "/"
+            + std::to_string(measured.at("blockSize").get<int>());
+        const auto& prior = *baselineCases.at(key);
+        const auto medianImprovement = 1.0
+            - measured.at("normal").at("medianMicroseconds").get<double>()
+                / prior.at("normal").at("medianMicroseconds").get<double>();
+        const auto p95Improvement = 1.0
+            - measured.at("normal").at("percentile95Microseconds").get<double>()
+                / prior.at("normal").at("percentile95Microseconds").get<double>();
+        CAPTURE(key, medianImprovement, p95Improvement);
+        REQUIRE(medianImprovement >= 0.15);
+        REQUIRE(p95Improvement >= 0.15);
+        REQUIRE(measured.at("graph").at("sampleWiseFusedKernelCount").get<std::size_t>() > 0);
+        REQUIRE(measured.at("finiteOutput").get<bool>());
+        REQUIRE(measured.at("budgets").at("withinNormalBudget").get<bool>());
+    }
+}

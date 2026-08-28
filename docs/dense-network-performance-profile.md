@@ -25,3 +25,16 @@ Across the supported matrix, Four-Line FDN p95 load ranges from 5.37% to 13.19%.
 ## M23.2 decision
 
 The first retained kernel should attack the Four-Line FDN's sample-wise routing and matrix together. A four-lane fused read/damp/gain/Hadamard/write pass can remove generic per-node dispatch and intermediate routing while keeping the visible 4x4 matrix authoritative. A standalone delay-only optimization is secondary: it cannot address the measured dominant family by itself. SIMD or a specialized path will be retained only if the same-machine target fixture improves by at least 10–15%, remains sample-equivalent within the declared tolerance, and preserves the generic fallback.
+
+## M23.2 result
+
+The retained implementation extends the prepared executor's existing static gain/sum/filter fusions into sample-wise feedback and causal regions. It is topology-generic: eligibility comes from signal dependency, fan-out, modulation, and region boundaries rather than a factory ID. The four-line graph prepares ten feedback-region fused kernels; Dense Figure Eight prepares two. Unsupported, modulated, tapped, or cross-region arrangements continue through the generic operation path.
+
+The exact-commit optimized report is [`artifacts/measurements/dense-network-profile-m23-2.json`](../artifacts/measurements/dense-network-profile-m23-2.json), produced at `5e19c7850d08` with 2,000 callbacks per case. Compared with M23.1 on the same machine:
+
+| Graph | Mean median improvement | Worst median improvement | Mean p95 improvement | Worst p95 improvement |
+| --- | ---: | ---: | ---: | ---: |
+| Four-Line FDN | 37.42% | 34.24% | 39.05% | 31.53% |
+| Dense Figure Eight | 25.17% | 21.43% | 26.99% | 22.58% |
+
+Every one of the 30 rate/block cases clears the 15% median and p95 retention gate. A paired optimized/generic render test drives 128,000 deterministic stereo samples through both prepared paths and bounds the maximum sample error below `1e-5`. Existing fixed-arena, callback-allocation, feedback stability, partition, reset, telemetry, and crossfade tests remain applicable because the kernel owns no new storage and performs no allocation or locking while processing.

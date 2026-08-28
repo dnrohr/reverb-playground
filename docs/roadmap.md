@@ -1469,6 +1469,8 @@ Acceptance criteria:
 
 ### M23.2 Add reusable dense-network kernels
 
+Status: Complete.
+
 Tasks: evaluate SIMD across FDN lines, Hadamard butterflies, batched filters, incremental fractional cursors, fused read/damp/gain/mix/write paths, and shared modulation tables.
 
 Acceptance criteria:
