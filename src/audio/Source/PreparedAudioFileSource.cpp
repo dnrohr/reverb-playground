@@ -382,7 +382,7 @@ void PreparedAudioFileSource::prepare(
     const std::size_t requestedMaximumBlockSize)
 {
     if (!std::isfinite(outputSampleRate) || outputSampleRate <= 0.0
-        || outputSampleRate > maximumOutputSampleRate || requestedMaximumBlockSize == 0
+        || requestedMaximumBlockSize == 0
         || requestedMaximumBlockSize > PreparedAudioFileSource::maximumBlockSize)
         throw std::invalid_argument("Audio-file transport preparation is outside supported bounds.");
     const auto cursor = impl_->cursorSourceFrame.load(std::memory_order_acquire);

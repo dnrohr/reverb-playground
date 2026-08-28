@@ -265,6 +265,12 @@ TEST_CASE("Prepared audio source reaches tail reprepares safely and contains non
     REQUIRE(std::abs(reprepared.cursorSourceFrame - cursorBeforeRateChange) <= 1);
     REQUIRE(reprepared.preparedBytes <= reverb::audio::PreparedAudioFileSource::maximumPreparedBytes);
 
+    source.prepare(1'234'567.8, 256);
+    const auto validatorRate = source.snapshot();
+    REQUIRE(validatorRate.prepared);
+    REQUIRE(validatorRate.outputSampleRate == Catch::Approx(1'234'567.8));
+    REQUIRE(validatorRate.preparedBytes <= reverb::audio::PreparedAudioFileSource::maximumPreparedBytes);
+
     source.reset();
     REQUIRE(source.snapshot().state == reverb::audio::AudioFileTransportState::ready);
     REQUIRE(source.snapshot().cursorSourceFrame == 0);

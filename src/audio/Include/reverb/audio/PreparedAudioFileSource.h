@@ -50,6 +50,8 @@ struct AudioFileTransportSnapshot {
 
 class PreparedAudioFileSource final {
 public:
+    // Read-ahead memory is sized no larger than two seconds at this rate. Hosts
+    // may probe higher rates; preparation remains bounded instead of throwing.
     static constexpr double maximumOutputSampleRate = 192'000.0;
     static constexpr double readAheadSeconds = 2.0;
     static constexpr std::size_t maximumBlockSize = 8'192;

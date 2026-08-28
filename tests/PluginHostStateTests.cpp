@@ -469,6 +469,26 @@ TEST_CASE("Host state stores independent wet and dry gains without the obsolete 
     REQUIRE(restored.dryGain() == Catch::Approx(0.21F));
 }
 
+TEST_CASE("Plugin survives the VST3 validator sample-rate sequence")
+{
+    ReverbPlaygroundProcessor processor;
+    juce::AudioBuffer<float> buffer(2, 64);
+    juce::MidiBuffer midi;
+    for (const auto sampleRate : { 22'050.0, 32'000.0, 44'100.0, 48'000.0,
+             88'200.0, 96'000.0, 192'000.0, 384'000.0, 1'234.5678,
+             12'345.678, 123'456.78, 1'234'567.8 }) {
+        CAPTURE(sampleRate);
+        processor.prepareToPlay(sampleRate, buffer.getNumSamples());
+        buffer.clear();
+        buffer.setSample(0, 0, 0.1F);
+        buffer.setSample(1, 0, 0.1F);
+        processor.processBlock(buffer, midi);
+        for (auto channel = 0; channel < buffer.getNumChannels(); ++channel)
+            for (auto frame = 0; frame < buffer.getNumSamples(); ++frame)
+                REQUIRE(std::isfinite(buffer.getSample(channel, frame)));
+    }
+}
+
 TEST_CASE("Energy telemetry follows the active compiled graph revision and is free when disabled")
 {
     ReverbPlaygroundProcessor processor;
