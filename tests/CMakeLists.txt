@@ -9,6 +9,7 @@ add_executable(reverb_tests
     DelayMemoryPlanTests.cpp
     DenseFigureEightTests.cpp
     DelaySetTuningTests.cpp
+    DelaySetResponseRankingTests.cpp
     DspGainTests.cpp
     DspPrimitivesTests.cpp
     DensityMeasurementsTests.cpp
@@ -107,3 +108,8 @@ add_test(
     NAME "Delay-set tuning CLI writes deterministic candidates"
     COMMAND reverb_delay_set_tuning_cli
         --output ${CMAKE_CURRENT_BINARY_DIR}/delay-set-candidates-smoke.json)
+
+add_test(
+    NAME "Rendered delay-set ranking CLI writes candidates and listening fixtures"
+    COMMAND reverb_delay_set_response_cli
+        --output-directory ${CMAKE_CURRENT_BINARY_DIR}/rendered-delay-set-ranking-smoke)

@@ -1,0 +1,489 @@
+{
+  "schemaVersion": 1,
+  "algorithm": "rendered-delay-set-ranking-v1",
+  "sourceSearch": {
+    "algorithm": "deterministic-delay-set-search-v1",
+    "seed": 21182445076759630,
+    "attempts": 4096,
+    "minimumMilliseconds": 35.0,
+    "maximumMilliseconds": 120.0,
+    "minimumSpacingMilliseconds": 4.0,
+    "modulationMarginMilliseconds": 2.0,
+    "planningSampleRate": 96000.0,
+    "delayMemoryBudgetBytes": 4194304
+  },
+  "sampleRate": 48000.0,
+  "targetRt60Seconds": 2.4,
+  "fixtures": [
+    "impulse",
+    "noise-burst",
+    "percussion",
+    "tonal"
+  ],
+  "fixtureDefinitions": {
+    "impulse": "0.1 peak dual-mono impulse; 5 seconds",
+    "noise-burst": "fixed-seed 0.08 peak dual-mono noise for 120 ms; 3 seconds",
+    "percussion": "fixed-seed 35 ms exponential noise hits at 0, 190, 430, 710, and 960 ms; 3 seconds",
+    "tonal": "220 Hz plus 329.63 Hz dual-mono tone for 800 ms with 25 ms fades; 3 seconds"
+  },
+  "eligibilityThresholds": {
+    "maximumPeakExclusive": 1.0,
+    "minimumLateEchoDensity": 0.8,
+    "maximumLateRecurrence": 0.8,
+    "maximumColorationPenalty": 0.9,
+    "maximumDecayRelativeError": 0.75,
+    "maximumAbsoluteStereoCorrelation": 0.98
+  },
+  "normalization": "listening WAV peak normalized to 0.5 (-6.02 dBFS); scores use unnormalized audio",
+  "renderedCandidateCount": 16,
+  "ranked": [
+    {
+      "sourceArithmeticRank": 2,
+      "eligible": true,
+      "delayMilliseconds": [
+        35.2,
+        45.9,
+        72.7,
+        110.3
+      ],
+      "aggregateScore": 0.2853029003368487,
+      "metrics": {
+        "lateEchoDensity": 0.965766670399736,
+        "lateRecurrence": 0.3032402824188263,
+        "colorationPenalty": 0.8510834204670529,
+        "decayRelativeError": 0.2237213946682477,
+        "absoluteStereoCorrelation": 0.01423607452985258,
+        "maximumPeak": 0.014397051185369492,
+        "finite": true
+      },
+      "passes": {
+        "stable": true,
+        "density": true,
+        "recurrence": true,
+        "coloration": true,
+        "decay": true,
+        "stereo": true
+      }
+    },
+    {
+      "sourceArithmeticRank": 7,
+      "eligible": true,
+      "delayMilliseconds": [
+        35.3,
+        50.3,
+        67.3,
+        114.1
+      ],
+      "aggregateScore": 0.28548775952522437,
+      "metrics": {
+        "lateEchoDensity": 0.975287494823848,
+        "lateRecurrence": 0.3024789488642071,
+        "colorationPenalty": 0.8709387699603117,
+        "decayRelativeError": 0.21601517297023246,
+        "absoluteStereoCorrelation": 0.01329340065521864,
+        "maximumPeak": 0.018566129729151726,
+        "finite": true
+      },
+      "passes": {
+        "stable": true,
+        "density": true,
+        "recurrence": true,
+        "coloration": true,
+        "decay": true,
+        "stereo": true
+      }
+    },
+    {
+      "sourceArithmeticRank": 1,
+      "eligible": true,
+      "delayMilliseconds": [
+        35.2,
+        44.7,
+        53.4,
+        113.2
+      ],
+      "aggregateScore": 0.2855997813541136,
+      "metrics": {
+        "lateEchoDensity": 0.979658864808935,
+        "lateRecurrence": 0.32047850080738266,
+        "colorationPenalty": 0.856951682098966,
+        "decayRelativeError": 0.22186460130086932,
+        "absoluteStereoCorrelation": 0.008362987372285031,
+        "maximumPeak": 0.012770075350999832,
+        "finite": true
+      },
+      "passes": {
+        "stable": true,
+        "density": true,
+        "recurrence": true,
+        "coloration": true,
+        "decay": true,
+        "stereo": true
+      }
+    },
+    {
+      "sourceArithmeticRank": 10,
+      "eligible": true,
+      "delayMilliseconds": [
+        35.4,
+        54.3,
+        67.8,
+        92.2
+      ],
+      "aggregateScore": 0.288898595380695,
+      "metrics": {
+        "lateEchoDensity": 0.9730311106959363,
+        "lateRecurrence": 0.3239019547693193,
+        "colorationPenalty": 0.8667101902491581,
+        "decayRelativeError": 0.21787656337427205,
+        "absoluteStereoCorrelation": 0.009035379206661963,
+        "maximumPeak": 0.011702360585331917,
+        "finite": true
+      },
+      "passes": {
+        "stable": true,
+        "density": true,
+        "recurrence": true,
+        "coloration": true,
+        "decay": true,
+        "stereo": true
+      }
+    },
+    {
+      "sourceArithmeticRank": 6,
+      "eligible": true,
+      "delayMilliseconds": [
+        35.3,
+        45.9,
+        68.7,
+        117.3
+      ],
+      "aggregateScore": 0.28937538656786954,
+      "metrics": {
+        "lateEchoDensity": 0.9673242125388103,
+        "lateRecurrence": 0.30742218581174807,
+        "colorationPenalty": 0.8734345880153754,
+        "decayRelativeError": 0.2176192595545217,
+        "absoluteStereoCorrelation": 0.01572511199651297,
+        "maximumPeak": 0.01265009306371212,
+        "finite": true
+      },
+      "passes": {
+        "stable": true,
+        "density": true,
+        "recurrence": true,
+        "coloration": true,
+        "decay": true,
+        "stereo": true
+      }
+    },
+    {
+      "sourceArithmeticRank": 14,
+      "eligible": true,
+      "delayMilliseconds": [
+        36.2,
+        46.7,
+        99.7,
+        111.4
+      ],
+      "aggregateScore": 0.2900619685683298,
+      "metrics": {
+        "lateEchoDensity": 0.9785681328165512,
+        "lateRecurrence": 0.32334089697641116,
+        "colorationPenalty": 0.8780752211959102,
+        "decayRelativeError": 0.21052822491254408,
+        "absoluteStereoCorrelation": 0.01693363257333437,
+        "maximumPeak": 0.01887301355600357,
+        "finite": true
+      },
+      "passes": {
+        "stable": true,
+        "density": true,
+        "recurrence": true,
+        "coloration": true,
+        "decay": true,
+        "stereo": true
+      }
+    },
+    {
+      "sourceArithmeticRank": 13,
+      "eligible": true,
+      "delayMilliseconds": [
+        35.9,
+        45.3,
+        77.2,
+        111.8
+      ],
+      "aggregateScore": 0.29014128482109086,
+      "metrics": {
+        "lateEchoDensity": 0.9741416758101826,
+        "lateRecurrence": 0.3126854031984766,
+        "colorationPenalty": 0.8643735425698414,
+        "decayRelativeError": 0.21728485548352652,
+        "absoluteStereoCorrelation": 0.030504298663792534,
+        "maximumPeak": 0.012049861252307892,
+        "finite": true
+      },
+      "passes": {
+        "stable": true,
+        "density": true,
+        "recurrence": true,
+        "coloration": true,
+        "decay": true,
+        "stereo": true
+      }
+    },
+    {
+      "sourceArithmeticRank": 4,
+      "eligible": true,
+      "delayMilliseconds": [
+        35.2,
+        61.0,
+        76.8,
+        81.3
+      ],
+      "aggregateScore": 0.2904670623499625,
+      "metrics": {
+        "lateEchoDensity": 0.9764783829836837,
+        "lateRecurrence": 0.2997501242604045,
+        "colorationPenalty": 0.8727963060938653,
+        "decayRelativeError": 0.21500341881869428,
+        "absoluteStereoCorrelation": 0.04126384556053224,
+        "maximumPeak": 0.016505250707268715,
+        "finite": true
+      },
+      "passes": {
+        "stable": true,
+        "density": true,
+        "recurrence": true,
+        "coloration": true,
+        "decay": true,
+        "stereo": true
+      }
+    },
+    {
+      "sourceArithmeticRank": 16,
+      "eligible": true,
+      "delayMilliseconds": [
+        36.7,
+        65.3,
+        89.7,
+        94.8
+      ],
+      "aggregateScore": 0.2924625528483643,
+      "metrics": {
+        "lateEchoDensity": 0.9790566445953734,
+        "lateRecurrence": 0.31723083221795223,
+        "colorationPenalty": 0.8901735185733897,
+        "decayRelativeError": 0.2059560541689325,
+        "absoluteStereoCorrelation": 0.028009003876920676,
+        "maximumPeak": 0.023645076900720596,
+        "finite": true
+      },
+      "passes": {
+        "stable": true,
+        "density": true,
+        "recurrence": true,
+        "coloration": true,
+        "decay": true,
+        "stereo": true
+      }
+    },
+    {
+      "sourceArithmeticRank": 15,
+      "eligible": true,
+      "delayMilliseconds": [
+        36.3,
+        60.9,
+        77.7,
+        111.8
+      ],
+      "aggregateScore": 0.29277492347778394,
+      "metrics": {
+        "lateEchoDensity": 0.9811830215588588,
+        "lateRecurrence": 0.3084050687803142,
+        "colorationPenalty": 0.8894361995163205,
+        "decayRelativeError": 0.20646750279898032,
+        "absoluteStereoCorrelation": 0.04074886785216349,
+        "maximumPeak": 0.012745430693030357,
+        "finite": true
+      },
+      "passes": {
+        "stable": true,
+        "density": true,
+        "recurrence": true,
+        "coloration": true,
+        "decay": true,
+        "stereo": true
+      }
+    },
+    {
+      "sourceArithmeticRank": 8,
+      "eligible": true,
+      "delayMilliseconds": [
+        35.3,
+        54.9,
+        99.8,
+        117.8
+      ],
+      "aggregateScore": 0.29358631781141803,
+      "metrics": {
+        "lateEchoDensity": 0.9620124461266976,
+        "lateRecurrence": 0.3172243240891027,
+        "colorationPenalty": 0.8869839254437115,
+        "decayRelativeError": 0.2052375679982832,
+        "absoluteStereoCorrelation": 0.020498217652690314,
+        "maximumPeak": 0.012350321747362614,
+        "finite": true
+      },
+      "passes": {
+        "stable": true,
+        "density": true,
+        "recurrence": true,
+        "coloration": true,
+        "decay": true,
+        "stereo": true
+      }
+    },
+    {
+      "sourceArithmeticRank": 3,
+      "eligible": true,
+      "delayMilliseconds": [
+        35.2,
+        57.7,
+        63.0,
+        78.2
+      ],
+      "aggregateScore": 0.2973560714468638,
+      "metrics": {
+        "lateEchoDensity": 0.9555146991781249,
+        "lateRecurrence": 0.31182638798021484,
+        "colorationPenalty": 0.8618082706486818,
+        "decayRelativeError": 0.21948902830623407,
+        "absoluteStereoCorrelation": 0.04917136947731341,
+        "maximumPeak": 0.012410169467329979,
+        "finite": true
+      },
+      "passes": {
+        "stable": true,
+        "density": true,
+        "recurrence": true,
+        "coloration": true,
+        "decay": true,
+        "stereo": true
+      }
+    },
+    {
+      "sourceArithmeticRank": 9,
+      "eligible": false,
+      "delayMilliseconds": [
+        35.3,
+        81.9,
+        107.8,
+        112.7
+      ],
+      "aggregateScore": 0.28612002050512597,
+      "metrics": {
+        "lateEchoDensity": 0.9823820590835373,
+        "lateRecurrence": 0.297183802726561,
+        "colorationPenalty": 0.9026055265357531,
+        "decayRelativeError": 0.19357788845177648,
+        "absoluteStereoCorrelation": 0.019614943895076543,
+        "maximumPeak": 0.01266307570040226,
+        "finite": true
+      },
+      "passes": {
+        "stable": true,
+        "density": true,
+        "recurrence": true,
+        "coloration": false,
+        "decay": true,
+        "stereo": true
+      }
+    },
+    {
+      "sourceArithmeticRank": 11,
+      "eligible": false,
+      "delayMilliseconds": [
+        35.7,
+        75.8,
+        104.0,
+        112.7
+      ],
+      "aggregateScore": 0.2889431838079317,
+      "metrics": {
+        "lateEchoDensity": 0.9841808630100903,
+        "lateRecurrence": 0.29830773963355145,
+        "colorationPenalty": 0.9061872388497024,
+        "decayRelativeError": 0.20034270799382553,
+        "absoluteStereoCorrelation": 0.0240590955726694,
+        "maximumPeak": 0.012062164023518562,
+        "finite": true
+      },
+      "passes": {
+        "stable": true,
+        "density": true,
+        "recurrence": true,
+        "coloration": false,
+        "decay": true,
+        "stereo": true
+      }
+    },
+    {
+      "sourceArithmeticRank": 12,
+      "eligible": false,
+      "delayMilliseconds": [
+        35.7,
+        86.5,
+        101.3,
+        105.3
+      ],
+      "aggregateScore": 0.2918174985438246,
+      "metrics": {
+        "lateEchoDensity": 0.9727415380208204,
+        "lateRecurrence": 0.30495763490320554,
+        "colorationPenalty": 0.9100071093929661,
+        "decayRelativeError": 0.195419766282795,
+        "absoluteStereoCorrelation": 0.021444520160976734,
+        "maximumPeak": 0.019250409677624702,
+        "finite": true
+      },
+      "passes": {
+        "stable": true,
+        "density": true,
+        "recurrence": true,
+        "coloration": false,
+        "decay": true,
+        "stereo": true
+      }
+    },
+    {
+      "sourceArithmeticRank": 5,
+      "eligible": false,
+      "delayMilliseconds": [
+        35.2,
+        72.8,
+        98.5,
+        109.7
+      ],
+      "aggregateScore": 0.29916675700302314,
+      "metrics": {
+        "lateEchoDensity": 0.9787209221935974,
+        "lateRecurrence": 0.3077473202034335,
+        "colorationPenalty": 0.9105461988194393,
+        "decayRelativeError": 0.20155509122623447,
+        "absoluteStereoCorrelation": 0.05470609695960587,
+        "maximumPeak": 0.011056396178901196,
+        "finite": true
+      },
+      "passes": {
+        "stable": true,
+        "density": true,
+        "recurrence": true,
+        "coloration": false,
+        "decay": true,
+        "stereo": true
+      }
+    }
+  ]
+}

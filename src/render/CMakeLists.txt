@@ -1,5 +1,6 @@
 add_library(reverb_render STATIC
     Source/DensityMeasurements.cpp
+    Source/DelaySetResponseRanking.cpp
     Source/EnvelopeMeasurements.cpp
     Source/GravityReference.cpp
     Source/OfflineRenderer.cpp
@@ -97,3 +98,11 @@ target_link_libraries(reverb_delay_set_tuning_cli
     PRIVATE
         reverb_project_options
         reverb_graph)
+
+add_executable(reverb_delay_set_response_cli
+    Source/DelaySetResponseRankingCli.cpp)
+
+target_link_libraries(reverb_delay_set_response_cli
+    PRIVATE
+        reverb_project_options
+        reverb_render)

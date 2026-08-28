@@ -11,6 +11,7 @@ struct FourLineFdnControls final {
     double dampingHertz { 7'000.0 };
     double modulationDepthMilliseconds { 0.45 };
     double wetLevel { 0.56 };
+    std::array<double, 4> delayMilliseconds { 53.9, 67.7, 79.9, 97.1 };
 };
 
 [[nodiscard]] std::array<double, 4> hadamard4(const std::array<double, 4>& input) noexcept;

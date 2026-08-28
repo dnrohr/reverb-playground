@@ -1364,3 +1364,19 @@ Results:
   records schema, algorithm, complete configuration, 64-bit seed, attempts,
   rejection counts, ranked delay sets, component scores, gains, and memory.
   This task changes no UI, so no screenshot or video is required.
+
+## M22.2 verification
+
+- The first 16 arithmetic candidates render deterministic impulse, noise-burst,
+  percussion, and tonal fixtures at 48 kHz. All four fixtures participate in
+  finite/bounded qualification; response measurements retain density,
+  recurrence, coloration, decay error, and stereo correlation separately.
+- Every dimension has its own pass flag. Ineligible or unstable candidates sort
+  behind eligible candidates regardless of aggregate score, so one average
+  cannot conceal a failed criterion.
+- The top three candidates are exported as ordinary 84-node schema-v2 patches.
+  Each has four stereo PCM16 listening WAVs normalized independently to 0.5
+  peak; measurement scores always use the unnormalized render.
+- The checked-in [rendered ranking and listening fixtures](../artifacts/measurements/m22-rendered-delay-sets/ranking.json)
+  include complete search provenance and deterministic source definitions.
+  This task changes no UI, so no screenshot or video is required.

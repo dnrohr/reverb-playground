@@ -1435,7 +1435,7 @@ Acceptance criteria:
 - Identical inputs reproduce identical rankings and invalid/over-budget candidates never render.
 - Intentionally good and poor fixtures validate each scoring component.
 
-### M22.2 Rank rendered responses
+### M22.2 Rank rendered responses — Complete
 
 Tasks: render impulse, noise-burst, percussion, and tonal fixtures; score density, recurrence, coloration, decay, and stereo behavior independently; export candidates as ordinary patches.
 

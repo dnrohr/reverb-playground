@@ -42,3 +42,34 @@ Regenerate it after intentionally changing the algorithm:
 Tests compare the report byte-for-byte, prove repeated searches agree, exercise
 intentionally irregular/common-factor/equal-difference/integer-period fixtures,
 and prove invalid or one-byte-budget searches admit no renderable candidate.
+
+## Rendered response ranking
+
+M22.2 renders the first 16 arithmetic candidates at 48 kHz with four
+deterministic sources: an impulse, a short noise burst, a five-hit percussive
+pattern, and a two-tone chord. Unnormalized output supplies the measurements;
+the listening WAVs are separately peak-normalized to 0.5 (−6.02 dBFS), so
+loudness does not masquerade as preference.
+
+Each candidate retains independent pass/fail results for finite/bounded output,
+late echo density, late recurrence, spectral coloration, RT60 error, and late
+stereo correlation. A failed dimension makes the candidate ineligible before
+the aggregate ordering is considered. The aggregate remains published for
+transparent ordering among eligible candidates; it never erases a failure.
+
+The deterministic run selected these leading delay sets:
+
+| Rank | Delays (ms) | Density | Recurrence | Coloration penalty | RT60 error | Abs. stereo corr. |
+|---:|---|---:|---:|---:|---:|---:|
+| 1 | 35.2, 45.9, 72.7, 110.3 | 0.966 | 0.303 | 0.851 | 0.224 | 0.014 |
+| 2 | 35.3, 50.3, 67.3, 114.1 | 0.975 | 0.302 | 0.871 | 0.216 | 0.013 |
+| 3 | 35.2, 44.7, 53.4, 113.2 | 0.980 | 0.320 | 0.857 | 0.222 | 0.008 |
+
+[`artifacts/measurements/m22-rendered-delay-sets/ranking.json`](../artifacts/measurements/m22-rendered-delay-sets/ranking.json)
+contains the full seed/configuration, thresholds, metrics, and ranking. The same
+directory contains each top candidate as an ordinary editable schema-v2 patch
+plus four normalized stereo PCM16 listening fixtures. Regenerate them with:
+
+```powershell
+.\scripts\generate_rendered_delay_set_ranking.ps1 -Configuration Release
+```

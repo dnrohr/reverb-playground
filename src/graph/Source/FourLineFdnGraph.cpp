@@ -122,7 +122,9 @@ GraphDocument makeFourLineFdnGraph(const FourLineFdnControls& requested)
     const auto damping = std::clamp(requested.dampingHertz, 1'200.0, 14'000.0);
     const auto motion = std::clamp(requested.modulationDepthMilliseconds, 0.0, 1.25);
     const auto wet = std::clamp(requested.wetLevel, 0.0, 0.7);
-    constexpr std::array delayTimes { 53.9, 67.7, 79.9, 97.1 };
+    auto delayTimes = requested.delayMilliseconds;
+    for (auto& value : delayTimes)
+        value = std::clamp(std::isfinite(value) ? value : 53.9, 20.0, 150.0);
     constexpr std::array diffusionTimes { 5.3, 7.1, 8.9, 11.3 };
     constexpr std::array injectionSigns { 0.32, -0.32, 0.32, -0.32 };
     constexpr std::array outputLeft { 0.50, 0.32, -0.25, 0.18 };
