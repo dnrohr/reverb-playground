@@ -59,15 +59,17 @@ int main(int argc, char** argv)
         std::filesystem::path output;
         auto smoke = false;
         auto barrComparison = false;
+        auto denseProfile = false;
         std::size_t measuredBlocks = 200;
         for (auto index = 1; index < argc; ++index) {
             const std::string argument = argv[index];
             if (argument == "--output" && index + 1 < argc) output = argv[++index];
             else if (argument == "--smoke") smoke = true;
             else if (argument == "--barr-comparison") barrComparison = true;
+            else if (argument == "--dense-profile") denseProfile = true;
             else if (argument == "--blocks" && index + 1 < argc)
                 measuredBlocks = static_cast<std::size_t>(std::stoull(argv[++index]));
-            else throw std::invalid_argument("usage: reverb_performance_matrix_cli --output <json> [--smoke|--barr-comparison] [--blocks N]");
+            else throw std::invalid_argument("usage: reverb_performance_matrix_cli --output <json> [--smoke|--barr-comparison|--dense-profile] [--blocks N]");
         }
         if (output.empty()) throw std::invalid_argument("--output is required");
 
@@ -97,6 +99,16 @@ int main(int argc, char** argv)
         if (smoke) {
             results.push_back(reverb::render::measurePerformanceCase(
                 { "barr-reference", 48'000.0, 128, std::max<std::size_t>(5, measuredBlocks) }));
+        } else if (denseProfile) {
+            const std::array denseGraphs { "dense-figure-eight", "four-line-fdn" };
+            results.reserve(denseGraphs.size() * rates.size() * blocks.size());
+            for (const auto* graph : denseGraphs)
+                for (const auto rate : rates)
+                    for (const auto block : blocks) {
+                        std::cout << graph << " / " << rate << " / " << block << std::endl;
+                        results.push_back(reverb::render::measurePerformanceCase(
+                            { graph, rate, block, measuredBlocks }));
+                    }
         } else {
             results.reserve(graphs.size() * rates.size() * blocks.size());
             for (const auto* graph : graphs)

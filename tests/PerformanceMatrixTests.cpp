@@ -17,6 +17,9 @@ TEST_CASE("Headless performance matrix separates normal and topology-crossfade m
     REQUIRE(result.request.graphId == "barr-reference");
     REQUIRE(result.normal.medianMicroseconds > 0.0);
     REQUIRE(result.normal.sampleCount == 8);
+    REQUIRE(result.telemetryEnabled.sampleCount == 8);
+    REQUIRE(result.telemetryEnabled.medianMicroseconds > 0.0);
+    REQUIRE(result.telemetryMedianOverheadRatio > 0.0);
     REQUIRE(result.normal.percentile95Microseconds >= result.normal.medianMicroseconds);
     REQUIRE(result.normal.peakMicroseconds >= result.normal.percentile95Microseconds);
     REQUIRE(result.topologyCrossfade.medianMicroseconds > 0.0);
@@ -28,6 +31,8 @@ TEST_CASE("Headless performance matrix separates normal and topology-crossfade m
     REQUIRE(result.delayMemoryBytes > 0);
     REQUIRE(result.requestToActiveMicroseconds > 0);
     REQUIRE(result.finiteOutput);
+    REQUIRE_FALSE(result.processorFamilies.empty());
+    REQUIRE_FALSE(result.dominantProcessorFamily.empty());
 
     const auto document = nlohmann::json::parse(reverb::render::performanceMatrixJson(
         { result }, "test machine", "test toolchain", "test commit"));
@@ -37,11 +42,13 @@ TEST_CASE("Headless performance matrix separates normal and topology-crossfade m
     REQUIRE(document.at("cases").size() == 1);
     const auto& measured = document.at("cases").front();
     REQUIRE(measured.contains("normal"));
+    REQUIRE(measured.contains("telemetryEnabled"));
     REQUIRE(measured.contains("topologyCrossfade"));
     REQUIRE(measured.at("normal").contains("percentile95LoadPercent"));
     REQUIRE(measured.at("topologyCrossfade").at("sampleCount").get<std::size_t>() >= 5);
     REQUIRE(measured.at("compile").contains("requestToActiveMicroseconds"));
     REQUIRE(measured.at("graph").contains("latencySamples"));
+    REQUIRE(measured.at("graph").contains("processorFamilies"));
     REQUIRE(measured.at("budgets").contains("withinNormalBudget"));
 }
 

@@ -3,6 +3,8 @@
 #include <reverb/dsp/BarrReference.h>
 #include <reverb/graph/AcyclicRuntime.h>
 #include <reverb/graph/BarrReferenceGraph.h>
+#include <reverb/graph/DenseFigureEightGraph.h>
+#include <reverb/graph/FourLineFdnGraph.h>
 #include <reverb/graph/GravityDiffusionGraph.h>
 #include <reverb/graph/ReverseCosmicShimmerGraph.h>
 #include <reverb/graph/SafeParallelShimmerGraph.h>
@@ -32,6 +34,8 @@ reverb::graph::GraphDocument graphFor(const std::string& id)
     if (id == "safe-parallel-shimmer") return reverb::graph::makeSafeParallelShimmerGraph();
     if (id == "split-feedback-shimmer") return reverb::graph::makeSplitFeedbackShimmerGraph();
     if (id == "reverse-cosmic-shimmer") return reverb::graph::makeReverseCosmicShimmerGraph();
+    if (id == "dense-figure-eight") return reverb::graph::makeDenseFigureEightGraph();
+    if (id == "four-line-fdn") return reverb::graph::makeFourLineFdnGraph();
     throw std::invalid_argument("unknown performance graph '" + id + "'");
 }
 
@@ -84,6 +88,45 @@ nlohmann::ordered_json distributionJson(const CallbackDistribution& value)
     };
 }
 
+std::vector<ProcessorFamilyCost> attributeProcessorFamilies(
+    const reverb::graph::PreparedGraphDiagnostics& diagnostics,
+    const std::size_t connectionCount,
+    const CallbackDistribution& normal)
+{
+    std::map<std::string, ProcessorFamilyCost> costs;
+    const auto add = [&](const std::string& family, const std::size_t nodes, const std::size_t units) {
+        auto& cost = costs[family];
+        cost.family = family;
+        cost.nodeCount += nodes;
+        cost.modelUnitsPerSample += units;
+    };
+    for (const auto& workload : diagnostics.workloadFamilies) {
+        const auto family = workload.family == "gain" || workload.family == "sum" ? "matrix"
+            : workload.family == "delay" || workload.family == "allpass" ? "delay"
+            : workload.family == "lowpass" ? "damping"
+            : workload.family == "lfo" || workload.family == "control-map"
+                || workload.family == "macro" ? "modulation"
+            : workload.family == "sample-wise-dispatch" ? "routing"
+            : "other";
+        add(family, workload.nodeCount, workload.estimatedScalarOperationsPerSample);
+    }
+    // Cable traversal, live-buffer movement, and final input/output publication are real work
+    // that is not represented by a processor node's arithmetic estimate.
+    add("routing", connectionCount, connectionCount + diagnostics.copiesAvoided + 4);
+    std::size_t totalUnits = 0;
+    for (const auto& [_, cost] : costs) totalUnits += cost.modelUnitsPerSample;
+    std::vector<ProcessorFamilyCost> result;
+    for (auto& [_, cost] : costs) {
+        const auto share = totalUnits == 0 ? 0.0
+            : static_cast<double>(cost.modelUnitsPerSample) / static_cast<double>(totalUnits);
+        cost.attributedSharePercent = share * 100.0;
+        cost.attributedMedianMicroseconds = normal.medianMicroseconds * share;
+        cost.attributedPercentile95Microseconds = normal.percentile95Microseconds * share;
+        result.push_back(std::move(cost));
+    }
+    return result;
+}
+
 } // namespace
 
 PerformanceCaseResult measurePerformanceCase(const PerformanceCaseRequest& request)
@@ -130,6 +173,17 @@ PerformanceCaseResult measurePerformanceCase(const PerformanceCaseRequest& reque
     }
     const auto normalSnapshot = host.publicationSnapshot();
 
+    host.setEnergyTelemetryEnabled(true);
+    for (auto warmup = 0; warmup < 8; ++warmup) finite = process() && finite;
+    std::vector<double> telemetryTimes;
+    telemetryTimes.reserve(request.measuredBlocks);
+    for (std::size_t block = 0; block < request.measuredBlocks; ++block) {
+        const auto started = Clock::now();
+        finite = process() && finite;
+        telemetryTimes.push_back(elapsedMicroseconds(started));
+    }
+    host.setEnergyTelemetryEnabled(false);
+
     std::vector<double> crossfadeTimes;
     for (std::size_t repetition = 0; repetition < request.crossfadeRepetitions; ++repetition) {
         const auto crossfadePublication = host.compileFeedbackAndPublish(
@@ -146,7 +200,10 @@ PerformanceCaseResult measurePerformanceCase(const PerformanceCaseRequest& reque
     PerformanceCaseResult result;
     result.request = request;
     result.normal = distribution(normalTimes, deadline);
+    result.telemetryEnabled = distribution(telemetryTimes, deadline);
     result.topologyCrossfade = distribution(crossfadeTimes, deadline);
+    result.telemetryMedianOverheadRatio = result.normal.medianMicroseconds > 0.0
+        ? result.telemetryEnabled.medianMicroseconds / result.normal.medianMicroseconds : 0.0;
     result.crossfadeMedianOverheadRatio = result.normal.medianMicroseconds > 0.0
         ? result.topologyCrossfade.medianMicroseconds / result.normal.medianMicroseconds : 0.0;
     result.graphLatencySamples = normalSnapshot.activeLatency.totalSamples;
@@ -169,6 +226,12 @@ PerformanceCaseResult measurePerformanceCase(const PerformanceCaseRequest& reque
     result.fusedNodeCount = normalSnapshot.activePlanDiagnostics.fusedNodeCount;
     result.simdKernelCount = normalSnapshot.activePlanDiagnostics.simdKernelCount;
     result.estimatedOperationsPerSample = normalSnapshot.activePlanDiagnostics.estimatedScalarOperationsPerSample;
+    result.processorFamilies = attributeProcessorFamilies(
+        normalSnapshot.activePlanDiagnostics, result.connectionCount, result.normal);
+    if (!result.processorFamilies.empty()) {
+        result.dominantProcessorFamily = std::ranges::max_element(
+            result.processorFamilies, {}, &ProcessorFamilyCost::modelUnitsPerSample)->family;
+    }
     result.executionDomain = normalSnapshot.activePlanDiagnostics.executionDomain;
     result.validationMicroseconds = normalSnapshot.activePlanDiagnostics.compileTiming.validationMicroseconds;
     result.schedulingMicroseconds = normalSnapshot.activePlanDiagnostics.compileTiming.schedulingMicroseconds;
@@ -197,7 +260,9 @@ std::string performanceMatrixJson(
             { "measuredBlocks", result.request.measuredBlocks },
             { "crossfadeRepetitions", result.request.crossfadeRepetitions },
             { "normal", distributionJson(result.normal) },
+            { "telemetryEnabled", distributionJson(result.telemetryEnabled) },
             { "topologyCrossfade", distributionJson(result.topologyCrossfade) },
+            { "telemetryMedianOverheadRatio", result.telemetryMedianOverheadRatio },
             { "crossfadeMedianOverheadRatio", result.crossfadeMedianOverheadRatio },
             { "compile", {
                 { "validationMicroseconds", result.validationMicroseconds },
@@ -228,6 +293,18 @@ std::string performanceMatrixJson(
                 { "simdKernelCount", result.simdKernelCount },
                 { "estimatedOperationsPerSample", result.estimatedOperationsPerSample },
                 { "executionDomain", result.executionDomain },
+                { "dominantProcessorFamily", result.dominantProcessorFamily },
+                { "processorFamilies", [&result] {
+                    auto families = nlohmann::ordered_json::array();
+                    for (const auto& family : result.processorFamilies) families.push_back({
+                        { "family", family.family }, { "nodeCount", family.nodeCount },
+                        { "modelUnitsPerSample", family.modelUnitsPerSample },
+                        { "attributedMedianMicroseconds", family.attributedMedianMicroseconds },
+                        { "attributedPercentile95Microseconds", family.attributedPercentile95Microseconds },
+                        { "attributedSharePercent", family.attributedSharePercent },
+                    });
+                    return families;
+                }() },
             } },
             { "finiteOutput", result.finiteOutput },
             { "budgets", {
@@ -246,6 +323,7 @@ std::string performanceMatrixJson(
         { "buildConfiguration", "Release" },
         { "buildCommit", std::move(buildCommit) },
         { "source", "deterministic LCG noise plus 311 Hz sine; source preparation excluded from callback timing" },
+        { "familyAttribution", "Measured normal callback time apportioned by prepared-plan scalar work plus routing units; telemetry and crossfade are independently timed, and attributed family values are not independent stopwatch measurements" },
         { "cases", std::move(cases) },
     };
     return document.dump(2) + "\n";

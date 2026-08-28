@@ -27,10 +27,21 @@ struct CallbackDistribution final {
     std::size_t underruns {};
 };
 
+struct ProcessorFamilyCost final {
+    std::string family;
+    std::size_t nodeCount {};
+    std::size_t modelUnitsPerSample {};
+    double attributedMedianMicroseconds {};
+    double attributedPercentile95Microseconds {};
+    double attributedSharePercent {};
+};
+
 struct PerformanceCaseResult final {
     PerformanceCaseRequest request;
     CallbackDistribution normal;
+    CallbackDistribution telemetryEnabled;
     CallbackDistribution topologyCrossfade;
+    double telemetryMedianOverheadRatio {};
     double crossfadeMedianOverheadRatio {};
     std::size_t graphLatencySamples {};
     std::size_t preparedMemoryBytes {};
@@ -52,6 +63,8 @@ struct PerformanceCaseResult final {
     std::size_t fusedNodeCount {};
     std::size_t simdKernelCount {};
     std::size_t estimatedOperationsPerSample {};
+    std::vector<ProcessorFamilyCost> processorFamilies;
+    std::string dominantProcessorFamily;
     std::string executionDomain;
     std::uint64_t validationMicroseconds {};
     std::uint64_t schedulingMicroseconds {};
