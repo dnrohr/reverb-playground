@@ -8,6 +8,7 @@ add_executable(reverb_tests
     ControlModulationTests.cpp
     DelayMemoryPlanTests.cpp
     DenseFigureEightTests.cpp
+    DenseReverbQualificationTests.cpp
     DelaySetTuningTests.cpp
     DelaySetResponseRankingTests.cpp
     DspGainTests.cpp
