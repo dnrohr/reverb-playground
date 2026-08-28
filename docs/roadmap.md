@@ -1459,6 +1459,8 @@ Acceptance criteria:
 
 ### M23.1 Profile dense tanks by processor family
 
+Status: Complete.
+
 Tasks: separate delay, matrix, damping, modulation, routing, telemetry, normal, and crossfade costs across supported rates and blocks.
 
 Acceptance criteria:

@@ -92,6 +92,7 @@ Last updated: 2026-08-26
 | M18.5.2 Audition/capture control cleanup | Complete | Removed master, processed/bypass, export-mix, and capture-mute controls; impulse measurement always isolates its source; post-sum mute/safety retained; reviewed standalone evidence |
 | M18.5.3 Loop-range export | Complete | Explicit Entire File/Selected Loop selector; source-frame seek and exact one-pass interval; tail begins at selected end; deterministic duration fixture |
 | M18.5.4 Compiled-graph Energy | Complete | Bounded per-operation RMS lanes, coherent 30 Hz revision-tagged publication, incoming-revision topology handling, stale-frame rejection, and a zero-observation disabled path |
+| M23.1 Dense processor-family profile | Complete | Exact-commit 30-case Release baseline separates normal, telemetry, and crossfade timing and attributes delay, matrix, damping, modulation, and routing costs; Four-Line routing/dispatch is dominant |
 
 ## M0.2 verification
 
@@ -1398,3 +1399,20 @@ Results:
 - Reviewed UI evidence: [active Smoother preview](../artifacts/ui/m22-3-assisted-tuning/smoother-preview.png),
   [accepted Wider edit with Undo ready](../artifacts/ui/m22-3-assisted-tuning/wider-accepted-undo-ready.png),
   and [640×400 layout](../artifacts/ui/m22-3-assisted-tuning/assisted-tuning-640x400.png).
+
+## M23.1 verification
+
+- The Release profiler covers Dense Figure Eight and Four-Line FDN at 44.1,
+  48, and 96 kHz with 32, 64, 128, 256, and 512-sample blocks: 30 cases,
+  1,000 normal callbacks per case, and no measured underruns.
+- Normal, Energy-enabled, and topology-crossfade callback distributions are
+  independently timed. Prepared-plan work apportions normal time among delay,
+  matrix, damping, modulation, and routing without perturbing feedback loops
+  with per-operation clocks; the report labels that attribution honestly.
+- Four-Line FDN is the measured target. At 48 kHz / 128 samples it uses 145.5
+  us median and 156.6 us p95. Routing/sample-wise dispatch accounts for 49.05%
+  of attributed cost, ahead of delay (24.33%) and matrix work (21.67%).
+- The exact-commit [30-case report](../artifacts/measurements/dense-network-profile-m23-1.json)
+  and [analysis/decision](dense-network-performance-profile.md) establish the
+  M23.2 gate. This profiler-only task changes no UI, so no screenshot or video
+  is required.

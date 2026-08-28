@@ -241,3 +241,51 @@ TEST_CASE("M17 fused-kernel comparison covers flagship block paths without memor
     }
     REQUIRE(shimmerComparisonCases == 20);
 }
+
+TEST_CASE("Published M23 dense profile identifies a dominant family at every supported rate and block")
+{
+    const auto path = std::filesystem::path(REVERB_MEASUREMENTS_DIR)
+        / "dense-network-profile-m23-1.json";
+    std::ifstream stream(path);
+    REQUIRE(stream.good());
+    const auto document = nlohmann::json::parse(stream);
+    REQUIRE(document.at("buildConfiguration") == "Release");
+    REQUIRE(document.at("buildCommit") == "69660a4832bf");
+    REQUIRE(document.at("familyAttribution").get<std::string>().find("not independent stopwatch")
+        != std::string::npos);
+    REQUIRE(document.at("cases").size() == 30);
+
+    const std::array graphs { "dense-figure-eight", "four-line-fdn" };
+    const std::array rates { 44'100, 48'000, 96'000 };
+    const std::array blocks { 32, 64, 128, 256, 512 };
+    std::set<std::string> cases;
+    for (const auto& measured : document.at("cases")) {
+        const auto key = measured.at("graphId").get<std::string>() + "/"
+            + std::to_string(measured.at("sampleRate").get<int>()) + "/"
+            + std::to_string(measured.at("blockSize").get<int>());
+        REQUIRE(cases.insert(key).second);
+        REQUIRE(measured.at("measuredBlocks").get<std::size_t>() == 1'000);
+        REQUIRE(measured.at("normal").at("underruns") == 0);
+        REQUIRE(measured.at("telemetryEnabled").at("sampleCount") == 1'000);
+        REQUIRE(measured.at("telemetryMedianOverheadRatio").get<double>() > 0.0);
+        REQUIRE(measured.at("topologyCrossfade").at("sampleCount").get<std::size_t>() >= 20);
+        REQUIRE(measured.at("finiteOutput").get<bool>());
+        REQUIRE(measured.at("budgets").at("withinNormalBudget").get<bool>());
+        const auto& graph = measured.at("graph");
+        REQUIRE_FALSE(graph.at("dominantProcessorFamily").get<std::string>().empty());
+        REQUIRE(graph.at("processorFamilies").size() >= 4);
+        double share = 0.0;
+        for (const auto& family : graph.at("processorFamilies")) {
+            REQUIRE(family.at("modelUnitsPerSample").get<std::size_t>() > 0);
+            REQUIRE(family.at("attributedPercentile95Microseconds").get<double>() > 0.0);
+            share += family.at("attributedSharePercent").get<double>();
+        }
+        REQUIRE(share > 99.9999);
+        REQUIRE(share < 100.0001);
+    }
+    for (const auto* graph : graphs)
+        for (const auto rate : rates)
+            for (const auto block : blocks)
+                REQUIRE(cases.contains(std::string(graph) + "/" + std::to_string(rate)
+                    + "/" + std::to_string(block)));
+}

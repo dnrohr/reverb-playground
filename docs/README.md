@@ -73,6 +73,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Visible Pitch Shift primitive design](pitch-shift-primitive-design.md) - mono dual-read-head semantics, fixed causal latency, grain controls, automation, quality limits, and prepared resource budgets.
 - [Pitch Shift inner-loop optimization](pitch-shift-inner-loop-optimization.md) - prepared phase/window/addressing work, transition behavior, same-machine Release measurements, and qualification boundary.
 - [Compiled control-ramp processing](compiled-control-ramp-processing.md) - bounded ramp segments, block and causal processor kernels, equivalence coverage, and exact-commit performance evidence.
+- [Dense-network performance profile](dense-network-performance-profile.md) - M23 normal, Energy, and crossfade measurements with processor-family attribution and the Four-Line kernel decision.
 - [Reverse grains and stereo decorrelation](reverse-grain-and-stereo-decorrelation.md) - deterministic phase pairing, causal boundaries, transient evidence, compatibility, and multirate budgets.
 - [Reverse Cosmic Shimmer topology design](reverse-cosmic-shimmer-topology-design.md) - causal-rise front end, paired reverse-octave returns, dark circulation, slow motion, and unequal stereo extraction.
 - [Safe Parallel Shimmer topology design](safe-parallel-shimmer-design.md) - visible post-tank octave branch, structural non-recirculation, stereo extraction, alignment, memory, and loudness budgets.
