@@ -3,7 +3,7 @@
 Factory patches are versioned product assets, not informal examples. The
 authoritative shipped set is
 [`factory-patches/catalog.json`](../factory-patches/catalog.json). Catalog
-version 1 contains exactly nine complete families:
+version 1 contains exactly ten complete families:
 
 | Factory ID | Family | Document source | Schema | Engine |
 |---|---|---|---:|---:|
@@ -13,6 +13,7 @@ version 1 contains exactly nine complete families:
 | `modulated-cosmic-reverse` | Modulated reverse-style | Checked-in generated JSON | 2 | 0.1 |
 | `gravity-diffusion` | Gravity Diffusion | Native-builder generated JSON | 2 | 0.1 |
 | `dense-figure-eight` | Dense figure-eight | Native-builder generated JSON | 2 | 0.1 |
+| `four-line-dense-room` | Four-line FDN | Native-builder generated JSON | 2 | 0.1 |
 | `safe-parallel-shimmer` | Parallel shimmer | Native-builder generated JSON | 2 | 0.1 |
 | `split-feedback-shimmer` | Feedback shimmer | Native-builder generated JSON | 2 | 0.1 |
 | `reverse-cosmic-shimmer` | Reverse cosmic shimmer | Native-builder generated JSON | 2 | 0.1 |
@@ -20,14 +21,14 @@ version 1 contains exactly nine complete families:
 The Barr graph is generated from the same native definitions that execute it,
 so it cannot drift from a duplicated JSON asset. Gravity Diffusion, Safe
 Parallel Shimmer, Split-Feedback Shimmer, and Reverse Cosmic Shimmer are exported from their native
-graph builders and admitted by exact SHA-256. Dense Figure Eight follows the
-same native-builder and exact-hash path. The reverse/gated graphs and catalog are deterministic output
+graph builders and admitted by exact SHA-256. Dense Figure Eight and Four-line
+Dense Room follow the same native-builder and exact-hash path. The reverse/gated graphs and catalog are deterministic output
 from `scripts/generate_factory_patches.mjs`; `--check` compares every byte in CI.
 
 Each catalog entry declares `status: complete`, its family, document kind/path,
 schema and engine versions, SPDX license expression and license path, plus a
 provenance kind, source path, and description. Tests require every referenced
-path to exist. All nine are project-authored AGPL-3.0-only work and contain no
+path to exist. All ten are project-authored AGPL-3.0-only work and contain no
 ROM-derived data, imported presets, or captured impulse response.
 
 ## Admission rule
@@ -83,3 +84,6 @@ Reverse Cosmic Shimmer likewise adds no private processor: its paired Pitch
 Shift phases and reverse-grain directions are ordinary saved schema-v2
 parameters, and its 45-block graph restores exactly through editor and host
 state.
+Four-line Dense Room likewise persists its normalized Hadamard matrix as 16
+ordinary Gain and 12 ordinary Sum blocks. The compact Matrix Mixer is a
+reversible editor presentation of those saved blocks, never hidden DSP.

@@ -279,6 +279,23 @@ const catalog = {
       },
     },
     {
+      id: 'four-line-dense-room',
+      family: 'four-line-fdn',
+      status: 'complete',
+      document: {
+        kind: 'checked-in-json',
+        path: 'factory-patches/four-line-dense-room.rvp.json',
+        schemaVersion: 2,
+        engineVersion: '0.1',
+      },
+      license: { expression: 'AGPL-3.0-only', file: 'LICENSE' },
+      provenance: {
+        kind: 'project-authored-generated',
+        source: 'src/graph/Source/FourLineFdnGraph.cpp',
+        description: 'Generated from the project-authored normalized four-line Hadamard FDN graph.',
+      },
+    },
+    {
       id: 'safe-parallel-shimmer',
       family: 'parallel-shimmer',
       status: 'complete',
@@ -361,6 +378,12 @@ const denseFigureEightFactoryBytes = await readFile(denseFigureEightFactoryPath)
 const denseFigureEightFactoryHash = createHash('sha256').update(denseFigureEightFactoryBytes).digest('hex');
 if (denseFigureEightFactoryHash !== '8ccb9aa3a3cf05d85d5e8b472396cab23588313be614b2f1a353ea34594a81fb')
   throw new Error('dense-figure-eight.rvp.json is stale; run .\\scripts\\generate_dense_figure_eight_factory.ps1 -Configuration Release');
+
+const fourLineFdnFactoryPath = resolve(outputDirectory, 'four-line-dense-room.rvp.json');
+const fourLineFdnFactoryBytes = await readFile(fourLineFdnFactoryPath);
+const fourLineFdnFactoryHash = createHash('sha256').update(fourLineFdnFactoryBytes).digest('hex');
+if (fourLineFdnFactoryHash !== '7a2a038db737d5de8741b6ec46afc6d3a4118e6b851fa5f5961f50399bcaebd8')
+  throw new Error('four-line-dense-room.rvp.json is stale; run .\\scripts\\generate_four_line_dense_room_factory.ps1 -Configuration Release');
 
 const shimmerFactoryPath = resolve(outputDirectory, 'safe-parallel-shimmer.rvp.json');
 const shimmerFactoryBytes = await readFile(shimmerFactoryPath);

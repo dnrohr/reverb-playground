@@ -2,9 +2,11 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <reverb/graph/AcyclicRuntime.h>
+#include <reverb/graph/DenseFigureEightGraph.h>
 #include <reverb/graph/FourLineFdnGraph.h>
 #include <reverb/graph/PatchJson.h>
 #include <reverb/render/OfflineRenderer.h>
+#include <reverb/render/DensityMeasurements.h>
 
 #include <algorithm>
 #include <array>
@@ -70,8 +72,8 @@ TEST_CASE("Four-line FDN maps each unequal traversal to the requested RT60")
 TEST_CASE("Expanded four-line FDN exposes every matrix coefficient and delayed cycle")
 {
     const auto graph = reverb::graph::makeFourLineFdnGraph();
-    REQUIRE(graph.nodes.size() == 75);
-    REQUIRE(graph.connections.size() == 100);
+    REQUIRE(graph.nodes.size() == 84);
+    REQUIRE(graph.connections.size() == 118);
     REQUIRE(graph.layout.nodes.size() == graph.nodes.size());
     REQUIRE(std::ranges::count_if(graph.nodes, [](const auto& node) {
         return node.id.starts_with("matrix-") && node.id.find("-from-") != std::string::npos;
@@ -79,6 +81,8 @@ TEST_CASE("Expanded four-line FDN exposes every matrix coefficient and delayed c
     REQUIRE(std::ranges::count_if(graph.nodes, [](const auto& node) {
         return node.id.starts_with("line-delay-");
     }) == 4);
+    REQUIRE(std::ranges::count_if(graph.nodes,
+        [](const auto& node) { return node.type == "macro"; }) == 3);
     const auto compiled = reverb::graph::compileFeedbackGraph(graph, 48'000.0, 257);
     for (const auto& error : compiled.errors) INFO(error);
     REQUIRE(compiled.valid());
@@ -126,4 +130,69 @@ TEST_CASE("Four-line FDN reset and host partitions are sample exact")
     const auto reset = renderPartitioned(*small.runtime, 64);
     REQUIRE(std::ranges::equal(first.first, reset.first));
     REQUIRE(std::ranges::equal(first.second, reset.second));
+}
+
+TEST_CASE("Four-line FDN size decay and width macros sweep click-safely")
+{
+    constexpr std::size_t blockSize = 128;
+    auto compiled = reverb::graph::compileFeedbackGraph(
+        reverb::graph::makeFourLineFdnGraph(), 48'000.0, blockSize);
+    REQUIRE(compiled.valid());
+    std::array<float, blockSize> inputLeft {}, inputRight {}, outputLeft {}, outputRight {};
+    float previousLeft = 0.0F;
+    float previousRight = 0.0F;
+    double largestStep = 0.0;
+    double monoEnergy = 0.0;
+    for (int block = 0; block < 1'200; ++block) {
+        const auto phase = static_cast<double>(block) / 1'199.0;
+        REQUIRE(compiled.runtime->setMacroValue("size-macro", phase * 2.0 - 1.0));
+        REQUIRE(compiled.runtime->setMacroValue("decay-macro", std::sin(phase * 6.283185307179586)));
+        REQUIRE(compiled.runtime->setMacroValue("width-macro", block < 400 ? -1.0
+            : block < 800 ? 0.0 : 1.0));
+        inputLeft.fill(0.0F);
+        inputRight.fill(0.0F);
+        if (block % 53 == 0) inputLeft[0] = inputRight[0] = 0.05F;
+        compiled.runtime->process(inputLeft, inputRight, outputLeft, outputRight);
+        for (std::size_t sample = 0; sample < blockSize; ++sample) {
+            REQUIRE(std::isfinite(outputLeft[sample]));
+            REQUIRE(std::isfinite(outputRight[sample]));
+            REQUIRE(std::abs(outputLeft[sample]) < 1.0F);
+            REQUIRE(std::abs(outputRight[sample]) < 1.0F);
+            largestStep = std::max(largestStep,
+                std::abs(static_cast<double>(outputLeft[sample] - previousLeft)));
+            largestStep = std::max(largestStep,
+                std::abs(static_cast<double>(outputRight[sample] - previousRight)));
+            const auto mono = 0.5 * static_cast<double>(outputLeft[sample] + outputRight[sample]);
+            monoEnergy += mono * mono;
+            previousLeft = outputLeft[sample];
+            previousRight = outputRight[sample];
+        }
+    }
+    CAPTURE(largestStep, monoEnergy);
+    REQUIRE(largestStep < 0.5);
+    REQUIRE(monoEnergy > 0.0);
+}
+
+TEST_CASE("Four-line FDN improves density while retaining compatible stereo")
+{
+    constexpr double rate = 48'000.0;
+    constexpr std::size_t frames = 144'000;
+    const auto analyse = [](const auto& graph) {
+        const auto audio = reverb::render::renderOffline({ graph,
+            reverb::render::InputKind::impulse, rate, frames });
+        return reverb::render::measureDensity(audio.left, audio.right, rate);
+    };
+    const auto figureEight = analyse(reverb::graph::makeDenseFigureEightGraph());
+    const auto fdn = analyse(reverb::graph::makeFourLineFdnGraph());
+    CAPTURE(figureEight.regions[0].echoDensity, fdn.regions[0].echoDensity,
+        figureEight.regions[1].echoDensity, fdn.regions[1].echoDensity,
+        figureEight.regions[2].echoDensity, fdn.regions[2].echoDensity,
+        figureEight.regions[0].activePeaksPerSecond, fdn.regions[0].activePeaksPerSecond,
+        figureEight.regions[2].activePeaksPerSecond, fdn.regions[2].activePeaksPerSecond,
+        figureEight.regions[2].recurrence, fdn.regions[2].recurrence,
+        fdn.regions[2].stereoCorrelation);
+    REQUIRE(fdn.regions[0].echoDensity > figureEight.regions[0].echoDensity + 0.10);
+    REQUIRE(fdn.regions[1].echoDensity >= figureEight.regions[1].echoDensity);
+    REQUIRE(fdn.regions[2].recurrence < figureEight.regions[2].recurrence * 0.7);
+    REQUIRE(std::abs(fdn.regions[2].stereoCorrelation) < 0.98);
 }

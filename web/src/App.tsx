@@ -44,6 +44,7 @@ import { PitchShiftVisualization } from './PitchShiftVisualization';
 import { parallelShimmerBranch, parallelShimmerTeaching } from './parallelShimmerTeaching';
 import { decorateSplitShimmerFocus, splitFeedbackShimmerTeaching, splitShimmerLoopKind, type SplitShimmerLoopFocus } from './splitFeedbackShimmerTeaching';
 import { decorateReverseCosmicFocus, reverseCosmicShimmerTeaching, type ReverseCosmicFocus } from './reverseCosmicShimmerTeaching';
+import { collapseMatrixMixer, inspectMatrixMixer, type MatrixMixerInspection } from './matrixMixerPresentation';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -99,6 +100,19 @@ function ParallelShimmerTeaching({ selectedNodeId }: { selectedNodeId?: string }
   );
 }
 
+function MatrixMixerInspector({ inspection }: { inspection: MatrixMixerInspection }) {
+  return <section className="matrix-mixer-inspector" aria-label="Matrix Mixer coefficients and energy">
+    <header><span>4×4 COEFFICIENTS</span><strong>{inspection.orthogonal ? 'ORTHOGONAL' : 'CUSTOM'}</strong></header>
+    <div className="matrix-coefficients" role="table" aria-label="Matrix coefficient table">
+      {inspection.coefficients.flatMap((row, output) => row.map((value, input) => <span role="cell"
+        className={value < 0 ? 'is-negative' : 'is-positive'} key={`${output}-${input}`}>{value >= 0 ? '+' : '−'}{Math.abs(value).toFixed(2)}</span>))}
+    </div>
+    <div className="matrix-energy"><span>ROW ENERGY {inspection.rowEnergy.map((value) => value.toFixed(2)).join(' · ')}</span>
+      <span>COLUMN ENERGY {inspection.columnEnergy.map((value) => value.toFixed(2)).join(' · ')}</span></div>
+    <p>{inspection.reason}</p><small>Expand to inspect or edit every authoritative Gain and Sum block.</small>
+  </section>;
+}
+
 function DenseFigureEightTeaching() {
   return (
     <section className="parallel-shimmer-teaching" aria-label="Dense Figure Eight architecture teaching">
@@ -109,6 +123,16 @@ function DenseFigureEightTeaching() {
       <small>DECAY adjusts both calculated returns; TONE moves both loop filters; MOTION changes the two independent modulation rates.</small>
     </section>
   );
+}
+
+function FourLineFdnTeaching({ collapsed }: { collapsed: boolean }) {
+  return <section className="parallel-shimmer-teaching" aria-label="Four-Line Dense Room circulation teaching">
+    <header><span>FOUR-LINE DENSE ROOM</span><strong>HADAMARD FDN</strong></header>
+    <div><b>1 → 4</b><span>Each return is distributed across every line at ±0.50.</span></div>
+    <div><b>ENERGY</b><span>The normalized matrix preserves vector energy; per-line gains set decay.</span></div>
+    <p>Unequal damped delays circulate through an orthogonal matrix, while signed pickup vectors expose two different views of the same field.</p>
+    <small>{collapsed ? 'The matrix is compact for navigation. Expand Matrix reveals all 16 Gains and 12 Sums.' : 'Expanded view is authoritative and editable. Collapse Matrix restores the compact navigation view.'}</small>
+  </section>;
 }
 
 function SplitFeedbackShimmerTeaching({ focus, onFocus }: {
@@ -433,6 +457,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [activeLoopIndex, setActiveLoopIndex] = useState(0);
   const [splitLoopFocus, setSplitLoopFocus] = useState<SplitShimmerLoopFocus>('shifted');
   const [reverseCosmicFocus, setReverseCosmicFocus] = useState<ReverseCosmicFocus>('grains');
+  const [matrixCollapsed, setMatrixCollapsed] = useState(true);
   const [responseCapture, setResponseCapture] = useState<{
     capture: ImpulseCaptureResult;
     patchId: TeachingPatchId;
@@ -499,6 +524,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const displayedGraph = useMemo(() => decorateControlPreview(
     macroDecoratedGraph.nodes, macroDecoratedGraph.edges, controlPreviewTime,
   ), [controlPreviewTime, macroDecoratedGraph]);
+  const matrixInspection = useMemo(() => inspectMatrixMixer(nodes), [nodes]);
+  const matrixIsCollapsed = Boolean(matrixInspection?.canCollapse && matrixCollapsed);
+  const matrixDisplayedGraph = useMemo(() => collapseMatrixMixer(
+    displayedGraph.nodes, displayedGraph.edges, matrixInspection, matrixIsCollapsed,
+  ), [displayedGraph, matrixInspection, matrixIsCollapsed]);
   const focusSelectedMacro = useCallback(() => {
     if (!selectedMacroInspection) return;
     const ids = new Set(gravityFocusNodeIds(selectedMacroInspection));
@@ -971,6 +1001,21 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <span>{nodes.length} blocks / {edges.length} cables</span>
             </div>
             <div className="canvas-actions">
+              {matrixInspection ? <button type="button" className="matrix-view-toggle"
+                disabled={!matrixInspection.canCollapse}
+                title={matrixInspection.reason}
+                aria-pressed={!matrixIsCollapsed}
+                onClick={() => setMatrixCollapsed((collapsed) => !collapsed)}>
+                {!matrixInspection.canCollapse ? 'MATRIX EXPANDED / UNSAFE' : matrixIsCollapsed ? 'EXPAND MATRIX' : 'COLLAPSE MATRIX'}
+              </button> : null}
+              {matrixInspection ? <button type="button" className="matrix-view-toggle"
+                onClick={() => setSelectedNode(matrixDisplayedGraph.nodes.find((node) => node.id === 'matrix-mixer-view')
+                  ?? { id: 'matrix-mixer-view', type: 'patchNode', position: { x: 0, y: 0 }, data: {
+                    label: 'Matrix Mixer 4×4', type: 'matrix-mixer', role: 'routing', runtimeBound: true,
+                    ports: [], parameters: [],
+                  } })}>
+                INSPECT MATRIX
+              </button> : null}
               <span>{Math.round(viewport.zoom * 100)}%</span>
               <span className={`clean-state ${isHistoryClean(graphHistory, { nodes, edges }) ? 'is-clean' : 'is-dirty'}`}>
                 {isHistoryClean(graphHistory, { nodes, edges }) ? 'SAVED' : 'UNSAVED'}
@@ -1018,8 +1063,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           ) : null}
           <div className="flow-wrap">
             <ReactFlow
-              nodes={displayedGraph.nodes}
-              edges={displayedGraph.edges}
+              nodes={matrixDisplayedGraph.nodes}
+              edges={matrixDisplayedGraph.edges}
               nodeTypes={{ patchNode: PatchNode }}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
@@ -1070,6 +1115,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         <aside className="inspector" aria-label="Inspector">
           <div className="pane-heading"><span>INSPECTOR</span><button className="teaching-toggle" type="button" aria-pressed={teachingEnabled} title="Toggle contextual cards and response architecture overlays" onClick={toggleTeaching}>LEARN {teachingEnabled ? 'ON' : 'OFF'}</button></div>
           {activePatchId === 'dense-figure-eight' && teachingEnabled ? <DenseFigureEightTeaching /> : null}
+          {activePatchId === 'four-line-dense-room' && teachingEnabled ? <FourLineFdnTeaching collapsed={matrixIsCollapsed} /> : null}
           {activePatchId === 'safe-parallel-shimmer' && teachingEnabled ? <ParallelShimmerTeaching selectedNodeId={selectedNode?.id} /> : null}
           {activePatchId === 'split-feedback-shimmer' && teachingEnabled ? <SplitFeedbackShimmerTeaching focus={splitLoopFocus} onFocus={setSplitLoopFocus} /> : null}
           {activePatchId === 'reverse-cosmic-shimmer' && teachingEnabled ? <ReverseCosmicShimmerTeaching focus={reverseCosmicFocus} onFocus={setReverseCosmicFocus} /> : null}
@@ -1078,6 +1124,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <div className="selection-kicker">SELECTED BLOCK</div>
               <h2>{selectedNode.data.userName?.trim() || selectedNode.data.label}</h2>
               <code>{selectedNode.id}</code>
+              {selectedNode.data.type === 'matrix-mixer' && matrixInspection ? <MatrixMixerInspector inspection={matrixInspection} /> : null}
               {selectedNode.data.presentation === 'gravity' && selectedMacroInspection ? <GravityPresentation
                 value={selectedNode.data.parameters.find((parameter) => parameter.id === 'value')?.value ?? 0}
                 destinationCount={selectedMacroInspection.destinations.length}

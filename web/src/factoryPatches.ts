@@ -10,8 +10,9 @@ import safeParallelShimmerPatch from '../../factory-patches/safe-parallel-shimme
 import splitFeedbackShimmerPatch from '../../factory-patches/split-feedback-shimmer.rvp.json?raw';
 import reverseCosmicShimmerPatch from '../../factory-patches/reverse-cosmic-shimmer.rvp.json?raw';
 import denseFigureEightPatch from '../../factory-patches/dense-figure-eight.rvp.json?raw';
+import fourLineDenseRoomPatch from '../../factory-patches/four-line-dense-room.rvp.json?raw';
 
-export type FactoryPatchId = 'barr-reference' | 'causal-reverse-envelope' | 'level-gated-room' | 'modulated-cosmic-reverse' | 'gravity-diffusion' | 'dense-figure-eight' | 'safe-parallel-shimmer' | 'split-feedback-shimmer' | 'reverse-cosmic-shimmer';
+export type FactoryPatchId = 'barr-reference' | 'causal-reverse-envelope' | 'level-gated-room' | 'modulated-cosmic-reverse' | 'gravity-diffusion' | 'dense-figure-eight' | 'four-line-dense-room' | 'safe-parallel-shimmer' | 'split-feedback-shimmer' | 'reverse-cosmic-shimmer';
 export type ComparisonPatchId = Exclude<FactoryPatchId, 'barr-reference'>;
 
 export interface FactoryPatchDescription {
@@ -72,6 +73,13 @@ export const factoryPatches: readonly FactoryPatchDescription[] = [
     summary: 'Two calculated cross-coupled branches build a smooth modulated late field',
   },
   {
+    id: 'four-line-dense-room',
+    label: 'Four-Line Dense Room',
+    graphName: 'FOUR-LINE-DENSE-ROOM.graph',
+    filename: 'four-line-dense-room.rvp.json',
+    summary: 'Normalized Hadamard feedback circulates through four unequal damped lines',
+  },
+  {
     id: 'safe-parallel-shimmer',
     label: 'Safe Parallel Shimmer',
     graphName: 'SAFE-PARALLEL-SHIMMER.graph',
@@ -100,6 +108,7 @@ const rawPatches: Partial<Record<FactoryPatchId, string>> = {
   'modulated-cosmic-reverse': cosmicReversePatch,
   'gravity-diffusion': gravityDiffusionPatch,
   'dense-figure-eight': denseFigureEightPatch,
+  'four-line-dense-room': fourLineDenseRoomPatch,
   'safe-parallel-shimmer': safeParallelShimmerPatch,
   'split-feedback-shimmer': splitFeedbackShimmerPatch,
   'reverse-cosmic-shimmer': reverseCosmicShimmerPatch,
@@ -120,6 +129,7 @@ export function comparisonPatchLabel(id: ComparisonPatchId): string {
     case 'modulated-cosmic-reverse': return 'COSMIC REV';
     case 'gravity-diffusion': return 'GRAVITY';
     case 'dense-figure-eight': return 'FIGURE 8';
+    case 'four-line-dense-room': return '4-LINE FDN';
     case 'safe-parallel-shimmer': return 'PAR SHIMMER';
     case 'split-feedback-shimmer': return 'FB SHIMMER';
     case 'reverse-cosmic-shimmer': return 'REV COSMIC';

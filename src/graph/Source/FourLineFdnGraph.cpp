@@ -29,7 +29,8 @@ Node delay(std::string id, const double milliseconds)
 {
     return { std::move(id), "delay", { audioIn(), controlIn("delay-mod"), audioOut() }, {
         { "delay", milliseconds, "milliseconds", ParameterModulation {
-            "delay-mod", 2.0, ModulationPolarity::bipolar, milliseconds - 2.0, milliseconds + 2.0 } },
+            "delay-mod", milliseconds * 0.18, ModulationPolarity::bipolar,
+            milliseconds * 0.82, milliseconds * 1.18 } },
     } };
 }
 
@@ -65,6 +66,30 @@ Node lfo(std::string id, const double frequency, const double phase)
             ModulationPolarity::bipolar, 0.0, 1.0 } },
         { "run-mode", 0.0, "run-mode", ParameterModulation { "run-mode-mod", 1.0,
             ModulationPolarity::bipolar, 0.0, 1.0 } },
+    } };
+}
+
+Node macro(std::string id, std::string name)
+{
+    return { std::move(id), "macro", { controlOut() }, {
+        { "value", 0.0, "normalized" }, { "default-value", 0.0, "normalized" },
+        { "center-detent", 1.0, "boolean" },
+    }, std::move(name) };
+}
+
+Node returnGain(std::string id, const double value)
+{
+    return { std::move(id), "gain", { audioIn(), controlIn("gain-mod"), audioOut() }, {
+        { "gain", value, "linear", ParameterModulation { "gain-mod", value * 0.12,
+            ModulationPolarity::bipolar, 0.0, 0.98 } },
+    } };
+}
+
+Node widthPickup(std::string id, const double value, const double matchingLeft)
+{
+    return { std::move(id), "gain", { audioIn(), controlIn("gain-mod"), audioOut() }, {
+        { "gain", value, "linear", ParameterModulation { "gain-mod", value - matchingLeft,
+            ModulationPolarity::bipolar, -0.7, 0.7 } },
     } };
 }
 
@@ -113,7 +138,8 @@ GraphDocument makeFourLineFdnGraph(const FourLineFdnControls& requested)
         gain("input-left-half", 0.5, 0.0, 1.0), gain("input-right-half", 0.5, 0.0, 1.0),
         sum("input-mono"), allpass("input-diffusion-a", 3.7, 0.0),
         allpass("input-diffusion-b", 7.9, 0.0), lfo("motion-a", 0.083, 0.0),
-        lfo("motion-b", 0.057, 0.37),
+        lfo("motion-b", 0.057, 0.37), macro("size-macro", "Size"),
+        macro("decay-macro", "Decay"), macro("width-macro", "Width"),
     };
     graph.connections = {
         cable("input-left", "input", "out-l", "input-left-half", "in"),
@@ -131,8 +157,8 @@ GraphDocument makeFourLineFdnGraph(const FourLineFdnControls& requested)
         graph.nodes.push_back(allpass("line-diffusion-" + suffix, diffusionTimes[line], motion));
         graph.nodes.push_back(delay("line-delay-" + suffix, delayTimes[line]));
         graph.nodes.push_back(lowpass("line-damping-" + suffix, damping * (1.0 - 0.035 * line)));
-        graph.nodes.push_back(gain("line-return-" + suffix,
-            fdnLineGainForRt60(delayTimes[line] + diffusionTimes[line], rt60), 0.0, 0.98));
+        graph.nodes.push_back(returnGain("line-return-" + suffix,
+            fdnLineGainForRt60(delayTimes[line] + diffusionTimes[line], rt60)));
         graph.connections.push_back(cable("inject-source-" + suffix, "input-diffusion-b", "out", "inject-" + suffix, "in"));
         graph.connections.push_back(cable("inject-entry-" + suffix, "inject-" + suffix, "out", "line-entry-" + suffix, "in-a"));
         graph.connections.push_back(cable("line-diffuse-" + suffix, "line-entry-" + suffix, "out", "line-diffusion-" + suffix, "in"));
@@ -141,6 +167,10 @@ GraphDocument makeFourLineFdnGraph(const FourLineFdnControls& requested)
         graph.connections.push_back(cable("line-return-" + suffix, "line-damping-" + suffix, "out", "line-return-" + suffix, "in"));
         graph.connections.push_back(cable("motion-" + suffix, line % 2 == 0 ? "motion-a" : "motion-b", "out",
             "line-diffusion-" + suffix, "delay-mod"));
+        graph.connections.push_back(cable("size-" + suffix, "size-macro", "out",
+            "line-delay-" + suffix, "delay-mod"));
+        graph.connections.push_back(cable("decay-" + suffix, "decay-macro", "out",
+            "line-return-" + suffix, "gain-mod"));
     }
 
     for (std::size_t output = 0; output < 4; ++output) {
@@ -166,9 +196,12 @@ GraphDocument makeFourLineFdnGraph(const FourLineFdnControls& requested)
     for (std::size_t line = 0; line < 4; ++line) {
         const auto suffix = std::to_string(line + 1);
         graph.nodes.push_back(gain("left-pickup-" + suffix, wet * outputLeft[line]));
-        graph.nodes.push_back(gain("right-pickup-" + suffix, wet * outputRight[line]));
+        graph.nodes.push_back(widthPickup("right-pickup-" + suffix,
+            wet * outputRight[line], wet * outputLeft[line]));
         graph.connections.push_back(cable("left-pickup-" + suffix, "line-damping-" + suffix, "out", "left-pickup-" + suffix, "in"));
         graph.connections.push_back(cable("right-pickup-" + suffix, "line-damping-" + suffix, "out", "right-pickup-" + suffix, "in"));
+        graph.connections.push_back(cable("width-" + suffix, "width-macro", "out",
+            "right-pickup-" + suffix, "gain-mod"));
     }
     for (const auto channel : { std::string("left"), std::string("right") }) {
         graph.nodes.push_back(sum(channel + "-sum-a"));
@@ -181,14 +214,26 @@ GraphDocument makeFourLineFdnGraph(const FourLineFdnControls& requested)
         graph.connections.push_back(cable(channel + "-combine-a", channel + "-sum-a", "out", channel + "-sum", "in-a"));
         graph.connections.push_back(cable(channel + "-combine-b", channel + "-sum-b", "out", channel + "-sum", "in-b"));
     }
+    graph.nodes.push_back(allpass("left-extraction-a", 4.3, 0.0));
+    graph.nodes.push_back(allpass("left-extraction-b", 9.7, 0.0));
+    graph.nodes.push_back(allpass("left-extraction-c", 16.9, 0.0));
+    graph.nodes.push_back(allpass("right-extraction-a", 5.9, 0.0));
+    graph.nodes.push_back(allpass("right-extraction-b", 12.1, 0.0));
+    graph.nodes.push_back(allpass("right-extraction-c", 19.7, 0.0));
     graph.nodes.push_back({ "output", "stereo-output", { audioIn("in-l"), audioIn("in-r") }, {} });
-    graph.connections.push_back(cable("left-output", "left-sum", "out", "output", "in-l"));
-    graph.connections.push_back(cable("right-output", "right-sum", "out", "output", "in-r"));
+    for (const auto channel : { std::string("left"), std::string("right") }) {
+        graph.connections.push_back(cable(channel + "-extract-a", channel + "-sum", "out", channel + "-extraction-a", "in"));
+        graph.connections.push_back(cable(channel + "-extract-b", channel + "-extraction-a", "out", channel + "-extraction-b", "in"));
+        graph.connections.push_back(cable(channel + "-extract-c", channel + "-extraction-b", "out", channel + "-extraction-c", "in"));
+        graph.connections.push_back(cable(channel + "-output", channel + "-extraction-c", "out", "output", channel == "left" ? "in-l" : "in-r"));
+    }
 
     graph.layout.nodes = { { "input", -1'300.0, 0.0 }, { "input-left-half", -1'100.0, -100.0 },
         { "input-right-half", -1'100.0, 100.0 }, { "input-mono", -880.0, 0.0 },
         { "input-diffusion-a", -660.0, 0.0 }, { "input-diffusion-b", -440.0, 0.0 },
-        { "motion-a", -400.0, 850.0 }, { "motion-b", -180.0, 850.0 } };
+        { "motion-a", -400.0, 850.0 }, { "motion-b", -180.0, 850.0 },
+        { "size-macro", 80.0, 850.0 }, { "decay-macro", 300.0, 850.0 },
+        { "width-macro", 520.0, 850.0 } };
     for (std::size_t line = 0; line < 4; ++line) {
         const auto suffix = std::to_string(line + 1);
         const auto y = -660.0 + 440.0 * line;
@@ -213,7 +258,11 @@ GraphDocument makeFourLineFdnGraph(const FourLineFdnControls& requested)
     graph.layout.nodes.insert(graph.layout.nodes.end(), { { "left-sum-a", 2'880.0, -360.0 },
         { "left-sum-b", 2'880.0, -190.0 }, { "left-sum", 3'100.0, -275.0 },
         { "right-sum-a", 2'880.0, 190.0 }, { "right-sum-b", 2'880.0, 360.0 },
-        { "right-sum", 3'100.0, 275.0 }, { "output", 3'340.0, 0.0 } });
+        { "right-sum", 3'100.0, 275.0 },
+        { "left-extraction-a", 3'330.0, -360.0 }, { "left-extraction-b", 3'550.0, -360.0 },
+        { "left-extraction-c", 3'770.0, -360.0 }, { "right-extraction-a", 3'330.0, 360.0 },
+        { "right-extraction-b", 3'550.0, 360.0 }, { "right-extraction-c", 3'770.0, 360.0 },
+        { "output", 4'020.0, 0.0 } });
     graph.layout.viewport = { 240.0, 120.0, 0.28 };
     return graph;
 }

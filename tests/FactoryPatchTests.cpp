@@ -4,6 +4,7 @@
 #include <reverb/graph/AcyclicRuntime.h>
 #include <reverb/graph/BarrReferenceGraph.h>
 #include <reverb/graph/DenseFigureEightGraph.h>
+#include <reverb/graph/FourLineFdnGraph.h>
 #include <reverb/graph/PatchJson.h>
 #include <reverb/graph/ReverseCosmicShimmerGraph.h>
 #include <reverb/graph/SafeParallelShimmerGraph.h>
@@ -102,12 +103,12 @@ TEST_CASE("Factory catalog declares the complete licensed and traceable shipped 
 {
     const auto catalog = loadFactoryCatalog();
     REQUIRE(catalog.at("catalogVersion") == 1);
-    REQUIRE(catalog.at("patches").size() == 9);
+    REQUIRE(catalog.at("patches").size() == 10);
     const std::set<std::string> expectedIds {
-        "barr-reference", "causal-reverse-envelope", "level-gated-room", "modulated-cosmic-reverse", "gravity-diffusion", "dense-figure-eight", "safe-parallel-shimmer", "split-feedback-shimmer", "reverse-cosmic-shimmer",
+        "barr-reference", "causal-reverse-envelope", "level-gated-room", "modulated-cosmic-reverse", "gravity-diffusion", "dense-figure-eight", "four-line-dense-room", "safe-parallel-shimmer", "split-feedback-shimmer", "reverse-cosmic-shimmer",
     };
     const std::set<std::string> expectedFamilies {
-        "barr-reference", "reverse-style", "gated", "modulated-reverse-style", "gravity-diffusion", "dense-figure-eight", "parallel-shimmer", "feedback-shimmer", "reverse-cosmic-shimmer",
+        "barr-reference", "reverse-style", "gated", "modulated-reverse-style", "gravity-diffusion", "dense-figure-eight", "four-line-fdn", "parallel-shimmer", "feedback-shimmer", "reverse-cosmic-shimmer",
     };
     std::set<std::string> ids;
     std::set<std::string> families;
@@ -178,6 +179,17 @@ TEST_CASE("Dense Figure Eight factory exactly matches its public native builder"
     REQUIRE(checked.connections.size() == 50);
     REQUIRE(std::ranges::count_if(checked.nodes,
         [](const auto& node) { return node.type == "macro"; }) == 3);
+}
+
+TEST_CASE("Four-Line Dense Room factory exactly matches its public native builder")
+{
+    const auto checked = loadFactory("four-line-dense-room.rvp.json");
+    const auto authored = reverb::graph::makeFourLineFdnGraph();
+    REQUIRE(checked == authored);
+    REQUIRE(reverb::graph::writePatchJson(checked) == readFile(
+        std::filesystem::path { REVERB_FACTORY_PATCH_DIR } / "four-line-dense-room.rvp.json"));
+    REQUIRE(checked.nodes.size() == 84);
+    REQUIRE(checked.connections.size() == 118);
 }
 
 TEST_CASE("Split Feedback Shimmer factory exactly matches its public native builder")

@@ -513,3 +513,20 @@ button { font: inherit; }
   .grain-window b { animation: none !important; left: 32%; }
   .grain-window-b b { left: 68%; }
 }
+
+.matrix-mixer-compound .patch-node {
+  min-width: 220px;
+  border-color: #c28cff;
+  box-shadow: 0 0 0 1px rgb(194 140 255 / 28%), 0 16px 35px rgb(0 0 0 / 30%);
+}
+.matrix-view-toggle { border-color: #8d69aa !important; color: #d9b8f0 !important; }
+.matrix-mixer-inspector { margin: 14px 0; padding: 12px; border: 1px solid #59636d; background: #11171c; }
+.matrix-mixer-inspector header { display: flex; justify-content: space-between; gap: 8px; color: #aeb9c2; font-size: 10px; letter-spacing: .08em; }
+.matrix-mixer-inspector header strong { color: #d9b8f0; }
+.matrix-coefficients { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; margin: 10px 0; }
+.matrix-coefficients span { padding: 7px 3px; border: 1px solid #38434c; text-align: center; font: 11px/1 var(--mono); }
+.matrix-coefficients .is-positive { color: #82d8ca; background: rgb(48 118 108 / 14%); }
+.matrix-coefficients .is-negative { color: #e7aa71; background: rgb(151 91 45 / 14%); }
+.matrix-energy { display: grid; gap: 5px; color: #aeb9c2; font: 9px/1.35 var(--mono); }
+.matrix-mixer-inspector p { margin: 10px 0 5px; color: #d9e0e5; font-size: 11px; line-height: 1.45; }
+.matrix-mixer-inspector small { color: #89959e; font-size: 10px; line-height: 1.4; }

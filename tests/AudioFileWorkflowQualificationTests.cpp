@@ -1,5 +1,6 @@
 #include <reverb/graph/BarrReferenceGraph.h>
 #include <reverb/graph/DenseFigureEightGraph.h>
+#include <reverb/graph/FourLineFdnGraph.h>
 #include <reverb/graph/GravityDiffusionGraph.h>
 #include <reverb/graph/PatchJson.h>
 #include <reverb/graph/ReverseCosmicShimmerGraph.h>
@@ -97,6 +98,7 @@ TEST_CASE("Representative program material qualifies every milestone fourteen re
         loadFactory("modulated-cosmic-reverse.rvp.json"),
         reverb::graph::makeGravityDiffusionGraph(),
         reverb::graph::makeDenseFigureEightGraph(),
+        reverb::graph::makeFourLineFdnGraph(),
         reverb::graph::makeSafeParallelShimmerGraph(),
         reverb::graph::makeSplitFeedbackShimmerGraph(),
         reverb::graph::makeReverseCosmicShimmerGraph(),

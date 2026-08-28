@@ -18,6 +18,10 @@ program ROM, captured impulse response, or recorded audio.
 - `dense-figure-eight.rvp.json` is exported from its calculated native builder.
   Its two cross-coupled branches expose every delay, diffuser, damper, return,
   modulation route, stereo tap, and Decay/Tone/Motion macro.
+- `four-line-dense-room.rvp.json` is exported from the normalized four-line FDN
+  builder. It keeps all 16 matrix coefficients and their Sum routing explicit,
+  adds Size/Decay/Width controls and stereo extraction diffusion, and can be
+  compacted into the editor's inspectable Matrix Mixer presentation.
 - `safe-parallel-shimmer.rvp.json` adds one non-recirculating aligned octave
   layer; `split-feedback-shimmer.rvp.json` exposes separately bounded normal
   and shifted returns.
@@ -42,6 +46,7 @@ Gravity's native document is exported first and then admitted by exact hash:
 ```powershell
 .\scripts\generate_gravity_factory_patch.ps1
 .\scripts\generate_dense_figure_eight_factory.ps1
+.\scripts\generate_four_line_dense_room_factory.ps1
 node scripts/generate_factory_patches.mjs
 ```
 

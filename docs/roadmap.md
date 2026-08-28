@@ -1403,7 +1403,7 @@ Acceptance criteria:
 - The matrix preserves energy within floating-point tolerance and does not control decay implicitly.
 - RT60 mapping, reset, serialization, block partitioning, storage, and safety pass deterministic tests.
 
-### M21.2 Make matrix mixing inspectable
+### M21.2 Make matrix mixing inspectable — Complete
 
 Tasks: add a transparent four-input/four-output Matrix Mixer compound with coefficients, polarity, energy, and an expanded equivalent sum/gain view.
 
@@ -1413,7 +1413,7 @@ Acceptance criteria:
 - Expansion exposes the complete equivalent routing without making the minimum-size canvas unusable.
 - Invalid or amplifying matrices follow a documented reject/normalize policy.
 
-### M21.3 Publish a four-line Dense Room factory
+### M21.3 Publish a four-line Dense Room factory — Complete
 
 Tasks: qualify delay set, diffusion, injection/pickup vectors, damping, modulation, size/decay/width controls, and circulation teaching overlays.
 

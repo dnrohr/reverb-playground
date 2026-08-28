@@ -1325,3 +1325,26 @@ Results:
 - [Four-line FDN reference](four-line-fdn-design.md) records the equations,
   public expanded representation, boundaries, and M21.2 handoff. UI unchanged;
   no screenshot or video is required for this task.
+
+## M21.2-M21.3 verification
+
+- The editor detects the exact expanded Hadamard subgraph and offers a compact
+  four-input/four-output Matrix Mixer with coefficient signs, row/column energy,
+  and orthogonality. Expand restores all 16 Gain and 12 Sum blocks. Collapse is
+  rejected for energy-amplifying edits and never normalizes them automatically.
+- Compacting is display-only: saved JSON, runtime compilation, undo, and factory
+  identity retain the complete public-primitives graph.
+- Four-line Dense Room is the tenth cataloged factory. Its 84 nodes and 118
+  cables add Size/Decay/Width macros and six extraction allpasses to the M21.1
+  tank, and the native builder is admitted by exact SHA-256.
+- At 48 kHz the fixed impulse improves early echo density by 0.129 over Dense
+  Figure Eight, does not regress middle density, lowers late recurrence by 43%,
+  and has 0.014 late stereo correlation. Supported-rate/extreme, exact
+  partition/reset, saved-state, continuous macro sweep, finite/bounded, stereo,
+  and mono-sum tests qualify the factory.
+- Reviewed UI evidence: [compact factory](../artifacts/ui/m21-four-line-fdn/four-line-dense-room-compact.png),
+  [coefficient and energy inspector](../artifacts/ui/m21-four-line-fdn/matrix-coefficient-inspector.png),
+  [expanded equivalent routing](../artifacts/ui/m21-four-line-fdn/matrix-expanded-routing.png),
+  and [640×400 compact layout](../artifacts/ui/m21-four-line-fdn/four-line-dense-room-640x400.png).
+  Browser interaction proved 16 coefficient Gains and 12 matrix Sums in the
+  expanded view and no document-level horizontal overflow at 640×400.
