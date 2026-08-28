@@ -636,8 +636,41 @@ void PreparedAcyclicRuntime::process(
             for (auto operationIndex = regionBegin;
                 operationIndex < regionEnd; ++operationIndex) {
                 auto& operation = implementation_->operations[operationIndex];
-                if (operation.kind == OperationKind::input || operation.kind == OperationKind::output || operation.kind == OperationKind::delay) continue;
+                if (operation.kind == OperationKind::input || operation.kind == OperationKind::output
+                    || operation.kind == OperationKind::delay || operation.fusedAway) continue;
                 auto destination = sampleBuffer(operation.outputs.front(), sampleIndex);
+                if (operation.fusedKernel == FusedKernelKind::sumGain) {
+                    destination.front() = (implementation_->buffers[operation.inputs[0]][sampleIndex]
+                        + implementation_->buffers[operation.inputs[1]][sampleIndex])
+                        * operation.fusedScale;
+                    continue;
+                }
+                if (operation.fusedKernel == FusedKernelKind::weightedSum) {
+                    destination.front() = (implementation_->buffers[operation.inputs[0]][sampleIndex]
+                        * operation.fusedInputScaleA
+                        + implementation_->buffers[operation.inputs[1]][sampleIndex]
+                        * operation.fusedInputScaleB) * operation.fusedScale;
+                    continue;
+                }
+                if (operation.fusedKernel == FusedKernelKind::gainLowpass) {
+                    destination.front() = implementation_->buffers[operation.inputs.front()][sampleIndex]
+                        * operation.fusedScale;
+                    std::get<reverb::dsp::OnePoleLowPass>(operation.processor).process(destination);
+                    continue;
+                }
+                if (operation.fusedKernel == FusedKernelKind::sumGainLowpass) {
+                    destination.front() = (implementation_->buffers[operation.inputs[0]][sampleIndex]
+                        + implementation_->buffers[operation.inputs[1]][sampleIndex])
+                        * operation.fusedScale;
+                    std::get<reverb::dsp::OnePoleLowPass>(operation.processor).process(destination);
+                    continue;
+                }
+                if (operation.fusedKernel == FusedKernelKind::lowpassGain) {
+                    destination.front() = implementation_->buffers[operation.inputs.front()][sampleIndex];
+                    std::get<reverb::dsp::OnePoleLowPass>(operation.processor).process(destination);
+                    destination.front() *= operation.fusedScale;
+                    continue;
+                }
                 if (operation.inputs.front() != operation.outputs.front())
                     std::ranges::copy(sampleBuffer(operation.inputs.front(), sampleIndex), destination.begin());
                 if (operation.kind == OperationKind::sum) {
@@ -809,7 +842,7 @@ void PreparedAcyclicRuntime::process(
 
 AcyclicCompileResult compileAcyclicGraph(
     const GraphDocument& document, const double sampleRate, const std::size_t maximumBlockSize,
-    const bool allowFeedback)
+    const bool allowFeedback, const bool enableSampleWiseFusion)
 {
     AcyclicCompileResult result;
     result.warnings = document.migrationWarnings;
@@ -1400,14 +1433,26 @@ AcyclicCompileResult compileAcyclicGraph(
                 ++fusionFanOut[input];
         }
         std::vector<bool> sampleWiseOperation(implementation->operations.size(), false);
+        std::vector<std::size_t> sampleWiseRegion(
+            implementation->operations.size(), std::numeric_limits<std::size_t>::max());
+        auto regionNumber = std::size_t {};
         for (const auto& [begin, end] : implementation->sampleWiseRegions)
+        {
             std::fill(sampleWiseOperation.begin() + static_cast<std::ptrdiff_t>(begin),
                 sampleWiseOperation.begin() + static_cast<std::ptrdiff_t>(end), true);
+            std::fill(sampleWiseRegion.begin() + static_cast<std::ptrdiff_t>(begin),
+                sampleWiseRegion.begin() + static_cast<std::ptrdiff_t>(end), regionNumber++);
+        }
+        const auto sameExecutionRegion = [&](const std::size_t first, const std::size_t second) {
+            return sampleWiseOperation[first] == sampleWiseOperation[second]
+                && (!sampleWiseOperation[first] || sampleWiseRegion[first] == sampleWiseRegion[second]);
+        };
         std::unordered_set<std::size_t> fusedTargets;
         const auto noFusionIndex = std::numeric_limits<std::size_t>::max();
         for (std::size_t targetIndex = 0; targetIndex < implementation->operations.size(); ++targetIndex) {
             auto& target = implementation->operations[targetIndex];
-            if (sampleWiseOperation[targetIndex] || target.inputs.empty()) continue;
+            if (target.inputs.empty()
+                || (sampleWiseOperation[targetIndex] && !enableSampleWiseFusion)) continue;
             const auto acceptsStaticGain = (target.kind == OperationKind::gain
                     && target.gainModulation == noFusionIndex)
                 || (target.kind == OperationKind::lowpass
@@ -1415,7 +1460,7 @@ AcyclicCompileResult compileAcyclicGraph(
             if (!acceptsStaticGain) continue;
             const auto sourceSignal = target.inputs.front();
             const auto producerIndex = fusionProducer[sourceSignal];
-            if (producerIndex == noFusionIndex || sampleWiseOperation[producerIndex]
+            if (producerIndex == noFusionIndex || !sameExecutionRegion(targetIndex, producerIndex)
                 || fusionFanOut[sourceSignal] != 1) continue;
             auto& producerOperation = implementation->operations[producerIndex];
             if (producerOperation.fusedAway) continue;
@@ -1469,13 +1514,13 @@ AcyclicCompileResult compileAcyclicGraph(
         // from the schedule. The Sum record becomes a weighted block kernel.
         for (std::size_t targetIndex = 0; targetIndex < implementation->operations.size(); ++targetIndex) {
             auto& target = implementation->operations[targetIndex];
-            if (sampleWiseOperation[targetIndex] || target.fusedAway
+            if ((sampleWiseOperation[targetIndex] && !enableSampleWiseFusion) || target.fusedAway
                 || target.kind != OperationKind::sum || target.inputs.size() != 2) continue;
             auto foldedAny = false;
             for (std::size_t inputIndex = 0; inputIndex < 2; ++inputIndex) {
                 const auto sourceSignal = target.inputs[inputIndex];
                 const auto producerIndex = fusionProducer[sourceSignal];
-                if (producerIndex == noFusionIndex || sampleWiseOperation[producerIndex]
+                if (producerIndex == noFusionIndex || !sameExecutionRegion(targetIndex, producerIndex)
                     || fusionFanOut[sourceSignal] != 1) continue;
                 auto& producerOperation = implementation->operations[producerIndex];
                 if (producerOperation.fusedAway || producerOperation.kind != OperationKind::gain
@@ -1503,12 +1548,12 @@ AcyclicCompileResult compileAcyclicGraph(
         // output; the filter's unscaled state remains bit-for-bit equivalent.
         for (std::size_t targetIndex = 0; targetIndex < implementation->operations.size(); ++targetIndex) {
             auto& target = implementation->operations[targetIndex];
-            if (sampleWiseOperation[targetIndex] || target.fusedAway
+            if ((sampleWiseOperation[targetIndex] && !enableSampleWiseFusion) || target.fusedAway
                 || target.kind != OperationKind::gain || target.gainModulation != noFusionIndex
                 || target.inputs.empty()) continue;
             const auto sourceSignal = target.inputs.front();
             const auto producerIndex = fusionProducer[sourceSignal];
-            if (producerIndex == noFusionIndex || sampleWiseOperation[producerIndex]
+            if (producerIndex == noFusionIndex || !sameExecutionRegion(targetIndex, producerIndex)
                 || fusionFanOut[sourceSignal] != 1) continue;
             auto& producerOperation = implementation->operations[producerIndex];
             if (producerOperation.fusedAway || producerOperation.kind != OperationKind::lowpass
@@ -1524,6 +1569,10 @@ AcyclicCompileResult compileAcyclicGraph(
             ++result.planDiagnostics.fusedNodeCount;
         }
         result.planDiagnostics.fusedKernelCount = fusedTargets.size();
+        result.planDiagnostics.sampleWiseFusedKernelCount = static_cast<std::size_t>(
+            std::ranges::count_if(fusedTargets, [&](const auto index) {
+                return sampleWiseOperation[index];
+            }));
         if (reverb::dsp::block::usesSimd()) {
             for (std::size_t index = 0; index < implementation->operations.size(); ++index) {
                 const auto& operation = implementation->operations[index];
@@ -1537,7 +1586,12 @@ AcyclicCompileResult compileAcyclicGraph(
             }
         }
         result.planDiagnostics.fusionPreventionReasons = {
-            { "feedback-or-causal-region", static_cast<std::size_t>(std::ranges::count(sampleWiseOperation, true)) },
+            { "unfused-feedback-or-causal-region", static_cast<std::size_t>(std::ranges::count_if(
+                implementation->operations, [&](const auto& operation) {
+                    const auto index = static_cast<std::size_t>(&operation - implementation->operations.data());
+                    return sampleWiseOperation[index] && !operation.fusedAway
+                        && operation.fusedKernel == FusedKernelKind::none;
+                })) },
             { "modulated", static_cast<std::size_t>(std::ranges::count_if(
                 implementation->operations, [&](const auto& operation) {
                     return operation.gainModulation != noFusionIndex
@@ -1724,9 +1778,11 @@ AcyclicCompileResult compileAcyclicGraph(
 }
 
 AcyclicCompileResult compileFeedbackGraph(
-    const GraphDocument& document, const double sampleRate, const std::size_t maximumBlockSize)
+    const GraphDocument& document, const double sampleRate, const std::size_t maximumBlockSize,
+    const bool enableSampleWiseFusion)
 {
-    return compileAcyclicGraph(document, sampleRate, maximumBlockSize, true);
+    return compileAcyclicGraph(
+        document, sampleRate, maximumBlockSize, true, enableSampleWiseFusion);
 }
 
 struct AcyclicRuntimeHost::RuntimeEnvelope final {

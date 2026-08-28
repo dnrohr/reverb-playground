@@ -132,6 +132,39 @@ TEST_CASE("Four-line FDN reset and host partitions are sample exact")
     REQUIRE(std::ranges::equal(first.second, reset.second));
 }
 
+TEST_CASE("Four-line feedback fusion preserves the visible generic graph with a safe fallback")
+{
+    constexpr std::size_t blockSize = 128;
+    const auto graph = reverb::graph::makeFourLineFdnGraph();
+    auto optimized = reverb::graph::compileFeedbackGraph(graph, 48'000.0, blockSize, true);
+    auto generic = reverb::graph::compileFeedbackGraph(graph, 48'000.0, blockSize, false);
+    REQUIRE(optimized.valid());
+    REQUIRE(generic.valid());
+    REQUIRE(optimized.planDiagnostics.sampleWiseFusedKernelCount >= 8);
+    REQUIRE(generic.planDiagnostics.sampleWiseFusedKernelCount == 0);
+
+    std::array<float, blockSize> inputLeft {}, inputRight {}, optimizedLeft {}, optimizedRight {};
+    std::array<float, blockSize> genericLeft {}, genericRight {};
+    double maximumError = 0.0;
+    for (auto block = 0; block < 1'000; ++block) {
+        for (std::size_t sample = 0; sample < blockSize; ++sample) {
+            const auto phase = static_cast<double>(block * blockSize + sample);
+            inputLeft[sample] = static_cast<float>(0.03 * std::sin(phase * 0.017));
+            inputRight[sample] = static_cast<float>(0.02 * std::cos(phase * 0.013));
+        }
+        optimized.runtime->process(inputLeft, inputRight, optimizedLeft, optimizedRight);
+        generic.runtime->process(inputLeft, inputRight, genericLeft, genericRight);
+        for (std::size_t sample = 0; sample < blockSize; ++sample) {
+            maximumError = std::max(maximumError,
+                std::abs(static_cast<double>(optimizedLeft[sample] - genericLeft[sample])));
+            maximumError = std::max(maximumError,
+                std::abs(static_cast<double>(optimizedRight[sample] - genericRight[sample])));
+        }
+    }
+    CAPTURE(maximumError);
+    REQUIRE(maximumError < 1.0e-5);
+}
+
 TEST_CASE("Four-line FDN size decay and width macros sweep click-safely")
 {
     constexpr std::size_t blockSize = 128;

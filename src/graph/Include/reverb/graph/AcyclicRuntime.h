@@ -92,6 +92,7 @@ struct PreparedGraphDiagnostics final {
     std::size_t copiesAvoided {};
     std::size_t fusedKernelCount {};
     std::size_t fusedNodeCount {};
+    std::size_t sampleWiseFusedKernelCount {};
     std::size_t simdKernelCount {};
     std::string executionDomain;
     std::vector<WorkloadFamily> workloadFamilies;
@@ -143,7 +144,8 @@ private:
     explicit PreparedAcyclicRuntime(std::unique_ptr<Impl> implementation) noexcept;
     std::unique_ptr<Impl> implementation_;
     friend struct AcyclicCompileResult;
-    friend AcyclicCompileResult compileAcyclicGraph(const GraphDocument&, double, std::size_t, bool);
+    friend AcyclicCompileResult compileAcyclicGraph(
+        const GraphDocument&, double, std::size_t, bool, bool);
 };
 
 struct AcyclicCompileResult final {
@@ -199,12 +201,14 @@ struct TopologyPublicationSnapshot final {
     const GraphDocument& document,
     double sampleRate,
     std::size_t maximumBlockSize,
-    bool allowFeedback = false);
+    bool allowFeedback = false,
+    bool enableSampleWiseFusion = true);
 
 [[nodiscard]] AcyclicCompileResult compileFeedbackGraph(
     const GraphDocument& document,
     double sampleRate,
-    std::size_t maximumBlockSize);
+    std::size_t maximumBlockSize,
+    bool enableSampleWiseFusion = true);
 
 class AcyclicRuntimeHost final {
 public:

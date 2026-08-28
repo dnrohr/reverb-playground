@@ -224,6 +224,7 @@ PerformanceCaseResult measurePerformanceCase(const PerformanceCaseRequest& reque
     result.copiesAvoided = normalSnapshot.activePlanDiagnostics.copiesAvoided;
     result.fusedKernelCount = normalSnapshot.activePlanDiagnostics.fusedKernelCount;
     result.fusedNodeCount = normalSnapshot.activePlanDiagnostics.fusedNodeCount;
+    result.sampleWiseFusedKernelCount = normalSnapshot.activePlanDiagnostics.sampleWiseFusedKernelCount;
     result.simdKernelCount = normalSnapshot.activePlanDiagnostics.simdKernelCount;
     result.estimatedOperationsPerSample = normalSnapshot.activePlanDiagnostics.estimatedScalarOperationsPerSample;
     result.processorFamilies = attributeProcessorFamilies(
@@ -290,6 +291,7 @@ std::string performanceMatrixJson(
                 { "copiesAvoided", result.copiesAvoided },
                 { "fusedKernelCount", result.fusedKernelCount },
                 { "fusedNodeCount", result.fusedNodeCount },
+                { "sampleWiseFusedKernelCount", result.sampleWiseFusedKernelCount },
                 { "simdKernelCount", result.simdKernelCount },
                 { "estimatedOperationsPerSample", result.estimatedOperationsPerSample },
                 { "executionDomain", result.executionDomain },

@@ -61,6 +61,7 @@ struct PerformanceCaseResult final {
     std::size_t copiesAvoided {};
     std::size_t fusedKernelCount {};
     std::size_t fusedNodeCount {};
+    std::size_t sampleWiseFusedKernelCount {};
     std::size_t simdKernelCount {};
     std::size_t estimatedOperationsPerSample {};
     std::vector<ProcessorFamilyCost> processorFamilies;
