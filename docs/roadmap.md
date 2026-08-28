@@ -1444,7 +1444,7 @@ Acceptance criteria:
 - No unstable candidate can pass and no single composite score hides a failed dimension.
 - Top candidates have normalized listening fixtures and complete reproduction provenance.
 
-### M22.3 Add non-destructive assisted tuning
+### M22.3 Add non-destructive assisted tuning — Complete
 
 Tasks: offer smoother/less-metallic/wider/less-modulated alternatives, explain proposed changes, preview safely, and support accept/cancel/undo.
 

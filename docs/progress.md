@@ -1380,3 +1380,21 @@ Results:
 - The checked-in [rendered ranking and listening fixtures](../artifacts/measurements/m22-rendered-delay-sets/ranking.json)
   include complete search provenance and deterministic source definitions.
   This task changes no UI, so no screenshot or video is required.
+
+## M22.3 verification
+
+- Four explained suggestions—Smoother, Less Metallic, Wider, and Less
+  Modulated—produce ordinary graph previews without mutating their baseline.
+  The measured delay candidate preserves RT60, Width preserves pickup-vector
+  energy, and every changed parameter remains visible.
+- Preview publishes only to the native crossfading audition runtime. Cancel
+  republishes the exact baseline; Accept creates one ordinary history edit;
+  Undo restores byte-equivalent baseline state. Unit tests cover non-mutation,
+  each distinct suggestion, decay recalculation, and exact undo.
+- Browser QA exercised Preview → Cancel and Preview → Accept → Undo. Preview
+  retained the SAVED indicator; Cancel restored it with no Undo entry; Accept
+  showed UNSAVED and enabled Undo; Undo restored SAVED and enabled Redo.
+  The 640×400 layout had no document-level horizontal overflow.
+- Reviewed UI evidence: [active Smoother preview](../artifacts/ui/m22-3-assisted-tuning/smoother-preview.png),
+  [accepted Wider edit with Undo ready](../artifacts/ui/m22-3-assisted-tuning/wider-accepted-undo-ready.png),
+  and [640×400 layout](../artifacts/ui/m22-3-assisted-tuning/assisted-tuning-640x400.png).

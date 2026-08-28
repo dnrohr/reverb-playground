@@ -15,7 +15,7 @@ import {
   type OnSelectionChangeParams,
   type Viewport,
 } from '@xyflow/react';
-import { createFlowModel, deleteSelected, parseRuntimeSnapshot, type PatchNodeData, type RuntimeSnapshot } from './graph';
+import { createFlowModel, deleteSelected, parseRuntimeSnapshot, type GraphState, type PatchNodeData, type RuntimeSnapshot } from './graph';
 import { createModuleNode, moduleDefinitions, nextNodeId, type ModuleType } from './modules';
 import { commitGraphEdit, emptyGraphHistory, isHistoryClean, markHistoryClean, redoGraphEdit, snapshotGraph, undoGraphEdit } from './graphHistory';
 import { copySelectedGraph, pasteGraph, type GraphClipboard } from './graphClipboard';
@@ -45,6 +45,7 @@ import { parallelShimmerBranch, parallelShimmerTeaching } from './parallelShimme
 import { decorateSplitShimmerFocus, splitFeedbackShimmerTeaching, splitShimmerLoopKind, type SplitShimmerLoopFocus } from './splitFeedbackShimmerTeaching';
 import { decorateReverseCosmicFocus, reverseCosmicShimmerTeaching, type ReverseCosmicFocus } from './reverseCosmicShimmerTeaching';
 import { collapseMatrixMixer, inspectMatrixMixer, type MatrixMixerInspection } from './matrixMixerPresentation';
+import { assistedTuningSuggestions, createAssistedTuningPreview, supportsAssistedTuning, type AssistedTuningSuggestionId } from './assistedTuning';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -110,6 +111,28 @@ function MatrixMixerInspector({ inspection }: { inspection: MatrixMixerInspectio
     <div className="matrix-energy"><span>ROW ENERGY {inspection.rowEnergy.map((value) => value.toFixed(2)).join(' · ')}</span>
       <span>COLUMN ENERGY {inspection.columnEnergy.map((value) => value.toFixed(2)).join(' · ')}</span></div>
     <p>{inspection.reason}</p><small>Expand to inspect or edit every authoritative Gain and Sum block.</small>
+  </section>;
+}
+
+function AssistedTuningPanel({ previewId, busy, onPreview, onAccept, onCancel, onClose }: {
+  previewId: AssistedTuningSuggestionId | null; busy: boolean;
+  onPreview: (id: AssistedTuningSuggestionId) => void; onAccept: () => void;
+  onCancel: () => void; onClose: () => void;
+}) {
+  return <section className="assisted-tuning-panel" aria-label="Assisted tuning suggestions">
+    <header><div><span>ASSISTED TUNING</span><strong>PREVIEW IS NOT SAVED</strong></div><button type="button" aria-label="Close assisted tuning" onClick={onClose}>×</button></header>
+    <p>Each option publishes a crossfaded audition runtime while the visible and saved graph remain exact.</p>
+    <div className="tuning-suggestions">
+      {assistedTuningSuggestions.map((suggestion) => <article className={previewId === suggestion.id ? 'is-previewing' : ''} key={suggestion.id}>
+        <div><strong>{suggestion.label}</strong><span>{suggestion.summary}</span></div>
+        <p>{suggestion.reason}</p>
+        <ul>{suggestion.changes.map((change) => <li key={change}>{change}</li>)}</ul>
+        <button type="button" disabled={busy} aria-pressed={previewId === suggestion.id} onClick={() => onPreview(suggestion.id)}>
+          {previewId === suggestion.id ? 'PREVIEWING' : 'PREVIEW'}
+        </button>
+      </article>)}
+    </div>
+    <footer><button type="button" disabled={!previewId || busy} onClick={onAccept}>ACCEPT + ADD TO UNDO</button><button type="button" disabled={!previewId || busy} onClick={onCancel}>CANCEL / RESTORE EXACT</button></footer>
   </section>;
 }
 
@@ -458,6 +481,9 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [splitLoopFocus, setSplitLoopFocus] = useState<SplitShimmerLoopFocus>('shifted');
   const [reverseCosmicFocus, setReverseCosmicFocus] = useState<ReverseCosmicFocus>('grains');
   const [matrixCollapsed, setMatrixCollapsed] = useState(true);
+  const [tuningOpen, setTuningOpen] = useState(false);
+  const [tuningBusy, setTuningBusy] = useState(false);
+  const [tuningPreview, setTuningPreview] = useState<{ id: AssistedTuningSuggestionId; graph: GraphState } | null>(null);
   const [responseCapture, setResponseCapture] = useState<{
     capture: ImpulseCaptureResult;
     patchId: TeachingPatchId;
@@ -651,6 +677,57 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const applyGraph = useCallback((state: { nodes: Node<PatchNodeData>[]; edges: Edge[] }) => {
     setNodes(state.nodes); setEdges(state.edges); setSelectedNode(null); setSelectedEdge(null);
   }, [setEdges, setNodes]);
+
+  const previewAssistedTuning = useCallback(async (id: AssistedTuningSuggestionId) => {
+    const preview = createAssistedTuningPreview({ nodes, edges }, id);
+    setTuningBusy(true);
+    setTuningPreview({ id, graph: preview });
+    try {
+      const payload = await callNative('publishGraph', writePatchJson(preview.nodes, preview.edges, viewport, qualityPolicy));
+      if (payload !== undefined) {
+        const result = parseGraphPublicationResult(payload);
+        if (!result.accepted) {
+          setTuningPreview(null);
+          setGraphStatus({ kind: 'error', message: `TUNING PREVIEW REJECTED: ${result.error}` });
+          return;
+        }
+      }
+      setGraphStatus({ kind: 'ok', message: `AUDITION PREVIEW / ${id.replace('-', ' ').toUpperCase()} / SAVED GRAPH UNCHANGED` });
+    } catch (reason) {
+      if (!import.meta.env.DEV) {
+        setTuningPreview(null);
+        setGraphStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Tuning preview failed' });
+      }
+    } finally { setTuningBusy(false); }
+  }, [edges, nodes, qualityPolicy, viewport]);
+
+  const cancelAssistedTuning = useCallback(async () => {
+    setTuningBusy(true);
+    try { await callNative('publishGraph', writePatchJson(nodes, edges, viewport, qualityPolicy)); }
+    catch { /* development browser has no native runtime */ }
+    finally {
+      setTuningPreview(null); setTuningBusy(false);
+      setGraphStatus({ kind: 'ok', message: 'TUNING PREVIEW CANCELLED / EXACT GRAPH RESTORED' });
+    }
+  }, [edges, nodes, qualityPolicy, viewport]);
+
+  const acceptAssistedTuning = useCallback(() => {
+    if (!tuningPreview) return;
+    const before = { nodes, edges };
+    const after = tuningPreview.graph;
+    applyGraph(after);
+    setGraphHistory((history) => commitGraphEdit(history,
+      `Accept ${tuningPreview.id.replace('-', ' ')} tuning`, before, after));
+    setActivePatchId('custom');
+    setTuningPreview(null);
+    setGraphStatus({ kind: 'ok', message: `ACCEPTED ${tuningPreview.id.replace('-', ' ').toUpperCase()} / UNDO AVAILABLE` });
+  }, [applyGraph, edges, nodes, tuningPreview]);
+
+  useEffect(() => {
+    if (tuningPreview) setTuningPreview(null);
+    // A semantic edit or patch switch supersedes any audition-only runtime.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audibleFingerprint]);
 
   const publishRuntimeParameters = useCallback((state: { nodes: Node<PatchNodeData>[] }) => {
     for (const node of state.nodes) for (const parameter of node.data.parameters)
@@ -1001,6 +1078,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <span>{nodes.length} blocks / {edges.length} cables</span>
             </div>
             <div className="canvas-actions">
+              {supportsAssistedTuning({ nodes, edges }) ? <button type="button" className="tuning-open-button"
+                aria-expanded={tuningOpen} onClick={() => setTuningOpen((open) => !open)}>TUNE</button> : null}
               {matrixInspection ? <button type="button" className="matrix-view-toggle"
                 disabled={!matrixInspection.canCollapse}
                 title={matrixInspection.reason}
@@ -1114,6 +1193,13 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
         <aside className="inspector" aria-label="Inspector">
           <div className="pane-heading"><span>INSPECTOR</span><button className="teaching-toggle" type="button" aria-pressed={teachingEnabled} title="Toggle contextual cards and response architecture overlays" onClick={toggleTeaching}>LEARN {teachingEnabled ? 'ON' : 'OFF'}</button></div>
+          {tuningOpen && supportsAssistedTuning({ nodes, edges }) ? <AssistedTuningPanel
+            previewId={tuningPreview?.id ?? null} busy={tuningBusy}
+            onPreview={(id) => { void previewAssistedTuning(id); }} onAccept={acceptAssistedTuning}
+            onCancel={() => { void cancelAssistedTuning(); }} onClose={() => {
+              if (tuningPreview) void cancelAssistedTuning();
+              setTuningOpen(false);
+            }} /> : null}
           {activePatchId === 'dense-figure-eight' && teachingEnabled ? <DenseFigureEightTeaching /> : null}
           {activePatchId === 'four-line-dense-room' && teachingEnabled ? <FourLineFdnTeaching collapsed={matrixIsCollapsed} /> : null}
           {activePatchId === 'safe-parallel-shimmer' && teachingEnabled ? <ParallelShimmerTeaching selectedNodeId={selectedNode?.id} /> : null}

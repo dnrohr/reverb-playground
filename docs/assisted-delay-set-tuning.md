@@ -73,3 +73,27 @@ plus four normalized stereo PCM16 listening fixtures. Regenerate them with:
 ```powershell
 .\scripts\generate_rendered_delay_set_ranking.ps1 -Configuration Release
 ```
+
+## Non-destructive editor suggestions
+
+The four-line topology exposes four explained options in the Inspector:
+
+- **Smoother** applies the best eligible rendered delay set and recalculates
+  return gains to retain the existing 2.1-second target;
+- **Less Metallic** lowers the four visible damping cutoffs by 28%;
+- **Wider** moves the right pickup vector toward its wide endpoint, then
+  normalizes that vector back to its prior energy;
+- **Less Modulated** reduces each visible moving-allpass depth to 0.12 ms.
+
+Preview serializes an ordinary proposed graph directly to the native audition
+publisher. It uses the existing bounded topology crossfade but does not replace
+the React editor graph, history baseline, host state, or saved-state hash.
+Switching suggestions simply crossfades to another preview. Cancel republishes
+the exact current graph. Accept is the only operation that changes the editor:
+it creates one normal history entry, marks the graph unsaved, and can be undone
+back to byte-equivalent baseline state.
+
+No automatic suggestion runs and no preview is silently accepted. Each card
+states both its concrete parameter changes and intended audible effect. Width
+uses explicit energy normalization; the other suggestions retain all pickup
+and output gains, avoiding a hidden loudness boost.
