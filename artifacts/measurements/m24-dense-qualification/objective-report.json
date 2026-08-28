@@ -1,0 +1,857 @@
+{
+  "formatVersion": 1,
+  "measurement": "dense-reverb-product-qualification",
+  "buildCommit": "39e82b8077eb",
+  "sampleRate": 48000.0,
+  "blockSize": 128,
+  "targetRmsDb": -24.0,
+  "normalization": "integrated stereo RMS target with a 0.5 peak ceiling; objective metrics use the normalized renders",
+  "listeningOrder": [
+    "barr-reference",
+    "gravity-diffusion",
+    "dense-figure-eight",
+    "four-line-fdn"
+  ],
+  "thresholds": {
+    "minimumEchoDensity": 0.65,
+    "maximumRecurrence": 0.85,
+    "minimumSpectralFlatness": 0.04,
+    "minimumCrestFactor": 1.05,
+    "minimumMonoEnergyRatio": 0.08,
+    "maximumAbsoluteStereoCorrelation": 0.995
+  },
+  "cases": [
+    {
+      "program": "percussion",
+      "setting": "room",
+      "designId": "barr-reference",
+      "levels": {
+        "sourceRmsDb": -44.01913870885295,
+        "renderedRmsDb": -27.767769097553476,
+        "normalizationGainDb": 19.943815925522777,
+        "normalizedPeak": 0.4999999701976776
+      },
+      "objective": {
+        "echoDensity": 0.5703559566637253,
+        "recurrence": 0.0,
+        "spectralFlatness": 1.0,
+        "crestFactor": 2.2377343006070016,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.6189089017861872,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": false,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "percussion",
+      "setting": "room",
+      "designId": "gravity-diffusion",
+      "levels": {
+        "sourceRmsDb": -44.01913870885295,
+        "renderedRmsDb": -30.96138810169576,
+        "normalizationGainDb": 29.15129266081135,
+        "normalizedPeak": 0.5
+      },
+      "objective": {
+        "echoDensity": 0.08571753345724288,
+        "recurrence": 0.019818472247247167,
+        "spectralFlatness": 0.790151654554542,
+        "crestFactor": 5.339664957680133,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.49629915604919195,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": false,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "percussion",
+      "setting": "room",
+      "designId": "dense-figure-eight",
+      "levels": {
+        "sourceRmsDb": -44.01913870885295,
+        "renderedRmsDb": -26.951945588674743,
+        "normalizationGainDb": 34.92482664465844,
+        "normalizedPeak": 0.5
+      },
+      "objective": {
+        "echoDensity": 0.9971300720950029,
+        "recurrence": 0.13730523358171273,
+        "spectralFlatness": 0.9537231274769591,
+        "crestFactor": 3.266481526363306,
+        "stereoCorrelation": -0.01514289231410893,
+        "monoEnergyRatio": 0.4921649249735024,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "percussion",
+      "setting": "room",
+      "designId": "four-line-fdn",
+      "levels": {
+        "sourceRmsDb": -44.01913870885295,
+        "renderedRmsDb": -27.58940334807411,
+        "normalizationGainDb": 38.92957572318351,
+        "normalizedPeak": 0.4999999701976776
+      },
+      "objective": {
+        "echoDensity": 0.968186852303245,
+        "recurrence": 0.0,
+        "spectralFlatness": 0.9985696277633341,
+        "crestFactor": 3.2302521551016516,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.49103043903128757,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "speech",
+      "setting": "room",
+      "designId": "barr-reference",
+      "levels": {
+        "sourceRmsDb": -36.86546710437052,
+        "renderedRmsDb": -24.000000102901666,
+        "normalizationGainDb": 12.875881267171124,
+        "normalizedPeak": 0.3595651686191559
+      },
+      "objective": {
+        "echoDensity": 0.5703559566637253,
+        "recurrence": 0.0,
+        "spectralFlatness": 1.0,
+        "crestFactor": 1.1447181602834144,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.7413932575001977,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": false,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "speech",
+      "setting": "room",
+      "designId": "gravity-diffusion",
+      "levels": {
+        "sourceRmsDb": -36.86546710437052,
+        "renderedRmsDb": -23.999999976080197,
+        "normalizationGainDb": 23.906428408041553,
+        "normalizedPeak": 0.35313862562179565
+      },
+      "objective": {
+        "echoDensity": 0.08571753345724288,
+        "recurrence": 0.019818472247247167,
+        "spectralFlatness": 0.790151654554542,
+        "crestFactor": 2.421863575592139,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.48462276194340814,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": false,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "speech",
+      "setting": "room",
+      "designId": "dense-figure-eight",
+      "levels": {
+        "sourceRmsDb": -36.86546710437052,
+        "renderedRmsDb": -24.0000001274681,
+        "normalizationGainDb": 27.136867753426777,
+        "normalizedPeak": 0.43424755334854126
+      },
+      "objective": {
+        "echoDensity": 0.9971300720950029,
+        "recurrence": 0.13730523358171273,
+        "spectralFlatness": 0.9537231274769591,
+        "crestFactor": 2.183902533477134,
+        "stereoCorrelation": -0.01514289231410893,
+        "monoEnergyRatio": 0.5008723161142976,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "speech",
+      "setting": "room",
+      "designId": "four-line-fdn",
+      "levels": {
+        "sourceRmsDb": -36.86546710437052,
+        "renderedRmsDb": -24.0000001386257,
+        "normalizationGainDb": 30.622266422361758,
+        "normalizedPeak": 0.4785650372505188
+      },
+      "objective": {
+        "echoDensity": 0.968186852303245,
+        "recurrence": 0.0,
+        "spectralFlatness": 0.9985696277633341,
+        "crestFactor": 2.2605059659966895,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.3621610581767139,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "piano",
+      "setting": "hall",
+      "designId": "barr-reference",
+      "levels": {
+        "sourceRmsDb": -34.78214756899306,
+        "renderedRmsDb": -24.00000005709245,
+        "normalizationGainDb": 10.797086441547068,
+        "normalizedPeak": 0.4349019229412079
+      },
+      "objective": {
+        "echoDensity": 0.4801701688028602,
+        "recurrence": 0.0,
+        "spectralFlatness": 0.9999999999999998,
+        "crestFactor": 2.7295162339867645,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.7784848255735775,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": false,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "piano",
+      "setting": "hall",
+      "designId": "gravity-diffusion",
+      "levels": {
+        "sourceRmsDb": -34.78214756899306,
+        "renderedRmsDb": -24.00000003091801,
+        "normalizationGainDb": 20.28099275144467,
+        "normalizedPeak": 0.3208109736442566
+      },
+      "objective": {
+        "echoDensity": 0.0509745757474455,
+        "recurrence": 5.368292977990368e-05,
+        "spectralFlatness": 0.8385250482142925,
+        "crestFactor": 2.629121830672834,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.4967617883214178,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": false,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "piano",
+      "setting": "hall",
+      "designId": "dense-figure-eight",
+      "levels": {
+        "sourceRmsDb": -34.78214756899306,
+        "renderedRmsDb": -24.00000021878234,
+        "normalizationGainDb": 22.234123215132257,
+        "normalizedPeak": 0.4181617498397827
+      },
+      "objective": {
+        "echoDensity": 0.9911951617644936,
+        "recurrence": 0.37231927309146085,
+        "spectralFlatness": 0.09821730437667463,
+        "crestFactor": 2.7102811945416434,
+        "stereoCorrelation": 0.13050940468840197,
+        "monoEnergyRatio": 0.3239747455542902,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "piano",
+      "setting": "hall",
+      "designId": "four-line-fdn",
+      "levels": {
+        "sourceRmsDb": -34.78214756899306,
+        "renderedRmsDb": -24.00000021585459,
+        "normalizationGainDb": 25.41407953051475,
+        "normalizedPeak": 0.4242314100265503
+      },
+      "objective": {
+        "echoDensity": 0.974234032803805,
+        "recurrence": 0.28057989116233517,
+        "spectralFlatness": 0.0009979017157394354,
+        "crestFactor": 2.556893693195606,
+        "stereoCorrelation": 0.012186937450209696,
+        "monoEnergyRatio": 0.4144377603329481,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": false,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "pad",
+      "setting": "hall",
+      "designId": "barr-reference",
+      "levels": {
+        "sourceRmsDb": -37.815049196834664,
+        "renderedRmsDb": -23.99999977569344,
+        "normalizationGainDb": 13.82032345939701,
+        "normalizedPeak": 0.3490508198738098
+      },
+      "objective": {
+        "echoDensity": 0.4801701688028602,
+        "recurrence": 0.0,
+        "spectralFlatness": 0.9999999999999998,
+        "crestFactor": 1.951732864244238,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.7792448346531838,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": false,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "pad",
+      "setting": "hall",
+      "designId": "gravity-diffusion",
+      "levels": {
+        "sourceRmsDb": -37.815049196834664,
+        "renderedRmsDb": -24.000000238504956,
+        "normalizationGainDb": 24.835584544469647,
+        "normalizedPeak": 0.31455057859420776
+      },
+      "objective": {
+        "echoDensity": 0.0509745757474455,
+        "recurrence": 5.368292977990368e-05,
+        "spectralFlatness": 0.8385250482142925,
+        "crestFactor": 2.099960651242812,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.6731739872238361,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": false,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "pad",
+      "setting": "hall",
+      "designId": "dense-figure-eight",
+      "levels": {
+        "sourceRmsDb": -37.815049196834664,
+        "renderedRmsDb": -24.000000261591868,
+        "normalizationGainDb": 23.925369254570164,
+        "normalizedPeak": 0.37591293454170227
+      },
+      "objective": {
+        "echoDensity": 0.9911951617644936,
+        "recurrence": 0.37231927309146085,
+        "spectralFlatness": 0.09821730437667463,
+        "crestFactor": 2.280089275355744,
+        "stereoCorrelation": 0.13050940468840197,
+        "monoEnergyRatio": 0.17073630100469803,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "pad",
+      "setting": "hall",
+      "designId": "four-line-fdn",
+      "levels": {
+        "sourceRmsDb": -37.815049196834664,
+        "renderedRmsDb": -24.000000261467985,
+        "normalizationGainDb": 30.380143382644267,
+        "normalizedPeak": 0.34704864025115967
+      },
+      "objective": {
+        "echoDensity": 0.974234032803805,
+        "recurrence": 0.28057989116233517,
+        "spectralFlatness": 0.0009979017157394354,
+        "crestFactor": 2.164146477189371,
+        "stereoCorrelation": 0.012186937450209696,
+        "monoEnergyRatio": 0.3596952144732208,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": false,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "noise",
+      "setting": "dark",
+      "designId": "barr-reference",
+      "levels": {
+        "sourceRmsDb": -35.4653285653765,
+        "renderedRmsDb": -26.73835417032844,
+        "normalizationGainDb": 15.93490392952373,
+        "normalizedPeak": 0.5
+      },
+      "objective": {
+        "echoDensity": 0.6671681354088741,
+        "recurrence": 0.0,
+        "spectralFlatness": 1.0,
+        "crestFactor": 3.6729136990656586,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.626339917221676,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "noise",
+      "setting": "dark",
+      "designId": "gravity-diffusion",
+      "levels": {
+        "sourceRmsDb": -35.4653285653765,
+        "renderedRmsDb": -24.03465499482654,
+        "normalizationGainDb": 22.402376116305206,
+        "normalizedPeak": 0.5
+      },
+      "objective": {
+        "echoDensity": 0.1323758362433662,
+        "recurrence": 0.01951790324820227,
+        "spectralFlatness": 0.8975119137230404,
+        "crestFactor": 3.568284199686824,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.4972689385543149,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": false,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "noise",
+      "setting": "dark",
+      "designId": "dense-figure-eight",
+      "levels": {
+        "sourceRmsDb": -35.4653285653765,
+        "renderedRmsDb": -25.86442711836851,
+        "normalizationGainDb": 29.636832996191934,
+        "normalizedPeak": 0.5
+      },
+      "objective": {
+        "echoDensity": 0.9777832197072576,
+        "recurrence": 0.5326369300060743,
+        "spectralFlatness": 0.00026599567191384725,
+        "crestFactor": 2.9662859252176905,
+        "stereoCorrelation": 0.16316776632801047,
+        "monoEnergyRatio": 0.5003326137003918,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": false,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "noise",
+      "setting": "dark",
+      "designId": "four-line-fdn",
+      "levels": {
+        "sourceRmsDb": -35.4653285653765,
+        "renderedRmsDb": -25.513203472708025,
+        "normalizationGainDb": 35.18364040210061,
+        "normalizedPeak": 0.5
+      },
+      "objective": {
+        "echoDensity": 0.9735028409777813,
+        "recurrence": 0.406748701521278,
+        "spectralFlatness": 0.0002476508956486498,
+        "crestFactor": 2.6838698012026954,
+        "stereoCorrelation": 0.0026388313963894303,
+        "monoEnergyRatio": 0.4915449141115937,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": false,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "speech",
+      "setting": "dark",
+      "designId": "barr-reference",
+      "levels": {
+        "sourceRmsDb": -36.86546710437052,
+        "renderedRmsDb": -23.999999556411062,
+        "normalizationGainDb": 12.89478342963406,
+        "normalizedPeak": 0.35407403111457825
+      },
+      "objective": {
+        "echoDensity": 0.6671681354088741,
+        "recurrence": 0.0,
+        "spectralFlatness": 1.0,
+        "crestFactor": 2.100900215586554,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.7470086369451552,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "speech",
+      "setting": "dark",
+      "designId": "gravity-diffusion",
+      "levels": {
+        "sourceRmsDb": -36.86546710437052,
+        "renderedRmsDb": -23.999999770483527,
+        "normalizationGainDb": 22.912193404120163,
+        "normalizedPeak": 0.33397558331489563
+      },
+      "objective": {
+        "echoDensity": 0.1323758362433662,
+        "recurrence": 0.01951790324820227,
+        "spectralFlatness": 0.8975119137230404,
+        "crestFactor": 2.479140732274533,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.507080254558403,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": false,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "speech",
+      "setting": "dark",
+      "designId": "dense-figure-eight",
+      "levels": {
+        "sourceRmsDb": -36.86546710437052,
+        "renderedRmsDb": -24.000000386868727,
+        "normalizationGainDb": 25.91059914679146,
+        "normalizedPeak": 0.42711886763572693
+      },
+      "objective": {
+        "echoDensity": 0.9777832197072576,
+        "recurrence": 0.5326369300060743,
+        "spectralFlatness": 0.00026599567191384725,
+        "crestFactor": 2.235994573922155,
+        "stereoCorrelation": 0.16316776632801047,
+        "monoEnergyRatio": 0.5590641000077557,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": false,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "speech",
+      "setting": "dark",
+      "designId": "four-line-fdn",
+      "levels": {
+        "sourceRmsDb": -36.86546710437052,
+        "renderedRmsDb": -24.000000198140157,
+        "normalizationGainDb": 28.275497957481118,
+        "normalizedPeak": 0.40419602394104004
+      },
+      "objective": {
+        "echoDensity": 0.9735028409777813,
+        "recurrence": 0.406748701521278,
+        "spectralFlatness": 0.0002476508956486498,
+        "crestFactor": 2.3240610408600024,
+        "stereoCorrelation": 0.0026388313963894303,
+        "monoEnergyRatio": 0.3475898212714574,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": false,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "piano",
+      "setting": "modulated",
+      "designId": "barr-reference",
+      "levels": {
+        "sourceRmsDb": -34.78214756899306,
+        "renderedRmsDb": -24.00000005415311,
+        "normalizationGainDb": 10.797086436366815,
+        "normalizedPeak": 0.3702814280986786
+      },
+      "objective": {
+        "echoDensity": 0.5126334048781565,
+        "recurrence": 0.0,
+        "spectralFlatness": 1.0,
+        "crestFactor": 3.012454597874205,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.6578257751840906,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": false,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "piano",
+      "setting": "modulated",
+      "designId": "gravity-diffusion",
+      "levels": {
+        "sourceRmsDb": -34.78214756899306,
+        "renderedRmsDb": -24.000000232684723,
+        "normalizationGainDb": 21.46159033667955,
+        "normalizedPeak": 0.3495480716228485
+      },
+      "objective": {
+        "echoDensity": 0.10207073664873105,
+        "recurrence": 0.020516977105687794,
+        "spectralFlatness": 0.8843996244816557,
+        "crestFactor": 2.6908300308186246,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.42053480554385886,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": false,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "piano",
+      "setting": "modulated",
+      "designId": "dense-figure-eight",
+      "levels": {
+        "sourceRmsDb": -34.78214756899306,
+        "renderedRmsDb": -24.000000191139584,
+        "normalizationGainDb": 23.611609125485135,
+        "normalizedPeak": 0.4186321198940277
+      },
+      "objective": {
+        "echoDensity": 0.9889834115532816,
+        "recurrence": 0.4978361807252427,
+        "spectralFlatness": 0.10344328902596611,
+        "crestFactor": 2.571005726623542,
+        "stereoCorrelation": 0.1064237367670489,
+        "monoEnergyRatio": 0.3456011404728984,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "piano",
+      "setting": "modulated",
+      "designId": "four-line-fdn",
+      "levels": {
+        "sourceRmsDb": -34.78214756899306,
+        "renderedRmsDb": -23.999999916064,
+        "normalizationGainDb": 27.13119177154377,
+        "normalizedPeak": 0.4188634157180786
+      },
+      "objective": {
+        "echoDensity": 0.9735349181692247,
+        "recurrence": 0.2826193502635104,
+        "spectralFlatness": 0.002641857075463109,
+        "crestFactor": 2.490854330765481,
+        "stereoCorrelation": 0.015989296875551465,
+        "monoEnergyRatio": 0.38021303538312295,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": false,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "pad",
+      "setting": "modulated",
+      "designId": "barr-reference",
+      "levels": {
+        "sourceRmsDb": -37.815049196834664,
+        "renderedRmsDb": -23.999999772727584,
+        "normalizationGainDb": 13.820323454879569,
+        "normalizedPeak": 0.35039854049682617
+      },
+      "objective": {
+        "echoDensity": 0.5126334048781565,
+        "recurrence": 0.0,
+        "spectralFlatness": 1.0,
+        "crestFactor": 2.438561903294951,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.7983596379696104,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": false,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "pad",
+      "setting": "modulated",
+      "designId": "gravity-diffusion",
+      "levels": {
+        "sourceRmsDb": -37.815049196834664,
+        "renderedRmsDb": -23.999999827319662,
+        "normalizationGainDb": 26.253202645766358,
+        "normalizedPeak": 0.30182236433029175
+      },
+      "objective": {
+        "echoDensity": 0.10207073664873105,
+        "recurrence": 0.020516977105687794,
+        "spectralFlatness": 0.8843996244816557,
+        "crestFactor": 2.3950159041264003,
+        "stereoCorrelation": 0.0,
+        "monoEnergyRatio": 0.33716351667688604,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": false,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "pad",
+      "setting": "modulated",
+      "designId": "dense-figure-eight",
+      "levels": {
+        "sourceRmsDb": -37.815049196834664,
+        "renderedRmsDb": -24.000000424354404,
+        "normalizationGainDb": 25.702689532896848,
+        "normalizedPeak": 0.3685978055000305
+      },
+      "objective": {
+        "echoDensity": 0.9889834115532816,
+        "recurrence": 0.4978361807252427,
+        "spectralFlatness": 0.10344328902596611,
+        "crestFactor": 2.2545149907746738,
+        "stereoCorrelation": 0.1064237367670489,
+        "monoEnergyRatio": 0.15269924528731366,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": true,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    },
+    {
+      "program": "pad",
+      "setting": "modulated",
+      "designId": "four-line-fdn",
+      "levels": {
+        "sourceRmsDb": -37.815049196834664,
+        "renderedRmsDb": -24.000000260573646,
+        "normalizationGainDb": 31.773611874441656,
+        "normalizedPeak": 0.3671852946281433
+      },
+      "objective": {
+        "echoDensity": 0.9735349181692247,
+        "recurrence": 0.2826193502635104,
+        "spectralFlatness": 0.002641857075463109,
+        "crestFactor": 2.2733730463683046,
+        "stereoCorrelation": 0.015989296875551465,
+        "monoEnergyRatio": 0.32949091822121834,
+        "finite": true
+      },
+      "passes": {
+        "repeatLike": true,
+        "coloration": false,
+        "smearing": true,
+        "monoCompatibility": true
+      }
+    }
+  ]
+}

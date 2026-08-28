@@ -44,6 +44,7 @@ BINARY_ASSET_SUFFIXES = {".gif", ".ico", ".jpeg", ".jpg", ".mp3", ".mp4", ".otf"
 DOCUMENTED_ASSET_RULES = (
     re.compile(r"^artifacts/audio/.+\.(json|wav)$", re.IGNORECASE),
     re.compile(r"^artifacts/measurements/m22-rendered-delay-sets/.+\.(json|rvp\.json|wav)$", re.IGNORECASE),
+    re.compile(r"^artifacts/measurements/m24-dense-qualification/.+\.(json|wav)$", re.IGNORECASE),
     re.compile(r"^artifacts/ui/.+\.(gif|jpe?g|mp4|png)$", re.IGNORECASE),
     re.compile(r"^factory-patches/[^/]+\.rvp\.json$", re.IGNORECASE),
     re.compile(r"^factory-patches/catalog\.json$", re.IGNORECASE),
@@ -51,7 +52,7 @@ DOCUMENTED_ASSET_RULES = (
     re.compile(r"^src/ui/WebAssets/(editor\.(css|js)|index\.html)$", re.IGNORECASE),
     re.compile(r"^tests/fixtures/.+\.(json|wav)$", re.IGNORECASE),
 )
-GENERATED_DATA_ROOTS = ("artifacts/audio/", "artifacts/measurements/m22-rendered-delay-sets/", "factory-patches/", "schemas/", "src/ui/WebAssets/", "tests/fixtures/")
+GENERATED_DATA_ROOTS = ("artifacts/audio/", "artifacts/measurements/m22-rendered-delay-sets/", "artifacts/measurements/m24-dense-qualification/", "factory-patches/", "schemas/", "src/ui/WebAssets/", "tests/fixtures/")
 GENERATED_DATA_SUFFIXES = {".css", ".html", ".js", ".json", ".wav"}
 LOCAL_MARKERS = (
     "C:" + "/Users/" + "dnroh",
