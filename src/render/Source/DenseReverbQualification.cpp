@@ -6,6 +6,7 @@
 #include <reverb/graph/FourLineFdnGraph.h>
 #include <reverb/graph/GravityDiffusionGraph.h>
 #include <reverb/render/DensityMeasurements.h>
+#include <reverb/render/ResponseMeasurements.h>
 #include <reverb/render/WavWriter.h>
 
 #include <nlohmann/json.hpp>
@@ -13,6 +14,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <complex>
 #include <cstdint>
 #include <fstream>
 #include <numbers>
@@ -178,6 +180,67 @@ RenderResult render(const reverb::graph::GraphDocument& graph,
     return output;
 }
 
+struct ResponseProfile final { DensityRegion density; double spectralRippleDb {}; };
+
+double detrendedSpectralRippleDb(
+    const std::span<const float> left, const std::span<const float> right)
+{
+    constexpr std::size_t transformFrames = 2'048;
+    constexpr std::size_t bins = 128;
+    if (left.size() < transformFrames || right.size() < transformFrames) return 0.0;
+    auto start = left.size() > transformFrames ? (left.size() - transformFrames) / 2 : 0;
+    double strongestEnergy {};
+    for (auto candidate = start; candidate + transformFrames <= left.size();
+         candidate += transformFrames / 2) {
+        double energy {};
+        for (std::size_t frame = 0; frame < transformFrames; ++frame) {
+            const auto mono = 0.5 * (static_cast<double>(left[candidate + frame])
+                + right[candidate + frame]);
+            energy += mono * mono;
+        }
+        if (energy > strongestEnergy) {
+            strongestEnergy = energy;
+            start = candidate;
+        }
+    }
+    if (strongestEnergy <= 1.0e-20) return 0.0;
+    std::array<double, bins> powerDb {};
+    for (std::size_t bin = 1; bin <= bins; ++bin) {
+        std::complex<double> value {};
+        for (std::size_t frame = 0; frame < transformFrames; ++frame) {
+            const auto mono = 0.5 * (static_cast<double>(left[start + frame])
+                + right[start + frame]);
+            const auto window = 0.5 - 0.5 * std::cos(2.0 * std::numbers::pi
+                * static_cast<double>(frame) / static_cast<double>(transformFrames - 1));
+            const auto phase = -2.0 * std::numbers::pi * static_cast<double>(bin * frame)
+                / static_cast<double>(transformFrames);
+            value += mono * window * std::complex<double>(std::cos(phase), std::sin(phase));
+        }
+        powerDb[bin - 1] = 10.0 * std::log10(std::norm(value) + 1.0e-20);
+    }
+    double maximumPositiveRipple {};
+    for (std::size_t bin = 4; bin + 4 < bins; ++bin) {
+        double localMean {};
+        for (std::size_t neighbor = bin - 4; neighbor <= bin + 4; ++neighbor)
+            localMean += powerDb[neighbor];
+        localMean /= 9.0;
+        maximumPositiveRipple = std::max(maximumPositiveRipple, powerDb[bin] - localMean);
+    }
+    return maximumPositiveRipple;
+}
+
+ResponseProfile activeResponseProfile(const RenderResult& response)
+{
+    const auto measured = measureResponse(response.left, response.right, sampleRate);
+    const auto minimumFrames = static_cast<std::size_t>(sampleRate * 0.25);
+    const auto activeFrames = std::min(response.left.size(), std::max(minimumFrames,
+        measured.lastActiveFrame.value_or(response.left.size() - 1) + 1));
+    const auto left = std::span(response.left).first(activeFrames);
+    const auto right = std::span(response.right).first(activeFrames);
+    return { measureDensity(left, right, sampleRate).regions.back(),
+        detrendedSpectralRippleDb(left, right) };
+}
+
 double normalize(RenderResult& audio) noexcept
 {
     const auto found = rms(audio.left, audio.right);
@@ -193,7 +256,7 @@ double normalize(RenderResult& audio) noexcept
 
 DenseQualificationCase analyse(const DenseProgramKind program, const DenseSettingKind setting,
     const std::string& design, const std::span<const float> sourceLeft,
-    const std::span<const float> sourceRight, const DensityRegion& response, RenderResult& audio)
+    const std::span<const float> sourceRight, const ResponseProfile& response, RenderResult& audio)
 {
     DenseQualificationCase result;
     result.program = program;
@@ -210,12 +273,13 @@ DenseQualificationCase analyse(const DenseProgramKind program, const DenseSettin
     result.finite = rawRms > 0.0 && std::ranges::all_of(audio.left,
         [](const auto value) { return std::isfinite(value); }) && std::ranges::all_of(audio.right,
         [](const auto value) { return std::isfinite(value); });
-    result.echoDensity = response.echoDensity;
-    result.recurrence = response.recurrence;
-    result.spectralFlatness = response.spectralFlatness;
+    result.echoDensity = response.density.echoDensity;
+    result.recurrence = response.density.recurrence;
+    result.spectralFlatness = response.density.spectralFlatness;
+    result.spectralRippleDb = response.spectralRippleDb;
     const auto programDensity = measureDensity(audio.left, audio.right, sampleRate);
     result.crestFactor = programDensity.regions.back().crestFactor;
-    result.stereoCorrelation = response.stereoCorrelation;
+    result.stereoCorrelation = response.density.stereoCorrelation;
     double stereoEnergy {}, monoEnergy {};
     for (std::size_t frame = 0; frame < audio.left.size(); ++frame) {
         const auto left = static_cast<double>(audio.left[frame]);
@@ -226,7 +290,7 @@ DenseQualificationCase analyse(const DenseProgramKind program, const DenseSettin
     }
     result.monoEnergyRatio = stereoEnergy > 0.0 ? monoEnergy / stereoEnergy : 0.0;
     result.repeatLikePass = result.echoDensity >= 0.65 && result.recurrence <= 0.85;
-    result.colorationPass = result.spectralFlatness >= 0.04;
+    result.colorationPass = result.spectralRippleDb <= 12.0;
     result.smearingPass = result.crestFactor >= 1.05;
     result.monoCompatibilityPass = result.monoEnergyRatio >= 0.08
         && std::abs(result.stereoCorrelation) <= 0.995;
@@ -272,8 +336,7 @@ DenseQualificationReport qualifyDenseReverbs()
             std::vector<float> impulseLeft(frames), impulseRight(frames);
             impulseLeft.front() = impulseRight.front() = 0.1F;
             const auto responseAudio = render(graph, impulseLeft, impulseRight);
-            const auto response = measureDensity(
-                responseAudio.left, responseAudio.right, sampleRate).regions.back();
+            const auto response = activeResponseProfile(responseAudio);
             auto audio = render(graph, sourceLeft, sourceRight);
             report.cases.push_back(analyse(
                 program, setting, design, sourceLeft, sourceRight, response, audio));
@@ -295,6 +358,7 @@ std::string denseQualificationJson(
             { "normalizedPeak", measured.normalizedPeak } } },
         { "objective", { { "echoDensity", measured.echoDensity },
             { "recurrence", measured.recurrence }, { "spectralFlatness", measured.spectralFlatness },
+            { "spectralRippleDb", measured.spectralRippleDb },
             { "crestFactor", measured.crestFactor }, { "stereoCorrelation", measured.stereoCorrelation },
             { "monoEnergyRatio", measured.monoEnergyRatio }, { "finite", measured.finite } } },
         { "passes", { { "repeatLike", measured.repeatLikePass },
@@ -308,7 +372,7 @@ std::string denseQualificationJson(
         { "normalization", "integrated stereo RMS target with a 0.5 peak ceiling; objective metrics use the normalized renders" },
         { "listeningOrder", designIds },
         { "thresholds", { { "minimumEchoDensity", 0.65 }, { "maximumRecurrence", 0.85 },
-            { "minimumSpectralFlatness", 0.04 }, { "minimumCrestFactor", 1.05 },
+            { "maximumSpectralRippleDb", 12.0 }, { "minimumCrestFactor", 1.05 },
             { "minimumMonoEnergyRatio", 0.08 }, { "maximumAbsoluteStereoCorrelation", 0.995 } } },
         { "cases", std::move(cases) },
     }.dump(2) + "\n";
@@ -332,8 +396,7 @@ void writeDenseQualificationArtifacts(
             std::vector<float> impulseLeft(frames), impulseRight(frames);
             impulseLeft.front() = impulseRight.front() = 0.1F;
             const auto responseAudio = render(graph, impulseLeft, impulseRight);
-            const auto response = measureDensity(
-                responseAudio.left, responseAudio.right, sampleRate).regions.back();
+            const auto response = activeResponseProfile(responseAudio);
             auto audio = render(graph, sourceLeft, sourceRight);
             report.cases.push_back(analyse(
                 program, setting, design, sourceLeft, sourceRight, response, audio));

@@ -28,6 +28,8 @@ TEST_CASE("Dense qualification separates objective metrics across programs setti
         REQUIRE(measured.echoDensity <= 1.0);
         REQUIRE(measured.recurrence >= 0.0);
         REQUIRE(measured.recurrence <= 1.0);
+        REQUIRE(measured.spectralRippleDb >= 0.0);
+        REQUIRE(measured.spectralRippleDb <= 60.0);
         REQUIRE(measured.monoEnergyRatio >= 0.0);
         REQUIRE(measured.monoEnergyRatio <= 1.000001);
     }
@@ -37,6 +39,7 @@ TEST_CASE("Dense qualification separates objective metrics across programs setti
     REQUIRE(document.at("buildCommit") == "test-commit");
     REQUIRE(document.at("cases").size() == 32);
     REQUIRE(document.contains("thresholds"));
+    REQUIRE(document.at("thresholds").at("maximumSpectralRippleDb") == 12.0);
     REQUIRE(document.contains("listeningOrder"));
 }
 

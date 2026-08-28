@@ -23,6 +23,7 @@ struct DenseQualificationCase final {
     double echoDensity {};
     double recurrence {};
     double spectralFlatness {};
+    double spectralRippleDb {};
     double crestFactor {};
     double stereoCorrelation {};
     double monoEnergyRatio {};
