@@ -94,7 +94,7 @@ Last updated: 2026-08-26
 | M18.5.4 Compiled-graph Energy | Complete | Bounded per-operation RMS lanes, coherent 30 Hz revision-tagged publication, incoming-revision topology handling, stale-frame rejection, and a zero-observation disabled path |
 | M23.1 Dense processor-family profile | Complete | Exact-commit 30-case Release baseline separates normal, telemetry, and crossfade timing and attributes delay, matrix, damping, modulation, and routing costs; Four-Line routing/dispatch is dominant |
 | M23.2 Reusable dense-network kernels | Complete | Generic feedback-region gain/sum/filter fusion prepares 10 Four-Line kernels with a tested fallback; all 30 dense cases improve by at least 15% median and p95, with bounded audio equivalence |
-| M24.1 Comparative dense qualification | In progress | Exact-commit 32-case objective report and eight loudness-matched listening reels are published; dense tanks pass recurrence/density, but Four-Line coloration warnings require listening-led retuning before completion |
+| M24.1 Comparative dense qualification | In progress | Corrected exact-commit 32-case report uses energetic-window detrended ripple; both dense tanks pass density, recurrence, coloration, smearing, and mono gates, and eight loudness-matched reels await recorded listening notes |
 
 ## M0.2 verification
 

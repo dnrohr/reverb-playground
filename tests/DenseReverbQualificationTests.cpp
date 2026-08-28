@@ -50,7 +50,7 @@ TEST_CASE("Published dense qualification keeps objective failures visible for re
     std::ifstream stream(directory / "objective-report.json");
     REQUIRE(stream.good());
     const auto report = nlohmann::json::parse(stream);
-    REQUIRE(report.at("buildCommit") == "39e82b8077eb");
+    REQUIRE(report.at("buildCommit") == "b970de54a813");
     REQUIRE(report.at("cases").size() == 32);
     std::size_t failedDimensions = 0;
     double barrDensity = 0.0;
