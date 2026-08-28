@@ -1381,7 +1381,7 @@ Acceptance criteria:
 - Both branches track the requested decay within a documented tolerance.
 - Density growth materially exceeds Barr and Gravity baselines without merely darkening discrete repeats.
 
-### M20.2 Tune and publish Dense Figure Eight
+### M20.2 Tune and publish Dense Figure Eight — Complete
 
 Tasks: search candidate delay sets, reject recurrence relationships, tune diffusion/damping/modulation/output taps, expose useful macros, and add a teaching overlay.
 

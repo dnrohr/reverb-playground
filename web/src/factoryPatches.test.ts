@@ -37,7 +37,7 @@ describe('factory patches', () => {
     };
     expect(catalog.catalogVersion).toBe(1);
     expect(catalog.patches.map((patch) => patch.id)).toEqual(factoryPatches.map((patch) => patch.id));
-    expect(catalog.patches.map((patch) => patch.family)).toEqual(['barr-reference', 'reverse-style', 'gated', 'modulated-reverse-style', 'gravity-diffusion', 'parallel-shimmer', 'feedback-shimmer', 'reverse-cosmic-shimmer']);
+    expect(catalog.patches.map((patch) => patch.family)).toEqual(['barr-reference', 'reverse-style', 'gated', 'modulated-reverse-style', 'gravity-diffusion', 'dense-figure-eight', 'parallel-shimmer', 'feedback-shimmer', 'reverse-cosmic-shimmer']);
     for (const patch of catalog.patches) {
       expect(patch.status).toBe('complete');
       expect(['native-runtime', 'checked-in-json']).toContain(patch.document.kind);
@@ -53,11 +53,11 @@ describe('factory patches', () => {
 
   it('offers all complete reference, reverse, gated, and modulated-space designs', () => {
     expect(factoryPatches.map((patch) => patch.id)).toEqual([
-      'barr-reference', 'causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse', 'gravity-diffusion', 'safe-parallel-shimmer', 'split-feedback-shimmer', 'reverse-cosmic-shimmer',
+      'barr-reference', 'causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse', 'gravity-diffusion', 'dense-figure-eight', 'safe-parallel-shimmer', 'split-feedback-shimmer', 'reverse-cosmic-shimmer',
     ]);
   });
 
-  it.each(['causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse', 'gravity-diffusion', 'safe-parallel-shimmer', 'split-feedback-shimmer', 'reverse-cosmic-shimmer'] as const)(
+  it.each(['causal-reverse-envelope', 'level-gated-room', 'modulated-cosmic-reverse', 'gravity-diffusion', 'dense-figure-eight', 'safe-parallel-shimmer', 'split-feedback-shimmer', 'reverse-cosmic-shimmer'] as const)(
     'loads %s using only visible editable primitives and round trips schema v2',
     (id) => {
       const loaded = loadFactoryPatch(id, reference);

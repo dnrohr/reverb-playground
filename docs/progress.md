@@ -1285,3 +1285,26 @@ Results:
   records the architecture, decay equation, limits, and measurement contract.
 - This task adds no UI, so no screenshot or video is required. Factory controls,
   teaching overlays, listening evidence, and complete qualification are M20.2.
+
+## M20.2 verification
+
+- Dense Figure Eight is a cataloged schema-v2 factory generated directly from
+  the native builder and guarded by an exact SHA-256 check. Native and browser
+  tests require its complete 40-node/50-cable public graph to round-trip exactly.
+- The selected unequal tank delays reject shared lengths and obvious recurrence
+  relationships. M19 measurements require materially greater middle density
+  than Barr and Gravity and at least twice Gravity's late active-peak rate.
+- Decay, Tone, and Motion are visible bipolar Macro blocks with explicit dashed
+  routes to both branches. Teaching mode states both traversal times, return
+  polarity, cross-coupling behavior, and the responsibility of each macro.
+- Safety qualification covers supported sample rates, control extremes,
+  partition-exact processing, the fixed delay-memory budget, an explicit work
+  ceiling, and absence of pitch-shift processing. The only pitch-active motion
+  is the bounded moving-allpass behavior shown on the graph.
+- Representative speech/percussion, sustained-chord, and full-mix fixtures all
+  export complete bounded stereo WAV files through the topology. Desktop and
+  640×400 browser QA found no horizontal overflow and kept the compact layout
+  vertically reachable.
+- Reviewed UI evidence: [factory overview](../artifacts/ui/m20-2-dense-figure-eight/dense-figure-eight-overview.png),
+  [Decay macro inspector](../artifacts/ui/m20-2-dense-figure-eight/decay-macro-inspector.png),
+  and [640×400 layout](../artifacts/ui/m20-2-dense-figure-eight/dense-figure-eight-compact-640x400.png).

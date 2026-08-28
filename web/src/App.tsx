@@ -99,6 +99,18 @@ function ParallelShimmerTeaching({ selectedNodeId }: { selectedNodeId?: string }
   );
 }
 
+function DenseFigureEightTeaching() {
+  return (
+    <section className="parallel-shimmer-teaching" aria-label="Dense Figure Eight architecture teaching">
+      <header><span>DENSE FIGURE EIGHT</span><strong>CROSS-COUPLED TANK</strong></header>
+      <div><b>BRANCH A</b><span>209.3 ms nominal traversal · positive return</span></div>
+      <div><b>BRANCH B</b><span>242.9 ms nominal traversal · inverted return</span></div>
+      <p>Each branch feeds the other. Unequal delays, distributed allpasses, damping, and moving taps turn repeat trains into a denser late field.</p>
+      <small>DECAY adjusts both calculated returns; TONE moves both loop filters; MOTION changes the two independent modulation rates.</small>
+    </section>
+  );
+}
+
 function SplitFeedbackShimmerTeaching({ focus, onFocus }: {
   focus: SplitShimmerLoopFocus; onFocus: (focus: SplitShimmerLoopFocus) => void;
 }) {
@@ -1057,6 +1069,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
         <aside className="inspector" aria-label="Inspector">
           <div className="pane-heading"><span>INSPECTOR</span><button className="teaching-toggle" type="button" aria-pressed={teachingEnabled} title="Toggle contextual cards and response architecture overlays" onClick={toggleTeaching}>LEARN {teachingEnabled ? 'ON' : 'OFF'}</button></div>
+          {activePatchId === 'dense-figure-eight' && teachingEnabled ? <DenseFigureEightTeaching /> : null}
           {activePatchId === 'safe-parallel-shimmer' && teachingEnabled ? <ParallelShimmerTeaching selectedNodeId={selectedNode?.id} /> : null}
           {activePatchId === 'split-feedback-shimmer' && teachingEnabled ? <SplitFeedbackShimmerTeaching focus={splitLoopFocus} onFocus={setSplitLoopFocus} /> : null}
           {activePatchId === 'reverse-cosmic-shimmer' && teachingEnabled ? <ReverseCosmicShimmerTeaching focus={reverseCosmicFocus} onFocus={setReverseCosmicFocus} /> : null}

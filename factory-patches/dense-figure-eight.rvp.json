@@ -1,0 +1,2355 @@
+{
+  "schemaVersion": 2,
+  "engineVersion": "0.1",
+  "qualityPolicy": "normal",
+  "semantic": {
+    "nodes": [
+      {
+        "id": "input",
+        "type": "stereo-input",
+        "ports": [
+          {
+            "id": "out-l",
+            "signal": "audio",
+            "direction": "output"
+          },
+          {
+            "id": "out-r",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "input-left-half",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.5,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 1.0,
+              "polarity": "unipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "input-right-half",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.5,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 1.0,
+              "polarity": "unipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "input-mono",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "input-ap-1",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 3.1,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 0.0,
+              "polarity": "bipolar",
+              "clampMinimum": 3.099,
+              "clampMaximum": 3.101
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.57,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.15,
+              "polarity": "bipolar",
+              "clampMinimum": 0.35,
+              "clampMaximum": 0.72
+            }
+          }
+        ]
+      },
+      {
+        "id": "input-ap-2",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 4.7,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 0.0,
+              "polarity": "bipolar",
+              "clampMinimum": 4.699,
+              "clampMaximum": 4.7010000000000005
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.57,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.15,
+              "polarity": "bipolar",
+              "clampMinimum": 0.35,
+              "clampMaximum": 0.72
+            }
+          }
+        ]
+      },
+      {
+        "id": "input-ap-3",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 7.9,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 0.0,
+              "polarity": "bipolar",
+              "clampMinimum": 7.899,
+              "clampMaximum": 7.901000000000001
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.57,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.15,
+              "polarity": "bipolar",
+              "clampMinimum": 0.35,
+              "clampMaximum": 0.72
+            }
+          }
+        ]
+      },
+      {
+        "id": "input-ap-4",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 11.3,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 0.0,
+              "polarity": "bipolar",
+              "clampMinimum": 11.299000000000001,
+              "clampMaximum": 11.301
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.57,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.15,
+              "polarity": "bipolar",
+              "clampMinimum": 0.35,
+              "clampMaximum": 0.72
+            }
+          }
+        ]
+      },
+      {
+        "id": "inject-a",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.42,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 1.0,
+              "polarity": "unipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "inject-b",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": -0.42,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 1.0,
+              "polarity": "unipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "entry-a",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [],
+        "name": "Branch A entry"
+      },
+      {
+        "id": "entry-b",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [],
+        "name": "Branch B entry"
+      },
+      {
+        "id": "a-ap-1",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 7.3,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 0.7,
+              "polarity": "bipolar",
+              "clampMinimum": 6.6,
+              "clampMaximum": 8.0
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.57,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.15,
+              "polarity": "bipolar",
+              "clampMinimum": 0.35,
+              "clampMaximum": 0.72
+            }
+          }
+        ]
+      },
+      {
+        "id": "a-delay-1",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 71.1,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2.0,
+              "polarity": "bipolar",
+              "clampMinimum": 69.1,
+              "clampMaximum": 73.1
+            }
+          }
+        ]
+      },
+      {
+        "id": "a-ap-2",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 13.7,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 0.7,
+              "polarity": "bipolar",
+              "clampMinimum": 13.0,
+              "clampMaximum": 14.399999999999999
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.57,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.15,
+              "polarity": "bipolar",
+              "clampMinimum": 0.35,
+              "clampMaximum": 0.72
+            }
+          }
+        ]
+      },
+      {
+        "id": "a-delay-2",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 97.3,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2.0,
+              "polarity": "bipolar",
+              "clampMinimum": 95.3,
+              "clampMaximum": 99.3
+            }
+          }
+        ]
+      },
+      {
+        "id": "a-ap-3",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 19.9,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 0.7,
+              "polarity": "bipolar",
+              "clampMinimum": 19.2,
+              "clampMaximum": 20.599999999999998
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.57,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.15,
+              "polarity": "bipolar",
+              "clampMinimum": 0.35,
+              "clampMaximum": 0.72
+            }
+          }
+        ]
+      },
+      {
+        "id": "a-damping",
+        "type": "lowpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "cutoff-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "cutoff",
+            "value": 6200.0,
+            "unit": "hertz",
+            "modulation": {
+              "portId": "cutoff-mod",
+              "amount": 4000.0,
+              "polarity": "bipolar",
+              "clampMinimum": 1000.0,
+              "clampMaximum": 12000.0
+            }
+          }
+        ],
+        "name": "Branch A damping"
+      },
+      {
+        "id": "a-cross-gain",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.5474884984252714,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 0.076648389779538,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 0.98
+            }
+          }
+        ],
+        "name": "A to B RT60 return"
+      },
+      {
+        "id": "b-ap-1",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 8.9,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 0.7,
+              "polarity": "bipolar",
+              "clampMinimum": 8.200000000000001,
+              "clampMaximum": 9.6
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.57,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.15,
+              "polarity": "bipolar",
+              "clampMinimum": 0.35,
+              "clampMaximum": 0.72
+            }
+          }
+        ]
+      },
+      {
+        "id": "b-delay-1",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 83.7,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2.0,
+              "polarity": "bipolar",
+              "clampMinimum": 81.7,
+              "clampMaximum": 85.7
+            }
+          }
+        ]
+      },
+      {
+        "id": "b-ap-2",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 17.3,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 0.7,
+              "polarity": "bipolar",
+              "clampMinimum": 16.6,
+              "clampMaximum": 18.0
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.57,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.15,
+              "polarity": "bipolar",
+              "clampMinimum": 0.35,
+              "clampMaximum": 0.72
+            }
+          }
+        ]
+      },
+      {
+        "id": "b-delay-2",
+        "type": "delay",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 109.1,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 2.0,
+              "polarity": "bipolar",
+              "clampMinimum": 107.1,
+              "clampMaximum": 111.1
+            }
+          }
+        ]
+      },
+      {
+        "id": "b-ap-3",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 23.9,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 0.7,
+              "polarity": "bipolar",
+              "clampMinimum": 23.2,
+              "clampMaximum": 24.599999999999998
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.57,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.15,
+              "polarity": "bipolar",
+              "clampMinimum": 0.35,
+              "clampMaximum": 0.72
+            }
+          }
+        ]
+      },
+      {
+        "id": "b-damping",
+        "type": "lowpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "cutoff-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "cutoff",
+            "value": 5766.0,
+            "unit": "hertz",
+            "modulation": {
+              "portId": "cutoff-mod",
+              "amount": 4000.0,
+              "polarity": "bipolar",
+              "clampMinimum": 1000.0,
+              "clampMaximum": 12000.0
+            }
+          }
+        ],
+        "name": "Branch B damping"
+      },
+      {
+        "id": "b-cross-gain",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": -0.4970212989068887,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": -0.06958298184696442,
+              "polarity": "bipolar",
+              "clampMinimum": -0.98,
+              "clampMaximum": 0.0
+            }
+          }
+        ],
+        "name": "B to A RT60 return"
+      },
+      {
+        "id": "motion-a",
+        "type": "lfo",
+        "ports": [
+          {
+            "id": "frequency-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "phase-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "waveform-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "run-mode-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "frequency",
+            "value": 0.113,
+            "unit": "hertz",
+            "modulation": {
+              "portId": "frequency-mod",
+              "amount": 0.15,
+              "polarity": "bipolar",
+              "clampMinimum": 0.01,
+              "clampMaximum": 0.35
+            }
+          },
+          {
+            "id": "phase",
+            "value": 0.0,
+            "unit": "cycles",
+            "modulation": {
+              "portId": "phase-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 0.999
+            }
+          },
+          {
+            "id": "waveform",
+            "value": 0.0,
+            "unit": "waveform",
+            "modulation": {
+              "portId": "waveform-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "run-mode",
+            "value": 0.0,
+            "unit": "run-mode",
+            "modulation": {
+              "portId": "run-mode-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "motion-b",
+        "type": "lfo",
+        "ports": [
+          {
+            "id": "frequency-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "phase-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "waveform-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "run-mode-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "frequency",
+            "value": 0.071,
+            "unit": "hertz",
+            "modulation": {
+              "portId": "frequency-mod",
+              "amount": 0.15,
+              "polarity": "bipolar",
+              "clampMinimum": 0.01,
+              "clampMaximum": 0.35
+            }
+          },
+          {
+            "id": "phase",
+            "value": 0.31,
+            "unit": "cycles",
+            "modulation": {
+              "portId": "phase-mod",
+              "amount": 0.25,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 0.999
+            }
+          },
+          {
+            "id": "waveform",
+            "value": 0.0,
+            "unit": "waveform",
+            "modulation": {
+              "portId": "waveform-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          },
+          {
+            "id": "run-mode",
+            "value": 0.0,
+            "unit": "run-mode",
+            "modulation": {
+              "portId": "run-mode-mod",
+              "amount": 1.0,
+              "polarity": "bipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "decay-macro",
+        "type": "macro",
+        "ports": [
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "value",
+            "value": 0.0,
+            "unit": "normalized"
+          },
+          {
+            "id": "default-value",
+            "value": 0.0,
+            "unit": "normalized"
+          },
+          {
+            "id": "center-detent",
+            "value": 1.0,
+            "unit": "boolean"
+          }
+        ],
+        "name": "Decay"
+      },
+      {
+        "id": "tone-macro",
+        "type": "macro",
+        "ports": [
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "value",
+            "value": 0.0,
+            "unit": "normalized"
+          },
+          {
+            "id": "default-value",
+            "value": 0.0,
+            "unit": "normalized"
+          },
+          {
+            "id": "center-detent",
+            "value": 1.0,
+            "unit": "boolean"
+          }
+        ],
+        "name": "Tone"
+      },
+      {
+        "id": "motion-macro",
+        "type": "macro",
+        "ports": [
+          {
+            "id": "out",
+            "signal": "control",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "value",
+            "value": 0.0,
+            "unit": "normalized"
+          },
+          {
+            "id": "default-value",
+            "value": 0.0,
+            "unit": "normalized"
+          },
+          {
+            "id": "center-detent",
+            "value": 1.0,
+            "unit": "boolean"
+          }
+        ],
+        "name": "Motion"
+      },
+      {
+        "id": "left-a",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.41759999999999997,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 1.0,
+              "polarity": "unipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "left-b",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.16240000000000002,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 1.0,
+              "polarity": "unipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "left-sum",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "right-a",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": -0.1392,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 1.0,
+              "polarity": "unipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "right-b",
+        "type": "gain",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "gain-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "gain",
+            "value": 0.44079999999999997,
+            "unit": "linear",
+            "modulation": {
+              "portId": "gain-mod",
+              "amount": 1.0,
+              "polarity": "unipolar",
+              "clampMinimum": 0.0,
+              "clampMaximum": 1.0
+            }
+          }
+        ]
+      },
+      {
+        "id": "right-sum",
+        "type": "sum",
+        "ports": [
+          {
+            "id": "in-a",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-b",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": []
+      },
+      {
+        "id": "left-extraction",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 11.9,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 0.35,
+              "polarity": "bipolar",
+              "clampMinimum": 11.55,
+              "clampMaximum": 12.25
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.57,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.15,
+              "polarity": "bipolar",
+              "clampMinimum": 0.35,
+              "clampMaximum": 0.72
+            }
+          }
+        ],
+        "name": "Left unequal tap mix"
+      },
+      {
+        "id": "right-extraction",
+        "type": "allpass",
+        "ports": [
+          {
+            "id": "in",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "delay-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "coefficient-mod",
+            "signal": "control",
+            "direction": "input"
+          },
+          {
+            "id": "out",
+            "signal": "audio",
+            "direction": "output"
+          }
+        ],
+        "parameters": [
+          {
+            "id": "delay",
+            "value": 17.9,
+            "unit": "milliseconds",
+            "modulation": {
+              "portId": "delay-mod",
+              "amount": 0.35,
+              "polarity": "bipolar",
+              "clampMinimum": 17.549999999999997,
+              "clampMaximum": 18.25
+            }
+          },
+          {
+            "id": "coefficient",
+            "value": 0.57,
+            "unit": "unitless",
+            "modulation": {
+              "portId": "coefficient-mod",
+              "amount": 0.15,
+              "polarity": "bipolar",
+              "clampMinimum": 0.35,
+              "clampMaximum": 0.72
+            }
+          }
+        ],
+        "name": "Right unequal tap mix"
+      },
+      {
+        "id": "output",
+        "type": "stereo-output",
+        "ports": [
+          {
+            "id": "in-l",
+            "signal": "audio",
+            "direction": "input"
+          },
+          {
+            "id": "in-r",
+            "signal": "audio",
+            "direction": "input"
+          }
+        ],
+        "parameters": []
+      }
+    ],
+    "connections": [
+      {
+        "id": "input-left",
+        "from": {
+          "nodeId": "input",
+          "portId": "out-l"
+        },
+        "to": {
+          "nodeId": "input-left-half",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "input-right",
+        "from": {
+          "nodeId": "input",
+          "portId": "out-r"
+        },
+        "to": {
+          "nodeId": "input-right-half",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "input-left-sum",
+        "from": {
+          "nodeId": "input-left-half",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-mono",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "input-right-sum",
+        "from": {
+          "nodeId": "input-right-half",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-mono",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "input-ap-1",
+        "from": {
+          "nodeId": "input-mono",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-ap-1",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "input-ap-2",
+        "from": {
+          "nodeId": "input-ap-1",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-ap-2",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "input-ap-3",
+        "from": {
+          "nodeId": "input-ap-2",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-ap-3",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "input-ap-4",
+        "from": {
+          "nodeId": "input-ap-3",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "input-ap-4",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "inject-a",
+        "from": {
+          "nodeId": "input-ap-4",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "inject-a",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "inject-b",
+        "from": {
+          "nodeId": "input-ap-4",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "inject-b",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "inject-entry-a",
+        "from": {
+          "nodeId": "inject-a",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "entry-a",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "inject-entry-b",
+        "from": {
+          "nodeId": "inject-b",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "entry-b",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "b-cross-entry-a",
+        "from": {
+          "nodeId": "b-cross-gain",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "entry-a",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "a-cross-entry-b",
+        "from": {
+          "nodeId": "a-cross-gain",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "entry-b",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "a-ap-1",
+        "from": {
+          "nodeId": "entry-a",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "a-ap-1",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "a-delay-1",
+        "from": {
+          "nodeId": "a-ap-1",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "a-delay-1",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "a-ap-2",
+        "from": {
+          "nodeId": "a-delay-1",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "a-ap-2",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "a-delay-2",
+        "from": {
+          "nodeId": "a-ap-2",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "a-delay-2",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "a-ap-3",
+        "from": {
+          "nodeId": "a-delay-2",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "a-ap-3",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "a-damping",
+        "from": {
+          "nodeId": "a-ap-3",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "a-damping",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "a-cross",
+        "from": {
+          "nodeId": "a-damping",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "a-cross-gain",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "b-ap-1",
+        "from": {
+          "nodeId": "entry-b",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "b-ap-1",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "b-delay-1",
+        "from": {
+          "nodeId": "b-ap-1",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "b-delay-1",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "b-ap-2",
+        "from": {
+          "nodeId": "b-delay-1",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "b-ap-2",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "b-delay-2",
+        "from": {
+          "nodeId": "b-ap-2",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "b-delay-2",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "b-ap-3",
+        "from": {
+          "nodeId": "b-delay-2",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "b-ap-3",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "b-damping",
+        "from": {
+          "nodeId": "b-ap-3",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "b-damping",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "b-cross",
+        "from": {
+          "nodeId": "b-damping",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "b-cross-gain",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "motion-a-a1",
+        "from": {
+          "nodeId": "motion-a",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "a-ap-1",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "motion-a-a3",
+        "from": {
+          "nodeId": "motion-a",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "a-ap-3",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "motion-b-b1",
+        "from": {
+          "nodeId": "motion-b",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "b-ap-1",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "motion-b-b3",
+        "from": {
+          "nodeId": "motion-b",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "b-ap-3",
+          "portId": "delay-mod"
+        }
+      },
+      {
+        "id": "decay-a",
+        "from": {
+          "nodeId": "decay-macro",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "a-cross-gain",
+          "portId": "gain-mod"
+        }
+      },
+      {
+        "id": "decay-b",
+        "from": {
+          "nodeId": "decay-macro",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "b-cross-gain",
+          "portId": "gain-mod"
+        }
+      },
+      {
+        "id": "tone-a",
+        "from": {
+          "nodeId": "tone-macro",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "a-damping",
+          "portId": "cutoff-mod"
+        }
+      },
+      {
+        "id": "tone-b",
+        "from": {
+          "nodeId": "tone-macro",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "b-damping",
+          "portId": "cutoff-mod"
+        }
+      },
+      {
+        "id": "motion-rate-a",
+        "from": {
+          "nodeId": "motion-macro",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "motion-a",
+          "portId": "frequency-mod"
+        }
+      },
+      {
+        "id": "motion-rate-b",
+        "from": {
+          "nodeId": "motion-macro",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "motion-b",
+          "portId": "frequency-mod"
+        }
+      },
+      {
+        "id": "left-a",
+        "from": {
+          "nodeId": "a-damping",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "left-a",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "left-b",
+        "from": {
+          "nodeId": "b-delay-2",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "left-b",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "left-a-sum",
+        "from": {
+          "nodeId": "left-a",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "left-sum",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "left-b-sum",
+        "from": {
+          "nodeId": "left-b",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "left-sum",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "right-a",
+        "from": {
+          "nodeId": "a-delay-2",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "right-a",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "right-b",
+        "from": {
+          "nodeId": "b-damping",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "right-b",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "right-a-sum",
+        "from": {
+          "nodeId": "right-a",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "right-sum",
+          "portId": "in-a"
+        }
+      },
+      {
+        "id": "right-b-sum",
+        "from": {
+          "nodeId": "right-b",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "right-sum",
+          "portId": "in-b"
+        }
+      },
+      {
+        "id": "left-extraction",
+        "from": {
+          "nodeId": "left-sum",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "left-extraction",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "right-extraction",
+        "from": {
+          "nodeId": "right-sum",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "right-extraction",
+          "portId": "in"
+        }
+      },
+      {
+        "id": "left-output",
+        "from": {
+          "nodeId": "left-extraction",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "output",
+          "portId": "in-l"
+        }
+      },
+      {
+        "id": "right-output",
+        "from": {
+          "nodeId": "right-extraction",
+          "portId": "out"
+        },
+        "to": {
+          "nodeId": "output",
+          "portId": "in-r"
+        }
+      }
+    ]
+  },
+  "layout": {
+    "nodes": [
+      {
+        "nodeId": "input",
+        "x": -1260.0,
+        "y": -120.0
+      },
+      {
+        "nodeId": "input-left-half",
+        "x": -1080.0,
+        "y": -210.0
+      },
+      {
+        "nodeId": "input-right-half",
+        "x": -1080.0,
+        "y": -30.0
+      },
+      {
+        "nodeId": "input-mono",
+        "x": -870.0,
+        "y": -120.0
+      },
+      {
+        "nodeId": "input-ap-1",
+        "x": -650.0,
+        "y": -120.0
+      },
+      {
+        "nodeId": "input-ap-2",
+        "x": -430.0,
+        "y": -120.0
+      },
+      {
+        "nodeId": "input-ap-3",
+        "x": -210.0,
+        "y": -120.0
+      },
+      {
+        "nodeId": "input-ap-4",
+        "x": 10.0,
+        "y": -120.0
+      },
+      {
+        "nodeId": "inject-a",
+        "x": 230.0,
+        "y": -210.0
+      },
+      {
+        "nodeId": "inject-b",
+        "x": 230.0,
+        "y": 390.0
+      },
+      {
+        "nodeId": "entry-a",
+        "x": 450.0,
+        "y": -210.0
+      },
+      {
+        "nodeId": "a-ap-1",
+        "x": 670.0,
+        "y": -210.0
+      },
+      {
+        "nodeId": "a-delay-1",
+        "x": 890.0,
+        "y": -210.0
+      },
+      {
+        "nodeId": "a-ap-2",
+        "x": 1110.0,
+        "y": -210.0
+      },
+      {
+        "nodeId": "a-delay-2",
+        "x": 1330.0,
+        "y": -210.0
+      },
+      {
+        "nodeId": "a-ap-3",
+        "x": 1550.0,
+        "y": -210.0
+      },
+      {
+        "nodeId": "a-damping",
+        "x": 1770.0,
+        "y": -210.0
+      },
+      {
+        "nodeId": "a-cross-gain",
+        "x": 1770.0,
+        "y": 90.0
+      },
+      {
+        "nodeId": "entry-b",
+        "x": 450.0,
+        "y": 390.0
+      },
+      {
+        "nodeId": "b-ap-1",
+        "x": 670.0,
+        "y": 390.0
+      },
+      {
+        "nodeId": "b-delay-1",
+        "x": 890.0,
+        "y": 390.0
+      },
+      {
+        "nodeId": "b-ap-2",
+        "x": 1110.0,
+        "y": 390.0
+      },
+      {
+        "nodeId": "b-delay-2",
+        "x": 1330.0,
+        "y": 390.0
+      },
+      {
+        "nodeId": "b-ap-3",
+        "x": 1550.0,
+        "y": 390.0
+      },
+      {
+        "nodeId": "b-damping",
+        "x": 1770.0,
+        "y": 390.0
+      },
+      {
+        "nodeId": "b-cross-gain",
+        "x": 450.0,
+        "y": 90.0
+      },
+      {
+        "nodeId": "motion-a",
+        "x": 690.0,
+        "y": 690.0
+      },
+      {
+        "nodeId": "motion-b",
+        "x": 930.0,
+        "y": 690.0
+      },
+      {
+        "nodeId": "decay-macro",
+        "x": 1230.0,
+        "y": 690.0
+      },
+      {
+        "nodeId": "tone-macro",
+        "x": 1450.0,
+        "y": 690.0
+      },
+      {
+        "nodeId": "motion-macro",
+        "x": 1670.0,
+        "y": 690.0
+      },
+      {
+        "nodeId": "left-a",
+        "x": 2030.0,
+        "y": -310.0
+      },
+      {
+        "nodeId": "left-b",
+        "x": 2030.0,
+        "y": -110.0
+      },
+      {
+        "nodeId": "left-sum",
+        "x": 2250.0,
+        "y": -210.0
+      },
+      {
+        "nodeId": "right-a",
+        "x": 2030.0,
+        "y": 290.0
+      },
+      {
+        "nodeId": "right-b",
+        "x": 2030.0,
+        "y": 490.0
+      },
+      {
+        "nodeId": "right-sum",
+        "x": 2250.0,
+        "y": 390.0
+      },
+      {
+        "nodeId": "left-extraction",
+        "x": 2470.0,
+        "y": -210.0
+      },
+      {
+        "nodeId": "right-extraction",
+        "x": 2470.0,
+        "y": 390.0
+      },
+      {
+        "nodeId": "output",
+        "x": 2700.0,
+        "y": 90.0
+      }
+    ],
+    "viewport": {
+      "x": 260.0,
+      "y": 120.0,
+      "zoom": 0.42
+    }
+  }
+}

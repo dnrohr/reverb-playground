@@ -22,6 +22,16 @@ Node gain(std::string id, const double value, const double maximum = 1.0)
     } };
 }
 
+Node returnGain(std::string id, const double value)
+{
+    const auto sign = value < 0.0 ? -1.0 : 1.0;
+    return { std::move(id), "gain", { audioIn(), controlIn("gain-mod"), audioOut() }, {
+        { "gain", value, "linear", ParameterModulation {
+            "gain-mod", sign * std::abs(value) * 0.14, ModulationPolarity::bipolar,
+            sign < 0.0 ? -0.98 : 0.0, sign < 0.0 ? 0.0 : 0.98 } },
+    } };
+}
+
 Node sum(std::string id) { return { std::move(id), "sum", { audioIn("in-a"), audioIn("in-b"), audioOut() }, {} }; }
 
 Node delay(std::string id, const double milliseconds)
@@ -57,12 +67,23 @@ Node lfo(std::string id, const double frequency, const double phase)
 {
     return { std::move(id), "lfo", { controlIn("frequency-mod"), controlIn("phase-mod"),
         controlIn("waveform-mod"), controlIn("run-mode-mod"), controlOut() }, {
-        { "frequency", frequency, "hertz", ParameterModulation { "frequency-mod", 1.0,
-            ModulationPolarity::bipolar, 0.01, 100.0 } },
+        { "frequency", frequency, "hertz", ParameterModulation { "frequency-mod", 0.15,
+            ModulationPolarity::bipolar, 0.01, 0.35 } },
         { "phase", phase, "cycles", ParameterModulation { "phase-mod", 0.25,
             ModulationPolarity::bipolar, 0.0, 0.999 } },
-        { "waveform", 0.0, "waveform" }, { "run-mode", 0.0, "run-mode" },
+        { "waveform", 0.0, "waveform", ParameterModulation { "waveform-mod", 1.0,
+            ModulationPolarity::bipolar, 0.0, 1.0 } },
+        { "run-mode", 0.0, "run-mode", ParameterModulation { "run-mode-mod", 1.0,
+            ModulationPolarity::bipolar, 0.0, 1.0 } },
     } };
+}
+
+Node macro(std::string id, std::string name)
+{
+    return { std::move(id), "macro", { controlOut() }, {
+        { "value", 0.0, "normalized" }, { "default-value", 0.0, "normalized" },
+        { "center-detent", 1.0, "boolean" },
+    }, std::move(name) };
 }
 
 Connection cable(std::string id, std::string from, std::string fromPort, std::string to, std::string toPort)
@@ -99,12 +120,13 @@ GraphDocument makeDenseFigureEightGraph(const DenseFigureEightControls& requeste
         allpass("a-ap-1", 7.3, modulation), delay("a-delay-1", 71.1),
         allpass("a-ap-2", 13.7, modulation), delay("a-delay-2", 97.3),
         allpass("a-ap-3", 19.9, modulation), lowpass("a-damping", damping),
-        gain("a-cross-gain", feedbackGainForRt60(branchATraversal, rt60), 0.98),
+        returnGain("a-cross-gain", feedbackGainForRt60(branchATraversal, rt60)),
         allpass("b-ap-1", 8.9, modulation), delay("b-delay-1", 83.7),
         allpass("b-ap-2", 17.3, modulation), delay("b-delay-2", 109.1),
         allpass("b-ap-3", 23.9, modulation), lowpass("b-damping", damping * 0.93),
-        gain("b-cross-gain", -feedbackGainForRt60(branchBTraversal, rt60), 0.98),
+        returnGain("b-cross-gain", -feedbackGainForRt60(branchBTraversal, rt60)),
         lfo("motion-a", 0.113, 0.0), lfo("motion-b", 0.071, 0.31),
+        macro("decay-macro", "Decay"), macro("tone-macro", "Tone"), macro("motion-macro", "Motion"),
         gain("left-a", wet * 0.72), gain("left-b", wet * 0.28), sum("left-sum"),
         gain("right-a", -wet * 0.24), gain("right-b", wet * 0.76), sum("right-sum"),
         allpass("left-extraction", 11.9, modulation * 0.5),
@@ -145,6 +167,12 @@ GraphDocument makeDenseFigureEightGraph(const DenseFigureEightControls& requeste
         cable("motion-a-a3", "motion-a", "out", "a-ap-3", "delay-mod"),
         cable("motion-b-b1", "motion-b", "out", "b-ap-1", "delay-mod"),
         cable("motion-b-b3", "motion-b", "out", "b-ap-3", "delay-mod"),
+        cable("decay-a", "decay-macro", "out", "a-cross-gain", "gain-mod"),
+        cable("decay-b", "decay-macro", "out", "b-cross-gain", "gain-mod"),
+        cable("tone-a", "tone-macro", "out", "a-damping", "cutoff-mod"),
+        cable("tone-b", "tone-macro", "out", "b-damping", "cutoff-mod"),
+        cable("motion-rate-a", "motion-macro", "out", "motion-a", "frequency-mod"),
+        cable("motion-rate-b", "motion-macro", "out", "motion-b", "frequency-mod"),
         cable("left-a", "a-damping", "out", "left-a", "in"),
         cable("left-b", "b-delay-2", "out", "left-b", "in"),
         cable("left-a-sum", "left-a", "out", "left-sum", "in-a"),
@@ -183,6 +211,8 @@ GraphDocument makeDenseFigureEightGraph(const DenseFigureEightControls& requeste
         { "b-ap-2", 1'110.0, 390.0 }, { "b-delay-2", 1'330.0, 390.0 },
         { "b-ap-3", 1'550.0, 390.0 }, { "b-damping", 1'770.0, 390.0 }, { "b-cross-gain", 450.0, 90.0 },
         { "motion-a", 690.0, 690.0 }, { "motion-b", 930.0, 690.0 },
+        { "decay-macro", 1'230.0, 690.0 }, { "tone-macro", 1'450.0, 690.0 },
+        { "motion-macro", 1'670.0, 690.0 },
         { "left-a", 2'030.0, -310.0 }, { "left-b", 2'030.0, -110.0 }, { "left-sum", 2'250.0, -210.0 },
         { "right-a", 2'030.0, 290.0 }, { "right-b", 2'030.0, 490.0 }, { "right-sum", 2'250.0, 390.0 },
         { "left-extraction", 2'470.0, -210.0 }, { "right-extraction", 2'470.0, 390.0 },

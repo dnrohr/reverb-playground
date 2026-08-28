@@ -15,6 +15,9 @@ program ROM, captured impulse response, or recorded audio.
   builder. Its 58 visible nodes expose the eight-stage tank, normalized Gravity
   weighting, complementary Macros, independent LFO motion, and delayed damped
   return; it is not a proprietary-algorithm reconstruction.
+- `dense-figure-eight.rvp.json` is exported from its calculated native builder.
+  Its two cross-coupled branches expose every delay, diffuser, damper, return,
+  modulation route, stereo tap, and Decay/Tone/Motion macro.
 - `safe-parallel-shimmer.rvp.json` adds one non-recirculating aligned octave
   layer; `split-feedback-shimmer.rvp.json` exposes separately bounded normal
   and shifted returns.
@@ -38,6 +41,7 @@ Gravity's native document is exported first and then admitted by exact hash:
 
 ```powershell
 .\scripts\generate_gravity_factory_patch.ps1
+.\scripts\generate_dense_figure_eight_factory.ps1
 node scripts/generate_factory_patches.mjs
 ```
 

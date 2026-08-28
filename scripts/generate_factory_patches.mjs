@@ -262,6 +262,23 @@ const catalog = {
       },
     },
     {
+      id: 'dense-figure-eight',
+      family: 'dense-figure-eight',
+      status: 'complete',
+      document: {
+        kind: 'checked-in-json',
+        path: 'factory-patches/dense-figure-eight.rvp.json',
+        schemaVersion: 2,
+        engineVersion: '0.1',
+      },
+      license: { expression: 'AGPL-3.0-only', file: 'LICENSE' },
+      provenance: {
+        kind: 'project-authored-generated',
+        source: 'src/graph/Source/DenseFigureEightGraph.cpp',
+        description: 'Generated from the project-authored calculated two-branch public-primitives graph.',
+      },
+    },
+    {
       id: 'safe-parallel-shimmer',
       family: 'parallel-shimmer',
       status: 'complete',
@@ -338,6 +355,12 @@ const gravityFactoryBytes = await readFile(gravityFactoryPath);
 const gravityFactoryHash = createHash('sha256').update(gravityFactoryBytes).digest('hex');
 if (gravityFactoryHash !== '2c7f8615c1fe96dcf97a6c3d0662477186783618458ac7104ad1ac011fa05bf5')
   throw new Error('gravity-diffusion.rvp.json is stale; run .\\scripts\\generate_gravity_factory_patch.ps1 -Configuration Release');
+
+const denseFigureEightFactoryPath = resolve(outputDirectory, 'dense-figure-eight.rvp.json');
+const denseFigureEightFactoryBytes = await readFile(denseFigureEightFactoryPath);
+const denseFigureEightFactoryHash = createHash('sha256').update(denseFigureEightFactoryBytes).digest('hex');
+if (denseFigureEightFactoryHash !== '8ccb9aa3a3cf05d85d5e8b472396cab23588313be614b2f1a353ea34594a81fb')
+  throw new Error('dense-figure-eight.rvp.json is stale; run .\\scripts\\generate_dense_figure_eight_factory.ps1 -Configuration Release');
 
 const shimmerFactoryPath = resolve(outputDirectory, 'safe-parallel-shimmer.rvp.json');
 const shimmerFactoryBytes = await readFile(shimmerFactoryPath);

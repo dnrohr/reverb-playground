@@ -54,13 +54,18 @@ TEST_CASE("Figure-eight RT60 gains map traversal time to sixty-decibel decay")
 TEST_CASE("Dense figure eight exposes two delayed cross-coupled branches and round trips exactly")
 {
     const auto graph = reverb::graph::makeDenseFigureEightGraph();
-    REQUIRE(graph.nodes.size() == 37);
-    REQUIRE(graph.connections.size() == 44);
+    REQUIRE(graph.nodes.size() == 40);
+    REQUIRE(graph.connections.size() == 50);
     const auto compiled = reverb::graph::compileFeedbackGraph(graph, 48'000.0, 256);
     for (const auto& error : compiled.errors)
         INFO(error);
     REQUIRE(compiled.valid());
     REQUIRE(compiled.planDiagnostics.feedbackRegionCount == 1);
+    REQUIRE(compiled.delayMemory.withinBudget());
+    REQUIRE(compiled.planDiagnostics.preparedStorageBytes < reverb::graph::delayMemoryBudgetBytes);
+    REQUIRE(compiled.planDiagnostics.estimatedScalarOperationsPerSample < 2'000);
+    REQUIRE(std::ranges::none_of(graph.nodes, [](const auto& node) { return node.type == "pitch-shift"; }));
+    REQUIRE(std::ranges::count_if(graph.nodes, [](const auto& node) { return node.type == "macro"; }) == 3);
     for (const auto id : { "a-delay-1", "a-delay-2", "b-delay-1", "b-delay-2", "a-cross-gain", "b-cross-gain" })
         REQUIRE(std::ranges::any_of(graph.nodes, [&](const auto& node) { return node.id == id; }));
     REQUIRE(reverb::graph::parsePatchJson(reverb::graph::writePatchJson(graph)) == graph);
