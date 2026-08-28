@@ -1394,7 +1394,7 @@ Acceptance criteria:
 
 ## M21. Constrained four-line FDN
 
-### M21.1 Implement the four-line Hadamard network
+### M21.1 Implement the four-line Hadamard network — Complete
 
 Tasks: add four unequal delay lines, normalized 4x4 Hadamard mixing, per-line delay-aware gains and damping, bounded modulation, and explicit input/output vectors.
 

@@ -1308,3 +1308,20 @@ Results:
 - Reviewed UI evidence: [factory overview](../artifacts/ui/m20-2-dense-figure-eight/dense-figure-eight-overview.png),
   [Decay macro inspector](../artifacts/ui/m20-2-dense-figure-eight/decay-macro-inspector.png),
   and [640×400 layout](../artifacts/ui/m20-2-dense-figure-eight/dense-figure-eight-compact-640x400.png).
+
+## M21.1 verification
+
+- The four-line FDN reference expands its normalized 4×4 Hadamard feedback
+  matrix into 16 ordinary Gain and 12 ordinary Sum blocks. Tests prove the
+  matrix preserves energy and is its own inverse within floating-point tolerance.
+- Four unequal lines expose independent moving diffusion, Delay, low-pass
+  damping, delay-aware RT60 return gain, alternating input injection, and
+  unequal signed stereo pickup vectors. Matrix mixing redistributes energy and
+  does not implicitly control decay.
+- The 75-node/100-cable graph compiles as one legal delayed feedback region,
+  fits the fixed delay arena, round-trips schema v2, remains finite and bounded
+  across supported rates and parameter extremes, resets exactly, and produces
+  sample-identical output with 64- and 257-sample host partitions.
+- [Four-line FDN reference](four-line-fdn-design.md) records the equations,
+  public expanded representation, boundaries, and M21.2 handoff. UI unchanged;
+  no screenshot or video is required for this task.

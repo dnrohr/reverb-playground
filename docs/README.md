@@ -68,6 +68,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Gravity Diffusion factory patch and teaching view](gravity-diffusion-factory-and-teaching.md) - project-authored provenance, reconstruction and modification guide, honest prediction/reference/live-measurement hierarchy, A/B workflow, and UI evidence.
 - [Gravity Diffusion validation and Windows package](gravity-validation-and-package.md) - multi-rate safety, macro sweeps, named-host restore, physical scaling evidence, and exact package identity.
 - [Dense figure-eight reference](dense-figure-eight-design.md) - calculated cross-coupled decay, delay selection, density qualification, factory macros, and UI evidence.
+- [Four-line FDN reference](four-line-fdn-design.md) - normalized Hadamard feedback, per-line decay, expanded visible routing, and deterministic safety gates.
 - [Visible Pitch Shift primitive design](pitch-shift-primitive-design.md) - mono dual-read-head semantics, fixed causal latency, grain controls, automation, quality limits, and prepared resource budgets.
 - [Pitch Shift inner-loop optimization](pitch-shift-inner-loop-optimization.md) - prepared phase/window/addressing work, transition behavior, same-machine Release measurements, and qualification boundary.
 - [Compiled control-ramp processing](compiled-control-ramp-processing.md) - bounded ramp segments, block and causal processor kernels, equivalence coverage, and exact-commit performance evidence.
