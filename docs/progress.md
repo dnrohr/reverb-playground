@@ -95,6 +95,7 @@ Last updated: 2026-08-26
 | M23.1 Dense processor-family profile | Complete | Exact-commit 30-case Release baseline separates normal, telemetry, and crossfade timing and attributes delay, matrix, damping, modulation, and routing costs; Four-Line routing/dispatch is dominant |
 | M23.2 Reusable dense-network kernels | Complete | Generic feedback-region gain/sum/filter fusion prepares 10 Four-Line kernels with a tested fallback; all 30 dense cases improve by at least 15% median and p95, with bounded audio equivalence |
 | M24.1 Comparative dense qualification | In progress | Corrected exact-commit 32-case report uses energetic-window detrended ripple; both dense tanks pass density, recurrence, coloration, smearing, and mono gates, and eight loudness-matched reels await recorded listening notes |
+| M24.2 Dense release qualification | In progress | Exact `b2deaaf11d01` package validates; pluginval strictness 10 and Steinberg extensive validation pass after fixing extreme host-rate preparation; full Release and clean-main CI remain |
 
 ## M0.2 verification
 

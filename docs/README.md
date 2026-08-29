@@ -22,6 +22,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Alpha usability and safety protocol](alpha-usability-safety-protocol.md) - anonymous participant method, complete task journey, accessibility matrix, and stop rules.
 - [Alpha validation findings](alpha-validation-findings.md) - privacy-preserving session outcomes, prioritized defects, and release-blocker inventory.
 - [Windows alpha package and host validation](windows-alpha-package-and-host-validation.md) - reproducible archive contract and named-host evidence.
+- [M24 dense-reverb release qualification](m24-release-qualification.md) - current exact-build safety, workflow, host, package, and supported-envelope evidence.
 - [Progress log](progress.md) - completed roadmap tasks and verification evidence.
 - [Project license](../LICENSE), [third-party notices](../THIRD_PARTY_NOTICES.md), [asset provenance](../ASSET_PROVENANCE.md), and [contribution/DCO policy](../CONTRIBUTING.md) - open-source distribution boundaries.
 - [Patch format v1](patch-format.md) - versioned semantic graph, editor layout, typed ports, units, validation, and migration policy.
