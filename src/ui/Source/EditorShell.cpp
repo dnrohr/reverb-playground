@@ -36,9 +36,9 @@ EditorShell::EditorShell(Callbacks callbacks)
     styleLabel(wetGainLabel_, mutedText, 12.0F, juce::Font::bold);
     styleLabel(dryGainLabel_, mutedText, 12.0F, juce::Font::bold);
 
-    const std::array<juce::Component*, 9> components {
+    const std::array<juce::Component*, 8> components {
         &status_, &wetGainLabel_, &dryGainLabel_,
-        &deviceButton_, &impulseButton_, &muteButton_, &resetButton_, &wetGain_, &dryGain_,
+        &impulseButton_, &muteButton_, &resetButton_, &wetGain_, &dryGain_,
     };
     for (auto* component : components)
         addAndMakeVisible(component);
@@ -71,6 +71,7 @@ EditorShell::EditorShell(Callbacks callbacks)
     dryGain_.setDoubleClickReturnValue(true, 0.0);
     dryGain_.onValueChange = [this] { callbacks_.setDryGain(static_cast<float>(dryGain_.getValue())); };
     muteButton_.setToggleState(callbacks_.emergencyMuted(), juce::dontSendNotification);
+    resetButton_.setVisible(false);
 
     const std::array<juce::Component*, 13> auditionComponents {
         &sourceMode_, &fileButton_, &filePlayButton_, &fileStopButton_, &drawerButton_,
@@ -218,6 +219,13 @@ EditorShell::EditorShell(Callbacks callbacks)
             callbacks_.resetSafety();
             complete(true);
         })
+        .withNativeFunction("chooseAudioDevice", [this](const auto&, auto complete) {
+            callbacks_.chooseAudioDevice();
+            complete(true);
+        })
+        .withNativeFunction("standaloneAuditionAvailable", [this](const auto&, auto complete) {
+            complete(callbacks_.standaloneAuditionAvailable);
+        })
         .withResourceProvider([this](const auto& path) { return getWebResource(path); });
     browser_ = std::make_unique<juce::WebBrowserComponent>(std::move(options));
     addAndMakeVisible(*browser_);
@@ -230,7 +238,7 @@ void EditorShell::paint(juce::Graphics& graphics)
     graphics.fillAll(background);
     const auto headerHeight = callbacks_.standaloneAuditionAvailable
         ? static_cast<float>(calculateAuditionDeckLayout(getWidth(), auditionDrawerExpanded_).headerHeight)
-        : 88.0F;
+        : static_cast<float>(globalControlHeightForWidth(getWidth()) + 10);
     auto controls = getLocalBounds().toFloat().removeFromTop(headerHeight);
     graphics.setColour(panel);
     graphics.fillRect(controls);
@@ -297,40 +305,36 @@ void EditorShell::resized()
 {
     auto bounds = getLocalBounds();
     const auto deck = calculateAuditionDeckLayout(getWidth(), auditionDrawerExpanded_);
-    const auto headerHeight = callbacks_.standaloneAuditionAvailable ? deck.headerHeight : 88;
+    const auto headerHeight = callbacks_.standaloneAuditionAvailable
+        ? deck.headerHeight : globalControlHeightForWidth(getWidth()) + 10;
     constexpr int inset = 14;
     const auto contentWidth = juce::jmax(0, getWidth() - inset * 2);
     if (getWidth() < 900) {
-        status_.setBounds(inset, 10, contentWidth, 25);
-        auto actions = juce::Rectangle<int> { inset, 39, contentWidth, 28 };
-        constexpr int actionGap = 6;
-        const auto actionWidth = juce::jmax(0, (actions.getWidth() - actionGap * 3) / 4);
-        deviceButton_.setBounds(actions.removeFromLeft(actionWidth)); actions.removeFromLeft(actionGap);
-        impulseButton_.setBounds(actions.removeFromLeft(actionWidth)); actions.removeFromLeft(actionGap);
-        muteButton_.setBounds(actions.removeFromLeft(actionWidth)); actions.removeFromLeft(actionGap);
-        resetButton_.setBounds(actions);
-        auto gainRow = juce::Rectangle<int> { inset, 70, contentWidth, 27 };
+        status_.setBounds(inset, 6, contentWidth, 23);
+        auto gainRow = juce::Rectangle<int> { inset, 31, contentWidth, 25 };
         const auto half = gainRow.getWidth() / 2;
         auto wet = gainRow.removeFromLeft(half).reduced(0, 0); wet.removeFromRight(5);
         auto dry = gainRow; dry.removeFromLeft(5);
         wetGainLabel_.setBounds(wet.removeFromLeft(34)); wetGain_.setBounds(wet);
         dryGainLabel_.setBounds(dry.removeFromLeft(34)); dryGain_.setBounds(dry);
+        auto actions = juce::Rectangle<int> { inset, 59, contentWidth, 28 };
+        constexpr int actionGap = 6;
+        const auto actionCount = resetButton_.isVisible() ? 3 : 2;
+        const auto actionWidth = juce::jmax(0, (actions.getWidth() - actionGap * (actionCount - 1)) / actionCount);
+        impulseButton_.setBounds(actions.removeFromLeft(actionWidth)); actions.removeFromLeft(actionGap);
+        muteButton_.setBounds(actions.removeFromLeft(actionWidth));
+        if (resetButton_.isVisible()) { actions.removeFromLeft(actionGap); resetButton_.setBounds(actions); }
     } else {
-        auto topRow = juce::Rectangle<int> { inset, 10, contentWidth, 31 };
-        constexpr int actionWidth = 132;
-        constexpr int resetWidth = 116;
-        constexpr int actionGap = 7;
-        const auto actionsWidth = actionWidth * 3 + resetWidth + actionGap * 3;
-        status_.setBounds(topRow.removeFromLeft(juce::jmax(180, topRow.getWidth() - actionsWidth)));
-        deviceButton_.setBounds(topRow.removeFromLeft(actionWidth)); topRow.removeFromLeft(actionGap);
-        impulseButton_.setBounds(topRow.removeFromLeft(actionWidth)); topRow.removeFromLeft(actionGap);
-        muteButton_.setBounds(topRow.removeFromLeft(actionWidth)); topRow.removeFromLeft(actionGap);
-        resetButton_.setBounds(topRow.removeFromLeft(resetWidth));
-        auto gainRow = juce::Rectangle<int> { inset, 43, contentWidth, 32 };
-        wetGainLabel_.setBounds(gainRow.removeFromLeft(34));
-        wetGain_.setBounds(gainRow.removeFromLeft(260)); gainRow.removeFromLeft(12);
-        dryGainLabel_.setBounds(gainRow.removeFromLeft(34));
-        dryGain_.setBounds(gainRow.removeFromLeft(260));
+        auto row = juce::Rectangle<int> { inset, 6, contentWidth, 29 };
+        constexpr int gap = 7;
+        if (resetButton_.isVisible()) { resetButton_.setBounds(row.removeFromRight(112)); row.removeFromRight(gap); }
+        muteButton_.setBounds(row.removeFromRight(132)); row.removeFromRight(gap);
+        impulseButton_.setBounds(row.removeFromRight(122)); row.removeFromRight(gap);
+        auto dry = row.removeFromRight(205); row.removeFromRight(gap);
+        dryGainLabel_.setBounds(dry.removeFromLeft(34)); dryGain_.setBounds(dry);
+        auto wet = row.removeFromRight(205); row.removeFromRight(gap);
+        wetGainLabel_.setBounds(wet.removeFromLeft(34)); wetGain_.setBounds(wet);
+        status_.setBounds(row);
     }
     if (callbacks_.standaloneAuditionAvailable) {
         const auto convert = [](const LayoutRect& item) {
@@ -528,6 +532,10 @@ void EditorShell::timerCallback()
         dryGain_.setValue(callbacks_.dryGain(), juce::dontSendNotification);
     muteButton_.setToggleState(callbacks_.emergencyMuted(), juce::dontSendNotification);
     const auto safetyLatched = callbacks_.isSafetyLatched();
+    if (resetButton_.isVisible() != safetyLatched) {
+        resetButton_.setVisible(safetyLatched);
+        resized();
+    }
     if (impulseFlashTicks_ > 0 && --impulseFlashTicks_ == 0)
         impulseButton_.setButtonText("TRIGGER IMPULSE");
     if (muteButton_.getToggleState())

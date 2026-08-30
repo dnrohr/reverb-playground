@@ -1,6 +1,6 @@
 # Roadmap progress
 
-Last updated: 2026-08-26
+Last updated: 2026-08-29
 
 | Task | Status | Evidence |
 |---|---|---|
@@ -96,6 +96,7 @@ Last updated: 2026-08-26
 | M23.2 Reusable dense-network kernels | Complete | Generic feedback-region gain/sum/filter fusion prepares 10 Four-Line kernels with a tested fallback; all 30 dense cases improve by at least 15% median and p95, with bounded audio equivalence |
 | M24.1 Comparative dense qualification | In progress | Corrected exact-commit 32-case report uses energetic-window detrended ripple; both dense tanks pass density, recurrence, coloration, smearing, and mono gates, and eight loudness-matched reels await recorded listening notes |
 | M24.2 Dense release qualification | Complete | Exact `b2deaaf11d01` package validates; pluginval strictness 10 and Steinberg extensive validation pass after fixing extreme host-rate preparation; 244 native/CLI plus 123 web tests pass locally and clean-main CI verifies and packages `120f9dc` |
+| M25.1 Consolidate application chrome and menus | Complete | Conventional File/Edit/View/Help menus, compact patch identity/status, contextual safety recovery, 64 logical pixels returned to the 1200 x 720 schematic, responsive tests, and standalone screenshot evidence |
 
 ## M0.2 verification
 

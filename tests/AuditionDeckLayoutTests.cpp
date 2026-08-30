@@ -28,11 +28,19 @@ TEST_CASE("Compact audition strip remains in bounds at every supported editor wi
         CAPTURE(width);
         REQUIRE(layout.headerHeight < 150);
         REQUIRE(layout.deckBounds == reverb::ui::LayoutRect {
-            14, 10 + reverb::ui::globalControlHeightForWidth(width) + 6, width - 28, 32 });
+            14, 10 + reverb::ui::globalControlHeightForWidth(width) + 6, width - 28, 28 });
         requireContainedAndSeparate(layout.deckBounds, layout.compactControls());
         for (const auto& control : layout.drawerControls()) REQUIRE(control.isEmpty());
         REQUIRE(layout.summary.width >= 210);
     }
+}
+
+TEST_CASE("Compact wide chrome returns thirty-two native pixels to the schematic")
+{
+    constexpr auto releasedWideClosedHeaderHeight = 123;
+    const auto compact = reverb::ui::calculateAuditionDeckLayout(1'200, false);
+    REQUIRE(compact.headerHeight == 91);
+    REQUIRE(releasedWideClosedHeaderHeight - compact.headerHeight == 32);
 }
 
 TEST_CASE("Expanded audition drawer remains in bounds through resize and transport states")

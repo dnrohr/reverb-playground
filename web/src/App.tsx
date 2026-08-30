@@ -46,6 +46,7 @@ import { decorateSplitShimmerFocus, splitFeedbackShimmerTeaching, splitShimmerLo
 import { decorateReverseCosmicFocus, reverseCosmicShimmerTeaching, type ReverseCosmicFocus } from './reverseCosmicShimmerTeaching';
 import { collapseMatrixMixer, inspectMatrixMixer, type MatrixMixerInspection } from './matrixMixerPresentation';
 import { assistedTuningSuggestions, createAssistedTuningPreview, supportsAssistedTuning, type AssistedTuningSuggestionId } from './assistedTuning';
+import { editorCommandBarHeight, measurementBarHeight } from './workspaceChrome';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -507,12 +508,18 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [energyEnabled, setEnergyEnabled] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [energyLevels, setEnergyLevels] = useState<EnergyLevels>({});
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
+  const [openApplicationMenu, setOpenApplicationMenu] = useState<'file' | 'edit' | 'view' | 'help' | null>(null);
+  const [standaloneAvailable, setStandaloneAvailable] = useState(false);
   const [diagnostics, setDiagnostics] = useState<RuntimeDiagnostics | null>(null);
   const activeGraphRevision = useRef(0);
   const [controlPreviewTime, setControlPreviewTime] = useState(() => performance.now() / 1000);
   const audibleFingerprint = useMemo(() => audibleGraphFingerprint(nodes, edges), [edges, nodes]);
   const hostStateJson = useMemo(() => writePatchJson(nodes, edges, viewport, qualityPolicy), [edges, nodes, qualityPolicy, viewport]);
   const activePatch = activePatchId === 'custom' ? null : factoryPatchDescription(activePatchId);
+
+  useEffect(() => {
+    void callNative('standaloneAuditionAvailable').then((available) => setStandaloneAvailable(available === true));
+  }, []);
 
   const loopInspection = useMemo(() => selectedNode
     ? inspectFeedbackLoops(nodes, edges, { nodeId: selectedNode.id })
@@ -878,6 +885,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && openApplicationMenu) {
+        event.preventDefault();
+        setOpenApplicationMenu(null);
+        return;
+      }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
         event.preventDefault();
         if (event.shiftKey) redoGraph(); else undoGraph();
@@ -896,7 +908,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [copySelection, pasteSelection, redoGraph, removeSelection, resetPatch, undoGraph]);
+  }, [copySelection, openApplicationMenu, pasteSelection, redoGraph, removeSelection, resetPatch, undoGraph]);
 
   const beginParameterEdit = useCallback((nodeId: string, parameterId: string, _before: number) => {
     activeEdit.current = { label: `Edit ${nodeId}.${parameterId}`, before: snapshotGraph({ nodes, edges }) };
@@ -959,6 +971,19 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     }
   }, [setEdges, setFlowViewport, setNodes, snapshot]);
 
+  useEffect(() => {
+    const handleFileShortcut = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      if (event.key.toLowerCase() === 's') {
+        event.preventDefault(); savePatch();
+      } else if (event.key.toLowerCase() === 'o') {
+        event.preventDefault(); loadInput.current?.click();
+      }
+    };
+    window.addEventListener('keydown', handleFileShortcut);
+    return () => window.removeEventListener('keydown', handleFileShortcut);
+  }, [savePatch]);
+
   const teachingKey = selectedNode?.id ?? 'overview';
   const pendingConnectionDecision = pendingConnection ? decideConnection(nodes, edges, pendingConnection) : null;
   const pendingSignal = pendingConnectionDecision?.kind === 'occupied' ? pendingConnectionDecision.signal : null;
@@ -972,16 +997,51 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   }, []);
 
   return (
-    <main className="editor-shell">
-      <header className="editor-header">
-        <div>
-          <div className="eyebrow">SCHEMATIC EDITOR / {activePatch?.label.toUpperCase() ?? 'CUSTOM PATCH'}</div>
-          <h1>Patch architecture</h1>
-          {snapshot.productVersion && snapshot.buildCommit ? <span className="build-identity">v{snapshot.productVersion} / {snapshot.buildCommit}</span> : null}
-        </div>
+    <main className="editor-shell" style={{ gridTemplateRows: `${editorCommandBarHeight}px ${measurementBarHeight}px minmax(0, 1fr)` }}>
+      <header className="editor-header" onMouseLeave={() => setOpenApplicationMenu(null)}>
+        <nav className="application-menus" aria-label="Application menus">
+          {(['file', 'edit', 'view', 'help'] as const).map((menu) => <div className="application-menu" key={menu}>
+            <button type="button" aria-haspopup="menu" aria-expanded={openApplicationMenu === menu}
+              onClick={() => setOpenApplicationMenu((open) => open === menu ? null : menu)}>{menu.toUpperCase()}</button>
+            {openApplicationMenu === menu ? <div className="application-menu-popover" role="menu" aria-label={`${menu} menu`}>
+              {menu === 'file' ? <>
+                <button role="menuitem" type="button" onClick={() => { savePatch(); setOpenApplicationMenu(null); }}>SAVE PATCH <kbd>CTRL S</kbd></button>
+                <button role="menuitem" type="button" onClick={() => { loadInput.current?.click(); setOpenApplicationMenu(null); }}>OPEN PATCH… <kbd>CTRL O</kbd></button>
+                {standaloneAvailable ? <button role="menuitem" type="button" onClick={() => { void callNative('chooseAudioDevice'); setOpenApplicationMenu(null); }}>AUDIO DEVICE…</button> : null}
+                <button role="menuitem" type="button" onClick={() => { resetPatch(); setOpenApplicationMenu(null); }}>RESET PATCH <kbd>R</kbd></button>
+              </> : null}
+              {menu === 'edit' ? <>
+                <button role="menuitem" type="button" disabled={!graphHistory.undo.length} onClick={() => { undoGraph(); setOpenApplicationMenu(null); }}>UNDO <kbd>CTRL Z</kbd></button>
+                <button role="menuitem" type="button" disabled={!graphHistory.redo.length} onClick={() => { redoGraph(); setOpenApplicationMenu(null); }}>REDO <kbd>CTRL Y</kbd></button>
+                <button role="menuitem" type="button" onClick={() => { copySelection(); setOpenApplicationMenu(null); }}>COPY <kbd>CTRL C</kbd></button>
+                <button role="menuitem" type="button" disabled={!clipboard.current} onClick={() => { pasteSelection(); setOpenApplicationMenu(null); }}>PASTE <kbd>CTRL V</kbd></button>
+                <button role="menuitem" type="button" onClick={() => { removeSelection(); setOpenApplicationMenu(null); }}>DELETE SELECTION <kbd>DEL</kbd></button>
+              </> : null}
+              {menu === 'view' ? <>
+                <label className="menu-select">PROCESSING QUALITY
+                  <select aria-label="Processing quality" value={qualityPolicy}
+                    onChange={(event) => setQualityPolicy(event.target.value as QualityPolicy)}>
+                    <option value="draft">Draft / lowest cost</option>
+                    <option value="normal">Normal / released sound</option>
+                    <option value="high">High / cubic</option>
+                  </select>
+                </label>
+                <button role="menuitemcheckbox" aria-checked={energyEnabled} type="button" disabled={reducedMotion}
+                  onClick={() => setEnergyEnabled((enabled) => !enabled)}>ENERGY {reducedMotion ? 'REDUCED' : energyEnabled ? 'ON' : 'OFF'}</button>
+                <button role="menuitemcheckbox" aria-checked={diagnosticsOpen} type="button"
+                  onClick={() => { setDiagnosticsOpen((open) => !open); setOpenApplicationMenu(null); }}>DIAGNOSTICS</button>
+              </> : null}
+              {menu === 'help' ? <>
+                <button role="menuitemcheckbox" aria-checked={teachingEnabled} type="button" onClick={() => { toggleTeaching(); setOpenApplicationMenu(null); }}>CONTEXTUAL LEARNING {teachingEnabled ? 'ON' : 'OFF'}</button>
+                <button role="menuitem" type="button" onClick={() => { setResearchOpen(true); setOpenApplicationMenu(null); }}>KEITH BARR ARCHITECTURE NOTES</button>
+                {snapshot.productVersion && snapshot.buildCommit ? <span className="menu-build">REVERB PLAYGROUND v{snapshot.productVersion}<br />{snapshot.buildCommit}</span> : null}
+              </> : null}
+            </div> : null}
+          </div>)}
+        </nav>
         <div className="header-runtime">
           <label className="factory-picker">
-            <span>FACTORY PATCH</span>
+            <span>PATCH</span>
             <select
               aria-label="Factory patch"
               value={activePatchId}
@@ -994,34 +1054,21 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               {factoryPatches.map((patch) => <option key={patch.id} value={patch.id}>{patch.label}</option>)}
             </select>
           </label>
-          <label className="factory-picker quality-picker" title="Draft uses nearest interpolation; Normal uses linear; High uses cubic interpolation. Saved with the patch.">
-            <span>QUALITY</span>
-            <select aria-label="Processing quality" value={qualityPolicy}
-              onChange={(event) => setQualityPolicy(event.target.value as QualityPolicy)}>
-              <option value="draft">Draft / lowest cost</option>
-              <option value="normal">Normal / released sound</option>
-              <option value="high">High / cubic</option>
-            </select>
-          </label>
+          <div className="patch-identity"><strong>{activePatch?.graphName ?? 'CUSTOM.graph'}</strong>
+            <span>{nodes.length} BLOCKS / {edges.length} CABLES</span></div>
+          <span className={`clean-state ${isHistoryClean(graphHistory, { nodes, edges }) ? 'is-clean' : 'is-dirty'}`}>
+            {isHistoryClean(graphHistory, { nodes, edges }) ? 'SAVED' : 'UNSAVED'}
+          </span>
           <div className="comparison-switch" role="group" aria-label="Compare Barr reference with selected design">
             <button type="button" aria-pressed={activePatchId === 'barr-reference'} onClick={() => void selectFactoryPatch('barr-reference')}>A / BARR</button>
             <button type="button" aria-pressed={activePatchId === comparisonPatchId} onClick={() => void selectFactoryPatch(comparisonPatchId)}>
               B / {comparisonPatchLabel(comparisonPatchId)}
             </button>
           </div>
-          <div className="comparison-switch comparison-four" role="group" aria-label="Compare cosmic and shimmer designs">
-            {([
-              ['barr-reference', 'BARR'],
-              ['modulated-cosmic-reverse', 'COSMIC REV'],
-              ['split-feedback-shimmer', 'FB SHIMMER'],
-              ['reverse-cosmic-shimmer', 'REV COSMIC'],
-            ] as const).map(([id, label]) => <button type="button" key={id} aria-pressed={activePatchId === id}
-              onClick={() => void selectFactoryPatch(id)}>{label}</button>)}
-          </div>
           <button className="energy-toggle" type="button" aria-pressed={energyEnabled} disabled={reducedMotion} onClick={() => setEnergyEnabled((value) => !value)} title={reducedMotion ? 'Disabled by the operating-system reduced-motion preference' : 'Toggle measured node and cable energy'}>
             ENERGY {reducedMotion ? 'REDUCED' : energyEnabled ? 'ON' : 'OFF'}
           </button>
-          <button className="diagnostics-toggle" type="button" aria-expanded={diagnosticsOpen} onClick={() => setDiagnosticsOpen((value) => !value)}>DIAGNOSTICS</button>
+          <button className="header-save" type="button" onClick={savePatch}>SAVE</button>
           <div className="header-status" aria-label="Audition status">
             <span className="status-dot" aria-hidden="true" />
             <span>{diagnostics?.topologyPublication.crossfadeTotalSamples
@@ -1073,10 +1120,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
         <section className="canvas-pane" aria-label="Patch canvas">
           <div className="canvas-toolbar">
-            <div>
-              <strong>{activePatch?.graphName ?? 'CUSTOM.graph'}</strong>
-              <span>{nodes.length} blocks / {edges.length} cables</span>
-            </div>
+            <div><strong>PATCH CANVAS</strong><span>{Math.round(viewport.zoom * 100)}%</span></div>
             <div className="canvas-actions">
               {supportsAssistedTuning({ nodes, edges }) ? <button type="button" className="tuning-open-button"
                 aria-expanded={tuningOpen} onClick={() => setTuningOpen((open) => !open)}>TUNE</button> : null}
@@ -1095,32 +1139,20 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                   } })}>
                 INSPECT MATRIX
               </button> : null}
-              <span>{Math.round(viewport.zoom * 100)}%</span>
-              <span className={`clean-state ${isHistoryClean(graphHistory, { nodes, edges }) ? 'is-clean' : 'is-dirty'}`}>
-                {isHistoryClean(graphHistory, { nodes, edges }) ? 'SAVED' : 'UNSAVED'}
-              </span>
-              <button type="button" onClick={savePatch}>SAVE PATCH</button>
-              <button type="button" onClick={() => loadInput.current?.click()}>LOAD PATCH</button>
-              <button type="button" disabled={!graphHistory.undo.length} onClick={undoGraph}>UNDO</button>
-              <button type="button" disabled={!graphHistory.redo.length} onClick={redoGraph}>REDO</button>
-              <button type="button" onClick={copySelection}>COPY</button>
-              <button type="button" disabled={!clipboard.current} onClick={pasteSelection}>PASTE</button>
-              <button type="button" onClick={removeSelection}>DELETE</button>
-              <button type="button" onClick={resetPatch}>RESET PATCH</button>
-              <input
-                ref={loadInput}
-                className="file-input"
-                aria-label="Load patch file"
-                type="file"
-                accept=".json,application/json"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) void loadPatch(file);
-                  event.target.value = '';
-                }}
-              />
             </div>
           </div>
+          <input
+            ref={loadInput}
+            className="file-input"
+            aria-label="Load patch file"
+            type="file"
+            accept=".json,application/json"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void loadPatch(file);
+              event.target.value = '';
+            }}
+          />
           {fileStatus ? (
             <div className={`file-status file-status-${fileStatus.kind}`} role={fileStatus.kind === 'error' ? 'alert' : 'status'}>
               <span>{fileStatus.message}</span>

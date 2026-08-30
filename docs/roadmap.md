@@ -1515,7 +1515,7 @@ Goal: reorganize the existing interface around a canvas-first workspace without
 removing capability or weakening safety. App-icon design is deliberately
 deferred and is not part of this milestone.
 
-### M25.1 Consolidate application chrome and menus
+### M25.1 Consolidate application chrome and menus — Complete
 
 Tasks: replace the stacked native/editor command regions with one compact
 application bar and one patch command bar; add conventional File, Edit, View,

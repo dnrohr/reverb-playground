@@ -46,7 +46,7 @@ def check_contract(styles: str, app: str, editor_shell: str, plugin_editor: str)
         if ratio < 4.5:
             failures.append(f"contrast: {label} is {ratio:.2f}:1; expected at least 4.5:1")
     for required in (
-        ".build-identity { display: block; margin-top: 5px; color: #788892;",
+        ".patch-identity span { color: #788892;",
         ".chart-grid text, .axis-label { fill: #788892;",
         ".module-group h2 { margin: 0 0 7px 4px; color: #788892;",
     ):

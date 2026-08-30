@@ -59,7 +59,7 @@ struct AuditionDeckLayout final {
 
 [[nodiscard]] constexpr int globalControlHeightForWidth(const int width) noexcept
 {
-    return width < 900 ? 87 : 65;
+    return width < 900 ? 87 : 37;
 }
 
 [[nodiscard]] inline AuditionDeckLayout calculateAuditionDeckLayout(
@@ -68,12 +68,12 @@ struct AuditionDeckLayout final {
     constexpr int outerInset = 14;
     constexpr int topInset = 10;
     constexpr int gap = 6;
-    constexpr int compactHeight = 32;
+    constexpr int compactHeight = 28;
     constexpr int bottomInset = 10;
     const auto availableWidth = width > outerInset * 2 ? width - outerInset * 2 : 0;
     const auto globalHeight = globalControlHeightForWidth(width);
     const auto deckY = topInset + globalHeight + gap;
-    const auto deckHeight = expanded ? 128 : compactHeight;
+    const auto deckHeight = expanded ? 124 : compactHeight;
     AuditionDeckLayout result;
     result.headerHeight = deckY + deckHeight + bottomInset;
     result.deckBounds = { outerInset, deckY, availableWidth, deckHeight };
