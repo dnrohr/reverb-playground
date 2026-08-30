@@ -3,6 +3,7 @@
 #include <reverb/ui/AuditionDeckLayout.h>
 
 #include <array>
+#include <utility>
 
 namespace {
 
@@ -24,23 +25,25 @@ void requireContainedAndSeparate(
 TEST_CASE("Compact audition strip remains in bounds at every supported editor width")
 {
     for (const auto width : { 640, 720, 899, 900, 1200, 1536, 1920 }) {
-        const auto layout = reverb::ui::calculateAuditionDeckLayout(width, false);
+        const auto layout = reverb::ui::calculateAuditionDeckLayout(width, false, 720);
         CAPTURE(width);
-        REQUIRE(layout.headerHeight < 150);
-        REQUIRE(layout.deckBounds == reverb::ui::LayoutRect {
-            14, 10 + reverb::ui::globalControlHeightForWidth(width) + 6, width - 28, 28 });
+        REQUIRE(layout.bottomDeckHeight <= 78);
+        REQUIRE(layout.deckBounds.bottom() == 720);
+        REQUIRE(layout.browserBounds.y == layout.topBarHeight);
+        REQUIRE(layout.browserBounds.bottom() == layout.deckBounds.y);
         requireContainedAndSeparate(layout.deckBounds, layout.compactControls());
         for (const auto& control : layout.drawerControls()) REQUIRE(control.isEmpty());
-        REQUIRE(layout.summary.width >= 210);
+        REQUIRE(layout.summary.width >= 121);
     }
 }
 
-TEST_CASE("Compact wide chrome returns thirty-two native pixels to the schematic")
+TEST_CASE("Compact bottom deck leaves the desktop schematic dominant")
 {
-    constexpr auto releasedWideClosedHeaderHeight = 123;
-    const auto compact = reverb::ui::calculateAuditionDeckLayout(1'200, false);
-    REQUIRE(compact.headerHeight == 91);
-    REQUIRE(releasedWideClosedHeaderHeight - compact.headerHeight == 32);
+    const auto compact = reverb::ui::calculateAuditionDeckLayout(1'200, false, 720);
+    REQUIRE(compact.topBarHeight == 47);
+    REQUIRE(compact.bottomDeckHeight == 42);
+    REQUIRE(compact.browserBounds.height == 631);
+    REQUIRE(compact.browserBounds.height > 7 * compact.bottomDeckHeight);
 }
 
 TEST_CASE("Expanded audition drawer remains in bounds through resize and transport states")
@@ -58,17 +61,18 @@ TEST_CASE("Expanded audition drawer remains in bounds through resize and transpo
     };
 
     for (const auto width : { 640, 720, 899, 900, 1200, 1536, 1920 }) {
-        const auto layout = reverb::ui::calculateAuditionDeckLayout(width, true);
+        const auto layout = reverb::ui::calculateAuditionDeckLayout(width, true, 720);
         for (const auto state : states) {
             CAPTURE(width, state.fileLoaded, state.playing, state.looping, state.exporting);
-            REQUIRE(layout.headerHeight <= 241);
+            REQUIRE(layout.bottomDeckHeight <= 186);
             requireContainedAndSeparate(layout.deckBounds, layout.compactControls());
             requireContainedAndSeparate(layout.deckBounds, layout.drawerControls());
             for (const auto& compact : layout.compactControls())
                 for (const auto& detail : layout.drawerControls())
                     REQUIRE_FALSE(compact.intersects(detail));
             REQUIRE(layout.exportProgress.width >= 142);
-            REQUIRE(layout.loopRange.width >= 202);
+            REQUIRE(layout.loopRange.width >= 171);
+            REQUIRE(layout.mixDisclosure.width >= 111);
         }
     }
 }
@@ -76,11 +80,29 @@ TEST_CASE("Expanded audition drawer remains in bounds through resize and transpo
 TEST_CASE("Drawer changes only vertical chrome and preserves compact control geometry")
 {
     for (const auto width : { 640, 899, 900, 1200, 1920 }) {
-        const auto closed = reverb::ui::calculateAuditionDeckLayout(width, false);
-        const auto open = reverb::ui::calculateAuditionDeckLayout(width, true);
+        const auto closed = reverb::ui::calculateAuditionDeckLayout(width, false, 720);
+        const auto open = reverb::ui::calculateAuditionDeckLayout(width, true, 720);
         CAPTURE(width);
         REQUIRE(closed.compactControls() == open.compactControls());
-        REQUIRE(open.headerHeight - closed.headerHeight == 96);
-        REQUIRE(open.headerHeight < 400);
+        REQUIRE(open.bottomDeckHeight - closed.bottomDeckHeight == 108);
+        REQUIRE(open.browserBounds.height == closed.browserBounds.height - 108);
+        REQUIRE(open.deckBounds.bottom() == closed.deckBounds.bottom());
+    }
+}
+
+TEST_CASE("Bottom deck remains bounded at minimum height and common Windows scaling sizes")
+{
+    for (const auto [width, height] : std::array {
+        std::pair { 640, 400 }, std::pair { 960, 576 }, std::pair { 1200, 720 },
+        std::pair { 1536, 864 }, std::pair { 1920, 1080 },
+    }) {
+        for (const auto expanded : { false, true }) {
+            const auto layout = reverb::ui::calculateAuditionDeckLayout(width, expanded, height);
+            CAPTURE(width, height, expanded);
+            REQUIRE(layout.deckBounds.y >= layout.topBarHeight);
+            REQUIRE(layout.deckBounds.bottom() == height);
+            REQUIRE(layout.browserBounds.height >= 0);
+            REQUIRE_FALSE(layout.browserBounds.intersects(layout.deckBounds));
+        }
     }
 }

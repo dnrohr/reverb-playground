@@ -64,7 +64,7 @@ const modules = [
   { group: 'CONTROL', items: moduleDefinitions.filter((item) => item.role === 'control') },
 ];
 const contextTabs: ContextTab[] = ['inspect', 'analyze', 'learn'];
-const contextTabLabels: Record<ContextTab, string> = { inspect: 'Inspector', analyze: 'Analyze', learn: 'Learn' };
+const contextTabLabels: Record<ContextTab, string> = { inspect: 'Inspect', analyze: 'Analyze', learn: 'Learn' };
 
 const parameterChoices = (unit: string): { value: number; label: string }[] | null => {
   if (unit === 'boolean') return [{ value: 0, label: 'OFF' }, { value: 1, label: 'ON' }];
@@ -1079,8 +1079,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     });
   }, []);
 
+  const measurementDrawerVisible = !standaloneAvailable || workspacePresentation.auditionOpen;
   return (
-    <main className="editor-shell" style={{ gridTemplateRows: `${editorCommandBarHeight}px ${measurementBarHeight}px minmax(0, 1fr)` }}>
+    <main className={`editor-shell${measurementDrawerVisible ? ' measurement-open' : ''}`}
+      style={{ gridTemplateRows: `${editorCommandBarHeight}px minmax(0, 1fr) ${measurementDrawerVisible ? measurementBarHeight : 0}px` }}>
       <header className="editor-header" onMouseLeave={() => setOpenApplicationMenu(null)}>
         <nav className="application-menus" aria-label="Application menus">
           {(['file', 'edit', 'view', 'help'] as const).map((menu) => <div className="application-menu" key={menu}>
@@ -1181,8 +1183,6 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           </div>
         </div>
       </header>
-
-      <MeasurementBar sampleRate={snapshot.sampleRate} onCapture={receiveCapture} />
 
       <section className={`workspace arrangement-${workspacePresentation.arrangement}${workspaceLayout.overlay ? ' workspace-overlay' : ''}`}
         style={{ gridTemplateColumns: workspaceGridColumns(workspaceLayout) }}>
@@ -1328,6 +1328,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           <div className="pane-heading context-heading"><span>CONTEXT</span><div><button className="teaching-toggle" type="button" aria-pressed={teachingEnabled} title="Toggle contextual explanations and response architecture overlays" onClick={toggleTeaching}>LEARN {teachingEnabled ? 'ON' : 'OFF'}</button><button className="dock-close" type="button" aria-label="Close context dock" onClick={() => toggleDock('context')}>›</button></div></div>
           <div className="context-tabs" role="tablist" aria-label="Context views">
             {contextTabs.map((tab) => <button id={`context-tab-${tab}`} role="tab" type="button" key={tab}
+              aria-label={tab === 'inspect' ? 'Inspector context' : `${contextTabLabels[tab]} context`}
               aria-selected={contextTab === tab} aria-controls={`context-panel-${tab}`} tabIndex={contextTab === tab ? 0 : -1}
               onKeyDown={(event) => handleContextTabKey(event, tab)} onClick={() => { if (tab === 'analyze') setDiagnostics(null); setContextTab(tab); }}>{contextTabLabels[tab]}</button>)}
           </div>
@@ -1545,6 +1546,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           </div>
         </aside>
       </section>
+      {measurementDrawerVisible ? <MeasurementBar sampleRate={snapshot.sampleRate} onCapture={receiveCapture} /> : null}
     </main>
   );
 }

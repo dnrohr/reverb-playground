@@ -32,7 +32,7 @@ button { font: inherit; }
   overflow: hidden;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: 48px 50px minmax(0, 1fr);
+  grid-template-rows: 48px minmax(0, 1fr) 0;
   background: var(--bg);
 }
 
@@ -93,7 +93,7 @@ button { font: inherit; }
 .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 12px rgba(69, 208, 204, .7); }
 .status-divider { color: #53616b; }
 
-.measurement-bar { display: flex; align-items: center; gap: 14px; min-width: 0; padding: 7px 20px; border-bottom: 1px solid var(--line); background: #151b20; font: 9px ui-monospace, Consolas, monospace; }
+.measurement-bar { display: flex; align-items: center; gap: 14px; min-width: 0; padding: 7px 20px; border-top: 1px solid var(--line); background: #151b20; font: 9px ui-monospace, Consolas, monospace; }
 .measurement-title { display: grid; min-width: 112px; line-height: 1.25; }
 .measurement-title span { color: var(--cyan); font-size: 8px; font-weight: 800; letter-spacing: .14em; }
 .measurement-title strong { color: #dce4e8; font-size: 10px; }
@@ -361,7 +361,7 @@ button { font: inherit; }
 
 .inspector .pane-heading { height: 42px; padding: 0 16px; border-bottom: 1px solid var(--line); }
 .context-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-bottom: 1px solid var(--line); background: #11171b; }
-.context-tabs button { min-width: 0; padding: 0 3px; border: 0; border-right: 1px solid #2b363e; color: #7f8d96; background: transparent; font: 800 7px var(--mono); letter-spacing: .025em; text-transform: uppercase; }
+.context-tabs button { min-width: 0; padding: 0 2px; border: 0; border-right: 1px solid #2b363e; color: #7f8d96; background: transparent; font: 800 6.5px var(--mono); letter-spacing: 0; text-transform: uppercase; }
 .context-tabs button:last-child { border-right: 0; }
 .context-tabs button[aria-selected="true"] { color: #071012; background: var(--cyan); box-shadow: inset 0 -3px #bffefa; }
 .context-tabs button:focus-visible { position: relative; z-index: 1; outline: 2px solid var(--amber); outline-offset: -3px; }

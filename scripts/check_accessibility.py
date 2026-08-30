@@ -74,8 +74,13 @@ def check_contract(styles: str, app: str, editor_shell: str, plugin_editor: str)
     ):
         if token not in app:
             failures.append(f"App.tsx: missing keyboard/non-color/reduced-motion contract token {token!r}")
-    if "browser_->setBounds(bounds);" not in editor_shell:
-        failures.append("EditorShell.cpp: WebView must receive the complete available logical bounds")
+    for token in (
+        "deck.browserBounds.x",
+        "getHeight() - globalControlHeightForWidth(getWidth()) - 10",
+        'mixDisclosureLabel_.setText("WET + DRY UNNORMALIZED / SUM MAY EXCEED UNITY"',
+    ):
+        if token not in editor_shell:
+            failures.append(f"EditorShell.cpp: missing bounded/declarative bottom-deck token {token!r}")
     for token in ("setResizable(true, true);", "setResizeLimits(640, 400, 8192, 8192);"):
         if token not in plugin_editor:
             failures.append(f"PluginEditor.cpp: missing scaling contract {token!r}")

@@ -3,11 +3,13 @@ import appSource from './App.tsx?raw';
 import { editorCommandBarHeight, measurementBarHeight, webCanvasHeightGain } from './workspaceChrome';
 
 describe('focused workspace chrome', () => {
-  it('keeps one compact command row above measurement and gains 32 canvas pixels', () => {
+  it('keeps one compact command row and moves measurement into the conditional bottom drawer', () => {
     expect(editorCommandBarHeight).toBe(48);
     expect(measurementBarHeight).toBe(50);
     expect(webCanvasHeightGain()).toBe(32);
-    expect(appSource).toContain('gridTemplateRows: `${editorCommandBarHeight}px ${measurementBarHeight}px minmax(0, 1fr)`');
+    expect(appSource).toContain("const measurementDrawerVisible = !standaloneAvailable || workspacePresentation.auditionOpen");
+    expect(appSource).toContain('gridTemplateRows: `${editorCommandBarHeight}px minmax(0, 1fr) ${measurementDrawerVisible ? measurementBarHeight : 0}px`');
+    expect(appSource.indexOf('<MeasurementBar')).toBeGreaterThan(appSource.indexOf('className={`workspace'));
   });
 
   it('provides complete conventional menus without the retired permanent controls', () => {

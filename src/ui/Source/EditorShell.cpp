@@ -47,7 +47,7 @@ EditorShell::EditorShell(Callbacks callbacks)
     impulseButton_.onClick = [this] {
         callbacks_.triggerImpulse();
         impulseFlashTicks_ = 10;
-        impulseButton_.setButtonText("IMPULSE SENT");
+        impulseButton_.setButtonText("QUICK IMPULSE SENT");
     };
     muteButton_.setClickingTogglesState(true);
     muteButton_.onClick = [this] { callbacks_.setEmergencyMuted(muteButton_.getToggleState()); };
@@ -87,6 +87,11 @@ EditorShell::EditorShell(Callbacks callbacks)
     transportLabel_.setJustificationType(juce::Justification::centredRight);
     styleLabel(fileLabel_, text, 12.0F, juce::Font::bold);
     styleLabel(transportLabel_, mutedText, 11.0F, juce::Font::plain);
+    mixDisclosureLabel_.setText("WET + DRY UNNORMALIZED / SUM MAY EXCEED UNITY", juce::dontSendNotification);
+    mixDisclosureLabel_.setJustificationType(juce::Justification::centredRight);
+    styleLabel(mixDisclosureLabel_, amber, 9.0F, juce::Font::bold);
+    addAndMakeVisible(mixDisclosureLabel_);
+    mixDisclosureLabel_.setVisible(false);
     for (auto* button : { &fileButton_, &filePlayButton_, &fileStopButton_, &drawerButton_ }) {
         button->setColour(juce::TextButton::buttonColourId, panel.brighter(0.08F));
         button->setColour(juce::TextButton::buttonOnColourId, cyan.darker(0.35F));
@@ -244,14 +249,22 @@ EditorShell::EditorShell(Callbacks callbacks)
 void EditorShell::paint(juce::Graphics& graphics)
 {
     graphics.fillAll(background);
-    const auto headerHeight = callbacks_.standaloneAuditionAvailable
-        ? static_cast<float>(calculateAuditionDeckLayout(getWidth(), auditionDrawerExpanded_).headerHeight)
-        : static_cast<float>(globalControlHeightForWidth(getWidth()) + 10);
-    auto controls = getLocalBounds().toFloat().removeFromTop(headerHeight);
+    const auto deck = calculateAuditionDeckLayout(getWidth(), auditionDrawerExpanded_, getHeight());
+    const auto topBarHeight = callbacks_.standaloneAuditionAvailable
+        ? deck.topBarHeight : globalControlHeightForWidth(getWidth()) + 10;
+    auto controls = getLocalBounds().toFloat().removeFromTop(static_cast<float>(topBarHeight));
     graphics.setColour(panel);
     graphics.fillRect(controls);
     graphics.setColour(border);
     graphics.drawLine(0.0F, controls.getBottom() - 1.0F, controls.getRight(), controls.getBottom() - 1.0F);
+    if (callbacks_.standaloneAuditionAvailable) {
+        graphics.setColour(panel);
+        graphics.fillRect(juce::Rectangle<float> { 0.0F, static_cast<float>(deck.deckBounds.y),
+            static_cast<float>(getWidth()), static_cast<float>(deck.deckBounds.height) });
+        graphics.setColour(border);
+        graphics.drawLine(0.0F, static_cast<float>(deck.deckBounds.y),
+            static_cast<float>(getWidth()), static_cast<float>(deck.deckBounds.y));
+    }
     if (callbacks_.standaloneAuditionAvailable && !waveformBounds_.isEmpty()) {
         graphics.setColour(background.brighter(0.08F));
         graphics.fillRoundedRectangle(waveformBounds_.toFloat(), 3.0F);
@@ -311,25 +324,31 @@ std::optional<juce::WebBrowserComponent::Resource> EditorShell::getWebResource(c
 
 void EditorShell::resized()
 {
-    auto bounds = getLocalBounds();
-    const auto deck = calculateAuditionDeckLayout(getWidth(), auditionDrawerExpanded_);
-    const auto headerHeight = callbacks_.standaloneAuditionAvailable
-        ? deck.headerHeight : globalControlHeightForWidth(getWidth()) + 10;
+    const auto deck = calculateAuditionDeckLayout(getWidth(), auditionDrawerExpanded_, getHeight());
     constexpr int inset = 14;
     const auto contentWidth = juce::jmax(0, getWidth() - inset * 2);
-    if (getWidth() < 900) {
+    const auto narrowControls = callbacks_.standaloneAuditionAvailable ? getWidth() < 1200 : getWidth() < 900;
+    if (narrowControls) {
         status_.setBounds(inset, 6, contentWidth, 23);
-        auto gainRow = juce::Rectangle<int> { inset, 31, contentWidth, 25 };
-        const auto half = gainRow.getWidth() / 2;
-        auto wet = gainRow.removeFromLeft(half).reduced(0, 0); wet.removeFromRight(5);
-        auto dry = gainRow; dry.removeFromLeft(5);
-        wetGainLabel_.setBounds(wet.removeFromLeft(34)); wetGain_.setBounds(wet);
-        dryGainLabel_.setBounds(dry.removeFromLeft(34)); dryGain_.setBounds(dry);
-        auto actions = juce::Rectangle<int> { inset, 59, contentWidth, 28 };
+        auto actions = juce::Rectangle<int> { inset, 31, contentWidth, 28 };
+        if (!callbacks_.standaloneAuditionAvailable) {
+            auto gainRow = juce::Rectangle<int> { inset, 31, contentWidth, 25 };
+            const auto half = gainRow.getWidth() / 2;
+            auto wet = gainRow.removeFromLeft(half); wet.removeFromRight(5);
+            auto dry = gainRow; dry.removeFromLeft(5);
+            wetGainLabel_.setBounds(wet.removeFromLeft(34)); wetGain_.setBounds(wet);
+            dryGainLabel_.setBounds(dry.removeFromLeft(34)); dryGain_.setBounds(dry);
+            actions = { inset, 59, contentWidth, 28 };
+        }
         constexpr int actionGap = 6;
-        const auto actionCount = resetButton_.isVisible() ? 3 : 2;
+        const auto actionCount = resetButton_.isVisible()
+            ? (callbacks_.standaloneAuditionAvailable ? 2 : 3)
+            : (callbacks_.standaloneAuditionAvailable ? 1 : 2);
         const auto actionWidth = juce::jmax(0, (actions.getWidth() - actionGap * (actionCount - 1)) / actionCount);
-        impulseButton_.setBounds(actions.removeFromLeft(actionWidth)); actions.removeFromLeft(actionGap);
+        if (!callbacks_.standaloneAuditionAvailable) {
+            impulseButton_.setBounds(actions.removeFromLeft(actionWidth));
+            actions.removeFromLeft(actionGap);
+        }
         muteButton_.setBounds(actions.removeFromLeft(actionWidth));
         if (resetButton_.isVisible()) { actions.removeFromLeft(actionGap); resetButton_.setBounds(actions); }
     } else {
@@ -337,11 +356,13 @@ void EditorShell::resized()
         constexpr int gap = 7;
         if (resetButton_.isVisible()) { resetButton_.setBounds(row.removeFromRight(112)); row.removeFromRight(gap); }
         muteButton_.setBounds(row.removeFromRight(132)); row.removeFromRight(gap);
-        impulseButton_.setBounds(row.removeFromRight(122)); row.removeFromRight(gap);
-        auto dry = row.removeFromRight(205); row.removeFromRight(gap);
-        dryGainLabel_.setBounds(dry.removeFromLeft(34)); dryGain_.setBounds(dry);
-        auto wet = row.removeFromRight(205); row.removeFromRight(gap);
-        wetGainLabel_.setBounds(wet.removeFromLeft(34)); wetGain_.setBounds(wet);
+        if (!callbacks_.standaloneAuditionAvailable) {
+            impulseButton_.setBounds(row.removeFromRight(122)); row.removeFromRight(gap);
+            auto dry = row.removeFromRight(205); row.removeFromRight(gap);
+            dryGainLabel_.setBounds(dry.removeFromLeft(34)); dryGain_.setBounds(dry);
+            auto wet = row.removeFromRight(205); row.removeFromRight(gap);
+            wetGainLabel_.setBounds(wet.removeFromLeft(34)); wetGain_.setBounds(wet);
+        }
         status_.setBounds(row);
     }
     if (callbacks_.standaloneAuditionAvailable) {
@@ -354,6 +375,14 @@ void EditorShell::resized()
         auto summary = convert(deck.summary);
         fileLabel_.setBounds(summary.removeFromLeft(static_cast<int>(summary.getWidth() * 0.48)));
         transportLabel_.setBounds(summary);
+        const auto setGainBounds = [this, &convert](const LayoutRect& area, juce::Label& label, juce::Slider& slider) {
+            auto bounds = convert(area);
+            label.setBounds(bounds.removeFromLeft(32));
+            slider.setBounds(bounds);
+        };
+        setGainBounds(deck.wetGain, wetGainLabel_, wetGain_);
+        setGainBounds(deck.dryGain, dryGainLabel_, dryGain_);
+        impulseButton_.setBounds(convert(deck.quickImpulse));
         exportButton_.setBounds(convert(deck.exportWav));
         drawerButton_.setBounds(convert(deck.drawerToggle));
         waveformBounds_ = convert(deck.waveform);
@@ -363,12 +392,16 @@ void EditorShell::resized()
         exportProgressBar_.setBounds(convert(deck.exportProgress));
         seek_.setBounds(convert(deck.seek));
         loopRange_.setBounds(convert(deck.loopRange));
+        mixDisclosureLabel_.setBounds(convert(deck.mixDisclosure));
     } else {
         waveformBounds_ = {};
     }
-    bounds.removeFromTop(headerHeight);
     if (browser_ != nullptr)
-        browser_->setBounds(bounds);
+        browser_->setBounds(callbacks_.standaloneAuditionAvailable
+            ? juce::Rectangle<int> { deck.browserBounds.x, deck.browserBounds.y,
+                deck.browserBounds.width, deck.browserBounds.height }
+            : juce::Rectangle<int> { 0, globalControlHeightForWidth(getWidth()) + 10, getWidth(),
+                juce::jmax(0, getHeight() - globalControlHeightForWidth(getWidth()) - 10) });
 }
 
 void EditorShell::chooseAudioFile()
@@ -425,9 +458,9 @@ void EditorShell::setAuditionDrawerExpanded(const bool expanded)
     auditionDrawerExpanded_ = callbacks_.standaloneAuditionAvailable && expanded;
     drawerButton_.setButtonText(auditionDrawerExpanded_ ? juce::String::fromUTF8("\xe2\x88\x92") : "+");
     drawerButton_.setTooltip(auditionDrawerExpanded_ ? "Hide audio-file details" : "Show audio-file details");
-    const std::array<juce::Component*, 6> drawerComponents {
-        &fileStopButton_, &loopButton_, &exportRange_,
-        &exportProgressBar_, &seek_, &loopRange_,
+    const std::array<juce::Component*, 7> drawerComponents {
+        &loopButton_, &exportRange_,
+        &exportProgressBar_, &seek_, &loopRange_, &exportButton_, &mixDisclosureLabel_,
     };
     for (auto* component : drawerComponents)
         component->setVisible(auditionDrawerExpanded_);
@@ -545,7 +578,7 @@ void EditorShell::timerCallback()
         resized();
     }
     if (impulseFlashTicks_ > 0 && --impulseFlashTicks_ == 0)
-        impulseButton_.setButtonText("TRIGGER IMPULSE");
+        impulseButton_.setButtonText("QUICK IMPULSE");
     if (muteButton_.getToggleState())
         status_.setText("EMERGENCY MUTE ACTIVE  /  OUTPUT SILENT", juce::dontSendNotification);
     else

@@ -71,7 +71,7 @@ private:
     juce::Label wetGainLabel_;
     juce::Label dryGainLabel_;
     juce::TextButton deviceButton_ { "AUDIO DEVICE..." };
-    juce::TextButton impulseButton_ { "TRIGGER IMPULSE" };
+    juce::TextButton impulseButton_ { "QUICK IMPULSE" };
     juce::TextButton muteButton_ { "EMERGENCY MUTE" };
     juce::TextButton resetButton_ { "RESET SAFETY" };
     juce::Slider wetGain_;
@@ -86,6 +86,7 @@ private:
     juce::TextButton exportButton_ { "EXPORT WAV..." };
     juce::Label fileLabel_;
     juce::Label transportLabel_;
+    juce::Label mixDisclosureLabel_;
     juce::Slider seek_;
     juce::Slider loopRange_;
     double exportProgress_ {};

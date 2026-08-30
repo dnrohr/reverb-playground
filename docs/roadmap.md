@@ -1574,7 +1574,7 @@ Acceptance criteria:
 - Tab order, screen-reader names, non-color state cues, reduced motion, and
   keyboard-only navigation pass the accessibility preflight.
 
-### M25.4 Rebuild the compact audition and measurement drawer
+### M25.4 Rebuild the compact audition and measurement drawer — Complete
 
 Tasks: keep source, play/pause, file identity, Wet/Dry Gain, quick impulse, and
 drawer state in a thin bottom strip; place waveform, seek, loop, export range,
