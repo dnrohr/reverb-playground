@@ -1,7 +1,7 @@
 # Visual Reverb Constructor / Inspector Roadmap
 
-Status: initial execution roadmap
-Date: 2026-08-25
+Status: living execution roadmap
+Date: 2026-08-29
 Product definition: [visual-reverb-constructor-spec.md](visual-reverb-constructor-spec.md)
 
 ## Delivery policy
@@ -40,6 +40,9 @@ UI tasks require a current screenshot. Interactive, animated, audio-reactive, or
 | M22. Assisted delay-set tuning | Deterministic offline search proposes reproducible, measurable tunings | Generate, rank, audition, accept, or reject candidate delay sets without losing the current patch |
 | M23. Dense-network optimization | Reusable SIMD/fused kernels accelerate measured FDN and figure-eight hot paths | Run dense tanks faster without hidden factory code or changed audio semantics |
 | M24. Dense-reverb product qualification | Dense factories are listening-tested, host-safe, documented, packaged, and releasable | Compare matched factories, automate/reopen/export them, and pass clean Windows release CI |
+| M25. Focused workspace shell | The canvas becomes the dominant surface while application, audition, inspection, and safety controls remain easy to reach | Switch among balanced, creation, and learning arrangements at every supported window size without losing state or hiding safety |
+| M26. Scalable graph construction | Dense architectures remain explicit but become faster to build, organize, and navigate | Insert a visible Sum automatically, collapse and expand graph structure, and clean a large schematic without changing its sound |
+| M27. Audition, comparison, and block-language refinement | Users can diagnose branches, compare designs fairly, and understand a smaller, clearer module vocabulary | Isolate a path, compare two revisions with honest level handling, and expand every compound block to its authoritative primitives |
 
 ---
 
@@ -1503,6 +1506,337 @@ Acceptance criteria:
 Milestone exit criteria:
 
 - The project ships at least one convincingly dense, teachable, editable reverb with reproducible tuning evidence and honest audition/export/telemetry behavior.
+
+---
+
+## M25. Focused workspace shell
+
+Goal: reorganize the existing interface around a canvas-first workspace without
+removing capability or weakening safety. App-icon design is deliberately
+deferred and is not part of this milestone.
+
+### M25.1 Consolidate application chrome and menus
+
+Tasks: replace the stacked native/editor command regions with one compact
+application bar and one patch command bar; add conventional File, Edit, View,
+and Help menus; move audio-device setup, quality policy, documentation, and
+infrequent commands to discoverable menu locations; keep patch identity,
+saved/unsaved state, and Emergency Mute continuously visible; show Reset Safety
+only when recovery is available.
+
+Acceptance criteria:
+
+- Save/load, undo/redo, clipboard, factory selection, quality, audio setup,
+  help, and diagnostics remain reachable by visible menus and documented
+  shortcuts; no existing command disappears without an explicit replacement.
+- Emergency Mute is reachable in one action at every supported size, keyboard
+  focus remains visible, and recovery appears automatically when latched.
+- At 1200 x 720, the schematic receives materially more vertical space than the
+  current released layout; exact before/after logical bounds are recorded.
+- Standalone and VST3 expose only controls meaningful to their environment and
+  retain accurate build, audio, patch, and safety status.
+
+### M25.2 Add responsive, collapsible workspace docks
+
+Tasks: make the module palette, contextual right dock, and bottom audition
+drawer independently collapsible; provide Balanced, Create Focus, and Learn &
+Inspect workspace arrangements; remember presentation state outside patch
+semantics; define sensible automatic collapse rules for narrow windows.
+
+Acceptance criteria:
+
+- Balanced keeps modules, canvas, and context visible; Create Focus maximizes
+  construction space; Learn & Inspect prioritizes explanation and analysis.
+- Collapsing or resizing never changes the graph, selection, transport, loop,
+  Wet/Dry Gain, analysis results, or an in-flight export.
+- Automated layout coverage exercises 640, 720, 899, 900, 1200, 1536, and 1920
+  logical-pixel widths with every dock combination and representative empty,
+  loaded, looping, exporting, selected, and safety-latched states.
+- No control overlaps, clips, becomes unreachable, or leaves unused WebView
+  space at 100%, 125%, or 150% Windows display scaling.
+
+### M25.3 Consolidate Inspector, Analyze, and Learn
+
+Tasks: replace competing right-side panels and overlays with one tabbed context
+dock; route parameter editing and loop inspection to Inspector, response,
+density, Energy, matrix, CPU, memory, latency, and safety evidence to Analyze,
+and architecture explanations to Learn; retain selection and scroll position
+when switching tabs where meaningful.
+
+Acceptance criteria:
+
+- Selecting a block, cable, feedback loop, matrix, or measurement opens the
+  relevant context without covering the canvas or creating a second inspector.
+- Every value states whether it is edited, measured, estimated, predicted, or
+  documented; stale revision data cannot appear as current.
+- Energy/sample scanning and diagnostic polling remain free or dormant when
+  their visible analysis is disabled.
+- Tab order, screen-reader names, non-color state cues, reduced motion, and
+  keyboard-only navigation pass the accessibility preflight.
+
+### M25.4 Rebuild the compact audition and measurement drawer
+
+Tasks: keep source, play/pause, file identity, Wet/Dry Gain, quick impulse, and
+drawer state in a thin bottom strip; place waveform, seek, loop, export range,
+export progress, response-capture settings, and extended transport in an
+expandable drawer; keep quick impulse audition distinct from deterministic
+response capture.
+
+Acceptance criteria:
+
+- File audition and live input need no open drawer for ordinary play/stop and
+  Wet/Dry changes; measurement capture always isolates external sources.
+- Opening the drawer does not obscure or resize controls incorrectly, cancel an
+  export, reset playback, or move loop bounds.
+- Live audition and export retain the same unnormalized Wet/Dry law and the
+  drawer clearly discloses possible summed headroom above unity.
+- Screenshot evidence covers compact and expanded desktop layouts; video
+  evidence covers resize, source switching, looping, capture, and export.
+
+### M25.5 Validate the three primary user journeys
+
+Tasks: run representative musician, sound-designer, and learner journeys;
+measure canvas space, command count, discoverability, keyboard reachability,
+and error recovery; record regressions separately from preference feedback.
+
+Acceptance criteria:
+
+- A musician can select a factory, audition a file, adjust macros, compare, and
+  export without manipulating graph structure.
+- A sound designer can create, connect, tune, save, and recover a graph without
+  opening Learn or extended analysis.
+- A learner can trace feedback, inspect Energy/response/density, and read the
+  architecture explanation without losing graph context.
+- Internal verification is complete before the reorganized UI becomes the
+  candidate used by the still-required M7.5 non-implementer sessions.
+
+Milestone exit criteria:
+
+- The canvas is visibly dominant, all existing capability has an intentional
+  home, and users can emphasize creation or learning without entering a mode
+  that changes audio or patch meaning.
+
+---
+
+## M26. Scalable graph construction
+
+Goal: preserve the educational honesty of visible primitive graphs while
+reducing the repetitive work and cable congestion exposed by dense tanks,
+shimmer networks, and expanded matrices.
+
+### M26.1 Add assisted explicit-Sum insertion
+
+Tasks: when an audio cable is dropped on an occupied mono input, offer a
+previewed Insert Sum action; create the Sum, preserve the existing connection,
+route both sources, and place the new block deterministically; support cancel
+and one-step undo.
+
+Acceptance criteria:
+
+- The completed graph contains an ordinary visible Sum (+); the runtime never
+  acquires hidden fan-in or implicit normalization.
+- Cancel is byte-identical to the pre-drop document, and Undo/Redo treats block
+  creation plus all rewiring as one history action.
+- Feedback validation, cable identity, persistence, clipboard behavior, and
+  deterministic rendering match the same graph constructed manually.
+- Keyboard users can request, confirm, or cancel insertion without pointer-only
+  interaction.
+
+### M26.2 Add collapsible graph groups
+
+Tasks: let users place selected blocks into named visual groups; collapse a
+group to one boundary with explicit typed ports; expand it back to authoritative
+primitive nodes; preserve layout and independent group state.
+
+Acceptance criteria:
+
+- Grouping and collapse are presentation operations and cannot change rendered
+  audio, compiled latency, feedback legality, parameter identity, or automation.
+- Boundary ports map one-to-one to visible internal cables, and feedback-loop
+  highlighting can cross the boundary and reveal the complete primitive path.
+- Save/reopen, copy/paste, undo/redo, graph replacement, and schema migration
+  preserve semantic identity and expanded layout deterministically.
+- Nested groups are either explicitly bounded and tested or rejected with a
+  clear reason; no accidental partial support is shipped.
+
+### M26.3 Define reusable subpatches
+
+Tasks: design named reusable graph definitions with explicit mono audio/control
+ports and instances; choose copy, linked-instance, and parameter-exposure
+semantics; flatten or specialize them deterministically during compilation;
+define versioning and missing-definition recovery before implementation.
+
+Acceptance criteria:
+
+- The design document resolves ownership, instance identity, editable exposed
+  parameters, recursion rejection, feedback across boundaries, persistence,
+  clipboard, factory provenance, and forward/backward compatibility.
+- An initial implementation supports at least one repeated diffuser or delay
+  branch with audio equivalence to its manually expanded graph.
+- Editing or replacing a definition cannot silently mutate an audible saved
+  patch; affected instances and pending changes are explicit and undoable.
+- Compilation produces the same safety, memory, latency, diagnostics, and
+  Energy evidence as the authoritative expanded graph.
+
+### M26.4 Improve cable routing and large-graph layout
+
+Tasks: add persistent cable waypoints, alignment/distribution commands, group
+layout tools, and optional named routing portals for long connections; provide
+trace-to-source, trace-to-output, and complete-loop focus actions.
+
+Acceptance criteria:
+
+- Waypoints, alignment, and distribution change layout only and round-trip
+  without graph recompilation or semantic dirty state.
+- A routing portal always has a visible, uniquely paired endpoint; selecting it
+  reveals and highlights the omitted cable path, signal type, and direction.
+- Portals cannot create hidden fan-in, cross documents, bypass validation, or
+  obscure a zero-delay cycle.
+- A representative expanded Four-Line FDN and Reverse Cosmic Shimmer can be
+  arranged without overlapping nodes or ambiguous cable destinations at the
+  supported compact and desktop sizes.
+
+### M26.5 Generalize compound-block presentation
+
+Tasks: turn the existing Matrix Mixer collapse/expand behavior into a reusable
+compound-presentation contract; define summaries, boundary ports, inspector
+content, expand-in-place behavior, and edit authority for compound structures.
+
+Acceptance criteria:
+
+- Matrix Mixer remains the first qualified compound and expands to its exact 16
+  gains and 12 sums with stable identity and audio equivalence.
+- A compound summary never becomes a hidden DSP primitive; expanded ordinary
+  blocks remain the saved and executable authority unless a later schema
+  explicitly says otherwise.
+- Energy, feedback, latency, warnings, copy/paste, and Learn explanations work
+  at both summary and expanded levels without double-counting.
+
+Milestone exit criteria:
+
+- Users can construct and navigate dense graphs substantially faster while
+  every mix, feedback path, modulation mapping, and executable primitive remains
+  inspectable on demand.
+
+---
+
+## M27. Audition, comparison, and block-language refinement
+
+Goal: make diagnosis and fair comparison first-class while keeping the module
+library compact and avoiding convenience blocks that conceal signal flow.
+
+### M27.1 Add temporary branch isolate, mute, and block bypass
+
+Tasks: define non-destructive audition overlays for a selected cable, branch,
+loop, or block; distinguish temporary isolate/mute from saved graph Gain edits;
+make bypass latency and feedback consequences explicit; add clear-all and
+automatic safety recovery behavior.
+
+Acceptance criteria:
+
+- Temporary audition state is visually unmistakable, excluded from patch files
+  and host state unless explicitly promoted, and cleared predictably on graph
+  replacement or reopen.
+- Isolate/mute never changes graph validation; bypass is refused when it would
+  create an algebraic cycle or is implemented as an explicit safe replacement.
+- Export and measurement state whether temporary audition overlays are included
+  and never capture them accidentally.
+- Emergency Mute and numerical safety remain downstream and authoritative.
+
+### M27.2 Upgrade A/B comparison snapshots
+
+Tasks: capture two explicit graph/control snapshots; switch with the existing
+safe publication/crossfade path; offer disclosed loudness matching based on a
+bounded deterministic probe; show changed blocks, gains, latency, and active
+snapshot; support revert and promote.
+
+Acceptance criteria:
+
+- A and B preserve exact graph, macro, and relevant audition identity and never
+  become unlabeled mutable hidden states.
+- Raw comparison applies no level compensation; matched comparison reports the
+  measured adjustment and refuses silence, unstable output, or insufficient
+  evidence.
+- Switching remains click-safe, finite, deterministic, undo-aware, and honest
+  about different graph latency and predelay.
+- A listening fixture proves raw and matched modes differ as documented without
+  altering exported patch semantics.
+
+### M27.3 Refine names and inspector complexity
+
+Tasks: audit every module label, port, unit, default, detent, and advanced
+parameter; rename Gain / Invert to Gain while retaining negative inversion;
+keep common controls visible and move specialist Pitch Shift, Curve Mapper,
+gate, and modulation fields into one consistent expandable Advanced section.
+
+Acceptance criteria:
+
+- Existing saved type/parameter IDs remain compatible; display-name changes do
+  not rewrite or invalidate patches.
+- Every block communicates channel count, signal type, units, audible role, and
+  whether a parameter is static, smoothed, modulated, or topology-affecting.
+- Advanced disclosure state does not change audio and remains usable at compact
+  widths and by keyboard/screen reader.
+- User-facing docs, factory teaching text, screenshots, and accessibility
+  labels use the same vocabulary.
+
+### M27.4 Evaluate a unified Filter and compound Mixer
+
+Tasks: measure the architectural need for high-pass/band-pass damping and
+multi-input mixing; specify a unified Filter mode only if its transfer,
+modulation, migration, and real-time costs remain clear; prototype a Mixer as
+expandable gains plus explicit sums rather than hidden fan-in.
+
+Acceptance criteria:
+
+- The Filter decision compares separate primitives with one mode-selectable
+  block and states whether mode changes require topology publication.
+- Any shipped high-pass or band-pass response is deterministic across supported
+  rates, has documented coefficient limits, and remains finite under modulation.
+- Any Mixer expands to ordinary Gain and Sum blocks with identical audio,
+  latency, Energy, safety, save/load, and feedback inspection.
+- Neither block is added merely to shorten the palette; rejected proposals and
+  their rationale remain documented.
+
+### M27.5 Validate focused diagnosis and comparison
+
+Tasks: exercise branch isolation, bypass refusal, A/B switching, matching,
+compound expansion, compact inspector disclosure, export, and save/reopen on
+Barr, Four-Line FDN, and Reverse Cosmic Shimmer.
+
+Acceptance criteria:
+
+- The three primary user journeys from M25 become faster or clearer without a
+  regression in graph truth, real-time safety, accessibility, or window fill.
+- Full native/web/repository/documentation/release checks pass, supported host
+  formats validate, and clean `main` CI succeeds.
+- Current screenshots cover all three workspace emphases; video shows Sum
+  insertion, group expansion, branch diagnosis, A/B comparison, and resizing.
+
+Milestone exit criteria:
+
+- The interface scales from first factory audition to dense-network diagnosis
+  without hiding its executable architecture or overwhelming ordinary playback.
+
+---
+
+## Recommended UI execution sequence
+
+1. M25.1-M25.2 - establish the compact shell and responsive dock contract.
+2. M25.3-M25.4 - move existing inspection, teaching, measurement, and audition
+   capability into the new surfaces without semantic changes.
+3. M25.5 - validate the reorganized journeys before adding construction scope.
+4. M26.1-M26.2 - improve the two highest-frequency graph operations: fan-in
+   and visual grouping.
+5. M26.4-M26.5 - add layout/routing help and generalize compound presentation.
+6. M26.3 - implement reusable subpatches only after the simpler group boundary
+   and compound contracts are proven.
+7. M27.1-M27.3 - add diagnosis/comparison and simplify the visible vocabulary.
+8. M27.4-M27.5 - admit any new blocks only from measured need, then run complete
+   product qualification.
+
+This sequence deliberately reorganizes existing behavior before adding new
+graph semantics. Each milestone remains independently releasable.
 
 ---
 
