@@ -1536,7 +1536,7 @@ Acceptance criteria:
 - Standalone and VST3 expose only controls meaningful to their environment and
   retain accurate build, audio, patch, and safety status.
 
-### M25.2 Add responsive, collapsible workspace docks
+### M25.2 Add responsive, collapsible workspace docks — Complete
 
 Tasks: make the module palette, contextual right dock, and bottom audition
 drawer independently collapsible; provide Balanced, Create Focus, and Learn &

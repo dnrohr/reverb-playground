@@ -47,6 +47,15 @@ import { decorateReverseCosmicFocus, reverseCosmicShimmerTeaching, type ReverseC
 import { collapseMatrixMixer, inspectMatrixMixer, type MatrixMixerInspection } from './matrixMixerPresentation';
 import { assistedTuningSuggestions, createAssistedTuningPreview, supportsAssistedTuning, type AssistedTuningSuggestionId } from './assistedTuning';
 import { editorCommandBarHeight, measurementBarHeight } from './workspaceChrome';
+import {
+  arrangementPresentation,
+  parseWorkspacePresentation,
+  resolveWorkspaceLayout,
+  toggleWorkspaceDock,
+  workspaceGridColumns,
+  workspacePresentationStorageKey,
+  type WorkspaceArrangement,
+} from './workspaceLayout';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -510,15 +519,51 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
   const [openApplicationMenu, setOpenApplicationMenu] = useState<'file' | 'edit' | 'view' | 'help' | null>(null);
   const [standaloneAvailable, setStandaloneAvailable] = useState(false);
+  const [windowWidth, setWindowWidth] = useState(() => window.innerWidth);
+  const [workspacePresentation, setWorkspacePresentation] = useState(() => {
+    try { return parseWorkspacePresentation(window.localStorage.getItem(workspacePresentationStorageKey)); }
+    catch { return parseWorkspacePresentation(null); }
+  });
   const [diagnostics, setDiagnostics] = useState<RuntimeDiagnostics | null>(null);
   const activeGraphRevision = useRef(0);
   const [controlPreviewTime, setControlPreviewTime] = useState(() => performance.now() / 1000);
   const audibleFingerprint = useMemo(() => audibleGraphFingerprint(nodes, edges), [edges, nodes]);
   const hostStateJson = useMemo(() => writePatchJson(nodes, edges, viewport, qualityPolicy), [edges, nodes, qualityPolicy, viewport]);
   const activePatch = activePatchId === 'custom' ? null : factoryPatchDescription(activePatchId);
+  const workspaceLayout = useMemo(() => resolveWorkspaceLayout(windowWidth, workspacePresentation), [windowWidth, workspacePresentation]);
 
   useEffect(() => {
     void callNative('standaloneAuditionAvailable').then((available) => setStandaloneAvailable(available === true));
+  }, []);
+
+  useEffect(() => {
+    const resize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', resize);
+    return () => window.removeEventListener('resize', resize);
+  }, []);
+
+  useEffect(() => {
+    try { window.localStorage.setItem(workspacePresentationStorageKey, JSON.stringify(workspacePresentation)); }
+    catch { /* presentation remains session-local */ }
+    if (standaloneAvailable) void callNative('setAuditionDrawerExpanded', workspacePresentation.auditionOpen);
+  }, [standaloneAvailable, workspacePresentation]);
+
+  useEffect(() => {
+    if (!standaloneAvailable) return;
+    const timer = window.setInterval(() => {
+      void callNative('auditionDrawerExpanded').then((expanded) => {
+        if (typeof expanded !== 'boolean') return;
+        setWorkspacePresentation((current) => current.auditionOpen === expanded ? current : { ...current, auditionOpen: expanded });
+      });
+    }, 750);
+    return () => window.clearInterval(timer);
+  }, [standaloneAvailable]);
+
+  const selectWorkspaceArrangement = useCallback((arrangement: WorkspaceArrangement) => {
+    setWorkspacePresentation(arrangementPresentation(arrangement));
+  }, []);
+  const toggleDock = useCallback((dock: 'modules' | 'context') => {
+    setWorkspacePresentation((current) => toggleWorkspaceDock(current, dock));
   }, []);
 
   const loopInspection = useMemo(() => selectedNode
@@ -1018,6 +1063,23 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <button role="menuitem" type="button" onClick={() => { removeSelection(); setOpenApplicationMenu(null); }}>DELETE SELECTION <kbd>DEL</kbd></button>
               </> : null}
               {menu === 'view' ? <>
+                <label className="menu-select">WORKSPACE
+                  <select aria-label="Workspace arrangement" value={workspacePresentation.arrangement}
+                    onChange={(event) => selectWorkspaceArrangement(event.target.value as WorkspaceArrangement)}>
+                    <option value="balanced">Balanced</option>
+                    <option value="create">Create Focus</option>
+                    <option value="learn">Learn &amp; Inspect</option>
+                    {workspacePresentation.arrangement === 'custom' ? <option value="custom">Custom</option> : null}
+                  </select>
+                </label>
+                <button role="menuitemcheckbox" aria-checked={workspacePresentation.modulesOpen} type="button"
+                  onClick={() => toggleDock('modules')}>MODULE PALETTE {workspacePresentation.modulesOpen ? 'OPEN' : 'CLOSED'}</button>
+                <button role="menuitemcheckbox" aria-checked={workspacePresentation.contextOpen} type="button"
+                  onClick={() => toggleDock('context')}>CONTEXT DOCK {workspacePresentation.contextOpen ? 'OPEN' : 'CLOSED'}</button>
+                {standaloneAvailable ? <button role="menuitemcheckbox" aria-checked={workspacePresentation.auditionOpen} type="button"
+                  onClick={() => setWorkspacePresentation((current) => ({ ...current, auditionOpen: !current.auditionOpen }))}>
+                  AUDIO DRAWER {workspacePresentation.auditionOpen ? 'OPEN' : 'CLOSED'}
+                </button> : null}
                 <label className="menu-select">PROCESSING QUALITY
                   <select aria-label="Processing quality" value={qualityPolicy}
                     onChange={(event) => setQualityPolicy(event.target.value as QualityPolicy)}>
@@ -1094,11 +1156,12 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       /> : null}
       {diagnosticsOpen ? <DiagnosticsPanel diagnostics={diagnostics} runawayLoop={runawayLoopInspection} canUndo={graphHistory.undo.length > 0} onUndo={undoGraph} onRecover={() => { void callNative('resetSafety').catch(() => undefined); }} onClose={() => setDiagnosticsOpen(false)} /> : null}
 
-      <section className="workspace">
-        <aside className="module-library" aria-label="Module library">
+      <section className={`workspace arrangement-${workspacePresentation.arrangement}${workspaceLayout.overlay ? ' workspace-overlay' : ''}`}
+        style={{ gridTemplateColumns: workspaceGridColumns(workspaceLayout) }}>
+        <aside className={`module-library${workspaceLayout.modulesVisible ? ' dock-visible' : ' dock-hidden'}`} aria-label="Module library" aria-hidden={!workspaceLayout.modulesVisible}>
           <div className="pane-heading">
             <span>MODULES</span>
-            <span className="pane-count">{moduleDefinitions.length}</span>
+            <div><span className="pane-count">{moduleDefinitions.length}</span><button className="dock-close" type="button" aria-label="Close module palette" onClick={() => toggleDock('modules')}>‹</button></div>
           </div>
           <p className="pane-help">Click a primitive to place it near the canvas center. Audio cables are mono.</p>
           {modules.map((section) => (
@@ -1120,7 +1183,12 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
         <section className="canvas-pane" aria-label="Patch canvas">
           <div className="canvas-toolbar">
-            <div><strong>PATCH CANVAS</strong><span>{Math.round(viewport.zoom * 100)}%</span></div>
+            <div><strong>PATCH CANVAS</strong><span>{Math.round(viewport.zoom * 100)}%</span>
+              <label className="workspace-picker"><span>WORKSPACE</span><select aria-label="Workspace arrangement" value={workspacePresentation.arrangement}
+                onChange={(event) => selectWorkspaceArrangement(event.target.value as WorkspaceArrangement)}>
+                <option value="balanced">Balanced</option><option value="create">Create Focus</option><option value="learn">Learn &amp; Inspect</option>{workspacePresentation.arrangement === 'custom' ? <option value="custom">Custom</option> : null}
+              </select></label>
+            </div>
             <div className="canvas-actions">
               {supportsAssistedTuning({ nodes, edges }) ? <button type="button" className="tuning-open-button"
                 aria-expanded={tuningOpen} onClick={() => setTuningOpen((open) => !open)}>TUNE</button> : null}
@@ -1173,6 +1241,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
             </div>
           ) : null}
           <div className="flow-wrap">
+            {!workspaceLayout.modulesVisible ? <button className="dock-reveal dock-reveal-left" type="button" onClick={() => toggleDock('modules')}>MODULES ›</button> : null}
+            {!workspaceLayout.contextVisible ? <button className="dock-reveal dock-reveal-right" type="button" onClick={() => toggleDock('context')}>‹ CONTEXT</button> : null}
             <ReactFlow
               nodes={matrixDisplayedGraph.nodes}
               edges={matrixDisplayedGraph.edges}
@@ -1223,8 +1293,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           </div>
         </section>
 
-        <aside className="inspector" aria-label="Inspector">
-          <div className="pane-heading"><span>INSPECTOR</span><button className="teaching-toggle" type="button" aria-pressed={teachingEnabled} title="Toggle contextual cards and response architecture overlays" onClick={toggleTeaching}>LEARN {teachingEnabled ? 'ON' : 'OFF'}</button></div>
+        <aside className={`inspector${workspaceLayout.contextVisible ? ' dock-visible' : ' dock-hidden'}`} aria-label="Inspector" aria-hidden={!workspaceLayout.contextVisible}>
+          <div className="pane-heading"><span>INSPECTOR</span><div><button className="teaching-toggle" type="button" aria-pressed={teachingEnabled} title="Toggle contextual cards and response architecture overlays" onClick={toggleTeaching}>LEARN {teachingEnabled ? 'ON' : 'OFF'}</button><button className="dock-close" type="button" aria-label="Close context dock" onClick={() => toggleDock('context')}>›</button></div></div>
           {tuningOpen && supportsAssistedTuning({ nodes, edges }) ? <AssistedTuningPanel
             previewId={tuningPreview?.id ?? null} busy={tuningBusy}
             onPreview={(id) => { void previewAssistedTuning(id); }} onAccept={acceptAssistedTuning}

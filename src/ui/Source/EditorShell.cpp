@@ -226,6 +226,14 @@ EditorShell::EditorShell(Callbacks callbacks)
         .withNativeFunction("standaloneAuditionAvailable", [this](const auto&, auto complete) {
             complete(callbacks_.standaloneAuditionAvailable);
         })
+        .withNativeFunction("setAuditionDrawerExpanded", [this](const auto& arguments, auto complete) {
+            const auto expanded = arguments.size() > 0 && static_cast<bool>(arguments[0]);
+            setAuditionDrawerExpanded(expanded);
+            complete(auditionDrawerExpanded_);
+        })
+        .withNativeFunction("auditionDrawerExpanded", [this](const auto&, auto complete) {
+            complete(auditionDrawerExpanded_);
+        })
         .withResourceProvider([this](const auto& path) { return getWebResource(path); });
     browser_ = std::make_unique<juce::WebBrowserComponent>(std::move(options));
     addAndMakeVisible(*browser_);
