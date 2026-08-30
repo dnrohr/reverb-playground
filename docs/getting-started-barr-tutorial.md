@@ -12,7 +12,7 @@ toolchain or any MIDIVerb ROM data.
    monitor level.
 3. Confirm that the editor header shows `v0.1.0 / <commit>` and that the commit
    agrees with the package's `build-info.json`.
-4. Keep **Master Audition Gain** low for the first impulse. **Emergency Mute**
+4. Keep **Wet Gain** low and **Dry Gain** at zero for the first impulse. **Emergency Mute**
    always silences output without changing the patch.
 
 The packaged standalone should look like this:
@@ -57,10 +57,10 @@ feature off.
 In **Measure / Impulse Response**:
 
 1. Select **500 ms** maximum length and **-80 dBFS** threshold.
-2. Leave **Mute live input** enabled so room noise cannot contaminate the
-   measurement.
+2. Measurement automatically isolates live input, loaded-file playback, and
+   the normal test source, so there is no input-mute setting to manage.
 3. Choose **Capture impulse**. The measurement stimulus is fixed at `0.1` peak
-   and is captured before Master Audition Gain.
+   and is captured before Wet and Dry Gain.
 4. In the response viewer, identify the solid left waveform, dashed right
    waveform, and white stereo-energy decay.
 5. Use **Early / 16x**, the zoom controls, wheel zoom, and the pan slider. These

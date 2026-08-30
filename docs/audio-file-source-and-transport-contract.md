@@ -31,19 +31,17 @@ bounded impulse ----- Test Impulse -/                         |
                                                               v
                          energy / response / diagnostics <--- wet output
                                                               |
-                                      dry bypass or audition mix
-                                                              |
-                                      Master Audition Gain
+                         Dry Gain x source + Wet Gain x graph output
                                                               |
                                       numerical guard / mute
                                                               |
                                       standalone device output
 ```
 
-Emergency Mute is downstream of every source and every dry/wet route. No file,
-bypass, or export preview path may bypass the numerical guard. Impulse-response
-capture continues to observe graph wet output before Master Audition Gain so
-measurement does not depend on listening level. Energy and diagnostics state
+Emergency Mute is downstream of every source and the wet/dry sum. No file,
+dry, or export preview path may bypass the numerical guard. Impulse-response
+capture observes graph wet output before Wet and Dry Gain so measurement does
+not depend on listening level. Energy and diagnostics state
 whether they describe source, wet graph output, or final audible output.
 
 ## Channel and format policy

@@ -14,7 +14,7 @@ Compilation failure never starts a transition and never removes the preceding au
 
 The editor debounces semantic changes for 35 milliseconds, serializes the same closed schema-v2 document used by Save Patch, and calls the native `publishGraph` bridge. The header reports compiling, crossfading, or active identity. A successful request is acknowledged immediately; its later compile result remains observable through diagnostics. Invalid native parsing is returned directly, while asynchronous compiler errors appear against their failed revision.
 
-Constructed-graph processing retains master audition gain, manual mute, impulse triggering, finite/runaway guards, live CPU/clipping accounting, and deterministic measurement reset/capture. Capture input muting and the 0.1-peak measurement impulse happen before the graph; capture samples remain pre-gain. Known Barr energy lanes gracefully fall to zero when the constructed runtime cannot yet supply per-node telemetry; general per-node instrumentation remains separate future work.
+Constructed-graph processing retains independent Wet/Dry Gain, manual mute, impulse triggering, finite/runaway guards, live CPU/clipping accounting, and deterministic measurement reset/capture. Automatic source isolation and the 0.1-peak measurement impulse happen before the graph; capture samples remain pre-gain. Compiled per-node energy lanes publish coherent revision-tagged telemetry for the active graph.
 
 ## Windows scaling correction
 

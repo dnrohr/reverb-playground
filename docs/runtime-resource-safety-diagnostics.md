@@ -17,7 +17,7 @@ The fixed operation estimate is 48 scalar operations per sample for the current 
 
 Runtime revision 1 is the prepared reference. Each accepted parameter value change advances the native revision. If either output contains NaN/infinity or exceeds the runaway ceiling, the guard zeros both output channels, latches safety mute, and records the exact active revision. Later parameter edits and Undo can advance the active revision, but the event's revision remains unchanged.
 
-Manual emergency mute and numerical safety mute are reported independently. The diagnostics panel opens automatically for a safety latch and keeps graph editing, parameter controls, and **Undo Last Edit** available. The native master audition gain also remains editable. Recovery is deliberately two-step:
+Manual emergency mute and numerical safety mute are reported independently. The diagnostics panel opens automatically for a safety latch and keeps graph editing, parameter controls, and **Undo Last Edit** available. Native Wet and Dry Gain also remain editable. Recovery is deliberately two-step:
 
 1. Undo or reduce the risky gain/parameter while muted.
 2. Choose **Recover Audio** (or the native **Reset Safety** control) to clear DSP state and the latch explicitly.

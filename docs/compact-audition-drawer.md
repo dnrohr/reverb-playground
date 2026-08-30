@@ -16,10 +16,11 @@ The standalone keeps the everyday audition path in one compact strip:
 The strip starts collapsed, reducing the standalone header by 96 logical pixels
 compared with the open drawer. Loading a file opens the drawer automatically so
 the waveform and loop tools are immediately discoverable. Closing it never
-changes source mode, playback, loop, processed/dry state, or an active export.
+changes source mode, playback, loop, Wet/Dry Gain, or an active export.
 
-The open drawer contains waveform seeking, Stop, loop enable/range,
-Processed/Dry Bypass, export mode, and export progress. The source selector
+The open drawer contains waveform seeking, Stop, loop enable/range, export
+range, and export progress. Wet and Dry Gain remain in the always-visible safe
+audition strip. The source selector
 replaces three permanent source buttons without changing the mutually exclusive
 Live Input, Audio File, and Test Impulse behavior.
 

@@ -49,8 +49,9 @@ Before each session, record:
   deliberate testing.
 
 Use a clean extracted package and no prior Reverb Playground settings or patch
-files. Keep monitor/headphone gain conservative. Start with Master Audition
-Gain at or below `0.25`; confirm **Emergency Mute** is reachable before sound.
+files. Keep monitor/headphone gain conservative. Start with **Wet Gain** at or
+below `0.25` and **Dry Gain** at `0`; confirm **Emergency Mute** is reachable
+before sound.
 
 ## Facilitation rules
 
@@ -85,8 +86,9 @@ blank/clipped, or audio device setup cannot be closed safely.
 Give the participant [Getting started: hear and inspect the Barr
 reference](getting-started-barr-tutorial.md). Ask them to describe the
 stereo-to-mono-to-stereo path, trigger a safe impulse, enable energy, capture a
-500 ms / -80 dBFS response with live input muted, zoom to the early response,
-edit one Allpass coefficient, undo it, and save/reload the patch.
+500 ms / -80 dBFS response, zoom to the early response, edit one Allpass
+coefficient, undo it, and save/reload the patch. Measurement capture isolates
+live input and loaded-file playback automatically.
 
 Expected evidence: separate L/R boundary cables and explicit Sum are
 understood; output remains comfortable; energy and response views are not

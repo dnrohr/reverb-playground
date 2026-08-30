@@ -175,10 +175,10 @@ MVP safeguards:
 - hard finite-value checks at every output boundary;
 - a final emergency limiter or mute independent of the user graph;
 - conservative default gains;
-- a user-adjustable master audition level;
+- independent user-adjustable Wet and Dry Gain;
 - automatic mute and diagnostic state after NaN/infinity or persistent runaway level;
 - loop highlighting and a clearly labeled heuristic stability warning;
-- optional “safe audition” mode that injects a quiet impulse before unmuting live input;
+- measurement capture that automatically isolates external audition sources and injects a quiet impulse;
 - undo available even while emergency-muted.
 
 Do not promise a mathematically exact stability verdict for arbitrary nonlinear or modulated graphs. For the linear time-invariant MVP, stronger analysis may be possible, but the UI must distinguish proof from heuristic estimation.

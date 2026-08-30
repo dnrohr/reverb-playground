@@ -47,10 +47,10 @@ pauses its cursor after the transition; returning resumes automatically when
 the source switch caused that pause. An explicit Pause, Stop, or Seek stays
 paused until Play. Live input is never summed into file or impulse audition.
 
-Master Audition Gain, Emergency Mute, the numerical-safety latch, energy view,
+Wet and Dry Gain, Emergency Mute, the numerical-safety latch, energy view,
 response capture, runtime diagnostics, topology crossfades, continuous edits,
-and A/B comparison remain authoritative for file audition. Dry bypass still
-passes through gain, mute, and numerical safety.
+and A/B comparison remain authoritative for file audition. The independent
+dry path still passes through mute and numerical safety.
 
 ## Persistence and privacy
 
@@ -61,10 +61,11 @@ Live Input without reopening a local path.
 
 ## Processed export
 
-Choose **Wet Only** or **Audition Mix**, then use **Export WAV…**. The standalone
-writes deterministic 48 kHz stereo 24-bit PCM through a temporary file, shows
-progress, and offers cancellation. Audition Mix is a 50/50 dry/processed blend;
-Wet Only contains only graph output. See [Processed-file export](processed-file-export.md)
+Set the independent **Wet Gain** and **Dry Gain**, choose **Entire File** or
+**Selected Loop**, then use **Export WAV…**. The standalone writes deterministic
+48 kHz stereo 24-bit PCM through a temporary file, shows progress, and offers
+cancellation. Export uses the same unnormalized Wet/Dry formula as live
+audition. See [Processed-file export](processed-file-export.md)
 for tail, safety, overwrite, and failure behavior.
 
 Reverse playback and arbitrary source reversal are not part of the transport;

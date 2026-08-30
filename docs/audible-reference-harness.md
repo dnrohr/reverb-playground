@@ -8,7 +8,7 @@ The standalone application and VST3 now run the fixed Barr-inspired reference we
 2. JUCE restores the last audio configuration or opens the operating-system default output. The status line shows the selected output and active sample rate.
 3. Choose **Audio Device...** to select the driver, input/output device, sample rate, and buffer size. The wrapper's **Options** control opens the same JUCE settings.
 4. Press **Trigger Impulse** to inject a unit impulse directly into the wet reference, independent of hardware input. The button confirms **Impulse sent** for one second.
-5. Adjust **Master Audition Gain** from silence to unity. The safe default is `0.5` linear.
+5. Adjust **Wet Gain** from silence to unity. Keep **Dry Gain** at zero for an isolated reverb response; raise it when you want the immediate source in parallel. The safe wet default is `0.5` linear.
 6. Press **Emergency Mute** for immediate latched manual silence; press it again to resume. **Reset Safety** becomes available only after the numerical guard detects a non-finite or runaway output.
 
 JUCE mutes standalone audio input by default to avoid acoustic feedback. The yellow banner and **Settings...** button control that protection. Leave it muted for impulse audition; explicitly enable it in settings only when the routing cannot feed speakers back into the input.

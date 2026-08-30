@@ -23,6 +23,10 @@ The searched 35.2 / 45.9 / 72.7 / 110.3 ms Four-Line alternative reduced average
 
 ## Listening worksheet
 
+Record the review in the
+[M24 comparative listening session](m24-listening-session-template.md) so every
+fixture, mono check, confidence level, and retuning decision is explicit.
+
 Listen at a fixed monitor level; do not change gain between the four sections of one reel. For each section, record short notes separately for:
 
 - repeat-like taps or flutter;

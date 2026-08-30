@@ -19,8 +19,8 @@ The message thread copies only a completed immutable slot and serializes capture
 
 ## Determinism
 
-Starting a measurement clears delay/filter state and settles all smoothed parameters to their current targets. Repeating a capture without modulation or parameter changes therefore produces sample-identical left and right arrays, independent of prior live input and master audition gain. Tests exercise repeated captures with different input buffers and audition gains.
+Starting a measurement clears delay/filter state and settles all smoothed parameters to their current targets. Repeating a capture without modulation or parameter changes therefore produces sample-identical left and right arrays, independent of prior live input and Wet/Dry Gain. Tests exercise repeated captures with different input buffers and audition gains.
 
 ## Evidence
 
-Reviewed UI evidence is stored in `artifacts/ui/m4-2-impulse-audition-capture/`. The screenshot shows the visible measurement bounds and completed result. The video shows a capture progressing to its bounded result while live input is muted.
+Reviewed UI evidence is stored in `artifacts/ui/m4-2-impulse-audition-capture/`. The screenshot shows the visible measurement bounds and completed result. The video shows a capture progressing to its bounded result; current builds isolate every audition source automatically.

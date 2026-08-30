@@ -36,7 +36,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Audible reference harness](audible-reference-harness.md) - standalone/plugin audition controls, device behavior, live safety, and UI evidence.
 - [Audio-file source and transport contract](audio-file-source-and-transport-contract.md) - standalone source arbitration, channel/resampling policy, prepared read-ahead ownership, deterministic transport, underrun behavior, and persistence boundaries.
 - [Standalone audio-file audition](standalone-audio-file-audition.md) - load/drop workflow, waveform transport, source selection, loop editing, dry comparison, safety, and privacy.
-- [Processed-file export](processed-file-export.md) - Wet Only/Audition Mix semantics, PCM24 format, resampling, bounded tails, cancellation, safety, and atomic publication.
+- [Processed-file export](processed-file-export.md) - shared Wet/Dry gain semantics, range selection, PCM24 format, resampling, bounded tails, cancellation, safety, and atomic publication.
 - [Audio workflow guide](audio-workflow-guide.md) - when to use file audition, live input, Test Impulse, offline export, or the VST3, plus recovery behavior and limitations.
 - [Compact audition drawer](compact-audition-drawer.md) - responsive collapsed/open transport layout, minimum-width guarantees, and current UI evidence.
 - [Schematic editor interactions](schematic-editor-interactions.md) - three-pane layout, pointer and keyboard controls, signal semantics, and scaling contract.
@@ -76,6 +76,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Compiled control-ramp processing](compiled-control-ramp-processing.md) - bounded ramp segments, block and causal processor kernels, equivalence coverage, and exact-commit performance evidence.
 - [Dense-network performance profile](dense-network-performance-profile.md) - M23 normal, Energy, and crossfade measurements with processor-family attribution and the Four-Line kernel decision.
 - [Dense-reverb qualification](dense-reverb-qualification.md) - loudness-matched Barr/Gravity/Figure Eight/Four-Line objective results, listening reels, visible failures, and the retuning gate.
+- [M24 comparative listening session](m24-listening-session-template.md) - anonymous eight-reel listening and mono-check worksheet required to close dense-reverb qualification.
 - [Reverse grains and stereo decorrelation](reverse-grain-and-stereo-decorrelation.md) - deterministic phase pairing, causal boundaries, transient evidence, compatibility, and multirate budgets.
 - [Reverse Cosmic Shimmer topology design](reverse-cosmic-shimmer-topology-design.md) - causal-rise front end, paired reverse-octave returns, dark circulation, slow motion, and unequal stereo extraction.
 - [Safe Parallel Shimmer topology design](safe-parallel-shimmer-design.md) - visible post-tank octave branch, structural non-recirculation, stereo extraction, alignment, memory, and loudness budgets.
