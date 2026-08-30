@@ -73,6 +73,12 @@ No UI changed during M24.2, so new screenshot or video evidence is not required;
 the validators create the current editor, and prior packaged UI evidence remains
 linked from the Windows alpha validation record.
 
+The complete local Release gate passed 244 native/CLI tests and 123 web tests.
+GitHub [Verify run 33240298702](https://github.com/dnrohr/reverb-playground/actions/runs/33240298702)
+then passed on clean `main`: Windows verification completed in 20m39s and the
+dependent deterministic-package job completed in 11m27s, uploading the ZIP,
+checksum, and standalone executable for commit `120f9dc`.
+
 ## Supported envelope
 
 The product-qualified audio envelope remains Windows 10/11 x64, stereo
@@ -81,4 +87,3 @@ single-precision processing, 44.1/48/96 kHz, and host blocks from 32 through
 kHz or beyond 64 MiB of delay memory while retaining the last valid runtime.
 Higher and unusual host rates are compatibility probes, not supported creative
 operating points; they must remain finite and must never crash the host.
-

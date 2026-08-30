@@ -1491,6 +1491,8 @@ Acceptance criteria:
 
 ### M24.2 Qualify hosts, safety, documentation, and release artifacts
 
+Status: Complete.
+
 Tasks: exercise extreme controls, continuous editing, automation, save/reopen, offline export, sample-rate changes, standalone/VST3 packaging, and the full release gate.
 
 Acceptance criteria:
