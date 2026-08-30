@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import {
   Background,
   BackgroundVariant,
@@ -47,6 +47,7 @@ import { decorateReverseCosmicFocus, reverseCosmicShimmerTeaching, type ReverseC
 import { collapseMatrixMixer, inspectMatrixMixer, type MatrixMixerInspection } from './matrixMixerPresentation';
 import { assistedTuningSuggestions, createAssistedTuningPreview, supportsAssistedTuning, type AssistedTuningSuggestionId } from './assistedTuning';
 import { editorCommandBarHeight, measurementBarHeight } from './workspaceChrome';
+import { captureRevisionState, contextTabFor, emphasizeAnalyzeLayout, shouldPollRuntimeDiagnostics, type ContextIntent, type ContextTab } from './contextDock';
 import {
   arrangementPresentation,
   parseWorkspacePresentation,
@@ -62,6 +63,8 @@ const modules = [
   { group: 'SIGNAL', items: moduleDefinitions.filter((item) => item.role !== 'io' && item.role !== 'control') },
   { group: 'CONTROL', items: moduleDefinitions.filter((item) => item.role === 'control') },
 ];
+const contextTabs: ContextTab[] = ['inspect', 'analyze', 'learn'];
+const contextTabLabels: Record<ContextTab, string> = { inspect: 'Inspector', analyze: 'Analyze', learn: 'Learn' };
 
 const parameterChoices = (unit: string): { value: number; label: string }[] | null => {
   if (unit === 'boolean') return [{ value: 0, label: 'OFF' }, { value: 1, label: 'ON' }];
@@ -113,7 +116,7 @@ function ParallelShimmerTeaching({ selectedNodeId }: { selectedNodeId?: string }
 
 function MatrixMixerInspector({ inspection }: { inspection: MatrixMixerInspection }) {
   return <section className="matrix-mixer-inspector" aria-label="Matrix Mixer coefficients and energy">
-    <header><span>4×4 COEFFICIENTS</span><strong>{inspection.orthogonal ? 'ORTHOGONAL' : 'CUSTOM'}</strong></header>
+    <header><span>4×4 COEFFICIENTS / EDITED</span><strong>{inspection.orthogonal ? 'ORTHOGONAL / PREDICTED' : 'CUSTOM / PREDICTED'}</strong></header>
     <div className="matrix-coefficients" role="table" aria-label="Matrix coefficient table">
       {inspection.coefficients.flatMap((row, output) => row.map((value, input) => <span role="cell"
         className={value < 0 ? 'is-negative' : 'is-positive'} key={`${output}-${input}`}>{value >= 0 ? '+' : '−'}{Math.abs(value).toFixed(2)}</span>))}
@@ -288,11 +291,13 @@ function MeasurementBar({ sampleRate, onCapture }: { sampleRate: number; onCaptu
   </section>;
 }
 
-function ResponseViewer({ capture, patchId, gateTeaching, teachingEnabled, onClose }: {
+function ResponseViewer({ capture, patchId, gateTeaching, teachingEnabled, captureRevision, activeRevision, onClose }: {
   capture: ImpulseCaptureResult;
   patchId: TeachingPatchId;
   gateTeaching: GateTeachingParameters;
   teachingEnabled: boolean;
+  captureRevision: number;
+  activeRevision: number;
   onClose: () => void;
 }) {
   const analysis = useMemo(() => analyseResponse(capture), [capture]);
@@ -321,13 +326,15 @@ function ResponseViewer({ capture, patchId, gateTeaching, teachingEnabled, onClo
   const startMs = window.start / capture.sampleRate * 1000;
   const endMs = window.end / capture.sampleRate * 1000;
   const setBoundedZoom = (value: number) => setZoom(Math.max(1, Math.min(256, value)));
-  return <section className="response-viewer" aria-label="Stereo impulse response viewer">
-    <header><div><span>CAPTURE #{capture.generation} / STEREO RESPONSE</span><h2>Impulse and energy decay</h2></div><button type="button" onClick={onClose}>CLOSE ×</button></header>
+  const revisionState = captureRevisionState(captureRevision, activeRevision);
+  return <section className="response-viewer context-response" aria-label="Stereo impulse response viewer">
+    <header><div><span>CAPTURE #{capture.generation} / MEASURED / REVISION {captureRevision > 0 ? `#${captureRevision}` : 'UNKNOWN'} / {revisionState}</span><h2>Impulse and energy decay</h2></div><button type="button" onClick={onClose}>CLEAR ×</button></header>
+    {revisionState === 'STALE' ? <p className="stale-evidence" role="status">STALE CAPTURE — the active graph is now revision #{activeRevision}. Values remain visible as historical evidence.</p> : null}
     <div className="response-metrics">
-      <div><span>WINDOW</span><strong>{startMs.toFixed(2)}–{endMs.toFixed(2)} ms</strong></div>
-      <div><span>PEAK L / R</span><strong>{analysis.peakLeft.toFixed(4)} / {analysis.peakRight.toFixed(4)}</strong></div>
-      <div><span>ONSET</span><strong>{analysis.onsetFrame === null ? 'NONE' : `${(analysis.onsetFrame / capture.sampleRate * 1000).toFixed(2)} ms`}</strong></div>
-      <div><span>RT60 / T30 FIT</span><strong>{displayedRt60 === null ? patchId === 'level-gated-room' ? 'NOT MEANINGFUL' : 'NOT ESTIMATED' : `${displayedRt60.toFixed(3)} s`}</strong></div>
+      <div><span>WINDOW / MEASURED</span><strong>{startMs.toFixed(2)}–{endMs.toFixed(2)} ms</strong></div>
+      <div><span>PEAK L / R / MEASURED</span><strong>{analysis.peakLeft.toFixed(4)} / {analysis.peakRight.toFixed(4)}</strong></div>
+      <div><span>ONSET / MEASURED</span><strong>{analysis.onsetFrame === null ? 'NONE' : `${(analysis.onsetFrame / capture.sampleRate * 1000).toFixed(2)} ms`}</strong></div>
+      <div><span>RT60 / ESTIMATED</span><strong>{displayedRt60 === null ? patchId === 'level-gated-room' ? 'NOT MEANINGFUL' : 'NOT ESTIMATED' : `${displayedRt60.toFixed(3)} s`}</strong></div>
     </div>
     <div className="response-navigation">
       <button type="button" aria-pressed={densityVisible} onClick={() => setDensityVisible((visible) => !visible)}>{densityVisible ? 'HIDE DENSITY' : 'DENSITY INSPECTOR'}</button>
@@ -384,9 +391,9 @@ function ResponseViewer({ capture, patchId, gateTeaching, teachingEnabled, onClo
   </section>;
 }
 
-function DiagnosticsPanel({ diagnostics, runawayLoop, canUndo, onUndo, onRecover, onClose }: { diagnostics: RuntimeDiagnostics | null; runawayLoop: FeedbackLoopInspection | null; canUndo: boolean; onUndo: () => void; onRecover: () => void; onClose: () => void }) {
-  return <aside className={`diagnostics-panel ${diagnostics?.mute.safetyLatched ? 'has-safety-latch' : ''}`} aria-label="Runtime resource and safety diagnostics">
-    <header><div><span>RUNTIME DIAGNOSTICS</span><h2>Resources and safety</h2></div><button type="button" onClick={onClose}>CLOSE ×</button></header>
+function DiagnosticsPanel({ diagnostics, runawayLoop, canUndo, onUndo, onRecover }: { diagnostics: RuntimeDiagnostics | null; runawayLoop: FeedbackLoopInspection | null; canUndo: boolean; onUndo: () => void; onRecover: () => void }) {
+  return <section className={`diagnostics-panel context-diagnostics ${diagnostics?.mute.safetyLatched ? 'has-safety-latch' : ''}`} aria-label="Runtime resource and safety diagnostics">
+    <header><div><span>RUNTIME DIAGNOSTICS / CURRENT REVISION</span><h2>Resources and safety</h2></div></header>
     {!diagnostics ? <p className="diagnostics-waiting">Waiting for a coherent native snapshot…</p> : <>
       <div className={`mute-diagnostic ${diagnostics.mute.active ? 'is-muted' : ''}`} role={diagnostics.mute.safetyLatched ? 'alert' : 'status'}>
         <strong>{diagnostics.mute.safetyLatched ? 'SAFETY MUTE LATCHED' : diagnostics.mute.manual ? 'MANUAL MUTE ACTIVE' : 'AUDIO SAFETY READY'}</strong>
@@ -424,7 +431,7 @@ function DiagnosticsPanel({ diagnostics, runawayLoop, canUndo, onUndo, onRecover
       {diagnostics.mute.safetyLatched ? runawayLoop?.loops[0] ? <section className="runaway-loop-event"><span>LIKELY FEEDBACK LOOP / HEURISTIC</span><strong>{runawayLoop.loops[0].nominalDelayMilliseconds.toFixed(2)} ms · {runawayLoop.loops[0].nodeIds.length} blocks</strong><code>{[...runawayLoop.loops[0].nodeIds, runawayLoop.loops[0].nodeIds[0]].join(' → ')}</code><p>Marked red on the graph. Ranking uses visible loop gain and nominal delay; it is guidance, not a stability proof.</p></section> : <p className="no-safety-event">No explicit delayed feedback loop could be identified for this event.</p> : null}
       <div className="diagnostic-actions"><button type="button" disabled={!canUndo} onClick={onUndo}>UNDO LAST EDIT</button><button type="button" disabled={!diagnostics.mute.safetyLatched} onClick={onRecover}>RECOVER AUDIO</button></div>
     </>}
-  </aside>;
+  </section>;
 }
 
 function GravityPresentation({ value, destinationCount, showMeasuredReference, onBegin, onValue, onCommit, onFocus }: {
@@ -484,6 +491,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   });
   const [dismissedTeaching, setDismissedTeaching] = useState<string | null>(null);
   const [researchOpen, setResearchOpen] = useState(false);
+  const [contextTab, setContextTab] = useState<ContextTab>('inspect');
   const [graphHistory, setGraphHistory] = useState(() => emptyGraphHistory(initial));
   const [graphStatus, setGraphStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
   const [pendingConnection, setPendingConnection] = useState<Connection | null>(null);
@@ -498,25 +506,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     capture: ImpulseCaptureResult;
     patchId: TeachingPatchId;
     gateTeaching: GateTeachingParameters;
+    graphRevision: number;
   } | null>(null);
-  const receiveCapture = useCallback((capture: ImpulseCaptureResult) => {
-    const parameter = (type: string, id: string, fallback: number) => nodes
-      .find((node) => node.data.type === type)?.data.parameters
-      .find((candidate) => candidate.id === id)?.value ?? fallback;
-    setResponseCapture({
-      capture,
-      patchId: activePatchId,
-      gateTeaching: {
-        detectorReleaseMilliseconds: parameter('envelope-follower', 'release', 20),
-        holdMilliseconds: parameter('hold-gate', 'hold', 120),
-        releaseMilliseconds: parameter('hold-gate', 'release', 8),
-      },
-    });
-  }, [activePatchId, nodes]);
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [energyEnabled, setEnergyEnabled] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [energyLevels, setEnergyLevels] = useState<EnergyLevels>({});
-  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
   const [openApplicationMenu, setOpenApplicationMenu] = useState<'file' | 'edit' | 'view' | 'help' | null>(null);
   const [standaloneAvailable, setStandaloneAvailable] = useState(false);
   const [windowWidth, setWindowWidth] = useState(() => window.innerWidth);
@@ -530,7 +524,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const audibleFingerprint = useMemo(() => audibleGraphFingerprint(nodes, edges), [edges, nodes]);
   const hostStateJson = useMemo(() => writePatchJson(nodes, edges, viewport, qualityPolicy), [edges, nodes, qualityPolicy, viewport]);
   const activePatch = activePatchId === 'custom' ? null : factoryPatchDescription(activePatchId);
-  const workspaceLayout = useMemo(() => resolveWorkspaceLayout(windowWidth, workspacePresentation), [windowWidth, workspacePresentation]);
+  const baseWorkspaceLayout = useMemo(() => resolveWorkspaceLayout(windowWidth, workspacePresentation), [windowWidth, workspacePresentation]);
+  const workspaceLayout = useMemo(() => emphasizeAnalyzeLayout(baseWorkspaceLayout,
+    contextTab === 'analyze' && workspacePresentation.contextOpen), [baseWorkspaceLayout, contextTab, workspacePresentation.contextOpen]);
+  const diagnosticsPollingEnabled = shouldPollRuntimeDiagnostics(contextTab,
+    workspacePresentation.contextOpen, shouldRunEnergyTelemetry(energyEnabled, reducedMotion));
 
   useEffect(() => {
     void callNative('standaloneAuditionAvailable').then((available) => setStandaloneAvailable(available === true));
@@ -565,6 +563,41 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const toggleDock = useCallback((dock: 'modules' | 'context') => {
     setWorkspacePresentation((current) => toggleWorkspaceDock(current, dock));
   }, []);
+  const openContext = useCallback((intent: ContextIntent) => {
+    const tab = contextTabFor(intent);
+    setContextTab(tab);
+    if (tab === 'analyze') setDiagnostics(null);
+    setWorkspacePresentation((current) => current.contextOpen && current.narrowDock === 'context'
+      ? current : { ...current, arrangement: 'custom', contextOpen: true, narrowDock: 'context' });
+  }, []);
+  const handleContextTabKey = useCallback((event: ReactKeyboardEvent<HTMLButtonElement>, tab: ContextTab) => {
+    const current = contextTabs.indexOf(tab);
+    const next = event.key === 'ArrowRight' ? (current + 1) % contextTabs.length
+      : event.key === 'ArrowLeft' ? (current + contextTabs.length - 1) % contextTabs.length
+        : event.key === 'Home' ? 0 : event.key === 'End' ? contextTabs.length - 1 : -1;
+    if (next < 0) return;
+    event.preventDefault();
+    const nextTab = contextTabs[next];
+    if (nextTab === 'analyze') setDiagnostics(null);
+    setContextTab(nextTab);
+    window.setTimeout(() => document.getElementById(`context-tab-${nextTab}`)?.focus(), 0);
+  }, []);
+  const receiveCapture = useCallback((capture: ImpulseCaptureResult) => {
+    const parameter = (type: string, id: string, fallback: number) => nodes
+      .find((node) => node.data.type === type)?.data.parameters
+      .find((candidate) => candidate.id === id)?.value ?? fallback;
+    setResponseCapture({
+      capture,
+      patchId: activePatchId,
+      graphRevision: activeGraphRevision.current,
+      gateTeaching: {
+        detectorReleaseMilliseconds: parameter('envelope-follower', 'release', 20),
+        holdMilliseconds: parameter('hold-gate', 'hold', 120),
+        releaseMilliseconds: parameter('hold-gate', 'release', 8),
+      },
+    });
+    openContext('measurement');
+  }, [activePatchId, nodes, openContext]);
 
   const loopInspection = useMemo(() => selectedNode
     ? inspectFeedbackLoops(nodes, edges, { nodeId: selectedNode.id })
@@ -627,6 +660,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   }, []);
 
   useEffect(() => {
+    if (!diagnosticsPollingEnabled) return;
     let cancelled = false;
     const timer = window.setTimeout(async () => {
       try {
@@ -716,7 +750,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
             && next.topologyPublication.failedRevision === next.topologyPublication.requestedRevision
             && next.topologyPublication.failure)
             setGraphStatus({ kind: 'error', message: `REVISION #${next.topologyPublication.failedRevision} REJECTED: ${next.topologyPublication.failure}` });
-          if (next.mute.safetyLatched) setDiagnosticsOpen(true);
+          if (next.mute.safetyLatched && (contextTab !== 'analyze' || !workspacePresentation.contextOpen)) openContext('diagnostics');
         }
       } catch { /* native snapshot may not be available in the development browser */ }
       finally { polling = false; }
@@ -724,7 +758,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     void poll();
     const timer = window.setInterval(() => void poll(), 250);
     return () => { cancelled = true; window.clearInterval(timer); };
-  }, []);
+  }, [contextTab, diagnosticsPollingEnabled, openContext, workspacePresentation.contextOpen]);
 
   const applyGraph = useCallback((state: { nodes: Node<PatchNodeData>[]; edges: Edge[] }) => {
     setNodes(state.nodes); setEdges(state.edges); setSelectedNode(null); setSelectedEdge(null);
@@ -923,10 +957,14 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   }, [applyGraph, edges, nodes]);
 
   const handleSelection = useCallback(({ nodes: selectedNodes, edges: selectedEdges }: OnSelectionChangeParams) => {
-    setSelectedNode((selectedNodes[0] as Node<PatchNodeData> | undefined) ?? null);
-    setSelectedEdge(selectedEdges[0] ?? null);
+    const node = (selectedNodes[0] as Node<PatchNodeData> | undefined) ?? null;
+    const edge = selectedEdges[0] ?? null;
+    setSelectedNode(node);
+    setSelectedEdge(edge);
     setActiveLoopIndex(0);
-  }, []);
+    if (node) openContext(node.data.type === 'matrix-mixer' ? 'matrix' : 'node');
+    else if (edge) openContext('cable');
+  }, [openContext]);
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
@@ -1090,12 +1128,12 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 </label>
                 <button role="menuitemcheckbox" aria-checked={energyEnabled} type="button" disabled={reducedMotion}
                   onClick={() => setEnergyEnabled((enabled) => !enabled)}>ENERGY {reducedMotion ? 'REDUCED' : energyEnabled ? 'ON' : 'OFF'}</button>
-                <button role="menuitemcheckbox" aria-checked={diagnosticsOpen} type="button"
-                  onClick={() => { setDiagnosticsOpen((open) => !open); setOpenApplicationMenu(null); }}>DIAGNOSTICS</button>
+                <button role="menuitem" type="button"
+                  onClick={() => { openContext('diagnostics'); setOpenApplicationMenu(null); }}>ANALYZE / DIAGNOSTICS</button>
               </> : null}
               {menu === 'help' ? <>
                 <button role="menuitemcheckbox" aria-checked={teachingEnabled} type="button" onClick={() => { toggleTeaching(); setOpenApplicationMenu(null); }}>CONTEXTUAL LEARNING {teachingEnabled ? 'ON' : 'OFF'}</button>
-                <button role="menuitem" type="button" onClick={() => { setResearchOpen(true); setOpenApplicationMenu(null); }}>KEITH BARR ARCHITECTURE NOTES</button>
+                <button role="menuitem" type="button" onClick={() => { setResearchOpen(true); openContext('research'); setOpenApplicationMenu(null); }}>KEITH BARR ARCHITECTURE NOTES</button>
                 {snapshot.productVersion && snapshot.buildCommit ? <span className="menu-build">REVERB PLAYGROUND v{snapshot.productVersion}<br />{snapshot.buildCommit}</span> : null}
               </> : null}
             </div> : null}
@@ -1146,16 +1184,6 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
       <MeasurementBar sampleRate={snapshot.sampleRate} onCapture={receiveCapture} />
 
-      {responseCapture ? <ResponseViewer
-        key={responseCapture.capture.generation}
-        capture={responseCapture.capture}
-        patchId={responseCapture.patchId}
-        gateTeaching={responseCapture.gateTeaching}
-        teachingEnabled={teachingEnabled}
-        onClose={() => setResponseCapture(null)}
-      /> : null}
-      {diagnosticsOpen ? <DiagnosticsPanel diagnostics={diagnostics} runawayLoop={runawayLoopInspection} canUndo={graphHistory.undo.length > 0} onUndo={undoGraph} onRecover={() => { void callNative('resetSafety').catch(() => undefined); }} onClose={() => setDiagnosticsOpen(false)} /> : null}
-
       <section className={`workspace arrangement-${workspacePresentation.arrangement}${workspaceLayout.overlay ? ' workspace-overlay' : ''}`}
         style={{ gridTemplateColumns: workspaceGridColumns(workspaceLayout) }}>
         <aside className={`module-library${workspaceLayout.modulesVisible ? ' dock-visible' : ' dock-hidden'}`} aria-label="Module library" aria-hidden={!workspaceLayout.modulesVisible}>
@@ -1200,11 +1228,14 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 {!matrixInspection.canCollapse ? 'MATRIX EXPANDED / UNSAFE' : matrixIsCollapsed ? 'EXPAND MATRIX' : 'COLLAPSE MATRIX'}
               </button> : null}
               {matrixInspection ? <button type="button" className="matrix-view-toggle"
-                onClick={() => setSelectedNode(matrixDisplayedGraph.nodes.find((node) => node.id === 'matrix-mixer-view')
+                onClick={() => {
+                  setSelectedNode(matrixDisplayedGraph.nodes.find((node) => node.id === 'matrix-mixer-view')
                   ?? { id: 'matrix-mixer-view', type: 'patchNode', position: { x: 0, y: 0 }, data: {
                     label: 'Matrix Mixer 4×4', type: 'matrix-mixer', role: 'routing', runtimeBound: true,
                     ports: [], parameters: [],
-                  } })}>
+                  } });
+                  openContext('matrix');
+                }}>
                 INSPECT MATRIX
               </button> : null}
             </div>
@@ -1293,8 +1324,16 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           </div>
         </section>
 
-        <aside className={`inspector${workspaceLayout.contextVisible ? ' dock-visible' : ' dock-hidden'}`} aria-label="Inspector" aria-hidden={!workspaceLayout.contextVisible}>
-          <div className="pane-heading"><span>INSPECTOR</span><div><button className="teaching-toggle" type="button" aria-pressed={teachingEnabled} title="Toggle contextual cards and response architecture overlays" onClick={toggleTeaching}>LEARN {teachingEnabled ? 'ON' : 'OFF'}</button><button className="dock-close" type="button" aria-label="Close context dock" onClick={() => toggleDock('context')}>›</button></div></div>
+        <aside className={`inspector context-dock${workspaceLayout.contextVisible ? ' dock-visible' : ' dock-hidden'}`} aria-label="Context dock" aria-hidden={!workspaceLayout.contextVisible}>
+          <div className="pane-heading context-heading"><span>CONTEXT</span><div><button className="teaching-toggle" type="button" aria-pressed={teachingEnabled} title="Toggle contextual explanations and response architecture overlays" onClick={toggleTeaching}>LEARN {teachingEnabled ? 'ON' : 'OFF'}</button><button className="dock-close" type="button" aria-label="Close context dock" onClick={() => toggleDock('context')}>›</button></div></div>
+          <div className="context-tabs" role="tablist" aria-label="Context views">
+            {contextTabs.map((tab) => <button id={`context-tab-${tab}`} role="tab" type="button" key={tab}
+              aria-selected={contextTab === tab} aria-controls={`context-panel-${tab}`} tabIndex={contextTab === tab ? 0 : -1}
+              onKeyDown={(event) => handleContextTabKey(event, tab)} onClick={() => { if (tab === 'analyze') setDiagnostics(null); setContextTab(tab); }}>{contextTabLabels[tab]}</button>)}
+          </div>
+          <div className="context-tab-panels">
+          <section id="context-panel-inspect" className="context-panel context-inspect" role="tabpanel" aria-labelledby="context-tab-inspect" hidden={contextTab !== 'inspect'}>
+          <div className="context-evidence-heading"><strong>PATCH VALUES</strong><span>EDITED / SAVED</span></div>
           {tuningOpen && supportsAssistedTuning({ nodes, edges }) ? <AssistedTuningPanel
             previewId={tuningPreview?.id ?? null} busy={tuningBusy}
             onPreview={(id) => { void previewAssistedTuning(id); }} onAccept={acceptAssistedTuning}
@@ -1302,17 +1341,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               if (tuningPreview) void cancelAssistedTuning();
               setTuningOpen(false);
             }} /> : null}
-          {activePatchId === 'dense-figure-eight' && teachingEnabled ? <DenseFigureEightTeaching /> : null}
-          {activePatchId === 'four-line-dense-room' && teachingEnabled ? <FourLineFdnTeaching collapsed={matrixIsCollapsed} /> : null}
-          {activePatchId === 'safe-parallel-shimmer' && teachingEnabled ? <ParallelShimmerTeaching selectedNodeId={selectedNode?.id} /> : null}
-          {activePatchId === 'split-feedback-shimmer' && teachingEnabled ? <SplitFeedbackShimmerTeaching focus={splitLoopFocus} onFocus={setSplitLoopFocus} /> : null}
-          {activePatchId === 'reverse-cosmic-shimmer' && teachingEnabled ? <ReverseCosmicShimmerTeaching focus={reverseCosmicFocus} onFocus={setReverseCosmicFocus} /> : null}
           {selectedNode ? (
             <div className="inspector-content" key={selectedNode.id}>
               <div className="selection-kicker">SELECTED BLOCK</div>
               <h2>{selectedNode.data.userName?.trim() || selectedNode.data.label}</h2>
               <code>{selectedNode.id}</code>
-              {selectedNode.data.type === 'matrix-mixer' && matrixInspection ? <MatrixMixerInspector inspection={matrixInspection} /> : null}
               {selectedNode.data.presentation === 'gravity' && selectedMacroInspection ? <GravityPresentation
                 value={selectedNode.data.parameters.find((parameter) => parameter.id === 'value')?.value ?? 0}
                 destinationCount={selectedMacroInspection.destinations.length}
@@ -1446,7 +1479,6 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 ? 'Macro value changes use a fixed 20 ms runtime ramp and do not compile topology. Default and detent edits republish the visible graph.'
                 : selectedNode.data.runtimeBound ? `Live value from native DSP runtime contract v${snapshot.contractVersion}.`
                   : 'Constructed graph block. Audible edits compile off-thread and crossfade into the live plugin at an audio-block boundary.'}</div>
-              {showTeaching ? <TeachingCard topic={teachingTopicFor(selectedNode.id)} onDismiss={() => setDismissedTeaching(teachingKey)} onResearch={() => setResearchOpen(true)} /> : null}
             </div>
           ) : selectedEdge ? (
             <div className="inspector-content">
@@ -1470,19 +1502,49 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <kbd>⌘/CTRL C</kbd><span>copy selected non-I/O blocks</span>
               <kbd>⌘/CTRL V</kbd><span>paste with new block and cable IDs</span>
               <kbd>DELETE</kbd><span>remove selected blocks or cables</span>
-              {showTeaching ? <TeachingCard topic={teachingTopicFor()} onDismiss={() => setDismissedTeaching(teachingKey)} onResearch={() => setResearchOpen(true)} /> : null}
             </div>
           )}
+          </section>
+
+          <section id="context-panel-analyze" className="context-panel context-analyze" role="tabpanel" aria-labelledby="context-tab-analyze" hidden={contextTab !== 'analyze'}>
+            <div className="context-evidence-heading"><strong>ACTIVE GRAPH EVIDENCE</strong><span>MEASURED / ESTIMATED / COMPILED</span></div>
+            <section className="energy-analysis" aria-label="Energy analysis status">
+              <header><strong>ENERGY / MEASURED RMS</strong><span>{energyEnabled && !reducedMotion ? 'VISIBLE' : 'DORMANT'}</span></header>
+              <p>{energyEnabled && !reducedMotion
+                ? `Current graph revision #${activeGraphRevision.current || '—'} publishes coherent per-operation RMS lanes at 30 Hz.`
+                : 'Sample scanning and telemetry polling are disabled. Enable Energy to measure live node and cable activity.'}</p>
+            </section>
+            {responseCapture ? <ResponseViewer
+              key={responseCapture.capture.generation}
+              capture={responseCapture.capture}
+              patchId={responseCapture.patchId}
+              gateTeaching={responseCapture.gateTeaching}
+              teachingEnabled={teachingEnabled}
+              captureRevision={responseCapture.graphRevision}
+              activeRevision={activeGraphRevision.current}
+              onClose={() => setResponseCapture(null)}
+            /> : <section className="analysis-empty"><strong>NO MEASURED RESPONSE</strong><p>Capture an isolated impulse to add waveform, decay, density, onset, and RT60 evidence here.</p></section>}
+            {matrixInspection ? <section className="analysis-section"><div className="analysis-section-title"><strong>MATRIX</strong><span>PREDICTED FROM VISIBLE COEFFICIENTS</span></div><MatrixMixerInspector inspection={matrixInspection} /></section> : null}
+            <DiagnosticsPanel diagnostics={diagnostics} runawayLoop={runawayLoopInspection} canUndo={graphHistory.undo.length > 0} onUndo={undoGraph} onRecover={() => { void callNative('resetSafety').catch(() => undefined); }} />
+          </section>
+
+          <section id="context-panel-learn" className="context-panel context-learn" role="tabpanel" aria-labelledby="context-tab-learn" hidden={contextTab !== 'learn'}>
+            <div className="context-evidence-heading"><strong>ARCHITECTURE &amp; LISTENING</strong><span>DOCUMENTED / EXPLANATORY</span></div>
+            {activePatchId === 'dense-figure-eight' && teachingEnabled ? <DenseFigureEightTeaching /> : null}
+            {activePatchId === 'four-line-dense-room' && teachingEnabled ? <FourLineFdnTeaching collapsed={matrixIsCollapsed} /> : null}
+            {activePatchId === 'safe-parallel-shimmer' && teachingEnabled ? <ParallelShimmerTeaching selectedNodeId={selectedNode?.id} /> : null}
+            {activePatchId === 'split-feedback-shimmer' && teachingEnabled ? <SplitFeedbackShimmerTeaching focus={splitLoopFocus} onFocus={setSplitLoopFocus} /> : null}
+            {activePatchId === 'reverse-cosmic-shimmer' && teachingEnabled ? <ReverseCosmicShimmerTeaching focus={reverseCosmicFocus} onFocus={setReverseCosmicFocus} /> : null}
+            {showTeaching ? <TeachingCard topic={teachingTopicFor(selectedNode?.id)} onDismiss={() => setDismissedTeaching(teachingKey)} onResearch={() => setResearchOpen(true)} /> : null}
+            {!teachingEnabled ? <section className="learn-disabled"><strong>CONTEXTUAL LEARNING IS OFF</strong><p>Inspector editing remains available. Enable Learn to restore documented architecture and listening guidance.</p><button type="button" onClick={toggleTeaching}>ENABLE LEARN</button></section> : null}
+            {researchOpen ? <section className="research-inline" aria-label="Keith Barr architecture research">
+              <header><div><span>OFFLINE RESEARCH / DOCUMENTED SOURCES</span><h2>Keith Barr reverb architectures</h2></div><button type="button" onClick={() => setResearchOpen(false)}>COLLAPSE</button></header>
+              <pre>{researchText}</pre>
+            </section> : !showTeaching ? <button className="research-link" type="button" onClick={() => setResearchOpen(true)}>OPEN KEITH BARR ARCHITECTURE LIBRARY</button> : null}
+          </section>
+          </div>
         </aside>
       </section>
-      {researchOpen ? (
-        <div className="research-backdrop" role="presentation" onMouseDown={() => setResearchOpen(false)}>
-          <section className="research-reader" role="dialog" aria-modal="true" aria-label="Keith Barr architecture research" onMouseDown={(event) => event.stopPropagation()}>
-            <header><div><span>OFFLINE RESEARCH / DOCUMENTED SOURCES</span><h2>Keith Barr reverb architectures</h2></div><button type="button" aria-label="Close architecture research" onClick={() => setResearchOpen(false)}>CLOSE ×</button></header>
-            <pre>{researchText}</pre>
-          </section>
-        </div>
-      ) : null}
     </main>
   );
 }

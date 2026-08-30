@@ -58,7 +58,10 @@ def check_contract(styles: str, app: str, editor_shell: str, plugin_editor: str)
     for token in (
         'aria-label="Module library"',
         'aria-label="Patch canvas"',
-        'aria-label="Inspector"',
+        'aria-label="Context dock"',
+        'role="tablist"',
+        'role="tab"',
+        'role="tabpanel"',
         'aria-label="Workspace arrangement"',
         'aria-label="Close module palette"',
         'aria-label="Close context dock"',

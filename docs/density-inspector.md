@@ -20,7 +20,7 @@ With **Learn On**, the panel explains the main interpretation boundary: density 
 
 Analysis starts only after the user opens the panel and uses a decimated, bounded view of each 40 ms window. The authoritative offline baselines remain the native M19.1 analyzer; this browser-side view prioritizes interactive inspection and retains the same metric meanings. Neither implementation changes captured or rendered audio.
 
-The response overlay remains scrollable. At 900 logical pixels and below it spans the available editor width; at the 640×400 minimum, the early/middle/late cards stack vertically and every section remains reachable by scrolling.
+The response view remains scrollable inside Analyze. The context dock widens on desktop without covering the canvas; at narrow widths it uses the existing single-dock overlay, and the early/middle/late cards stack vertically so every section remains reachable.
 
 ## Evidence
 

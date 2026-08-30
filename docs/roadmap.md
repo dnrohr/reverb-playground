@@ -1555,7 +1555,7 @@ Acceptance criteria:
 - No control overlaps, clips, becomes unreachable, or leaves unused WebView
   space at 100%, 125%, or 150% Windows display scaling.
 
-### M25.3 Consolidate Inspector, Analyze, and Learn
+### M25.3 Consolidate Inspector, Analyze, and Learn — Complete
 
 Tasks: replace competing right-side panels and overlays with one tabbed context
 dock; route parameter editing and loop inspection to Inspector, response,

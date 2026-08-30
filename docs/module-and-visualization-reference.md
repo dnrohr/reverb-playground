@@ -250,7 +250,7 @@ holds both markers in a static separated state without removing any labels.
 
 <!-- visualization: diagnostics -->
 
-The panel labels operation count as an active prepared-plan estimate, callback
+The Analyze tab labels operation count as an active prepared-plan estimate, callback
 load and clipping as aggregate live measurements, and total runtime memory as
 exact prepared bytes. It also exposes node/cable/feedback counts, the current
 block-wise or sample-wise execution domain, expensive processor families,

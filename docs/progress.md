@@ -1,6 +1,6 @@
 # Roadmap progress
 
-Last updated: 2026-08-29
+Last updated: 2026-08-30
 
 | Task | Status | Evidence |
 |---|---|---|
@@ -98,6 +98,7 @@ Last updated: 2026-08-29
 | M24.2 Dense release qualification | Complete | Exact `b2deaaf11d01` package validates; pluginval strictness 10 and Steinberg extensive validation pass after fixing extreme host-rate preparation; 244 native/CLI plus 123 web tests pass locally and clean-main CI verifies and packages `120f9dc` |
 | M25.1 Consolidate application chrome and menus | Complete | Conventional File/Edit/View/Help menus, compact patch identity/status, contextual safety recovery, 64 logical pixels returned to the 1200 x 720 schematic, responsive tests, and standalone screenshot evidence |
 | M25.2 Add responsive, collapsible workspace docks | Complete | Balanced/Create Focus/Learn & Inspect arrangements; independent module, context, and standalone audio drawers; presentation-only persistence; 7-width × 3-scale × all-dock/state coverage; screenshots and interaction video |
+| M25.3 Consolidate Inspector, Analyze, and Learn | Complete | One persistent tabbed context dock routes editing, measured/estimated/compiled evidence, and documented teaching; revision-stale capture labeling, dormant polling, keyboard tab navigation, screenshots, and interaction video |
 
 ## M0.2 verification
 
