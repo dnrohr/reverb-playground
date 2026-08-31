@@ -1678,7 +1678,10 @@ Acceptance criteria:
 - Compilation produces the same safety, memory, latency, diagnostics, and
   Energy evidence as the authoritative expanded graph.
 
-### M26.4 Improve cable routing and large-graph layout
+### M26.4 Improve cable routing and large-graph layout — Complete
+
+Status: Complete (2026-08-31). See
+[`large-graph-routing-and-layout.md`](large-graph-routing-and-layout.md).
 
 Tasks: add persistent cable waypoints, alignment/distribution commands, group
 layout tools, and optional named routing portals for long connections; provide

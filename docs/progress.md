@@ -1480,3 +1480,25 @@ Results:
   Evidence: [desktop](../artifacts/ui/m26-2-collapsible-groups/collapsed-group-inspector.png),
   [compact](../artifacts/ui/m26-2-collapsible-groups/collapsed-group-640x400.png), and
   [workflow](../artifacts/ui/m26-2-collapsible-groups/group-collapse-expand.mp4).
+
+## M26.4 verification
+
+- Selected primitive blocks align and distribute through deterministic,
+  layout-only commands; named visual groups arrange on a stable grid. Each
+  operation is a single Undo/Redo edit and leaves the semantic graph hash
+  unchanged.
+- Cables accept up to 32 ordered graph-space waypoints and one visible named
+  portal pair. A portal is a projection of exactly one authoritative edge;
+  selection reveals the complete route, signal direction, and endpoints.
+- Trace-to-source, trace-to-output, and complete-loop focus decorate and frame
+  authoritative primitives without saving state or publishing audio.
+- Optional schema-v2 `layout.cables` round-trips through browser files and
+  native host state. Validation rejects unknown/duplicate edges, non-finite or
+  excessive waypoints, empty metadata, and invalid names; legacy files remain
+  deterministic.
+- Browser QA covers Four-Line FDN waypoint layout, Reverse Cosmic Shimmer
+  portals, directed tracing, and a 640×400 workspace without document overflow.
+  Evidence: [FDN layout](../artifacts/ui/m26-4-large-graph-routing/four-line-waypoint-layout.png),
+  [portal layout](../artifacts/ui/m26-4-large-graph-routing/reverse-cosmic-portals.png),
+  [workflow](../artifacts/ui/m26-4-large-graph-routing/routing-focus-workflow.mp4), and
+  [compact](../artifacts/ui/m26-4-large-graph-routing/routing-640x400.png).

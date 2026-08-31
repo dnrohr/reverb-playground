@@ -259,6 +259,15 @@ GraphDocument parsePatchJson(const std::string_view jsonText)
             document.layout.groups.push_back(std::move(group));
         }
     }
+    if (const auto cables = layout.find("cables"); cables != layout.end()) {
+        for (const auto& cableJson : *cables) {
+            LayoutCable cable { .edgeId = cableJson.at("edgeId").get<std::string>() };
+            if (const auto waypoints = cableJson.find("waypoints"); waypoints != cableJson.end())
+                for (const auto& point : *waypoints) cable.waypoints.push_back({ point.at("x").get<double>(), point.at("y").get<double>() });
+            if (const auto portal = cableJson.find("portal"); portal != cableJson.end()) cable.portalName = portal->at("name").get<std::string>();
+            document.layout.cables.push_back(std::move(cable));
+        }
+    }
 
     return document;
 }
@@ -319,6 +328,18 @@ std::string writePatchJson(const GraphDocument& document)
             } },
     };
     if (!groupArray.empty()) layoutJson["groups"] = std::move(groupArray);
+    Json cableArray = Json::array();
+    for (const auto& cable : document.layout.cables) {
+        Json entry { { "edgeId", cable.edgeId } };
+        if (!cable.waypoints.empty()) {
+            Json points = Json::array();
+            for (const auto& point : cable.waypoints) points.push_back({ { "x", point.x }, { "y", point.y } });
+            entry["waypoints"] = std::move(points);
+        }
+        if (cable.portalName) entry["portal"] = { { "name", *cable.portalName } };
+        cableArray.push_back(std::move(entry));
+    }
+    if (!cableArray.empty()) layoutJson["cables"] = std::move(cableArray);
 
     const Json root {
         { "schemaVersion", GraphDocument::schemaVersion },

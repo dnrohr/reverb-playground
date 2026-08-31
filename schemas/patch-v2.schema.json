@@ -121,6 +121,24 @@
         "nodeIds": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } }
       }
     },
+    "point": {
+      "type": "object", "additionalProperties": false, "required": ["x", "y"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+    },
+    "layoutCable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["edgeId"],
+      "anyOf": [{ "required": ["waypoints"] }, { "required": ["portal"] }],
+      "properties": {
+        "edgeId": { "$ref": "#/$defs/identifier" },
+        "waypoints": { "type": "array", "minItems": 1, "maxItems": 32, "items": { "$ref": "#/$defs/point" } },
+        "portal": {
+          "type": "object", "additionalProperties": false, "required": ["name"],
+          "properties": { "name": { "type": "string", "minLength": 1, "maxLength": 32 } }
+        }
+      }
+    },
     "layout": {
       "type": "object",
       "additionalProperties": false,
@@ -128,6 +146,7 @@
       "properties": {
         "nodes": { "type": "array", "items": { "$ref": "#/$defs/nodePosition" } },
         "groups": { "type": "array", "items": { "$ref": "#/$defs/layoutGroup" } },
+        "cables": { "type": "array", "items": { "$ref": "#/$defs/layoutCable" } },
         "viewport": { "$ref": "#/$defs/viewport" }
       }
     }

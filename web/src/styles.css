@@ -52,7 +52,7 @@ button { font: inherit; }
 .application-menu { position: relative; }
 .application-menu > button { padding: 7px 8px; border: 0; border-radius: 3px; color: #aebbc1; background: transparent; font: 800 8px ui-monospace, Consolas, monospace; letter-spacing: .08em; }
 .application-menu > button:hover, .application-menu > button:focus-visible, .application-menu > button[aria-expanded="true"] { color: var(--text); outline: none; background: #263138; }
-.application-menu-popover { position: absolute; z-index: 40; top: calc(100% + 5px); left: 0; width: max-content; min-width: 210px; display: grid; padding: 5px; border: 1px solid #52616a; border-radius: 4px; background: #182126; box-shadow: 0 16px 38px rgba(0,0,0,.58); }
+.application-menu-popover { position: absolute; z-index: 40; top: calc(100% + 5px); left: 0; width: max-content; min-width: 210px; max-height: calc(100vh - 58px); overflow-y: auto; display: grid; padding: 5px; border: 1px solid #52616a; border-radius: 4px; background: #182126; box-shadow: 0 16px 38px rgba(0,0,0,.58); }
 .application-menu-popover button { display: flex; justify-content: space-between; gap: 22px; padding: 8px 9px; border: 0; border-radius: 3px; color: #d5dde1; background: transparent; font: 9px ui-monospace, Consolas, monospace; text-align: left; }
 .application-menu-popover button:hover, .application-menu-popover button:focus-visible { color: #071012; outline: none; background: var(--cyan); }
 .application-menu-popover button:disabled { color: #5f6e76; background: transparent; }
@@ -274,6 +274,22 @@ button { font: inherit; }
 .react-flow__node.graph-group-member .patch-node { outline: 1px dotted rgba(189, 156, 255, .72); outline-offset: 4px; }
 .react-flow__node.graph-group-boundary .patch-node { width: 190px; min-height: 93px; border: 1px dashed var(--violet); border-left: 4px solid var(--violet); background: rgba(37, 30, 51, .96); box-shadow: 0 0 24px rgba(189, 156, 255, .15); }
 .react-flow__node.graph-group-boundary .node-type::after { content: ' · VISUAL GROUP'; color: var(--violet); }
+.cable-waypoint { fill: #f2b44e; stroke: #151b20; stroke-width: 2; pointer-events: none; }
+.routing-portal { position: absolute; z-index: 5; padding: 3px 7px; border: 1px solid #b68bdf; border-radius: 3px; background: #211a2b; color: #eadcf8; font: 700 10px/1.2 var(--mono); white-space: nowrap; pointer-events: none; }
+.routing-portal-source { border-right-width: 3px; }
+.routing-portal-target { border-left-width: 3px; }
+.portal-path-revealed { position: fixed; left: 50%; top: 75px; z-index: 6; transform: translateX(-50%); padding: 4px 9px; border: 1px solid #f2b44e; background: #1b1710; color: #ffd98d; font: 700 10px var(--mono); pointer-events: none; }
+.react-flow__node.routing-trace-active { box-shadow: 0 0 0 2px #6fd8e8, 0 0 18px rgba(111,216,232,.38); }
+.react-flow__edge.routing-trace-active .react-flow__edge-path { stroke: #6fd8e8; stroke-width: 3; }
+.cable-routing-inspector { display: grid; gap: 8px; margin-top: 12px; padding-top: 11px; border-top: 1px solid var(--line); }
+.cable-routing-inspector h3 { margin: 0; color: var(--text-dim); font-size: 10px; letter-spacing: .12em; }
+.cable-routing-inspector small { color: var(--text-dim); line-height: 1.35; }
+.cable-focus-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.cable-focus-actions button, .cable-routing-inspector > button { min-height: 28px; }
+.waypoint-row { display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 6px; }
+.waypoint-row > span { color: var(--text-dim); font: 700 9px var(--mono); }
+.waypoint-row label, .portal-name-field { display: grid; gap: 3px; color: var(--text-dim); font: 700 9px var(--mono); }
+.waypoint-row input, .portal-name-field input { min-width: 0; width: 100%; padding: 5px; border: 1px solid var(--line); background: #10161a; color: var(--text); }
 .group-inspector { margin: 12px 0; padding: 10px; border: 1px solid rgba(189, 156, 255, .5); border-radius: 5px; background: rgba(45, 34, 60, .32); }
 .group-inspector label span, .group-inspector small { display: block; color: var(--muted); font: 8px var(--mono); letter-spacing: .07em; }
 .group-inspector input { box-sizing: border-box; width: 100%; margin-top: 5px; padding: 7px; border: 1px solid #65567c; color: var(--text); background: #11151a; }

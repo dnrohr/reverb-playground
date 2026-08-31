@@ -44,6 +44,7 @@ function canonicalGraph(state: GraphState, includeLayout: boolean) {
       sourceHandle: edge.sourceHandle ?? '',
       target: edge.target,
       targetHandle: edge.targetHandle ?? '',
+      ...(includeLayout && edge.data?.layout ? { layout: structuredClone(edge.data.layout) } : {}),
     })).sort((left, right) => left.id.localeCompare(right.id)),
   };
 }

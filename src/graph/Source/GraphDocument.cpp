@@ -171,6 +171,23 @@ ValidationResult validate(const GraphDocument& document)
         }
     }
 
+    std::unordered_set<std::string> routedCableIds;
+    for (const auto& cable : document.layout.cables) {
+        if (!routedCableIds.insert(cable.edgeId).second)
+            result.errors.push_back("layout cable IDs must be unique");
+        if (std::ranges::find(document.connections, cable.edgeId, &Connection::id) == document.connections.end())
+            result.errors.push_back("layout cable references unknown connection '" + cable.edgeId + "'");
+        if (cable.waypoints.size() > 32)
+            result.errors.push_back("layout cable '" + cable.edgeId + "' exceeds 32 waypoints");
+        for (const auto& point : cable.waypoints)
+            if (!std::isfinite(point.x) || !std::isfinite(point.y))
+                result.errors.push_back("layout cable '" + cable.edgeId + "' has a non-finite waypoint");
+        if (cable.portalName && (cable.portalName->find_first_not_of(" \t\r\n") == std::string::npos || cable.portalName->size() > 32))
+            result.errors.push_back("layout cable '" + cable.edgeId + "' portal name must contain 1 through 32 characters");
+        if (cable.waypoints.empty() && !cable.portalName)
+            result.errors.push_back("layout cable '" + cable.edgeId + "' has empty routing metadata");
+    }
+
     if (document.layout.viewport.zoom <= 0.0)
         result.errors.push_back("viewport zoom must be greater than zero");
 

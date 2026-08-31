@@ -40,6 +40,11 @@ export interface PatchNodeData extends Record<string, unknown> {
   groupMemberIds?: string[];
 }
 
+export interface CableLayout {
+  waypoints?: Array<{ x: number; y: number }>;
+  portal?: { name: string };
+}
+
 export interface RuntimeNode {
   id: string;
   type: string;

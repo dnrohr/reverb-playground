@@ -46,6 +46,8 @@ import { decorateSplitShimmerFocus, splitFeedbackShimmerTeaching, splitShimmerLo
 import { decorateReverseCosmicFocus, reverseCosmicShimmerTeaching, type ReverseCosmicFocus } from './reverseCosmicShimmerTeaching';
 import { collapseMatrixMixer, inspectMatrixMixer, type MatrixMixerInspection } from './matrixMixerPresentation';
 import { collapseGraphGroups, createGraphGroup, inspectGraphGroups, removeGraphGroup, renameGraphGroup, setGraphGroupCollapsed } from './graphGroups';
+import { addCableWaypoint, alignSelectedNodes, arrangeGraphGroup, cableLayout, clearCableWaypoints, setRoutingPortal, traceCable, updateCableWaypoint, type AlignmentCommand, type TraceDirection } from './graphRouting';
+import { RoutedEdge } from './RoutedEdge';
 import { assistedTuningSuggestions, createAssistedTuningPreview, supportsAssistedTuning, type AssistedTuningSuggestionId } from './assistedTuning';
 import { editorCommandBarHeight, measurementBarHeight } from './workspaceChrome';
 import { captureRevisionState, contextTabFor, emphasizeAnalyzeLayout, shouldPollRuntimeDiagnostics, type ContextIntent, type ContextTab } from './contextDock';
@@ -502,6 +504,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [splitLoopFocus, setSplitLoopFocus] = useState<SplitShimmerLoopFocus>('shifted');
   const [reverseCosmicFocus, setReverseCosmicFocus] = useState<ReverseCosmicFocus>('grains');
   const [matrixCollapsed, setMatrixCollapsed] = useState(true);
+  const [routeFocus, setRouteFocus] = useState<{ edgeId: string; direction: TraceDirection } | null>(null);
   const [tuningOpen, setTuningOpen] = useState(false);
   const [tuningBusy, setTuningBusy] = useState(false);
   const [tuningPreview, setTuningPreview] = useState<{ id: AssistedTuningSuggestionId; graph: GraphState } | null>(null);
@@ -640,17 +643,20 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const displayedGraph = useMemo(() => decorateControlPreview(
     macroDecoratedGraph.nodes, macroDecoratedGraph.edges, controlPreviewTime,
   ), [controlPreviewTime, macroDecoratedGraph]);
+  const routingFocusedGraph = useMemo(() => routeFocus
+    ? traceCable({ nodes: displayedGraph.nodes, edges: displayedGraph.edges }, routeFocus.edgeId, routeFocus.direction)
+    : displayedGraph, [displayedGraph, routeFocus]);
   const matrixInspection = useMemo(() => inspectMatrixMixer(nodes), [nodes]);
   const matrixIsCollapsed = Boolean(matrixInspection?.canCollapse && matrixCollapsed);
   const matrixDisplayedGraph = useMemo(() => collapseMatrixMixer(
-    displayedGraph.nodes, displayedGraph.edges, matrixInspection, matrixIsCollapsed,
-  ), [displayedGraph, matrixInspection, matrixIsCollapsed]);
+    routingFocusedGraph.nodes, routingFocusedGraph.edges, matrixInspection, matrixIsCollapsed,
+  ), [routingFocusedGraph, matrixInspection, matrixIsCollapsed]);
   const graphGroups = useMemo(() => inspectGraphGroups(nodes), [nodes]);
   const hasCollapsedGraphGroup = graphGroups.some((group) => group.collapsed);
   const groupDisplayedGraph = useMemo(() => collapseGraphGroups(
-    hasCollapsedGraphGroup ? displayedGraph.nodes : matrixDisplayedGraph.nodes,
-    hasCollapsedGraphGroup ? displayedGraph.edges : matrixDisplayedGraph.edges,
-  ), [displayedGraph, hasCollapsedGraphGroup, matrixDisplayedGraph]);
+    hasCollapsedGraphGroup ? routingFocusedGraph.nodes : matrixDisplayedGraph.nodes,
+    hasCollapsedGraphGroup ? routingFocusedGraph.edges : matrixDisplayedGraph.edges,
+  ), [routingFocusedGraph, hasCollapsedGraphGroup, matrixDisplayedGraph]);
   const selectedGroupDisplayedGraph = useMemo(() => selectedNode?.data.type === 'graph-group' ? {
     nodes: groupDisplayedGraph.nodes.map((node) => ({ ...node, selected: node.id === selectedNode.id })),
     edges: groupDisplayedGraph.edges,
@@ -1022,6 +1028,37 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     } catch (reason) { setGraphStatus({ kind: 'error', message: reason instanceof Error ? reason.message.toUpperCase() : 'GROUP EDIT FAILED' }); }
   }, [applyGraph, edges, nodes, selectedNode]);
 
+  const commitLayoutEdit = useCallback((label: string, transform: (state: GraphState) => GraphState) => {
+    try {
+      const before = { nodes, edges }; const after = transform(before); applyGraph(after);
+      setGraphHistory((history) => commitGraphEdit(history, label, before, after)); setActivePatchId('custom');
+      if (selectedEdge) setSelectedEdge(after.edges.find((edge) => edge.id === selectedEdge.id) ?? null);
+      setGraphStatus({ kind: 'ok', message: `${label.toUpperCase()} / LAYOUT ONLY / AUDIO GRAPH UNCHANGED` });
+    } catch (reason) { setGraphStatus({ kind: 'error', message: reason instanceof Error ? reason.message.toUpperCase() : 'LAYOUT EDIT FAILED' }); }
+  }, [applyGraph, edges, nodes, selectedEdge]);
+
+  const runAlignment = useCallback((command: AlignmentCommand) => {
+    const label = command === 'left' ? 'Align left' : command === 'top' ? 'Align top' : `Distribute ${command}`;
+    commitLayoutEdit(label, (state) => alignSelectedNodes(state, command));
+  }, [commitLayoutEdit]);
+
+  const arrangeSelectedGroup = useCallback(() => {
+    const groupId = selectedNode?.data.presentationGroup?.id
+      ?? nodes.find((node) => node.selected && node.data.presentationGroup)?.data.presentationGroup?.id;
+    if (!groupId) { setGraphStatus({ kind: 'error', message: 'SELECT A GROUP OR ONE OF ITS MEMBERS FIRST' }); return; }
+    commitLayoutEdit('Arrange group grid', (state) => arrangeGraphGroup(state, groupId));
+  }, [commitLayoutEdit, nodes, selectedNode]);
+
+  const focusCablePath = useCallback((direction: TraceDirection) => {
+    if (!selectedEdge) return; const traced = traceCable({ nodes, edges }, selectedEdge.id, direction); setRouteFocus({ edgeId: selectedEdge.id, direction });
+    void fitView({ nodes: nodes.filter((node) => traced.nodeIds.includes(node.id)), padding: 0.22, duration: reducedMotion ? 0 : 350, maxZoom: 1.1 });
+  }, [edges, fitView, nodes, reducedMotion, selectedEdge]);
+
+  const focusCompleteLoop = useCallback(() => {
+    const loop = loopInspection?.loops[normalizedLoopIndex]; if (!loop) return; setRouteFocus(null);
+    void fitView({ nodes: nodes.filter((node) => loop.nodeIds.includes(node.id)), padding: 0.22, duration: reducedMotion ? 0 : 350, maxZoom: 1.1 });
+  }, [fitView, loopInspection, nodes, normalizedLoopIndex, reducedMotion]);
+
   const handleSelection = useCallback(({ nodes: selectedNodes, edges: selectedEdges }: OnSelectionChangeParams) => {
     const node = (selectedNodes[0] as Node<PatchNodeData> | undefined) ?? null;
     const edge = selectedEdges[0] ?? null;
@@ -1167,6 +1204,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <button role="menuitem" type="button" onClick={() => { copySelection(); setOpenApplicationMenu(null); }}>COPY <kbd>CTRL C</kbd></button>
                 <button role="menuitem" type="button" disabled={!clipboard.current} onClick={() => { pasteSelection(); setOpenApplicationMenu(null); }}>PASTE <kbd>CTRL V</kbd></button>
                 <button role="menuitem" type="button" onClick={() => { beginCreateGroup(); setOpenApplicationMenu(null); }}>GROUP SELECTION… <kbd>CTRL G</kbd></button>
+                <button role="menuitem" type="button" onClick={() => { runAlignment('left'); setOpenApplicationMenu(null); }}>ALIGN SELECTED LEFT</button>
+                <button role="menuitem" type="button" onClick={() => { runAlignment('top'); setOpenApplicationMenu(null); }}>ALIGN SELECTED TOP</button>
+                <button role="menuitem" type="button" onClick={() => { runAlignment('horizontal'); setOpenApplicationMenu(null); }}>DISTRIBUTE HORIZONTALLY</button>
+                <button role="menuitem" type="button" onClick={() => { runAlignment('vertical'); setOpenApplicationMenu(null); }}>DISTRIBUTE VERTICALLY</button>
+                <button role="menuitem" type="button" onClick={() => { arrangeSelectedGroup(); setOpenApplicationMenu(null); }}>ARRANGE GROUP GRID</button>
                 <button role="menuitem" type="button" onClick={() => { removeSelection(); setOpenApplicationMenu(null); }}>DELETE SELECTION <kbd>DEL</kbd></button>
               </> : null}
               {menu === 'view' ? <>
@@ -1361,6 +1403,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               nodes={connectionDisplayedGraph.nodes}
               edges={connectionDisplayedGraph.edges}
               nodeTypes={{ patchNode: PatchNode }}
+              edgeTypes={{ smoothstep: RoutedEdge }}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onNodeDragStart={() => { dragStart.current = snapshotGraph({ nodes, edges }); }}
@@ -1379,7 +1422,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 if ((node as Node<PatchNodeData>).data.type !== 'graph-group') return;
                 setSelectedNode(node as Node<PatchNodeData>); setSelectedEdge(null); openContext('node');
               }}
-              onPaneClick={() => { setSelectedNode(null); setSelectedEdge(null); }}
+              onEdgeClick={(_event, edge) => { setSelectedEdge(edges.find((candidate) => candidate.id === edge.id) ?? edge); setSelectedNode(null); setActiveLoopIndex(0); openContext('cable'); }}
+              onPaneClick={() => { setSelectedNode(null); setSelectedEdge(null); setRouteFocus(null); }}
               onViewportChange={setViewport}
               defaultViewport={initial.viewport}
               fitView={!restored}
@@ -1594,6 +1638,27 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <div><dt>TO</dt><dd>{selectedEdge.target}</dd></div>
                 <div><dt>SIGNAL</dt><dd>{selectedEdge.data?.signal === 'control' ? 'CONTROL / DASHED' : 'AUDIO / SOLID'}</dd></div>
               </dl>
+              <section className="cable-routing-inspector" aria-label="Cable routing and focus">
+                <div className="cable-focus-actions">
+                  <button type="button" onClick={() => focusCablePath('source')}>TRACE TO SOURCE</button>
+                  <button type="button" onClick={() => focusCablePath('output')}>TRACE TO OUTPUT</button>
+                  {loopInspection?.loops.length ? <button type="button" onClick={focusCompleteLoop}>FOCUS COMPLETE LOOP</button> : null}
+                  {routeFocus ? <button type="button" onClick={() => setRouteFocus(null)}>CLEAR TRACE</button> : null}
+                </div>
+                <h3>ROUTING LAYOUT</h3>
+                {(cableLayout(selectedEdge).waypoints ?? []).map((point, index) => <div className="waypoint-row" key={index}>
+                  <span>POINT {index + 1}</span>
+                  <label>X <input aria-label={`Waypoint ${index + 1} X`} type="number" value={point.x} onChange={(event) => commitLayoutEdit('Move cable waypoint', (state) => updateCableWaypoint(state, selectedEdge.id, index, { x: Number(event.target.value), y: point.y }))} /></label>
+                  <label>Y <input aria-label={`Waypoint ${index + 1} Y`} type="number" value={point.y} onChange={(event) => commitLayoutEdit('Move cable waypoint', (state) => updateCableWaypoint(state, selectedEdge.id, index, { x: point.x, y: Number(event.target.value) }))} /></label>
+                </div>)}
+                <div className="cable-focus-actions"><button type="button" onClick={() => commitLayoutEdit('Add cable waypoint', (state) => addCableWaypoint(state, selectedEdge.id))}>ADD WAYPOINT</button>
+                  {(cableLayout(selectedEdge).waypoints?.length ?? 0) > 0 ? <button type="button" onClick={() => commitLayoutEdit('Clear cable waypoints', (state) => clearCableWaypoints(state, selectedEdge.id))}>CLEAR WAYPOINTS</button> : null}</div>
+                {cableLayout(selectedEdge).portal ? <label className="portal-name-field"><span>PAIRED PORTAL NAME</span><input aria-label="Paired routing portal name" maxLength={32} value={cableLayout(selectedEdge).portal!.name}
+                  onChange={(event) => commitLayoutEdit('Rename routing portal', (state) => setRoutingPortal(state, selectedEdge.id, event.target.value))} /></label> : null}
+                <button type="button" onClick={() => commitLayoutEdit(cableLayout(selectedEdge).portal ? 'Remove routing portal' : 'Create routing portal',
+                  (state) => setRoutingPortal(state, selectedEdge.id, cableLayout(selectedEdge).portal ? undefined : `PORTAL ${selectedEdge.id}`.slice(0, 32)))}>{cableLayout(selectedEdge).portal ? 'REMOVE PAIRED PORTAL' : 'CREATE PAIRED PORTAL'}</button>
+                <small>Waypoints and portals are saved layout only. Selecting a portal reveals its complete cable.</small>
+              </section>
             </div>
           ) : (
             <div className="inspector-empty">

@@ -100,10 +100,19 @@ struct LayoutGroup final {
     friend bool operator==(const LayoutGroup&, const LayoutGroup&) = default;
 };
 
+struct CableWaypoint final { double x { 0.0 }; double y { 0.0 }; friend bool operator==(const CableWaypoint&, const CableWaypoint&) = default; };
+struct LayoutCable final {
+    std::string edgeId;
+    std::vector<CableWaypoint> waypoints;
+    std::optional<std::string> portalName;
+    friend bool operator==(const LayoutCable&, const LayoutCable&) = default;
+};
+
 struct Layout final {
     std::vector<NodePosition> nodes;
     Viewport viewport;
     std::vector<LayoutGroup> groups;
+    std::vector<LayoutCable> cables;
 
     friend bool operator==(const Layout&, const Layout&) = default;
 };

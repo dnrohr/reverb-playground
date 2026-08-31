@@ -192,6 +192,22 @@ TEST_CASE("Visual layout groups round trip without changing semantic graph ident
     REQUIRE_FALSE(validate(ioGroup).valid());
 }
 
+TEST_CASE("Cable routing layout round trips and validates independently of graph semantics")
+{
+    using namespace reverb::graph;
+    auto graph = parsePatchJson(readFixture("patches/valid/barr-minimal.json"));
+    const auto semanticNodes = graph.nodes; const auto semanticConnections = graph.connections;
+    graph.layout.cables = { LayoutCable { "input-l-to-sum", { { 120.0, 80.0 }, { 240.0, 110.0 } }, std::string { "TANK RETURN" } } };
+    const auto restored = parsePatchJson(writePatchJson(graph));
+    REQUIRE(restored.layout.cables == graph.layout.cables);
+    REQUIRE(restored.nodes == semanticNodes); REQUIRE(restored.connections == semanticConnections);
+
+    auto missing = graph; missing.layout.cables[0].edgeId = "missing";
+    REQUIRE_FALSE(validate(missing).valid());
+    auto empty = graph; empty.layout.cables[0].waypoints.clear(); empty.layout.cables[0].portalName.reset();
+    REQUIRE_FALSE(validate(empty).valid());
+}
+
 TEST_CASE("Validator rejects zero-delay cycles and accepts delayed feedback")
 {
     using namespace reverb::graph;

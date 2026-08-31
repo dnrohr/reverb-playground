@@ -41,6 +41,14 @@ Current native and browser readers preserve non-empty groups and writers omit
 the field when no groups exist, retaining byte stability for existing factory
 patches and deterministic migration for older documents.
 
+An optional `layout.cables` array stores presentation for long connections.
+Each unique `edgeId` refers to one semantic connection and carries up to 32
+ordered `{x, y}` waypoints, one named portal pair, or both. Portals are not
+nodes or connections: the two visible endpoints always project the same saved
+cable. Readers reject unknown or duplicate cable IDs, invalid coordinates,
+empty routing records, and portal names outside 1–32 characters. Writers omit
+the array when no cable has custom layout.
+
 ## Nodes and ports
 
 A node contains:

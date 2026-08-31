@@ -57,6 +57,16 @@ describe('patch persistence', () => {
     expect(writePatchJson(loaded.nodes, loaded.edges, loaded.viewport)).toBe(written);
   });
 
+  it('round trips bounded layout-only cable waypoints and paired portals', () => {
+    const input = createModuleNode('stereo-input', 'input', { x: 0, y: 0 }); const output = createModuleNode('stereo-output', 'output', { x: 500, y: 0 });
+    const edges = [{ id: 'long-cable', source: 'input', sourceHandle: 'out-l', target: 'output', targetHandle: 'in-l', data: {
+      signal: 'audio', layout: { waypoints: [{ x: 175, y: 90 }, { x: 340, y: -40 }], portal: { name: 'LONG RETURN' } },
+    } }];
+    const written = writePatchJson([input, output], edges, { x: 0, y: 0, zoom: 1 }); const loaded = parsePatchJson(written, reference);
+    expect(loaded.edges[0].data?.layout).toEqual(edges[0].data.layout); expect(writePatchJson(loaded.nodes, loaded.edges, loaded.viewport)).toBe(written);
+    const invalid = JSON.parse(written); invalid.layout.cables[0].edgeId = 'missing'; expect(() => parsePatchJson(JSON.stringify(invalid), reference)).toThrow(/routed cable identity/);
+  });
+
   it('stores quality explicitly and defaults legacy schema-v2 patches to Normal', () => {
     const flow = createFlowModel(reference);
     flow.nodes.push(createModuleNode('stereo-input', 'stereo-input-1', { x: -200, y: 0 }), createModuleNode('stereo-output', 'stereo-output-1', { x: 200, y: 0 }));

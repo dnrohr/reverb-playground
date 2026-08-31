@@ -49,10 +49,12 @@ export function pasteGraph(state: GraphState, clipboard: GraphClipboard, offset 
       selected: true, data,
     };
   });
-  const edges = clipboard.edges.map((source) => ({
-    ...structuredClone(source), id: uniqueId(source.id, edgeIds),
-    source: replacements.get(source.source)!, target: replacements.get(source.target)!, selected: true,
-  }));
+  const edges = clipboard.edges.map((source) => {
+    const copy = structuredClone(source);
+    const layout = copy.data?.layout as { waypoints?: Array<{ x: number; y: number }> } | undefined;
+    if (layout?.waypoints) layout.waypoints = layout.waypoints.map((point) => ({ x: point.x + offset, y: point.y + offset }));
+    return { ...copy, id: uniqueId(source.id, edgeIds), source: replacements.get(source.source)!, target: replacements.get(source.target)!, selected: true };
+  });
   return {
     nodes: [...state.nodes.map((node) => ({ ...node, selected: false })), ...nodes],
     edges: [...state.edges.map((edge) => ({ ...edge, selected: false })), ...edges],
