@@ -265,6 +265,10 @@ button { font: inherit; }
 .connection-offer div { display: flex; gap: 7px; }
 .connection-offer button { padding: 6px 8px; border: 1px solid #56656e; border-radius: 3px; color: #d6dfe3; background: #1b242a; font-size: 8px; }
 .connection-offer button:first-child { border-color: var(--amber); color: var(--amber); }
+.sum-insertion-preview { opacity: .72; filter: drop-shadow(0 0 5px rgba(242, 180, 78, .32)); }
+.react-flow__node.sum-insertion-preview { border-color: var(--amber); outline: 1px dashed var(--amber); outline-offset: 3px; }
+.react-flow__edge.sum-insertion-preview .react-flow__edge-path { stroke: var(--amber); stroke-width: 2; stroke-dasharray: 7 5; animation: sum-preview-dash 1s linear infinite; }
+@keyframes sum-preview-dash { to { stroke-dashoffset: -24; } }
 .flow-wrap { min-width: 0; min-height: 0; position: relative; }
 .dock-reveal { position: absolute; z-index: 7; top: 62px; padding: 7px 9px; border: 1px solid #4d5e68; border-radius: 4px; color: #b8c5cc; background: rgba(20, 28, 33, .94); box-shadow: 0 5px 18px rgba(0, 0, 0, .28); font: 8px var(--mono); letter-spacing: .08em; }
 .dock-reveal:hover, .dock-reveal:focus-visible { border-color: var(--cyan); color: var(--cyan); outline: none; }

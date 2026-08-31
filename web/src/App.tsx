@@ -20,7 +20,7 @@ import { createModuleNode, moduleDefinitions, nextNodeId, type ModuleType } from
 import { commitGraphEdit, emptyGraphHistory, isHistoryClean, markHistoryClean, redoGraphEdit, snapshotGraph, undoGraphEdit } from './graphHistory';
 import { copySelectedGraph, pasteGraph, type GraphClipboard } from './graphClipboard';
 import { decorateFeedbackLoops, decorateRunawayFeedbackLoop, inspectFeedbackLoops, inspectMostRelevantFeedbackLoop, type FeedbackLoopInspection } from './loopInspection';
-import { connectGraph, decideConnection, insertSumForOccupiedInput } from './connectionEditing';
+import { connectGraph, decideConnection, insertSumForOccupiedInput, previewSumForOccupiedInput } from './connectionEditing';
 import { PatchNode } from './PatchNode';
 import { callNative } from './nativeBridge';
 import { parsePatchJson, writePatchJson, type QualityPolicy } from './patchPersistence';
@@ -482,6 +482,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const clipboard = useRef<GraphClipboard | null>(null);
   const pasteCount = useRef(0);
   const loadInput = useRef<HTMLInputElement | null>(null);
+  const occupiedConfirm = useRef<HTMLButtonElement | null>(null);
   const [fileStatus, setFileStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
   const [activePatchId, setActivePatchId] = useState<FactoryPatchId | 'custom'>(restored ? 'custom' : 'barr-reference');
   const [qualityPolicy, setQualityPolicy] = useState<QualityPolicy>(restored?.source.qualityPolicy ?? 'normal');
@@ -640,6 +641,14 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const matrixDisplayedGraph = useMemo(() => collapseMatrixMixer(
     displayedGraph.nodes, displayedGraph.edges, matrixInspection, matrixIsCollapsed,
   ), [displayedGraph, matrixInspection, matrixIsCollapsed]);
+  const pendingConnectionDecision = pendingConnection ? decideConnection(nodes, edges, pendingConnection) : null;
+  const pendingSignal = pendingConnectionDecision?.kind === 'occupied' ? pendingConnectionDecision.signal : null;
+  const sumPreviewGraph = useMemo(() => {
+    if (!pendingConnection || pendingSignal !== 'audio') return null;
+    try { return previewSumForOccupiedInput({ nodes, edges }, pendingConnection); }
+    catch { return null; }
+  }, [edges, nodes, pendingConnection, pendingSignal]);
+  const connectionDisplayedGraph = sumPreviewGraph ?? matrixDisplayedGraph;
   const focusSelectedMacro = useCallback(() => {
     if (!selectedMacroInspection) return;
     const ids = new Set(gravityFocusNodeIds(selectedMacroInspection));
@@ -863,6 +872,16 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     setGraphStatus({ kind: 'ok', message: action === 'replace' ? 'REPLACED OCCUPIED INPUT CABLE' : 'INSERTED + AND REWIRED BOTH SOURCES' });
   }, [applyGraph, edges, nodes, pendingConnection]);
 
+  useEffect(() => {
+    if (!pendingConnection) return;
+    occupiedConfirm.current?.focus();
+    const handleOccupiedKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); resolveOccupied('cancel'); }
+    };
+    window.addEventListener('keydown', handleOccupiedKey);
+    return () => window.removeEventListener('keydown', handleOccupiedKey);
+  }, [pendingConnection, pendingSignal, resolveOccupied]);
+
   const applyParameter = useCallback((nodeId: string, parameterId: string, value: number) => {
     const sourceNode = nodes.find((node) => node.id === nodeId);
     const detentEnabled = sourceNode?.data.type === 'macro'
@@ -1068,8 +1087,6 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   }, [savePatch]);
 
   const teachingKey = selectedNode?.id ?? 'overview';
-  const pendingConnectionDecision = pendingConnection ? decideConnection(nodes, edges, pendingConnection) : null;
-  const pendingSignal = pendingConnectionDecision?.kind === 'occupied' ? pendingConnectionDecision.signal : null;
   const showTeaching = teachingEnabled && dismissedTeaching !== teachingKey;
   const toggleTeaching = useCallback(() => {
     setTeachingEnabled((current) => {
@@ -1271,18 +1288,18 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
             </div>
           ) : null}
           {pendingConnection ? (
-            <div className="connection-offer" role="dialog" aria-label="Occupied input options">
-              <strong>INPUT ALREADY HAS A CABLE</strong>
-              <span>{pendingSignal === 'control' ? 'A parameter socket accepts one control cable. Replace it or cancel.' : 'Replace it, or insert an explicit Sum (+) block to preserve both audio sources.'}</span>
-              <div>{pendingSignal === 'audio' ? <button type="button" onClick={() => resolveOccupied('sum')}>INSERT +</button> : null}<button type="button" onClick={() => resolveOccupied('replace')}>REPLACE CABLE</button><button type="button" onClick={() => resolveOccupied('cancel')}>CANCEL</button></div>
+            <div className="connection-offer" role="dialog" aria-modal="true" aria-labelledby="occupied-title" aria-describedby="occupied-description">
+              <strong id="occupied-title">INPUT ALREADY HAS A CABLE</strong>
+              <span id="occupied-description">{pendingSignal === 'control' ? 'A parameter socket accepts one control cable. Replace it or cancel.' : 'The amber dashed Sum is a preview only. Confirm to preserve both audio sources, or choose another action.'}</span>
+              <div>{pendingSignal === 'audio' ? <button ref={occupiedConfirm} type="button" onClick={() => resolveOccupied('sum')}>CONFIRM INSERT +</button> : null}<button ref={pendingSignal === 'control' ? occupiedConfirm : undefined} type="button" onClick={() => resolveOccupied('replace')}>REPLACE CABLE</button><button type="button" onClick={() => resolveOccupied('cancel')}>CANCEL</button></div>
             </div>
           ) : null}
           <div className="flow-wrap">
             {!workspaceLayout.modulesVisible ? <button className="dock-reveal dock-reveal-left" type="button" onClick={() => toggleDock('modules')}>MODULES ›</button> : null}
             {!workspaceLayout.contextVisible ? <button className="dock-reveal dock-reveal-right" type="button" onClick={() => toggleDock('context')}>‹ CONTEXT</button> : null}
             <ReactFlow
-              nodes={matrixDisplayedGraph.nodes}
-              edges={matrixDisplayedGraph.edges}
+              nodes={connectionDisplayedGraph.nodes}
+              edges={connectionDisplayedGraph.edges}
               nodeTypes={{ patchNode: PatchNode }}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}

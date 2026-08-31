@@ -60,3 +60,28 @@ export function insertSumForOccupiedInput(state: GraphState, connection: Connect
   edges = [...edges, createTypedEdge(output, 'audio', edges)];
   return { nodes: [...state.nodes, sum], edges };
 }
+
+const previewClass = (className: string | undefined) => `${className ?? ''} sum-insertion-preview`.trim();
+
+/**
+ * Builds the exact graph that confirmation will commit, then marks only the
+ * proposed objects as non-interactive. The caller must render this returned
+ * graph without replacing its authoritative nodes/edges state.
+ */
+export function previewSumForOccupiedInput(state: GraphState, connection: Connection): GraphState {
+  const committed = insertSumForOccupiedInput(state, connection);
+  const originalNodeIds = new Set(state.nodes.map((node) => node.id));
+  const originalEdgeIds = new Set(state.edges.map((edge) => edge.id));
+  return {
+    nodes: committed.nodes.map((node) => originalNodeIds.has(node.id) ? node : {
+      ...node, className: previewClass(node.className), draggable: false, selectable: false, deletable: false,
+      // Preview-only nodes never enter useNodesState, so React Flow cannot
+      // retain its measurement callback. Supplying the module's deterministic
+      // canvas footprint keeps the proposal visible without mutating state.
+      width: 150, height: 93,
+    }),
+    edges: committed.edges.map((edge) => originalEdgeIds.has(edge.id) ? edge : {
+      ...edge, className: previewClass(edge.className), selectable: false, deletable: false,
+    }),
+  };
+}

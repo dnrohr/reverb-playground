@@ -1440,3 +1440,21 @@ Results:
   rate/block case improves at least 15% in both median and p95 timing. Four-Line
   averages 37.42% median and 39.05% p95 improvement.
 - No UI changed, so screenshot or video evidence is not required.
+
+## M26.1 verification
+
+- Dropping an audio cable on an occupied mono input now previews an ordinary
+  Sum and the exact three replacement cables in dashed amber. Preview objects
+  are non-interactive and never replace, persist, or publish the authoritative
+  graph before confirmation.
+- Confirmation uses the same deterministic builder as the preview. Cancel is
+  document-identical, while confirmation records block creation and rewiring as
+  one Undo/Redo transaction. Occupied control sockets continue to offer only
+  Replace Cable or Cancel.
+- Automated coverage checks exact preview/commit identity, deterministic IDs
+  and placement, source immutability, one-step Undo/Redo, persistence,
+  clipboard behavior, and rejection of control-cable Sum insertion.
+- Browser QA exercised cable drop, focused keyboard confirmation, Escape
+  cancellation, and final insertion at 1280×720. Reviewed evidence:
+  [preview](../artifacts/ui/m26-1-assisted-sum/assisted-sum-preview.png) and
+  [cancel/confirm workflow](../artifacts/ui/m26-1-assisted-sum/assisted-sum-keyboard-workflow.mp4).
