@@ -19,6 +19,8 @@ status visible. Less frequent actions live in four conventional menus:
 
 Save, Open, Undo, Redo, Copy, Paste, Delete Selection, and Reset Patch retain
 their documented keyboard shortcuts. Escape closes an open application menu.
+The View menu also mirrors A/B comparison so narrow and high-DPI layouts retain
+the command when the inline comparison switch is intentionally hidden.
 The patch-canvas bar now contains only canvas navigation and contextual Tune or
 Matrix actions instead of duplicating file and editing commands.
 
@@ -26,6 +28,11 @@ The standalone exposes Audio Device in the File menu. The VST3 does not expose
 standalone device setup because its host owns the audio device. Emergency Mute
 remains continuously reachable in the native strip; Reset Safety appears only
 after safety has latched and recovery is possible.
+
+The native shell explicitly includes the named WebView in keyboard traversal.
+Tab therefore moves from the audition and safety controls into File, Edit,
+View, Help, the factory selector, Energy, Save, and the rest of the schematic
+surface instead of cycling around the native controls.
 
 ## Space returned to the schematic
 

@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M25.5",
+  "date": "2026-08-30",
+  "referenceViewport": {
+    "width": 1200,
+    "height": 720,
+    "canvasPercentOfViewport": {
+      "balanced": 55.3,
+      "createFocus": 86.4,
+      "learnAndInspect": 62.2
+    },
+    "graphPercentOfViewport": {
+      "balanced": 51.6,
+      "createFocus": 80.6,
+      "learnAndInspect": 58.0
+    }
+  },
+  "keyboard": {
+    "standaloneEnteredWebView": true,
+    "entrySequence": [
+      "LOAD FILE...",
+      "Wet gain value",
+      "Dry gain value",
+      "QUICK IMPULSE",
+      "Audio-file details",
+      "Options",
+      "EMERGENCY MUTE",
+      "FILE",
+      "EDIT",
+      "VIEW",
+      "HELP",
+      "Factory patch",
+      "ENERGY ON",
+      "SAVE"
+    ],
+    "contextTabsSupport": ["ArrowLeft", "ArrowRight", "Home", "End"]
+  },
+  "journeys": [
+    {
+      "id": "musician",
+      "commandCount": 10,
+      "graphStructureEdits": 0,
+      "outcomes": {
+        "selectedFactory": true,
+        "auditionedFile": true,
+        "adjustedMacro": true,
+        "comparedAAndB": true,
+        "exportedWav": true
+      }
+    },
+    {
+      "id": "sound-designer",
+      "commandCount": 10,
+      "openedContextTabs": ["inspect"],
+      "outcomes": {
+        "createdBlocks": true,
+        "connectedBlocks": true,
+        "tunedParameter": true,
+        "savedPatch": true,
+        "deletedAndRecovered": true
+      }
+    },
+    {
+      "id": "learner",
+      "commandCount": 8,
+      "outcomes": {
+        "tracedFeedback": true,
+        "inspectedEnergy": true,
+        "capturedResponse": true,
+        "openedDensityInspector": true,
+        "readArchitectureExplanation": true,
+        "retainedGraphContext": true
+      }
+    }
+  ],
+  "findings": {
+    "regressions": [
+      {
+        "id": "M25-5-R1",
+        "summary": "Standalone Tab traversal skipped the WebView",
+        "status": "fixed-and-reverified"
+      },
+      {
+        "id": "M25-5-R2",
+        "summary": "A/B controls had no narrow-layout fallback",
+        "status": "fixed-and-reverified"
+      }
+    ],
+    "preferences": [
+      {
+        "id": "M25-5-P1",
+        "summary": "A future dedicated performance-macro strip could reduce graph selection for musicians",
+        "status": "recorded-not-required"
+      }
+    ]
+  },
+  "externalValidation": {
+    "m7_5NonImplementerSessionsStillRequired": true
+  }
+}

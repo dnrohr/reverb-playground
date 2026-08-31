@@ -100,6 +100,7 @@ Last updated: 2026-08-30
 | M25.2 Add responsive, collapsible workspace docks | Complete | Balanced/Create Focus/Learn & Inspect arrangements; independent module, context, and standalone audio drawers; presentation-only persistence; 7-width × 3-scale × all-dock/state coverage; screenshots and interaction video |
 | M25.3 Consolidate Inspector, Analyze, and Learn | Complete | One persistent tabbed context dock routes editing, measured/estimated/compiled evidence, and documented teaching; revision-stale capture labeling, dormant polling, keyboard tab navigation, screenshots, and interaction video |
 | M25.4 Rebuild the compact audition and measurement drawer | Complete | Bottom compact deck keeps source, playback, file identity, Wet/Dry, Quick Impulse, and drawer state visible; the expansion owns waveform, loop, export, capture settings, progress, and unnormalized-sum disclosure with responsive tests and exercised evidence |
+| M25.5 Validate the three primary user journeys | Complete | Release musician/designer/learner journeys pass in 8-10 commands; measured canvas dominance; standalone-to-WebView keyboard entry and narrow A/B fallback fixed; screenshots/videos and checked JSON qualification record |
 
 ## M0.2 verification
 

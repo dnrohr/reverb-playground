@@ -1112,6 +1112,12 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                     {workspacePresentation.arrangement === 'custom' ? <option value="custom">Custom</option> : null}
                   </select>
                 </label>
+                <button role="menuitemradio" aria-checked={activePatchId === 'barr-reference'} type="button"
+                  onClick={() => { void selectFactoryPatch('barr-reference'); setOpenApplicationMenu(null); }}>COMPARE A / BARR</button>
+                <button role="menuitemradio" aria-checked={activePatchId === comparisonPatchId} type="button"
+                  onClick={() => { void selectFactoryPatch(comparisonPatchId); setOpenApplicationMenu(null); }}>
+                  COMPARE B / {comparisonPatchLabel(comparisonPatchId)}
+                </button>
                 <button role="menuitemcheckbox" aria-checked={workspacePresentation.modulesOpen} type="button"
                   onClick={() => toggleDock('modules')}>MODULE PALETTE {workspacePresentation.modulesOpen ? 'OPEN' : 'CLOSED'}</button>
                 <button role="menuitemcheckbox" aria-checked={workspacePresentation.contextOpen} type="button"

@@ -241,6 +241,12 @@ EditorShell::EditorShell(Callbacks callbacks)
         })
         .withResourceProvider([this](const auto& path) { return getWebResource(path); });
     browser_ = std::make_unique<juce::WebBrowserComponent>(std::move(options));
+    // WebBrowserComponent is not keyboard-focusable by default.  Without this
+    // handoff, standalone Tab traversal cycles through the native audition
+    // controls and never reaches the schematic editor hosted by WebView2.
+    browser_->setWantsKeyboardFocus(true);
+    browser_->setTitle("Schematic editor");
+    browser_->setDescription("Create, inspect, analyze, and learn from the current reverb graph");
     addAndMakeVisible(*browser_);
     browser_->goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
     startTimerHz(10);

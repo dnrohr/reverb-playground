@@ -26,6 +26,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Focused workspace shell](focused-workspace-shell.md) - compact application menus, continuously visible patch/safety state, responsive native controls, and measured canvas-space gain.
 - [Responsive workspace docks](responsive-workspace-docks.md) - Balanced, Create Focus, and Learn & Inspect arrangements, independent dock controls, narrow overlays, and presentation-only persistence.
 - [Unified context dock](unified-context-dock.md) - Inspector/Analyze/Learn routing, revision-bound evidence, dormant telemetry rules, and accessible tab navigation.
+- [Primary user journey qualification](primary-user-journey-qualification.md) - measured musician, sound-designer, and learner workflows, fixed internal regressions, and the boundary before non-implementer sessions.
 - [Progress log](progress.md) - completed roadmap tasks and verification evidence.
 - [Project license](../LICENSE), [third-party notices](../THIRD_PARTY_NOTICES.md), [asset provenance](../ASSET_PROVENANCE.md), and [contribution/DCO policy](../CONTRIBUTING.md) - open-source distribution boundaries.
 - [Patch format v1](patch-format.md) - versioned semantic graph, editor layout, typed ports, units, validation, and migration policy.

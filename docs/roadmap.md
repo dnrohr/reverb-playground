@@ -1593,7 +1593,7 @@ Acceptance criteria:
 - Screenshot evidence covers compact and expanded desktop layouts; video
   evidence covers resize, source switching, looping, capture, and export.
 
-### M25.5 Validate the three primary user journeys
+### M25.5 Validate the three primary user journeys — Complete
 
 Tasks: run representative musician, sound-designer, and learner journeys;
 measure canvas space, command count, discoverability, keyboard reachability,

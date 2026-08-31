@@ -17,11 +17,12 @@ describe('focused workspace chrome', () => {
     for (const command of [
       'SAVE PATCH', 'OPEN PATCH…', 'AUDIO DEVICE…', 'RESET PATCH',
       'UNDO', 'REDO', 'COPY', 'PASTE', 'DELETE SELECTION',
-      'PROCESSING QUALITY', 'ENERGY', 'DIAGNOSTICS',
+      'COMPARE A / BARR', 'COMPARE B /', 'PROCESSING QUALITY', 'ENERGY', 'DIAGNOSTICS',
       'CONTEXTUAL LEARNING', 'KEITH BARR ARCHITECTURE NOTES',
     ]) expect(appSource).toContain(command);
     expect(appSource).not.toContain('className="factory-picker quality-picker"');
     expect(appSource).not.toContain('className="comparison-switch comparison-four"');
+    expect(appSource).toContain('role="menuitemradio" aria-checked={activePatchId');
     expect(appSource).toContain("callNative('standaloneAuditionAvailable')");
     expect(appSource).toContain('standaloneAvailable ? <button');
   });

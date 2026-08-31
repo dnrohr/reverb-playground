@@ -33,6 +33,19 @@ class AccessibilityContractTests(unittest.TestCase):
         self.assertTrue(any("reduced-motion" in failure for failure in failures))
         self.assertTrue(any("AUDIO / SOLID" in failure for failure in failures))
 
+    def test_missing_native_to_web_focus_handoff_fails(self):
+        root = check_accessibility.ROOT
+        shell = (root / "src/ui/Source/EditorShell.cpp").read_text(encoding="utf-8").replace(
+            "browser_->setWantsKeyboardFocus(true);", "browser_->setWantsKeyboardFocus(false);"
+        )
+        failures = check_accessibility.check_contract(
+            (root / "web/src/styles.css").read_text(encoding="utf-8"),
+            (root / "web/src/App.tsx").read_text(encoding="utf-8"),
+            shell,
+            (root / "src/app/PluginEditor.cpp").read_text(encoding="utf-8"),
+        )
+        self.assertTrue(any("setWantsKeyboardFocus" in failure for failure in failures))
+
 
 if __name__ == "__main__":
     unittest.main()

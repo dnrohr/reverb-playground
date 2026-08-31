@@ -78,6 +78,8 @@ def check_contract(styles: str, app: str, editor_shell: str, plugin_editor: str)
         "deck.browserBounds.x",
         "getHeight() - globalControlHeightForWidth(getWidth()) - 10",
         'mixDisclosureLabel_.setText("WET + DRY UNNORMALIZED / SUM MAY EXCEED UNITY"',
+        "browser_->setWantsKeyboardFocus(true);",
+        'browser_->setTitle("Schematic editor");',
     ):
         if token not in editor_shell:
             failures.append(f"EditorShell.cpp: missing bounded/declarative bottom-deck token {token!r}")
