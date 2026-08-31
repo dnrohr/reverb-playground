@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "basis": "released schema-v2 factory patch graphs; presentation metadata excluded",
+  "factoryCount": 9,
+  "totals": {
+    "nodes": 334,
+    "lowpasses": 20,
+    "subtractiveHighpasses": 3,
+    "bandpassPrimitives": 0,
+    "sums": 61,
+    "terminalMixesWithThreeOrMoreInputs": 13,
+    "fourByFourMatrixMixers": 1
+  },
+  "patches": [
+    {
+      "factory": "causal-reverse-envelope",
+      "nodeCount": 17,
+      "lowpassCount": 1,
+      "subtractiveHighpassCount": 0,
+      "subtractiveHighpassMembers": [],
+      "bandpassPrimitiveCount": 0,
+      "sumCount": 3,
+      "terminalMixesWithThreeOrMoreInputs": 1,
+      "maximumExplicitMixInputs": 3,
+      "matrixMixer4x4": false
+    },
+    {
+      "factory": "dense-figure-eight",
+      "nodeCount": 40,
+      "lowpassCount": 2,
+      "subtractiveHighpassCount": 0,
+      "subtractiveHighpassMembers": [],
+      "bandpassPrimitiveCount": 0,
+      "sumCount": 5,
+      "terminalMixesWithThreeOrMoreInputs": 0,
+      "maximumExplicitMixInputs": 2,
+      "matrixMixer4x4": false
+    },
+    {
+      "factory": "four-line-dense-room",
+      "nodeCount": 84,
+      "lowpassCount": 4,
+      "subtractiveHighpassCount": 0,
+      "subtractiveHighpassMembers": [],
+      "bandpassPrimitiveCount": 0,
+      "sumCount": 23,
+      "terminalMixesWithThreeOrMoreInputs": 6,
+      "maximumExplicitMixInputs": 5,
+      "matrixMixer4x4": true
+    },
+    {
+      "factory": "gravity-diffusion",
+      "nodeCount": 58,
+      "lowpassCount": 1,
+      "subtractiveHighpassCount": 0,
+      "subtractiveHighpassMembers": [],
+      "bandpassPrimitiveCount": 0,
+      "sumCount": 8,
+      "terminalMixesWithThreeOrMoreInputs": 2,
+      "maximumExplicitMixInputs": 4,
+      "matrixMixer4x4": false
+    },
+    {
+      "factory": "level-gated-room",
+      "nodeCount": 13,
+      "lowpassCount": 1,
+      "subtractiveHighpassCount": 0,
+      "subtractiveHighpassMembers": [],
+      "bandpassPrimitiveCount": 0,
+      "sumCount": 1,
+      "terminalMixesWithThreeOrMoreInputs": 0,
+      "maximumExplicitMixInputs": 2,
+      "matrixMixer4x4": false
+    },
+    {
+      "factory": "modulated-cosmic-reverse",
+      "nodeCount": 24,
+      "lowpassCount": 1,
+      "subtractiveHighpassCount": 0,
+      "subtractiveHighpassMembers": [],
+      "bandpassPrimitiveCount": 0,
+      "sumCount": 4,
+      "terminalMixesWithThreeOrMoreInputs": 1,
+      "maximumExplicitMixInputs": 4,
+      "matrixMixer4x4": false
+    },
+    {
+      "factory": "reverse-cosmic-shimmer",
+      "nodeCount": 45,
+      "lowpassCount": 4,
+      "subtractiveHighpassCount": 1,
+      "subtractiveHighpassMembers": [
+        {
+          "source": "tank-damping",
+          "lowpass": "shift-highpass-lowpass",
+          "invert": "shift-highpass-invert",
+          "sum": "shift-highpass"
+        }
+      ],
+      "bandpassPrimitiveCount": 0,
+      "sumCount": 9,
+      "terminalMixesWithThreeOrMoreInputs": 2,
+      "maximumExplicitMixInputs": 4,
+      "matrixMixer4x4": false
+    },
+    {
+      "factory": "safe-parallel-shimmer",
+      "nodeCount": 28,
+      "lowpassCount": 3,
+      "subtractiveHighpassCount": 1,
+      "subtractiveHighpassMembers": [
+        {
+          "source": "tank-damping",
+          "lowpass": "shimmer-highpass-lowpass",
+          "invert": "shimmer-highpass-invert",
+          "sum": "shimmer-highpass-sum"
+        }
+      ],
+      "bandpassPrimitiveCount": 0,
+      "sumCount": 4,
+      "terminalMixesWithThreeOrMoreInputs": 0,
+      "maximumExplicitMixInputs": 2,
+      "matrixMixer4x4": false
+    },
+    {
+      "factory": "split-feedback-shimmer",
+      "nodeCount": 25,
+      "lowpassCount": 3,
+      "subtractiveHighpassCount": 1,
+      "subtractiveHighpassMembers": [
+        {
+          "source": "tank-damping",
+          "lowpass": "shifted-highpass-lowpass",
+          "invert": "shifted-highpass-invert",
+          "sum": "shifted-highpass-sum"
+        }
+      ],
+      "bandpassPrimitiveCount": 0,
+      "sumCount": 4,
+      "terminalMixesWithThreeOrMoreInputs": 1,
+      "maximumExplicitMixInputs": 3,
+      "matrixMixer4x4": false
+    }
+  ]
+}

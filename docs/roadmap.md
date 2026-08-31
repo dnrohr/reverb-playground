@@ -1795,7 +1795,7 @@ Acceptance criteria:
 - User-facing docs, factory teaching text, screenshots, and accessibility
   labels use the same vocabulary.
 
-### M27.4 Evaluate a unified Filter and compound Mixer
+### M27.4 Evaluate a unified Filter and compound Mixer — Complete
 
 Tasks: measure the architectural need for high-pass/band-pass damping and
 multi-input mixing; specify a unified Filter mode only if its transfer,

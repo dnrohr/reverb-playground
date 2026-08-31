@@ -1615,3 +1615,23 @@ Results:
   [Gain](../artifacts/ui/m27-3-inspector-vocabulary/gain-inspector.jpg),
   [compact](../artifacts/ui/m27-3-inspector-vocabulary/advanced-640x400.jpg), and
   [workflow](../artifacts/ui/m27-3-inspector-vocabulary/advanced-disclosure-workflow.mp4).
+
+## M27.4 verification
+
+- A deterministic structural audit covers all nine released factory graphs:
+  334 nodes, 20 Low-passes, three exact subtractive High-passes, no Band-pass,
+  61 Sums, 13 terminal three-or-more-input Sum trees, and one qualified 4×4
+  Matrix Mixer. The checked measurement is
+  [m27-filter-mixer-need.json](../artifacts/measurements/m27-filter-mixer-need.json).
+- The [Filter and Mixer decision](filter-and-mixer-block-decision.md) compares
+  separate primitives with a unified mode-selectable Filter, defines transfer,
+  modulation, state, migration, coefficient, and publication consequences, and
+  rejects the new block until Band-pass or usability evidence earns the cost.
+- Mode changes would be topology-affecting off-thread rebuilds with a crossfade;
+  they would not be continuously modulated. No unqualified response ships.
+- The existing Matrix Mixer is the prototype: its temporary summary expands to
+  the same 16 Gains and 12 Sums, while audio, latency, Energy, safety, save/load,
+  feedback inspection, and warnings continue to use that unchanged graph.
+- An arbitrary Mixer is rejected because measured Sum trees do not share one
+  honest channel/gain/normalization boundary. UI and audio are unchanged; no
+  new screenshot or video is required, and M26.5 evidence remains authoritative.
