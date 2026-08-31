@@ -169,6 +169,29 @@ TEST_CASE("Legacy schema-v2 Pitch Shift values migrate visibly into one octave")
     REQUIRE(migrated.migrationWarnings.front().find("one-octave range") != std::string::npos);
 }
 
+TEST_CASE("Visual layout groups round trip without changing semantic graph identity")
+{
+    using namespace reverb::graph;
+    auto graph = parsePatchJson(readFixture("patches/valid/barr-minimal.json"));
+    const auto semanticNodes = graph.nodes;
+    const auto semanticConnections = graph.connections;
+    graph.layout.groups = { LayoutGroup { "group-1", "Diffusion", true, { "mono-sum", "allpass-1" } } };
+    REQUIRE(validate(graph).valid());
+    const auto json = writePatchJson(graph);
+    REQUIRE(nlohmann::json::parse(json).at("layout").at("groups").size() == 1);
+    const auto restored = parsePatchJson(json);
+    REQUIRE(restored.layout.groups == graph.layout.groups);
+    REQUIRE(restored.nodes == semanticNodes);
+    REQUIRE(restored.connections == semanticConnections);
+
+    auto nested = graph;
+    nested.layout.groups.push_back(LayoutGroup { "group-2", "Nested", false, { "allpass-1", "mono-sum" } });
+    REQUIRE_FALSE(validate(nested).valid());
+    auto ioGroup = graph;
+    ioGroup.layout.groups = { LayoutGroup { "group-1", "Invalid", false, { "input", "allpass-1" } } };
+    REQUIRE_FALSE(validate(ioGroup).valid());
+}
+
 TEST_CASE("Validator rejects zero-delay cycles and accepts delayed feedback")
 {
     using namespace reverb::graph;

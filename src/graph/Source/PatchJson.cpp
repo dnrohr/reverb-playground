@@ -251,6 +251,14 @@ GraphDocument parsePatchJson(const std::string_view jsonText)
         .y = viewport.at("y").get<double>(),
         .zoom = viewport.at("zoom").get<double>(),
     };
+    if (const auto groups = layout.find("groups"); groups != layout.end()) {
+        for (const auto& groupJson : *groups) {
+            LayoutGroup group { .id = groupJson.at("id").get<std::string>(), .name = groupJson.at("name").get<std::string>(),
+                .collapsed = groupJson.at("collapsed").get<bool>() };
+            group.nodeIds = groupJson.at("nodeIds").get<std::vector<std::string>>();
+            document.layout.groups.push_back(std::move(group));
+        }
+    }
 
     return document;
 }
@@ -297,6 +305,20 @@ std::string writePatchJson(const GraphDocument& document)
             { "y", position.y },
         });
     }
+    Json groupArray = Json::array();
+    for (const auto& group : document.layout.groups)
+        groupArray.push_back({ { "id", group.id }, { "name", group.name }, { "collapsed", group.collapsed }, { "nodeIds", group.nodeIds } });
+
+    Json layoutJson {
+        { "nodes", std::move(positionArray) },
+        { "viewport",
+            {
+                { "x", document.layout.viewport.x },
+                { "y", document.layout.viewport.y },
+                { "zoom", document.layout.viewport.zoom },
+            } },
+    };
+    if (!groupArray.empty()) layoutJson["groups"] = std::move(groupArray);
 
     const Json root {
         { "schemaVersion", GraphDocument::schemaVersion },
@@ -308,16 +330,7 @@ std::string writePatchJson(const GraphDocument& document)
                 { "nodes", std::move(nodeArray) },
                 { "connections", std::move(connectionArray) },
             } },
-        { "layout",
-            {
-                { "nodes", std::move(positionArray) },
-                { "viewport",
-                    {
-                        { "x", document.layout.viewport.x },
-                        { "y", document.layout.viewport.y },
-                        { "zoom", document.layout.viewport.zoom },
-                    } },
-            } },
+        { "layout", std::move(layoutJson) },
     };
 
     return root.dump(2) + "\n";

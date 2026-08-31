@@ -151,6 +151,26 @@ ValidationResult validate(const GraphDocument& document)
             result.errors.push_back("duplicate layout position for node '" + position.nodeId + "'");
     }
 
+    std::unordered_set<std::string> groupIds;
+    std::unordered_set<std::string> groupedNodeIds;
+    for (const auto& group : document.layout.groups) {
+        if (group.id.empty() || !groupIds.insert(group.id).second)
+            result.errors.push_back("layout group IDs must be non-empty and unique");
+        if (group.name.empty() || group.name.size() > 64)
+            result.errors.push_back("layout group '" + group.id + "' name must contain 1 through 64 characters");
+        if (group.nodeIds.size() < 2)
+            result.errors.push_back("layout group '" + group.id + "' must contain at least two nodes");
+        for (const auto& nodeId : group.nodeIds) {
+            if (!nodeIds.contains(nodeId))
+                result.errors.push_back("layout group '" + group.id + "' references unknown node '" + nodeId + "'");
+            if (!groupedNodeIds.insert(nodeId).second)
+                result.errors.push_back("node '" + nodeId + "' belongs to multiple layout groups");
+            const auto node = std::ranges::find(document.nodes, nodeId, &Node::id);
+            if (node != document.nodes.end() && (node->type == "stereo-input" || node->type == "stereo-output"))
+                result.errors.push_back("layout group '" + group.id + "' cannot contain I/O node '" + nodeId + "'");
+        }
+    }
+
     if (document.layout.viewport.zoom <= 0.0)
         result.errors.push_back("viewport zoom must be greater than zero");
 

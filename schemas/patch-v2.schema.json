@@ -110,12 +110,24 @@
         "zoom": { "type": "number", "exclusiveMinimum": 0 }
       }
     },
+    "layoutGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "collapsed", "nodeIds"],
+      "properties": {
+        "id": { "$ref": "#/$defs/identifier" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "collapsed": { "type": "boolean" },
+        "nodeIds": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "$ref": "#/$defs/identifier" } }
+      }
+    },
     "layout": {
       "type": "object",
       "additionalProperties": false,
       "required": ["nodes", "viewport"],
       "properties": {
         "nodes": { "type": "array", "items": { "$ref": "#/$defs/nodePosition" } },
+        "groups": { "type": "array", "items": { "$ref": "#/$defs/layoutGroup" } },
         "viewport": { "$ref": "#/$defs/viewport" }
       }
     }

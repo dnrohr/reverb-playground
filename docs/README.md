@@ -51,6 +51,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Feedback graph compilation](feedback-graph-compilation.md) - SCC analysis, exact algebraic-loop diagnostics, split-phase Delay semantics, and compiler budgets.
 - [Delay-memory planning](delay-memory-planning.md) - requested/allocated inspection, prepared arenas, project budget, boundaries, and safe sample-rate recalculation.
 - [Unified graph history and clipboard](unified-graph-history-and-clipboard.md) - mixed-operation undo/redo, bounded history, clean-state identity, and subgraph copy/paste.
+- [Collapsible graph groups](collapsible-graph-groups.md) - named layout-only groups, explicit typed boundaries, loop reveal, persistence, and nesting limits.
 - [Feedback-loop highlighting](feedback-loop-highlighting.md) - bounded directed-cycle analysis, active/alternate styling, and topology-derived loop facts.
 - [Impulse audition and capture](impulse-audition-and-capture.md) - safe stimulus, visible bounds, live-input isolation, lock-free capture publication, and deterministic repeats.
 - [Stereo impulse and decay view](stereo-impulse-and-decay-view.md) - accessible channel waveforms, Schroeder decay, bounded zoom/pan, T30 estimates, and refusal explanations.

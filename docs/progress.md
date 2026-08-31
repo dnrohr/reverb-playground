@@ -1458,3 +1458,25 @@ Results:
   cancellation, and final insertion at 1280×720. Reviewed evidence:
   [preview](../artifacts/ui/m26-1-assisted-sum/assisted-sum-preview.png) and
   [cancel/confirm workflow](../artifacts/ui/m26-1-assisted-sum/assisted-sum-keyboard-workflow.mp4).
+
+## M26.2 verification
+
+- Two or more selected non-I/O primitives can be assigned to a named visual
+  group. Expanded members receive a violet outline; collapse replaces only the
+  rendering with a named violet boundary and one typed port per crossing cable.
+- Semantic graph hashes remain unchanged across create/collapse/expand.
+  Document history records create, rename, collapse, expand, paste, and ungroup
+  atomically, while native publication continues to compile the complete
+  primitive graph.
+- Optional schema-v2 layout metadata round-trips through browser files and
+  native host state. Legacy documents migrate to no groups; validation rejects
+  unknown, duplicate, I/O, nested, and undersized membership.
+- Complete group clipboard copies receive fresh node, cable, and group IDs;
+  partial copies intentionally become ungrouped. Feedback and Energy are
+  calculated before projection, and collapsed loop highlights can expand to the
+  complete authoritative path.
+- Browser QA exercised keyboard creation, naming, collapse, boundary
+  inspection, expansion, and the 640×400 layout with no document overflow.
+  Evidence: [desktop](../artifacts/ui/m26-2-collapsible-groups/collapsed-group-inspector.png),
+  [compact](../artifacts/ui/m26-2-collapsible-groups/collapsed-group-640x400.png), and
+  [workflow](../artifacts/ui/m26-2-collapsible-groups/group-collapse-expand.mp4).

@@ -45,6 +45,7 @@ import { parallelShimmerBranch, parallelShimmerTeaching } from './parallelShimme
 import { decorateSplitShimmerFocus, splitFeedbackShimmerTeaching, splitShimmerLoopKind, type SplitShimmerLoopFocus } from './splitFeedbackShimmerTeaching';
 import { decorateReverseCosmicFocus, reverseCosmicShimmerTeaching, type ReverseCosmicFocus } from './reverseCosmicShimmerTeaching';
 import { collapseMatrixMixer, inspectMatrixMixer, type MatrixMixerInspection } from './matrixMixerPresentation';
+import { collapseGraphGroups, createGraphGroup, inspectGraphGroups, removeGraphGroup, renameGraphGroup, setGraphGroupCollapsed } from './graphGroups';
 import { assistedTuningSuggestions, createAssistedTuningPreview, supportsAssistedTuning, type AssistedTuningSuggestionId } from './assistedTuning';
 import { editorCommandBarHeight, measurementBarHeight } from './workspaceChrome';
 import { captureRevisionState, contextTabFor, emphasizeAnalyzeLayout, shouldPollRuntimeDiagnostics, type ContextIntent, type ContextTab } from './contextDock';
@@ -496,6 +497,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [graphHistory, setGraphHistory] = useState(() => emptyGraphHistory(initial));
   const [graphStatus, setGraphStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
   const [pendingConnection, setPendingConnection] = useState<Connection | null>(null);
+  const [groupNameDraft, setGroupNameDraft] = useState<string | null>(null);
   const [activeLoopIndex, setActiveLoopIndex] = useState(0);
   const [splitLoopFocus, setSplitLoopFocus] = useState<SplitShimmerLoopFocus>('shifted');
   const [reverseCosmicFocus, setReverseCosmicFocus] = useState<ReverseCosmicFocus>('grains');
@@ -601,7 +603,9 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   }, [activePatchId, nodes, openContext]);
 
   const loopInspection = useMemo(() => selectedNode
-    ? inspectFeedbackLoops(nodes, edges, { nodeId: selectedNode.id })
+    ? selectedNode.data.type === 'graph-group'
+      ? (selectedNode.data.groupMemberIds ?? []).map((nodeId) => inspectFeedbackLoops(nodes, edges, { nodeId })).find((inspection) => inspection.loops.length) ?? null
+      : inspectFeedbackLoops(nodes, edges, { nodeId: selectedNode.id })
     : selectedEdge ? inspectFeedbackLoops(nodes, edges, { edgeId: selectedEdge.id }) : null,
   [edges, nodes, selectedEdge, selectedNode]);
   const runawayLoopInspection = useMemo(() => diagnostics?.mute.safetyLatched
@@ -641,6 +645,16 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const matrixDisplayedGraph = useMemo(() => collapseMatrixMixer(
     displayedGraph.nodes, displayedGraph.edges, matrixInspection, matrixIsCollapsed,
   ), [displayedGraph, matrixInspection, matrixIsCollapsed]);
+  const graphGroups = useMemo(() => inspectGraphGroups(nodes), [nodes]);
+  const hasCollapsedGraphGroup = graphGroups.some((group) => group.collapsed);
+  const groupDisplayedGraph = useMemo(() => collapseGraphGroups(
+    hasCollapsedGraphGroup ? displayedGraph.nodes : matrixDisplayedGraph.nodes,
+    hasCollapsedGraphGroup ? displayedGraph.edges : matrixDisplayedGraph.edges,
+  ), [displayedGraph, hasCollapsedGraphGroup, matrixDisplayedGraph]);
+  const selectedGroupDisplayedGraph = useMemo(() => selectedNode?.data.type === 'graph-group' ? {
+    nodes: groupDisplayedGraph.nodes.map((node) => ({ ...node, selected: node.id === selectedNode.id })),
+    edges: groupDisplayedGraph.edges,
+  } : groupDisplayedGraph, [groupDisplayedGraph, selectedNode]);
   const pendingConnectionDecision = pendingConnection ? decideConnection(nodes, edges, pendingConnection) : null;
   const pendingSignal = pendingConnectionDecision?.kind === 'occupied' ? pendingConnectionDecision.signal : null;
   const sumPreviewGraph = useMemo(() => {
@@ -648,7 +662,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     try { return previewSumForOccupiedInput({ nodes, edges }, pendingConnection); }
     catch { return null; }
   }, [edges, nodes, pendingConnection, pendingSignal]);
-  const connectionDisplayedGraph = sumPreviewGraph ?? matrixDisplayedGraph;
+  const connectionDisplayedGraph = sumPreviewGraph ?? selectedGroupDisplayedGraph;
   const focusSelectedMacro = useCallback(() => {
     if (!selectedMacroInspection) return;
     const ids = new Set(gravityFocusNodeIds(selectedMacroInspection));
@@ -844,11 +858,12 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   }, [applyGraph, edges, nodes, screenToFlowPosition]);
 
   const removeSelection = useCallback(() => {
+    if (selectedNode?.data.type === 'graph-group') { setGraphStatus({ kind: 'error', message: 'VISUAL GROUPS CANNOT BE DELETED / EXPAND OR UNGROUP IT' }); return; }
     const protectedNode = nodes.find((node) => node.selected && (node.data.type === 'stereo-input' || node.data.type === 'stereo-output'));
     if (protectedNode) { setGraphStatus({ kind: 'error', message: `${protectedNode.data.label} is required and cannot be deleted.` }); return; }
     const before = { nodes, edges }; const after = deleteSelected(nodes, edges); if (after.nodes.length === nodes.length && after.edges.length === edges.length) return;
     applyGraph(after); setGraphHistory((history) => commitGraphEdit(history, 'Delete selection', before, after)); setGraphStatus({ kind: 'ok', message: 'DELETED SELECTION + INCIDENT CABLES / UNDO AVAILABLE' });
-  }, [applyGraph, edges, nodes]);
+  }, [applyGraph, edges, nodes, selectedNode]);
 
   const undoGraph = useCallback(() => { const result = undoGraphEdit(graphHistory); if (!result.edit) return; applyGraph(result.edit.before); publishRuntimeParameters(result.edit.before); setGraphHistory(result.history); setGraphStatus({ kind: 'ok', message: `UNDID ${result.edit.label.toUpperCase()}` }); }, [applyGraph, graphHistory, publishRuntimeParameters]);
   const redoGraph = useCallback(() => { const result = redoGraphEdit(graphHistory); if (!result.edit) return; applyGraph(result.edit.after); publishRuntimeParameters(result.edit.after); setGraphHistory(result.history); setGraphStatus({ kind: 'ok', message: `REDID ${result.edit.label.toUpperCase()}` }); }, [applyGraph, graphHistory, publishRuntimeParameters]);
@@ -960,12 +975,14 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   }, [applyGraph, fitView, publishRuntimeParameters, setFlowViewport, snapshot]);
 
   const copySelection = useCallback(() => {
-    const copied = copySelectedGraph({ nodes, edges });
+    const collapsedMembers = selectedNode?.data.type === 'graph-group' ? new Set(selectedNode.data.groupMemberIds ?? []) : null;
+    const sourceNodes = collapsedMembers ? nodes.map((node) => ({ ...node, selected: collapsedMembers.has(node.id) })) : nodes;
+    const copied = copySelectedGraph({ nodes: sourceNodes, edges });
     if (!copied) { setGraphStatus({ kind: 'error', message: 'SELECT ONE OR MORE NON-I/O BLOCKS TO COPY' }); return; }
     clipboard.current = copied; pasteCount.current = 0;
     void navigator.clipboard?.writeText(JSON.stringify({ format: 'reverb-playground-subgraph-v1', ...copied })).catch(() => undefined);
     setGraphStatus({ kind: 'ok', message: `COPIED ${copied.nodes.length} BLOCK${copied.nodes.length === 1 ? '' : 'S'} + ${copied.edges.length} INTERNAL CABLE${copied.edges.length === 1 ? '' : 'S'}` });
-  }, [edges, nodes]);
+  }, [edges, nodes, selectedNode]);
 
   const pasteSelection = useCallback(() => {
     if (!clipboard.current) { setGraphStatus({ kind: 'error', message: 'GRAPH CLIPBOARD IS EMPTY' }); return; }
@@ -975,15 +992,46 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     setGraphStatus({ kind: 'ok', message: `PASTED ${clipboard.current.nodes.length} BLOCK${clipboard.current.nodes.length === 1 ? '' : 'S'} / NEW IDS ASSIGNED` });
   }, [applyGraph, edges, nodes]);
 
+  const beginCreateGroup = useCallback(() => {
+    const selected = nodes.filter((node) => node.selected && node.data.role !== 'io');
+    if (selected.length < 2) { setGraphStatus({ kind: 'error', message: 'SELECT AT LEAST TWO NON-I/O BLOCKS TO GROUP' }); return; }
+    if (selected.some((node) => node.data.presentationGroup)) { setGraphStatus({ kind: 'error', message: 'NESTED GROUPS ARE NOT SUPPORTED / UNGROUP FIRST' }); return; }
+    setGraphStatus(null);
+    setGroupNameDraft(`Group ${graphGroups.length + 1}`);
+  }, [graphGroups.length, nodes]);
+
+  const commitCreateGroup = useCallback(() => {
+    if (groupNameDraft === null) return;
+    try {
+      const before = { nodes, edges }; const after = createGraphGroup(before, groupNameDraft);
+      applyGraph(after); setGraphHistory((history) => commitGraphEdit(history, 'Create group', before, after));
+      setActivePatchId('custom'); setGroupNameDraft(null); setGraphStatus({ kind: 'ok', message: `CREATED ${groupNameDraft.trim().toUpperCase()} / LAYOUT ONLY` });
+    } catch (reason) { setGraphStatus({ kind: 'error', message: reason instanceof Error ? reason.message.toUpperCase() : 'GROUP CREATION FAILED' }); }
+  }, [applyGraph, edges, groupNameDraft, nodes]);
+
+  const changeSelectedGroup = useCallback((action: 'collapse' | 'expand' | 'ungroup' | 'rename', name?: string) => {
+    const group = selectedNode?.data.presentationGroup; if (!group) return;
+    try {
+      const before = { nodes, edges };
+      const after = action === 'ungroup' ? removeGraphGroup(before, group.id)
+        : action === 'rename' && name !== undefined ? renameGraphGroup(before, group.id, name)
+          : setGraphGroupCollapsed(before, group.id, action === 'collapse');
+      applyGraph(after); setGraphHistory((history) => commitGraphEdit(history,
+        action === 'ungroup' ? 'Ungroup blocks' : action === 'rename' ? 'Rename group' : `${action} group`, before, after));
+      setActivePatchId('custom'); setGraphStatus({ kind: 'ok', message: `${action.toUpperCase()} GROUP / LAYOUT ONLY / AUDIO GRAPH UNCHANGED` });
+    } catch (reason) { setGraphStatus({ kind: 'error', message: reason instanceof Error ? reason.message.toUpperCase() : 'GROUP EDIT FAILED' }); }
+  }, [applyGraph, edges, nodes, selectedNode]);
+
   const handleSelection = useCallback(({ nodes: selectedNodes, edges: selectedEdges }: OnSelectionChangeParams) => {
     const node = (selectedNodes[0] as Node<PatchNodeData> | undefined) ?? null;
     const edge = selectedEdges[0] ?? null;
+    if (!node && !edge && selectedNode?.data.type === 'graph-group') return;
     setSelectedNode(node);
     setSelectedEdge(edge);
     setActiveLoopIndex(0);
     if (node) openContext(node.data.type === 'matrix-mixer' ? 'matrix' : 'node');
     else if (edge) openContext('cable');
-  }, [openContext]);
+  }, [openContext, selectedNode]);
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
@@ -1004,13 +1052,14 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c' && !(event.target instanceof HTMLInputElement)) { event.preventDefault(); copySelection(); return; }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'v' && !(event.target instanceof HTMLInputElement)) { event.preventDefault(); pasteSelection(); return; }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'g' && !(event.target instanceof HTMLInputElement)) { event.preventDefault(); beginCreateGroup(); return; }
       if ((event.key === 'Delete' || event.key === 'Backspace') && !(event.target instanceof HTMLInputElement)) { event.preventDefault(); removeSelection(); return; }
       if (event.key.toLowerCase() === 'r' && !(event.target instanceof HTMLInputElement))
         resetPatch();
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [copySelection, openApplicationMenu, pasteSelection, redoGraph, removeSelection, resetPatch, undoGraph]);
+  }, [beginCreateGroup, copySelection, openApplicationMenu, pasteSelection, redoGraph, removeSelection, resetPatch, undoGraph]);
 
   const beginParameterEdit = useCallback((nodeId: string, parameterId: string, _before: number) => {
     activeEdit.current = { label: `Edit ${nodeId}.${parameterId}`, before: snapshotGraph({ nodes, edges }) };
@@ -1117,6 +1166,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <button role="menuitem" type="button" disabled={!graphHistory.redo.length} onClick={() => { redoGraph(); setOpenApplicationMenu(null); }}>REDO <kbd>CTRL Y</kbd></button>
                 <button role="menuitem" type="button" onClick={() => { copySelection(); setOpenApplicationMenu(null); }}>COPY <kbd>CTRL C</kbd></button>
                 <button role="menuitem" type="button" disabled={!clipboard.current} onClick={() => { pasteSelection(); setOpenApplicationMenu(null); }}>PASTE <kbd>CTRL V</kbd></button>
+                <button role="menuitem" type="button" onClick={() => { beginCreateGroup(); setOpenApplicationMenu(null); }}>GROUP SELECTION… <kbd>CTRL G</kbd></button>
                 <button role="menuitem" type="button" onClick={() => { removeSelection(); setOpenApplicationMenu(null); }}>DELETE SELECTION <kbd>DEL</kbd></button>
               </> : null}
               {menu === 'view' ? <>
@@ -1294,6 +1344,16 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <div>{pendingSignal === 'audio' ? <button ref={occupiedConfirm} type="button" onClick={() => resolveOccupied('sum')}>CONFIRM INSERT +</button> : null}<button ref={pendingSignal === 'control' ? occupiedConfirm : undefined} type="button" onClick={() => resolveOccupied('replace')}>REPLACE CABLE</button><button type="button" onClick={() => resolveOccupied('cancel')}>CANCEL</button></div>
             </div>
           ) : null}
+          {groupNameDraft !== null ? (
+            <div className="connection-offer group-name-dialog" role="dialog" aria-modal="true" aria-labelledby="group-name-title">
+              <strong id="group-name-title">NAME VISUAL GROUP</strong>
+              <span>Grouping changes layout only. Primitive blocks, cables, automation, and processing remain authoritative.</span>
+              <input autoFocus aria-label="Group name" maxLength={64} value={groupNameDraft}
+                onChange={(event) => setGroupNameDraft(event.target.value)}
+                onKeyDown={(event) => { if (event.key === 'Enter') commitCreateGroup(); else if (event.key === 'Escape') setGroupNameDraft(null); }} />
+              <div><button type="button" disabled={!groupNameDraft.trim()} onClick={commitCreateGroup}>CREATE GROUP</button><button type="button" onClick={() => setGroupNameDraft(null)}>CANCEL</button></div>
+            </div>
+          ) : null}
           <div className="flow-wrap">
             {!workspaceLayout.modulesVisible ? <button className="dock-reveal dock-reveal-left" type="button" onClick={() => toggleDock('modules')}>MODULES ›</button> : null}
             {!workspaceLayout.contextVisible ? <button className="dock-reveal dock-reveal-right" type="button" onClick={() => toggleDock('context')}>‹ CONTEXT</button> : null}
@@ -1315,6 +1375,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               isValidConnection={(connection) => decideConnection(nodes, edges, { source: connection.source, sourceHandle: connection.sourceHandle ?? null, target: connection.target, targetHandle: connection.targetHandle ?? null }).kind !== 'invalid'}
               defaultEdgeOptions={{ interactionWidth: 24 }}
               onSelectionChange={handleSelection}
+              onNodeClick={(_event, node) => {
+                if ((node as Node<PatchNodeData>).data.type !== 'graph-group') return;
+                setSelectedNode(node as Node<PatchNodeData>); setSelectedEdge(null); openContext('node');
+              }}
+              onPaneClick={() => { setSelectedNode(null); setSelectedEdge(null); }}
               onViewportChange={setViewport}
               defaultViewport={initial.viewport}
               fitView={!restored}
@@ -1385,6 +1450,18 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <div><dt>ROLE</dt><dd>{selectedNode.data.role}</dd></div>
                 <div><dt>PORTS</dt><dd>{selectedNode.data.ports.length} mono</dd></div>
               </dl>
+              {selectedNode.data.presentationGroup ? <section className="group-inspector" aria-label="Visual group controls">
+                <label><span>GROUP NAME</span><input aria-label="Group name" defaultValue={selectedNode.data.presentationGroup.name}
+                  onKeyDown={(event) => { if (event.key === 'Enter') event.currentTarget.blur(); }}
+                  onBlur={(event) => { if (event.currentTarget.value.trim() !== selectedNode.data.presentationGroup?.name) changeSelectedGroup('rename', event.currentTarget.value); }} /></label>
+                <p>{selectedNode.data.groupMemberIds?.length ?? graphGroups.find((group) => group.id === selectedNode.data.presentationGroup?.id)?.nodeIds.length ?? 0} primitive blocks · presentation only</p>
+                <div>
+                  <button type="button" onClick={() => changeSelectedGroup(selectedNode.data.presentationGroup?.collapsed ? 'expand' : 'collapse')}>{selectedNode.data.presentationGroup.collapsed ? 'EXPAND GROUP' : 'COLLAPSE GROUP'}</button>
+                  {selectedNode.data.presentationGroup.collapsed && loopInspection?.loops.length ? <button type="button" onClick={() => changeSelectedGroup('expand')}>REVEAL COMPLETE LOOP</button> : null}
+                  <button type="button" onClick={() => changeSelectedGroup('ungroup')}>UNGROUP</button>
+                </div>
+                <small>Nested groups are intentionally unsupported.</small>
+              </section> : null}
               {selectedNode.data.type === 'pitch-shift' ? <PitchShiftVisualization
                 parameters={selectedNode.data.parameters}
                 reducedMotion={reducedMotion}
@@ -1499,7 +1576,9 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <button type="button" disabled={!graphHistory.undo.length} onClick={undoGraph}>UNDO</button>
                 <button type="button" disabled={!graphHistory.redo.length} onClick={redoGraph}>REDO</button>
               </div>
-              <div className="selection-note">{selectedNode.data.type === 'macro'
+              <div className="selection-note">{selectedNode.data.type === 'graph-group'
+                ? 'Visual boundary only. Expand to inspect and edit every authoritative primitive and cable; audio is never compiled from this summary.'
+                : selectedNode.data.type === 'macro'
                 ? 'Macro value changes use a fixed 20 ms runtime ramp and do not compile topology. Default and detent edits republish the visible graph.'
                 : selectedNode.data.runtimeBound ? `Live value from native DSP runtime contract v${snapshot.contractVersion}.`
                   : 'Constructed graph block. Audible edits compile off-thread and crossfade into the live plugin at an audio-block boundary.'}</div>

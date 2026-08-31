@@ -6,6 +6,16 @@ export interface GraphClipboard { nodes: Node<PatchNodeData>[]; edges: Edge[] }
 export function copySelectedGraph(state: GraphState): GraphClipboard | null {
   const nodes = state.nodes.filter((node) => node.selected && node.data.role !== 'io').map((node) => structuredClone(node));
   if (!nodes.length) return null;
+  const selectedIds = new Set(nodes.map((node) => node.id));
+  const groupMembers = new Map<string, string[]>();
+  for (const node of state.nodes) if (node.data.presentationGroup) {
+    const members = groupMembers.get(node.data.presentationGroup.id) ?? [];
+    members.push(node.id); groupMembers.set(node.data.presentationGroup.id, members);
+  }
+  for (const node of nodes) {
+    const group = node.data.presentationGroup;
+    if (group && !groupMembers.get(group.id)?.every((id) => selectedIds.has(id))) delete node.data.presentationGroup;
+  }
   const ids = new Set(nodes.map((node) => node.id));
   const edges = state.edges.filter((edge) => ids.has(edge.source) && ids.has(edge.target)).map((edge) => structuredClone(edge));
   return { nodes, edges };
@@ -23,12 +33,20 @@ export function pasteGraph(state: GraphState, clipboard: GraphClipboard, offset 
   const nodeIds = new Set(state.nodes.map((node) => node.id));
   const edgeIds = new Set(state.edges.map((edge) => edge.id));
   const replacements = new Map<string, string>();
+  const groupIds = new Set(state.nodes.flatMap((node) => node.data.presentationGroup ? [node.data.presentationGroup.id] : []));
+  const groupReplacements = new Map<string, string>();
   const nodes = clipboard.nodes.map((source) => {
     const id = uniqueId(source.id, nodeIds);
     replacements.set(source.id, id);
+    const data = { ...structuredClone(source.data), runtimeBound: false };
+    if (data.presentationGroup) {
+      let groupId = groupReplacements.get(data.presentationGroup.id);
+      if (!groupId) { groupId = uniqueId(data.presentationGroup.id, groupIds); groupReplacements.set(data.presentationGroup.id, groupId); }
+      data.presentationGroup = { ...data.presentationGroup, id: groupId };
+    }
     return {
       ...structuredClone(source), id, position: { x: source.position.x + offset, y: source.position.y + offset },
-      selected: true, data: { ...structuredClone(source.data), runtimeBound: false },
+      selected: true, data,
     };
   });
   const edges = clipboard.edges.map((source) => ({

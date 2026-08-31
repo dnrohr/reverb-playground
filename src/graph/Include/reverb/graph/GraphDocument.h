@@ -91,9 +91,19 @@ struct Viewport final {
     friend bool operator==(const Viewport&, const Viewport&) = default;
 };
 
+struct LayoutGroup final {
+    std::string id;
+    std::string name;
+    bool collapsed { false };
+    std::vector<std::string> nodeIds;
+
+    friend bool operator==(const LayoutGroup&, const LayoutGroup&) = default;
+};
+
 struct Layout final {
     std::vector<NodePosition> nodes;
     Viewport viewport;
+    std::vector<LayoutGroup> groups;
 
     friend bool operator==(const Layout&, const Layout&) = default;
 };

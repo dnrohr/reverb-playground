@@ -265,10 +265,21 @@ button { font: inherit; }
 .connection-offer div { display: flex; gap: 7px; }
 .connection-offer button { padding: 6px 8px; border: 1px solid #56656e; border-radius: 3px; color: #d6dfe3; background: #1b242a; font-size: 8px; }
 .connection-offer button:first-child { border-color: var(--amber); color: var(--amber); }
+.group-name-dialog input { box-sizing: border-box; width: 100%; margin: 0 0 10px; padding: 8px; border: 1px solid #5c6b74; border-radius: 3px; color: var(--text); background: #0f1519; font: 10px var(--mono); }
+.group-name-dialog input:focus-visible { border-color: var(--cyan); outline: 1px solid var(--cyan); }
 .sum-insertion-preview { opacity: .72; filter: drop-shadow(0 0 5px rgba(242, 180, 78, .32)); }
 .react-flow__node.sum-insertion-preview { border-color: var(--amber); outline: 1px dashed var(--amber); outline-offset: 3px; }
 .react-flow__edge.sum-insertion-preview .react-flow__edge-path { stroke: var(--amber); stroke-width: 2; stroke-dasharray: 7 5; animation: sum-preview-dash 1s linear infinite; }
 @keyframes sum-preview-dash { to { stroke-dashoffset: -24; } }
+.react-flow__node.graph-group-member .patch-node { outline: 1px dotted rgba(189, 156, 255, .72); outline-offset: 4px; }
+.react-flow__node.graph-group-boundary .patch-node { width: 190px; min-height: 93px; border: 1px dashed var(--violet); border-left: 4px solid var(--violet); background: rgba(37, 30, 51, .96); box-shadow: 0 0 24px rgba(189, 156, 255, .15); }
+.react-flow__node.graph-group-boundary .node-type::after { content: ' · VISUAL GROUP'; color: var(--violet); }
+.group-inspector { margin: 12px 0; padding: 10px; border: 1px solid rgba(189, 156, 255, .5); border-radius: 5px; background: rgba(45, 34, 60, .32); }
+.group-inspector label span, .group-inspector small { display: block; color: var(--muted); font: 8px var(--mono); letter-spacing: .07em; }
+.group-inspector input { box-sizing: border-box; width: 100%; margin-top: 5px; padding: 7px; border: 1px solid #65567c; color: var(--text); background: #11151a; }
+.group-inspector p { color: var(--violet); font: 9px var(--mono); }
+.group-inspector div { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.group-inspector button { padding: 6px 7px; border: 1px solid #65567c; border-radius: 3px; color: #d9ccf4; background: #231b2e; font: 8px var(--mono); }
 .flow-wrap { min-width: 0; min-height: 0; position: relative; }
 .dock-reveal { position: absolute; z-index: 7; top: 62px; padding: 7px 9px; border: 1px solid #4d5e68; border-radius: 4px; color: #b8c5cc; background: rgba(20, 28, 33, .94); box-shadow: 0 5px 18px rgba(0, 0, 0, .28); font: 8px var(--mono); letter-spacing: .08em; }
 .dock-reveal:hover, .dock-reveal:focus-visible { border-color: var(--cyan); color: var(--cyan); outline: none; }

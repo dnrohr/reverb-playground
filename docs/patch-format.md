@@ -33,6 +33,14 @@ The current authoritative machine-readable definition is [`schemas/patch-v2.sche
 
 `semantic` determines sound and graph validity. `layout` determines presentation only. Moving a node or changing the viewport must not alter the compiled DSP graph.
 
+Schema v2 also permits an optional `layout.groups` array. A group contains
+`id`, `name`, `collapsed`, and a unique `nodeIds` array with at least two
+non-I/O members. It is presentation metadata only: the semantic node and
+connection arrays remain complete whether the group is expanded or collapsed.
+Current native and browser readers preserve non-empty groups and writers omit
+the field when no groups exist, retaining byte stability for existing factory
+patches and deterministic migration for older documents.
+
 ## Nodes and ports
 
 A node contains:

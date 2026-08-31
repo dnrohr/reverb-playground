@@ -36,6 +36,8 @@ export interface PatchNodeData extends Record<string, unknown> {
   userName?: string;
   presentation?: 'gravity';
   controlPreview?: { value: number; label: string };
+  presentationGroup?: { id: string; name: string; collapsed: boolean };
+  groupMemberIds?: string[];
 }
 
 export interface RuntimeNode {
