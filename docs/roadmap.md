@@ -1699,7 +1699,10 @@ Acceptance criteria:
   arranged without overlapping nodes or ambiguous cable destinations at the
   supported compact and desktop sizes.
 
-### M26.5 Generalize compound-block presentation
+### M26.5 Generalize compound-block presentation — Complete
+
+Status: Complete (2026-08-31). See
+[`compound-block-presentation.md`](compound-block-presentation.md).
 
 Tasks: turn the existing Matrix Mixer collapse/expand behavior into a reusable
 compound-presentation contract; define summaries, boundary ports, inspector

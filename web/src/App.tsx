@@ -44,7 +44,8 @@ import { PitchShiftVisualization } from './PitchShiftVisualization';
 import { parallelShimmerBranch, parallelShimmerTeaching } from './parallelShimmerTeaching';
 import { decorateSplitShimmerFocus, splitFeedbackShimmerTeaching, splitShimmerLoopKind, type SplitShimmerLoopFocus } from './splitFeedbackShimmerTeaching';
 import { decorateReverseCosmicFocus, reverseCosmicShimmerTeaching, type ReverseCosmicFocus } from './reverseCosmicShimmerTeaching';
-import { collapseMatrixMixer, inspectMatrixMixer, type MatrixMixerInspection } from './matrixMixerPresentation';
+import { inspectMatrixMixer, inspectMatrixMixers, type MatrixMixerInspection } from './matrixMixerPresentation';
+import { compoundMembers, projectCompoundPresentations } from './compoundPresentation';
 import { collapseGraphGroups, createGraphGroup, inspectGraphGroups, removeGraphGroup, renameGraphGroup, setGraphGroupCollapsed } from './graphGroups';
 import { addCableWaypoint, alignSelectedNodes, arrangeGraphGroup, cableLayout, clearCableWaypoints, setRoutingPortal, traceCable, updateCableWaypoint, type AlignmentCommand, type TraceDirection } from './graphRouting';
 import { RoutedEdge } from './RoutedEdge';
@@ -503,7 +504,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [activeLoopIndex, setActiveLoopIndex] = useState(0);
   const [splitLoopFocus, setSplitLoopFocus] = useState<SplitShimmerLoopFocus>('shifted');
   const [reverseCosmicFocus, setReverseCosmicFocus] = useState<ReverseCosmicFocus>('grains');
-  const [matrixCollapsed, setMatrixCollapsed] = useState(true);
+  const [collapsedCompoundIds, setCollapsedCompoundIds] = useState<Set<string>>(() => new Set(['matrix-mixer']));
   const [routeFocus, setRouteFocus] = useState<{ edgeId: string; direction: TraceDirection } | null>(null);
   const [tuningOpen, setTuningOpen] = useState(false);
   const [tuningBusy, setTuningBusy] = useState(false);
@@ -608,6 +609,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const loopInspection = useMemo(() => selectedNode
     ? selectedNode.data.type === 'graph-group'
       ? (selectedNode.data.groupMemberIds ?? []).map((nodeId) => inspectFeedbackLoops(nodes, edges, { nodeId })).find((inspection) => inspection.loops.length) ?? null
+      : selectedNode.data.type === 'compound-summary'
+        ? (selectedNode.data.compoundPresentation?.memberNodeIds ?? []).map((nodeId) => inspectFeedbackLoops(nodes, edges, { nodeId })).find((inspection) => inspection.loops.length) ?? null
       : inspectFeedbackLoops(nodes, edges, { nodeId: selectedNode.id })
     : selectedEdge ? inspectFeedbackLoops(nodes, edges, { edgeId: selectedEdge.id }) : null,
   [edges, nodes, selectedEdge, selectedNode]);
@@ -646,18 +649,19 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const routingFocusedGraph = useMemo(() => routeFocus
     ? traceCable({ nodes: displayedGraph.nodes, edges: displayedGraph.edges }, routeFocus.edgeId, routeFocus.direction)
     : displayedGraph, [displayedGraph, routeFocus]);
+  const matrixInspections = useMemo(() => inspectMatrixMixers(nodes), [nodes]);
   const matrixInspection = useMemo(() => inspectMatrixMixer(nodes), [nodes]);
-  const matrixIsCollapsed = Boolean(matrixInspection?.canCollapse && matrixCollapsed);
-  const matrixDisplayedGraph = useMemo(() => collapseMatrixMixer(
-    routingFocusedGraph.nodes, routingFocusedGraph.edges, matrixInspection, matrixIsCollapsed,
-  ), [routingFocusedGraph, matrixInspection, matrixIsCollapsed]);
+  const matrixIsCollapsed = Boolean(matrixInspection?.canCollapse && collapsedCompoundIds.has(matrixInspection.id));
+  const compoundDisplayedGraph = useMemo(() => projectCompoundPresentations(
+    routingFocusedGraph.nodes, routingFocusedGraph.edges, matrixInspections, collapsedCompoundIds,
+  ), [collapsedCompoundIds, matrixInspections, routingFocusedGraph]);
   const graphGroups = useMemo(() => inspectGraphGroups(nodes), [nodes]);
   const hasCollapsedGraphGroup = graphGroups.some((group) => group.collapsed);
   const groupDisplayedGraph = useMemo(() => collapseGraphGroups(
-    hasCollapsedGraphGroup ? routingFocusedGraph.nodes : matrixDisplayedGraph.nodes,
-    hasCollapsedGraphGroup ? routingFocusedGraph.edges : matrixDisplayedGraph.edges,
-  ), [routingFocusedGraph, hasCollapsedGraphGroup, matrixDisplayedGraph]);
-  const selectedGroupDisplayedGraph = useMemo(() => selectedNode?.data.type === 'graph-group' ? {
+    hasCollapsedGraphGroup ? routingFocusedGraph.nodes : compoundDisplayedGraph.nodes,
+    hasCollapsedGraphGroup ? routingFocusedGraph.edges : compoundDisplayedGraph.edges,
+  ), [routingFocusedGraph, hasCollapsedGraphGroup, compoundDisplayedGraph]);
+  const selectedGroupDisplayedGraph = useMemo(() => selectedNode && ['graph-group', 'compound-summary'].includes(selectedNode.data.type) ? {
     nodes: groupDisplayedGraph.nodes.map((node) => ({ ...node, selected: node.id === selectedNode.id })),
     edges: groupDisplayedGraph.edges,
   } : groupDisplayedGraph, [groupDisplayedGraph, selectedNode]);
@@ -864,7 +868,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   }, [applyGraph, edges, nodes, screenToFlowPosition]);
 
   const removeSelection = useCallback(() => {
-    if (selectedNode?.data.type === 'graph-group') { setGraphStatus({ kind: 'error', message: 'VISUAL GROUPS CANNOT BE DELETED / EXPAND OR UNGROUP IT' }); return; }
+    if (selectedNode?.data.type === 'graph-group' || selectedNode?.data.type === 'compound-summary') { setGraphStatus({ kind: 'error', message: 'PRESENTATION SUMMARIES CANNOT BE DELETED / EXPAND TO EDIT AUTHORITATIVE BLOCKS' }); return; }
     const protectedNode = nodes.find((node) => node.selected && (node.data.type === 'stereo-input' || node.data.type === 'stereo-output'));
     if (protectedNode) { setGraphStatus({ kind: 'error', message: `${protectedNode.data.label} is required and cannot be deleted.` }); return; }
     const before = { nodes, edges }; const after = deleteSelected(nodes, edges); if (after.nodes.length === nodes.length && after.edges.length === edges.length) return;
@@ -981,7 +985,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   }, [applyGraph, fitView, publishRuntimeParameters, setFlowViewport, snapshot]);
 
   const copySelection = useCallback(() => {
-    const collapsedMembers = selectedNode?.data.type === 'graph-group' ? new Set(selectedNode.data.groupMemberIds ?? []) : null;
+    const collapsedMembers = selectedNode?.data.type === 'graph-group' ? new Set(selectedNode.data.groupMemberIds ?? [])
+      : selectedNode?.data.type === 'compound-summary' ? compoundMembers(selectedNode) : null;
     const sourceNodes = collapsedMembers ? nodes.map((node) => ({ ...node, selected: collapsedMembers.has(node.id) })) : nodes;
     const copied = copySelectedGraph({ nodes: sourceNodes, edges });
     if (!copied) { setGraphStatus({ kind: 'error', message: 'SELECT ONE OR MORE NON-I/O BLOCKS TO COPY' }); return; }
@@ -1059,14 +1064,25 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     void fitView({ nodes: nodes.filter((node) => loop.nodeIds.includes(node.id)), padding: 0.22, duration: reducedMotion ? 0 : 350, maxZoom: 1.1 });
   }, [fitView, loopInspection, nodes, normalizedLoopIndex, reducedMotion]);
 
+  const setCompoundCollapsed = useCallback((id: string, collapsed: boolean) => {
+    const inspection = matrixInspections.find((candidate) => candidate.id === id); if (!inspection) return;
+    if (collapsed && !inspection.canCollapse) { setGraphStatus({ kind: 'error', message: inspection.reason.toUpperCase() }); return; }
+    setCollapsedCompoundIds((current) => { const next = new Set(current); if (collapsed) next.add(id); else next.delete(id); return next; });
+    if (!collapsed) {
+      setSelectedNode(null);
+      requestAnimationFrame(() => void fitView({ nodes: nodes.filter((node) => inspection.memberNodeIds.includes(node.id)), padding: 0.14, duration: reducedMotion ? 0 : 350, maxZoom: 1 }));
+    }
+    setGraphStatus({ kind: 'ok', message: `${collapsed ? 'COLLAPSED' : 'EXPANDED'} ${inspection.label.toUpperCase()} / PRESENTATION ONLY` });
+  }, [fitView, matrixInspections, nodes, reducedMotion]);
+
   const handleSelection = useCallback(({ nodes: selectedNodes, edges: selectedEdges }: OnSelectionChangeParams) => {
     const node = (selectedNodes[0] as Node<PatchNodeData> | undefined) ?? null;
     const edge = selectedEdges[0] ?? null;
-    if (!node && !edge && selectedNode?.data.type === 'graph-group') return;
+    if (!node && !edge && selectedNode && ['graph-group', 'compound-summary'].includes(selectedNode.data.type)) return;
     setSelectedNode(node);
     setSelectedEdge(edge);
     setActiveLoopIndex(0);
-    if (node) openContext(node.data.type === 'matrix-mixer' ? 'matrix' : 'node');
+    if (node) openContext('node');
     else if (edge) openContext('cable');
   }, [openContext, selectedNode]);
 
@@ -1173,7 +1189,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   }, [savePatch]);
 
   const teachingKey = selectedNode?.id ?? 'overview';
-  const showTeaching = teachingEnabled && dismissedTeaching !== teachingKey;
+  const showTeaching = teachingEnabled && selectedNode?.data.type !== 'compound-summary' && dismissedTeaching !== teachingKey;
   const toggleTeaching = useCallback(() => {
     setTeachingEnabled((current) => {
       const next = !current;
@@ -1335,21 +1351,21 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
             <div className="canvas-actions">
               {supportsAssistedTuning({ nodes, edges }) ? <button type="button" className="tuning-open-button"
                 aria-expanded={tuningOpen} onClick={() => setTuningOpen((open) => !open)}>TUNE</button> : null}
-              {matrixInspection ? <button type="button" className="matrix-view-toggle"
-                disabled={!matrixInspection.canCollapse}
-                title={matrixInspection.reason}
-                aria-pressed={!matrixIsCollapsed}
-                onClick={() => setMatrixCollapsed((collapsed) => !collapsed)}>
-                {!matrixInspection.canCollapse ? 'MATRIX EXPANDED / UNSAFE' : matrixIsCollapsed ? 'EXPAND MATRIX' : 'COLLAPSE MATRIX'}
-              </button> : null}
+              {matrixInspections.map((inspection) => { const collapsed = inspection.canCollapse && collapsedCompoundIds.has(inspection.id); return <button type="button" className="matrix-view-toggle"
+                key={inspection.id} disabled={!inspection.canCollapse} title={inspection.reason} aria-pressed={!collapsed}
+                onClick={() => setCompoundCollapsed(inspection.id, !collapsed)}>
+                {!inspection.canCollapse ? `${inspection.label.toUpperCase()} EXPANDED / UNSAFE` : `${collapsed ? 'EXPAND' : 'COLLAPSE'} ${inspection.label.toUpperCase()}`}
+              </button>; })}
               {matrixInspection ? <button type="button" className="matrix-view-toggle"
                 onClick={() => {
-                  setSelectedNode(matrixDisplayedGraph.nodes.find((node) => node.id === 'matrix-mixer-view')
-                  ?? { id: 'matrix-mixer-view', type: 'patchNode', position: { x: 0, y: 0 }, data: {
-                    label: 'Matrix Mixer 4×4', type: 'matrix-mixer', role: 'routing', runtimeBound: true,
+                  setSelectedNode(compoundDisplayedGraph.nodes.find((node) => node.id === `compound-view-${matrixInspection.id}`)
+                  ?? { id: `compound-view-${matrixInspection.id}`, type: 'patchNode', position: { x: 0, y: 0 }, data: {
+                    label: 'Matrix Mixer 4×4', type: 'compound-summary', role: 'routing', runtimeBound: false,
                     ports: [], parameters: [],
+                    compoundPresentation: { id: matrixInspection.id, kind: matrixInspection.kind, memberNodeIds: matrixInspection.memberNodeIds,
+                      authoritativeNodeCount: 28, internalConnectionCount: 28, summary: matrixInspection.summary, learn: matrixInspection.learn },
                   } });
-                  openContext('matrix');
+                  openContext('node');
                 }}>
                 INSPECT MATRIX
               </button> : null}
@@ -1419,8 +1435,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               defaultEdgeOptions={{ interactionWidth: 24 }}
               onSelectionChange={handleSelection}
               onNodeClick={(_event, node) => {
-                if ((node as Node<PatchNodeData>).data.type !== 'graph-group') return;
-                setSelectedNode(node as Node<PatchNodeData>); setSelectedEdge(null); openContext('node');
+                if (!['graph-group', 'compound-summary'].includes((node as Node<PatchNodeData>).data.type)) return;
+                const selected = node as Node<PatchNodeData>; setSelectedNode(selected); setSelectedEdge(null); openContext('node');
               }}
               onEdgeClick={(_event, edge) => { setSelectedEdge(edges.find((candidate) => candidate.id === edge.id) ?? edge); setSelectedNode(null); setActiveLoopIndex(0); openContext('cable'); }}
               onPaneClick={() => { setSelectedNode(null); setSelectedEdge(null); setRouteFocus(null); }}
@@ -1505,6 +1521,23 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                   <button type="button" onClick={() => changeSelectedGroup('ungroup')}>UNGROUP</button>
                 </div>
                 <small>Nested groups are intentionally unsupported.</small>
+              </section> : null}
+              {selectedNode.data.compoundPresentation ? <section className="compound-inspector" aria-label="Compound presentation authority">
+                <header><strong>COMPOUND SUMMARY</strong><span>PRESENTATION ONLY</span></header>
+                <p>{selectedNode.data.compoundPresentation.summary}</p>
+                <dl className="property-list">
+                  <div><dt>AUTHORITY</dt><dd>{selectedNode.data.compoundPresentation.authoritativeNodeCount} ordinary blocks</dd></div>
+                  <div><dt>INTERNAL</dt><dd>{selectedNode.data.compoundPresentation.internalConnectionCount} ordinary cables</dd></div>
+                  <div><dt>BOUNDARY</dt><dd>{selectedNode.data.ports.length} one-to-one ports</dd></div>
+                  <div><dt>ENERGY</dt><dd>maximum visible member lane; never summed twice</dd></div>
+                  <div><dt>LATENCY</dt><dd>compiled from expanded primitives</dd></div>
+                  <div><dt>WARNINGS</dt><dd>{diagnostics?.topologyPublication.failure || 'none active'}</dd></div>
+                </dl>
+                {matrixInspections.find((inspection) => inspection.id === selectedNode.data.compoundPresentation?.id)
+                  ? <MatrixMixerInspector inspection={matrixInspections.find((inspection) => inspection.id === selectedNode.data.compoundPresentation?.id)!} /> : null}
+                <div><button type="button" onClick={() => setCompoundCollapsed(selectedNode.data.compoundPresentation!.id, false)}>EXPAND IN PLACE</button>
+                  <button type="button" onClick={copySelection}>COPY {selectedNode.data.compoundPresentation.authoritativeNodeCount} PRIMITIVES</button></div>
+                <small>The summary cannot be edited or compiled. Expand to change coefficients, cables, or automation.</small>
               </section> : null}
               {selectedNode.data.type === 'pitch-shift' ? <PitchShiftVisualization
                 parameters={selectedNode.data.parameters}
@@ -1620,7 +1653,9 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <button type="button" disabled={!graphHistory.undo.length} onClick={undoGraph}>UNDO</button>
                 <button type="button" disabled={!graphHistory.redo.length} onClick={redoGraph}>REDO</button>
               </div>
-              <div className="selection-note">{selectedNode.data.type === 'graph-group'
+              <div className="selection-note">{selectedNode.data.type === 'compound-summary'
+                ? 'Navigation summary only. Saved, executable, diagnostic, and automation authority remains with the expanded ordinary blocks.'
+                : selectedNode.data.type === 'graph-group'
                 ? 'Visual boundary only. Expand to inspect and edit every authoritative primitive and cable; audio is never compiled from this summary.'
                 : selectedNode.data.type === 'macro'
                 ? 'Macro value changes use a fixed 20 ms runtime ramp and do not compile topology. Default and detent edits republish the visible graph.'
@@ -1698,6 +1733,12 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
           <section id="context-panel-learn" className="context-panel context-learn" role="tabpanel" aria-labelledby="context-tab-learn" hidden={contextTab !== 'learn'}>
             <div className="context-evidence-heading"><strong>ARCHITECTURE &amp; LISTENING</strong><span>DOCUMENTED / EXPLANATORY</span></div>
+            {selectedNode?.data.compoundPresentation && teachingEnabled ? <section className="compound-learn-card" aria-label="Compound presentation explanation">
+              <header><span>{selectedNode.data.label.toUpperCase()}</span><strong>EXPANDABLE VIEW</strong></header>
+              <p>{selectedNode.data.compoundPresentation.learn}</p>
+              <dl><div><dt>SUMMARY</dt><dd>navigation and aggregate evidence</dd></div><div><dt>EXPANDED</dt><dd>saved and executable authority</dd></div></dl>
+              <button type="button" onClick={() => { setContextTab('inspect'); setCompoundCollapsed(selectedNode.data.compoundPresentation!.id, false); }}>EXPAND + INSPECT PRIMITIVES</button>
+            </section> : null}
             {activePatchId === 'dense-figure-eight' && teachingEnabled ? <DenseFigureEightTeaching /> : null}
             {activePatchId === 'four-line-dense-room' && teachingEnabled ? <FourLineFdnTeaching collapsed={matrixIsCollapsed} /> : null}
             {activePatchId === 'safe-parallel-shimmer' && teachingEnabled ? <ParallelShimmerTeaching selectedNodeId={selectedNode?.id} /> : null}

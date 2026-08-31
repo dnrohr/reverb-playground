@@ -1502,3 +1502,25 @@ Results:
   [portal layout](../artifacts/ui/m26-4-large-graph-routing/reverse-cosmic-portals.png),
   [workflow](../artifacts/ui/m26-4-large-graph-routing/routing-focus-workflow.mp4), and
   [compact](../artifacts/ui/m26-4-large-graph-routing/routing-640x400.png).
+
+## M26.5 verification
+
+- A reusable compound contract now separates recognizer facts, temporary
+  boundary projection, inspector/Learn content, and immutable primitive edit
+  authority. Summary nodes are non-runtime, parameterless, non-deletable, and
+  absent from patch and host state.
+- Matrix Mixer qualifies the contract with its exact 16 Gains and 12 Sums.
+  Collapse hides those 28 stable primitives; expansion reveals the identical
+  objects and positions. Amplifying edits refuse collapse without normalization.
+- All 20 real audio/control boundary cables retain their IDs, typed data,
+  routing, Energy, feedback, safety, focus, latency, and warning relationships;
+  the former eight synthetic Matrix edges are gone.
+- Summary copy selects the 28 authoritative primitives and internal cables.
+  Paste assigns fresh ordinary IDs and qualifies an independent expandable
+  Matrix copy; partial structures remain expanded ordinary graphs.
+- Browser QA exercises summary inspection, Matrix evidence, Learn explanation,
+  expand-in-place, copy/paste, independent re-collapse, and 640×400 resizing.
+  Evidence: [summary](../artifacts/ui/m26-5-compound-presentation/matrix-summary-inspector.png),
+  [expanded authority](../artifacts/ui/m26-5-compound-presentation/matrix-expanded-authority.png),
+  [workflow](../artifacts/ui/m26-5-compound-presentation/compound-expand-copy.mp4), and
+  [compact](../artifacts/ui/m26-5-compound-presentation/compound-640x400.png).

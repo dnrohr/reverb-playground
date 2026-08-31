@@ -38,6 +38,15 @@ export interface PatchNodeData extends Record<string, unknown> {
   controlPreview?: { value: number; label: string };
   presentationGroup?: { id: string; name: string; collapsed: boolean };
   groupMemberIds?: string[];
+  compoundPresentation?: {
+    id: string;
+    kind: string;
+    memberNodeIds: string[];
+    authoritativeNodeCount: number;
+    internalConnectionCount: number;
+    summary: string;
+    learn: string;
+  };
 }
 
 export interface CableLayout {

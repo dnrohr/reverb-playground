@@ -626,11 +626,25 @@ button { font: inherit; }
   .grain-window-b b { left: 68%; }
 }
 
-.matrix-mixer-compound .patch-node {
-  min-width: 220px;
+.react-flow__node.compound-summary-boundary .patch-node {
+  width: 210px;
+  min-height: 112px;
+  border-style: double;
   border-color: #c28cff;
   box-shadow: 0 0 0 1px rgb(194 140 255 / 28%), 0 16px 35px rgb(0 0 0 / 30%);
 }
+.react-flow__node.compound-summary-boundary .node-type::after { content: ' · EXPANDABLE'; color: #c28cff; }
+.compound-inspector, .compound-learn-card { display: grid; gap: 9px; margin-top: 12px; padding: 11px; border: 1px solid #74588b; background: #14121a; }
+.compound-inspector > header, .compound-learn-card > header { display: flex; justify-content: space-between; gap: 8px; color: #d9b8f0; font: 10px var(--mono); letter-spacing: .08em; }
+.compound-inspector > header span, .compound-learn-card > header strong { color: var(--amber); }
+.compound-inspector > p, .compound-learn-card p { margin: 0; color: #c4ccd1; font-size: 11px; line-height: 1.45; }
+.compound-inspector > div { display: flex; flex-wrap: wrap; gap: 7px; }
+.compound-inspector .property-list dd { max-width: 58%; white-space: normal; overflow-wrap: anywhere; line-height: 1.35; }
+.compound-inspector > small { color: #929da5; font-size: 9px; line-height: 1.4; }
+.compound-learn-card dl { display: grid; gap: 5px; margin: 0; }
+.compound-learn-card dl div { display: flex; justify-content: space-between; gap: 10px; font-size: 9px; }
+.compound-learn-card dt { color: #9b7db2; }
+.compound-learn-card dd { margin: 0; color: #cbd4d9; text-align: right; }
 .matrix-view-toggle { border-color: #8d69aa !important; color: #d9b8f0 !important; }
 .matrix-mixer-inspector { margin: 14px 0; padding: 12px; border: 1px solid #59636d; background: #11171c; }
 .matrix-mixer-inspector header { display: flex; justify-content: space-between; gap: 8px; color: #aeb9c2; font-size: 10px; letter-spacing: .08em; }
