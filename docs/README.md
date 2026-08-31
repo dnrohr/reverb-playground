@@ -54,6 +54,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Collapsible graph groups](collapsible-graph-groups.md) - named layout-only groups, explicit typed boundaries, loop reveal, persistence, and nesting limits.
 - [Large-graph routing and layout](large-graph-routing-and-layout.md) - persistent waypoints, paired portals, deterministic arrangement, and directed trace/focus tools.
 - [Compound-block presentation](compound-block-presentation.md) - reusable summary boundaries, expanded primitive authority, evidence aggregation, and Matrix qualification.
+- [Reusable subpatches](reusable-subpatches.md) - pinned definition provenance over expanded primitives, explicit ports, recovery, and Diffuse Delay qualification.
 - [Feedback-loop highlighting](feedback-loop-highlighting.md) - bounded directed-cycle analysis, active/alternate styling, and topology-derived loop facts.
 - [Impulse audition and capture](impulse-audition-and-capture.md) - safe stimulus, visible bounds, live-input isolation, lock-free capture publication, and deterministic repeats.
 - [Stereo impulse and decay view](stereo-impulse-and-decay-view.md) - accessible channel waveforms, Schroeder decay, bounded zoom/pan, T30 estimates, and refusal explanations.

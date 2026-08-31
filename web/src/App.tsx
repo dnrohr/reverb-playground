@@ -51,6 +51,7 @@ import { addCableWaypoint, alignSelectedNodes, arrangeGraphGroup, cableLayout, c
 import { RoutedEdge } from './RoutedEdge';
 import { assistedTuningSuggestions, createAssistedTuningPreview, supportsAssistedTuning, type AssistedTuningSuggestionId } from './assistedTuning';
 import { editorCommandBarHeight, measurementBarHeight } from './workspaceChrome';
+import { detachSubpatchInstance, instantiateSubpatch, subpatchDefinitions, subpatchInstanceStatus } from './subpatches';
 import { captureRevisionState, contextTabFor, emphasizeAnalyzeLayout, shouldPollRuntimeDiagnostics, type ContextIntent, type ContextTab } from './contextDock';
 import {
   arrangementPresentation,
@@ -867,6 +868,15 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     applyGraph(after); setSelectedNode(node); setGraphHistory((history) => commitGraphEdit(history, `Create ${node.data.label}`, before, after)); setGraphStatus({ kind: 'ok', message: `CREATED ${node.id} / DRAFT GRAPH` });
   }, [applyGraph, edges, nodes, screenToFlowPosition]);
 
+  const addSubpatch = useCallback((definitionId: string) => {
+    const definition = subpatchDefinitions.find((candidate) => candidate.id === definitionId); if (!definition) return;
+    const before = { nodes, edges }; const center = screenToFlowPosition({ x: window.innerWidth * .5, y: window.innerHeight * .5 });
+    const existingInstances = nodes.filter((node) => node.data.subpatchInstance).length / 2;
+    const after = instantiateSubpatch(before, definition, { x: center.x - 220, y: center.y + 130 + existingInstances * 70 });
+    applyGraph(after); setGraphHistory((history) => commitGraphEdit(history, `Create ${definition.name} subpatch`, before, after));
+    setActivePatchId('custom'); setGraphStatus({ kind: 'ok', message: `CREATED ${definition.name.toUpperCase()} / 2 EXPANDED PRIMITIVES / UNDO AVAILABLE` });
+  }, [applyGraph, edges, nodes, screenToFlowPosition]);
+
   const removeSelection = useCallback(() => {
     if (selectedNode?.data.type === 'graph-group' || selectedNode?.data.type === 'compound-summary') { setGraphStatus({ kind: 'error', message: 'PRESENTATION SUMMARIES CANNOT BE DELETED / EXPAND TO EDIT AUTHORITATIVE BLOCKS' }); return; }
     const protectedNode = nodes.find((node) => node.selected && (node.data.type === 'stereo-input' || node.data.type === 'stereo-output'));
@@ -1031,6 +1041,13 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         action === 'ungroup' ? 'Ungroup blocks' : action === 'rename' ? 'Rename group' : `${action} group`, before, after));
       setActivePatchId('custom'); setGraphStatus({ kind: 'ok', message: `${action.toUpperCase()} GROUP / LAYOUT ONLY / AUDIO GRAPH UNCHANGED` });
     } catch (reason) { setGraphStatus({ kind: 'error', message: reason instanceof Error ? reason.message.toUpperCase() : 'GROUP EDIT FAILED' }); }
+  }, [applyGraph, edges, nodes, selectedNode]);
+
+  const detachSelectedSubpatch = useCallback(() => {
+    const instance = selectedNode?.data.subpatchInstance; if (!instance) return;
+    const before = { nodes, edges }; const after = detachSubpatchInstance(before, instance.id); applyGraph(after);
+    setGraphHistory((history) => commitGraphEdit(history, 'Detach subpatch instance', before, after));
+    setActivePatchId('custom'); setGraphStatus({ kind: 'ok', message: `DETACHED ${instance.definitionName.toUpperCase()} / PRIMITIVES AND AUDIO UNCHANGED / UNDO AVAILABLE` });
   }, [applyGraph, edges, nodes, selectedNode]);
 
   const commitLayoutEdit = useCallback((label: string, transform: (state: GraphState) => GraphState) => {
@@ -1334,6 +1351,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               ))}
             </section>
           ))}
+          <section className="module-group subpatch-library">
+            <h2>SUBPATCHES</h2>
+            {subpatchDefinitions.map((definition) => <button className="module-item subpatch-item" key={definition.id} type="button"
+              title={definition.description} onClick={() => addSubpatch(definition.id)}><span className="module-glyph" aria-hidden="true" /><span>{definition.name}</span><small>v{definition.version} · expands to 2</small></button>)}
+          </section>
           <div className="signal-legend" aria-label="Cable styles">
             <div><span className="legend-line audio-line" /> AUDIO / SOLID</div>
             <div><span className="legend-line control-line" /> CONTROL / DASHED</div>
@@ -1538,6 +1560,18 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <div><button type="button" onClick={() => setCompoundCollapsed(selectedNode.data.compoundPresentation!.id, false)}>EXPAND IN PLACE</button>
                   <button type="button" onClick={copySelection}>COPY {selectedNode.data.compoundPresentation.authoritativeNodeCount} PRIMITIVES</button></div>
                 <small>The summary cannot be edited or compiled. Expand to change coefficients, cables, or automation.</small>
+              </section> : null}
+              {selectedNode.data.subpatchInstance ? <section className="subpatch-inspector" aria-label="Reusable subpatch instance">
+                <header><strong>REUSABLE SUBPATCH</strong><span>PINNED DEFINITION</span></header>
+                <p>{selectedNode.data.subpatchInstance.definitionName} v{selectedNode.data.subpatchInstance.definitionVersion}</p>
+                <dl className="property-list">
+                  <div><dt>INSTANCE</dt><dd>{selectedNode.data.subpatchInstance.id}</dd></div>
+                  <div><dt>AUTHORITY</dt><dd>{selectedNode.data.subpatchInstance.memberNodeIds.length} expanded ordinary blocks</dd></div>
+                  <div><dt>PORTS</dt><dd>{selectedNode.data.subpatchInstance.ports.map((port) => `${port.direction === 'input' ? 'IN' : 'OUT'} ${port.id} → ${port.nodeId}.${port.portId}`).join(' · ')}</dd></div>
+                  <div><dt>STATUS</dt><dd>{subpatchInstanceStatus(selectedNode.data.subpatchInstance, nodes).message}</dd></div>
+                </dl>
+                <button type="button" onClick={detachSelectedSubpatch}>DETACH TO ORDINARY BLOCKS</button>
+                <small>Compilation already uses these visible primitives. Definition changes never update this saved instance silently.</small>
               </section> : null}
               {selectedNode.data.type === 'pitch-shift' ? <PitchShiftVisualization
                 parameters={selectedNode.data.parameters}

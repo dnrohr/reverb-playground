@@ -1659,7 +1659,10 @@ Acceptance criteria:
 - Nested groups are either explicitly bounded and tested or rejected with a
   clear reason; no accidental partial support is shipped.
 
-### M26.3 Define reusable subpatches
+### M26.3 Define reusable subpatches — Complete
+
+Status: Complete (2026-08-31). See
+[`reusable-subpatches.md`](reusable-subpatches.md).
 
 Tasks: design named reusable graph definitions with explicit mono audio/control
 ports and instances; choose copy, linked-instance, and parameter-exposure

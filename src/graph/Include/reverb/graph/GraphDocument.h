@@ -107,12 +107,30 @@ struct LayoutCable final {
     std::optional<std::string> portalName;
     friend bool operator==(const LayoutCable&, const LayoutCable&) = default;
 };
+struct SubpatchPortBinding final {
+    std::string id;
+    SignalType signal { SignalType::audio };
+    PortDirection direction { PortDirection::input };
+    std::string nodeId;
+    std::string portId;
+    friend bool operator==(const SubpatchPortBinding&, const SubpatchPortBinding&) = default;
+};
+struct LayoutSubpatchInstance final {
+    std::string id;
+    std::string definitionId;
+    std::uint32_t definitionVersion { 1 };
+    std::string definitionName;
+    std::vector<std::string> memberNodeIds;
+    std::vector<SubpatchPortBinding> ports;
+    friend bool operator==(const LayoutSubpatchInstance&, const LayoutSubpatchInstance&) = default;
+};
 
 struct Layout final {
     std::vector<NodePosition> nodes;
     Viewport viewport;
     std::vector<LayoutGroup> groups;
     std::vector<LayoutCable> cables;
+    std::vector<LayoutSubpatchInstance> subpatches;
 
     friend bool operator==(const Layout&, const Layout&) = default;
 };

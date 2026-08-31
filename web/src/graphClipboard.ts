@@ -15,6 +15,11 @@ export function copySelectedGraph(state: GraphState): GraphClipboard | null {
   for (const node of nodes) {
     const group = node.data.presentationGroup;
     if (group && !groupMembers.get(group.id)?.every((id) => selectedIds.has(id))) delete node.data.presentationGroup;
+    const instance = node.data.subpatchInstance;
+    if (instance && !instance.memberNodeIds.every((id) => selectedIds.has(id))) {
+      delete node.data.subpatchInstance;
+      node.className = node.className?.replace(/\s*subpatch-member\b/g, '');
+    }
   }
   const ids = new Set(nodes.map((node) => node.id));
   const edges = state.edges.filter((edge) => ids.has(edge.source) && ids.has(edge.target)).map((edge) => structuredClone(edge));
@@ -35,6 +40,8 @@ export function pasteGraph(state: GraphState, clipboard: GraphClipboard, offset 
   const replacements = new Map<string, string>();
   const groupIds = new Set(state.nodes.flatMap((node) => node.data.presentationGroup ? [node.data.presentationGroup.id] : []));
   const groupReplacements = new Map<string, string>();
+  const instanceIds = new Set(state.nodes.flatMap((node) => node.data.subpatchInstance ? [node.data.subpatchInstance.id] : []));
+  const instanceReplacements = new Map<string, string>();
   const nodes = clipboard.nodes.map((source) => {
     const id = uniqueId(source.id, nodeIds);
     replacements.set(source.id, id);
@@ -49,6 +56,15 @@ export function pasteGraph(state: GraphState, clipboard: GraphClipboard, offset 
       selected: true, data,
     };
   });
+  for (const node of nodes) if (node.data.subpatchInstance) {
+    const source = node.data.subpatchInstance;
+    let instanceId = instanceReplacements.get(source.id);
+    if (!instanceId) { instanceId = uniqueId(source.id, instanceIds); instanceReplacements.set(source.id, instanceId); }
+    node.data.subpatchInstance = { ...source, id: instanceId,
+      memberNodeIds: source.memberNodeIds.map((id) => replacements.get(id)!).filter(Boolean),
+      ports: source.ports.map((port) => ({ ...port, nodeId: replacements.get(port.nodeId)! })).filter((port) => port.nodeId),
+    };
+  }
   const edges = clipboard.edges.map((source) => {
     const copy = structuredClone(source);
     const layout = copy.data?.layout as { waypoints?: Array<{ x: number; y: number }> } | undefined;

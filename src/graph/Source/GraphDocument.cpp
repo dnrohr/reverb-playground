@@ -188,6 +188,35 @@ ValidationResult validate(const GraphDocument& document)
             result.errors.push_back("layout cable '" + cable.edgeId + "' has empty routing metadata");
     }
 
+    std::unordered_set<std::string> subpatchIds;
+    std::unordered_set<std::string> subpatchMemberIds;
+    for (const auto& instance : document.layout.subpatches) {
+        if (instance.id.empty() || !subpatchIds.insert(instance.id).second)
+            result.errors.push_back("subpatch instance IDs must be non-empty and unique");
+        if (instance.definitionId.empty() || instance.definitionVersion < 1 || instance.definitionName.empty() || instance.definitionName.size() > 64)
+            result.errors.push_back("subpatch instance '" + instance.id + "' has invalid definition identity");
+        if (instance.memberNodeIds.empty() || instance.ports.empty())
+            result.errors.push_back("subpatch instance '" + instance.id + "' requires members and explicit ports");
+        std::unordered_set<std::string> localMembers;
+        for (const auto& nodeId : instance.memberNodeIds) {
+            if (!nodeIds.contains(nodeId) || !localMembers.insert(nodeId).second || !subpatchMemberIds.insert(nodeId).second)
+                result.errors.push_back("subpatch instance '" + instance.id + "' has an invalid, duplicate, or shared member '" + nodeId + "'");
+            const auto member = std::ranges::find(document.nodes, nodeId, &Node::id);
+            if (member != document.nodes.end() && (member->type == "stereo-input" || member->type == "stereo-output"))
+                result.errors.push_back("subpatch instance '" + instance.id + "' cannot contain I/O node '" + nodeId + "'");
+        }
+        std::unordered_set<std::string> localPorts;
+        for (const auto& binding : instance.ports) {
+            if (binding.id.empty() || !localPorts.insert(binding.id).second || !localMembers.contains(binding.nodeId)) {
+                result.errors.push_back("subpatch instance '" + instance.id + "' has an invalid explicit port '" + binding.id + "'");
+                continue;
+            }
+            const auto actual = ports.find(portKey(binding.nodeId, binding.portId));
+            if (actual == ports.end() || actual->second.port->signal != binding.signal || actual->second.port->direction != binding.direction)
+                result.errors.push_back("subpatch instance '" + instance.id + "' port '" + binding.id + "' does not match its primitive endpoint");
+        }
+    }
+
     if (document.layout.viewport.zoom <= 0.0)
         result.errors.push_back("viewport zoom must be greater than zero");
 

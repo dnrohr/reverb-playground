@@ -34,6 +34,7 @@ function canonicalGraph(state: GraphState, includeLayout: boolean) {
       ...(includeLayout ? {
         position: { x: node.position.x, y: node.position.y },
         presentationGroup: node.data.presentationGroup ? { ...node.data.presentationGroup } : undefined,
+        subpatchInstance: node.data.subpatchInstance ? structuredClone(node.data.subpatchInstance) : undefined,
       } : {}),
       ports: node.data.ports.map(({ id, signal, direction }) => ({ id, signal, direction })),
       parameters: node.data.parameters.map(({ id, value, unit, modulation }) => ({ id, value, unit, modulation: modulation ? { ...modulation } : undefined })),

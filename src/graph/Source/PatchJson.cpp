@@ -268,6 +268,23 @@ GraphDocument parsePatchJson(const std::string_view jsonText)
             document.layout.cables.push_back(std::move(cable));
         }
     }
+    if (const auto subpatches = layout.find("subpatches"); subpatches != layout.end()) {
+        for (const auto& instanceJson : *subpatches) {
+            LayoutSubpatchInstance instance {
+                .id = instanceJson.at("id").get<std::string>(),
+                .definitionId = instanceJson.at("definitionId").get<std::string>(),
+                .definitionVersion = instanceJson.at("definitionVersion").get<std::uint32_t>(),
+                .definitionName = instanceJson.at("definitionName").get<std::string>(),
+                .memberNodeIds = instanceJson.at("memberNodeIds").get<std::vector<std::string>>(),
+            };
+            for (const auto& portJson : instanceJson.at("ports")) instance.ports.push_back({
+                .id = portJson.at("id").get<std::string>(), .signal = parseSignalType(portJson.at("signal").get<std::string>()),
+                .direction = parseDirection(portJson.at("direction").get<std::string>()),
+                .nodeId = portJson.at("nodeId").get<std::string>(), .portId = portJson.at("portId").get<std::string>(),
+            });
+            document.layout.subpatches.push_back(std::move(instance));
+        }
+    }
 
     return document;
 }
@@ -340,6 +357,16 @@ std::string writePatchJson(const GraphDocument& document)
         cableArray.push_back(std::move(entry));
     }
     if (!cableArray.empty()) layoutJson["cables"] = std::move(cableArray);
+    Json subpatchArray = Json::array();
+    for (const auto& instance : document.layout.subpatches) {
+        Json ports = Json::array();
+        for (const auto& port : instance.ports) ports.push_back({ { "id", port.id }, { "signal", toString(port.signal) },
+            { "direction", toString(port.direction) }, { "nodeId", port.nodeId }, { "portId", port.portId } });
+        subpatchArray.push_back({ { "id", instance.id }, { "definitionId", instance.definitionId },
+            { "definitionVersion", instance.definitionVersion }, { "definitionName", instance.definitionName },
+            { "memberNodeIds", instance.memberNodeIds }, { "ports", std::move(ports) } });
+    }
+    if (!subpatchArray.empty()) layoutJson["subpatches"] = std::move(subpatchArray);
 
     const Json root {
         { "schemaVersion", GraphDocument::schemaVersion },

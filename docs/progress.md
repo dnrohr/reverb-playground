@@ -1524,3 +1524,28 @@ Results:
   [expanded authority](../artifacts/ui/m26-5-compound-presentation/matrix-expanded-authority.png),
   [workflow](../artifacts/ui/m26-5-compound-presentation/compound-expand-copy.mp4), and
   [compact](../artifacts/ui/m26-5-compound-presentation/compound-640x400.png).
+
+## M26.3 verification
+
+- The reusable-subpatch contract chooses immutable versioned definitions with
+  pinned copy semantics, explicit mono port bindings, expanded primitive edit
+  authority, structural recursion rejection, and safe missing-definition
+  recovery. See [reusable subpatches](reusable-subpatches.md).
+- The first definition, Diffuse Delay v1, places an ordinary All-pass, Delay,
+  and cable. Both blocks remain individually editable and compiler-visible;
+  the teal treatment communicates shared provenance without hiding processing.
+- Optional schema-v2 layout metadata round-trips through web save/load and
+  native host state. Closed validation rejects shared/missing members or port
+  bindings that disagree with their primitive endpoint.
+- Clipboard paste assigns fresh member, cable, binding, and instance IDs.
+  Detach removes only provenance in one undoable action. Missing definitions
+  retain audible expanded primitives rather than regenerating or muting them.
+- Native qualification requires identical compilation schedule, delay-memory
+  allocation, latency, logical signal count, and rendered samples with and
+  without provenance metadata.
+- Browser QA covers placement, independent copy, inspector authority, detach,
+  undo, save-ready state, and compact resizing. Evidence:
+  [instance](../artifacts/ui/m26-3-reusable-subpatches/diffuse-delay-instance.png),
+  [inspector](../artifacts/ui/m26-3-reusable-subpatches/subpatch-inspector.png),
+  [workflow](../artifacts/ui/m26-3-reusable-subpatches/subpatch-create-copy-detach.mp4), and
+  [compact](../artifacts/ui/m26-3-reusable-subpatches/subpatch-640x400.png).

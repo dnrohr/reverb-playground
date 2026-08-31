@@ -47,6 +47,14 @@ export interface PatchNodeData extends Record<string, unknown> {
     summary: string;
     learn: string;
   };
+  subpatchInstance?: {
+    id: string;
+    definitionId: string;
+    definitionVersion: number;
+    definitionName: string;
+    memberNodeIds: string[];
+    ports: Array<{ id: string; signal: 'audio' | 'control'; direction: 'input' | 'output'; nodeId: string; portId: string }>;
+  };
 }
 
 export interface CableLayout {

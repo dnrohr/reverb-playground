@@ -208,6 +208,34 @@ TEST_CASE("Cable routing layout round trips and validates independently of graph
     REQUIRE_FALSE(validate(empty).valid());
 }
 
+TEST_CASE("Pinned reusable subpatch metadata round trips over authoritative primitives")
+{
+    using namespace reverb::graph;
+    auto graph = parsePatchJson(readFixture("patches/valid/barr-minimal.json"));
+    graph.nodes.push_back(Node { "delay-1", "delay", {
+        Port { "in", SignalType::audio, PortDirection::input },
+        Port { "out", SignalType::audio, PortDirection::output },
+    }, { Parameter { "delay", 31.1, "milliseconds" } } });
+    graph.layout.nodes.push_back(NodePosition { "delay-1", 500.0, 100.0 });
+    const auto semanticNodes = graph.nodes; const auto semanticConnections = graph.connections;
+    graph.layout.subpatches = { LayoutSubpatchInstance { "diffuser-1", "rp.diffuse-delay", 1, "Diffuse Delay",
+        { "allpass-1", "delay-1" }, {
+            SubpatchPortBinding { "in", SignalType::audio, PortDirection::input, "allpass-1", "in" },
+            SubpatchPortBinding { "out", SignalType::audio, PortDirection::output, "delay-1", "out" },
+        } } };
+    const auto validation = validate(graph); CAPTURE(validation.errors); REQUIRE(validation.valid());
+    const auto restored = parsePatchJson(writePatchJson(graph));
+    REQUIRE(restored.layout.subpatches == graph.layout.subpatches);
+    REQUIRE(restored.nodes == semanticNodes); REQUIRE(restored.connections == semanticConnections);
+
+    auto shared = graph; shared.layout.subpatches.push_back(graph.layout.subpatches.front()); shared.layout.subpatches.back().id = "diffuser-2";
+    REQUIRE_FALSE(validate(shared).valid());
+    auto badPort = graph; badPort.layout.subpatches.front().ports.front().portId = "missing";
+    REQUIRE_FALSE(validate(badPort).valid());
+    auto ioMember = graph; ioMember.layout.subpatches.front().memberNodeIds.push_back("input");
+    REQUIRE_FALSE(validate(ioMember).valid());
+}
+
 TEST_CASE("Validator rejects zero-delay cycles and accepts delayed feedback")
 {
     using namespace reverb::graph;

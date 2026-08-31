@@ -85,6 +85,26 @@ TEST_CASE("Acyclic scheduling is deterministic across document ordering")
     REQUIRE(secondResult.schedule == firstResult.schedule);
 }
 
+TEST_CASE("Pinned subpatch provenance compiles identically to its authoritative expanded graph")
+{
+    auto manual = gainSumGraph(); auto reusable = manual;
+    reusable.layout.subpatches = { LayoutSubpatchInstance { "branch-1", "test.gain-sum", 1, "Gain Sum Branch",
+        { "gain", "sum" }, {
+            SubpatchPortBinding { "in", SignalType::audio, PortDirection::input, "gain", "in" },
+            SubpatchPortBinding { "out", SignalType::audio, PortDirection::output, "sum", "out" },
+        } } };
+    auto plain = compileAcyclicGraph(manual, 48'000.0, 64); auto tagged = compileAcyclicGraph(reusable, 48'000.0, 64);
+    REQUIRE(plain.valid()); REQUIRE(tagged.valid()); REQUIRE(tagged.schedule == plain.schedule);
+    REQUIRE(tagged.delayMemory.lineCount == plain.delayMemory.lineCount);
+    REQUIRE(tagged.delayMemory.allocatedBytes == plain.delayMemory.allocatedBytes);
+    REQUIRE(tagged.latency.totalSamples == plain.latency.totalSamples);
+    REQUIRE(tagged.planDiagnostics.logicalSignalCount == plain.planDiagnostics.logicalSignalCount);
+    std::array<float, 64> left {}; std::array<float, 64> right {}; left[0] = 1.0F; right[0] = 0.5F;
+    std::array<float, 64> plainLeft {}, plainRight {}, taggedLeft {}, taggedRight {};
+    plain.runtime->process(left, right, plainLeft, plainRight); tagged.runtime->process(left, right, taggedLeft, taggedRight);
+    REQUIRE(taggedLeft == plainLeft); REQUIRE(taggedRight == plainRight);
+}
+
 TEST_CASE("Constructed gain and sum graph matches direct reference calculation")
 {
     auto compiled = compileAcyclicGraph(gainSumGraph(), 48'000.0, 8);
