@@ -43,12 +43,15 @@ public:
     void triggerImpulse() noexcept;
     void setWetGain(float linearGain) noexcept;
     void setDryGain(float linearGain) noexcept;
+    void setComparisonGain(float linearGain) noexcept;
+    void setComparisonAudition(float wetGain, float dryGain, float matchGain, bool enabled) noexcept;
     // Source compatibility for hosts/tests built against pre-M18.5; no longer exposed by the UI.
     void setMasterGain(float linearGain) noexcept { setWetGain(linearGain); }
     void setEmergencyMuted(bool muted) noexcept;
     void requestSafetyReset() noexcept;
     [[nodiscard]] float wetGain() const noexcept;
     [[nodiscard]] float dryGain() const noexcept;
+    [[nodiscard]] float comparisonGain() const noexcept;
     [[nodiscard]] float masterGain() const noexcept { return wetGain(); }
     [[nodiscard]] bool isEmergencyMuted() const noexcept;
     [[nodiscard]] bool isSafetyLatched() const noexcept;
@@ -59,6 +62,7 @@ public:
     [[nodiscard]] juce::String energyTelemetryJson() const;
     [[nodiscard]] juce::String runtimeDiagnosticsJson() const;
     [[nodiscard]] juce::String audioFileTransportJson() const;
+    [[nodiscard]] juce::String auditionGainsJson() const;
     [[nodiscard]] juce::String publishGraphJson(const juce::String& patchJson);
     [[nodiscard]] juce::String previewGraphJson(const juce::String& patchJson);
     [[nodiscard]] juce::String storePatchStateJson(const juce::String& patchJson);
@@ -121,6 +125,11 @@ private:
     std::atomic<float> dryGainTarget_ { 0.0F };
     float wetGainCurrent_ { 0.5F };
     float dryGainCurrent_ { 0.0F };
+    std::atomic<float> comparisonGainTarget_ { 1.0F };
+    std::atomic<float> comparisonWetGain_ { 0.5F };
+    std::atomic<float> comparisonDryGain_ { 0.0F };
+    std::atomic<bool> comparisonAuditionEnabled_ {};
+    float comparisonGainCurrent_ { 1.0F };
     std::atomic<bool> graphCaptureMode_ {};
     std::atomic<double> captureLengthMilliseconds_ { 2'000.0 };
     std::atomic<double> captureStopThresholdDb_ { -80.0 };

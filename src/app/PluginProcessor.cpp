@@ -32,6 +32,7 @@ void ReverbPlaygroundProcessor::prepareToPlay(
     harness_.setMasterGain(1.0F);
     wetGainCurrent_ = wetGainTarget_.load(std::memory_order_acquire);
     dryGainCurrent_ = dryGainTarget_.load(std::memory_order_acquire);
+    comparisonGainCurrent_ = comparisonGainTarget_.load(std::memory_order_acquire);
     const auto maximumBlockSize = static_cast<std::size_t>(std::max(1, maximumExpectedSamplesPerBlock));
     audioFileSource_.prepare(sampleRate, maximumBlockSize);
     graphInputLeft_.assign(maximumBlockSize, 0.0F);
@@ -154,16 +155,19 @@ void ReverbPlaygroundProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
             buffer.clear();
             return;
         }
-        const auto wetTarget = wetGainTarget_.load(std::memory_order_relaxed);
-        const auto dryTarget = dryGainTarget_.load(std::memory_order_relaxed);
+        const auto comparisonEnabled = comparisonAuditionEnabled_.load(std::memory_order_relaxed);
+        const auto wetTarget = comparisonEnabled ? comparisonWetGain_.load(std::memory_order_relaxed) : wetGainTarget_.load(std::memory_order_relaxed);
+        const auto dryTarget = comparisonEnabled ? comparisonDryGain_.load(std::memory_order_relaxed) : dryGainTarget_.load(std::memory_order_relaxed);
+        const auto comparisonTarget = comparisonGainTarget_.load(std::memory_order_relaxed);
         const auto rampFrames = std::max<std::size_t>(1, std::min(sampleCount,
             static_cast<std::size_t>(std::max(1.0, activeSampleRate() * 0.010))));
         const auto wetStep = (wetTarget - wetGainCurrent_) / static_cast<float>(rampFrames);
         const auto dryStep = (dryTarget - dryGainCurrent_) / static_cast<float>(rampFrames);
+        const auto comparisonStep = (comparisonTarget - comparisonGainCurrent_) / static_cast<float>(rampFrames);
         for (std::size_t index = 0; index < sampleCount; ++index) {
-            if (index < rampFrames) { wetGainCurrent_ += wetStep; dryGainCurrent_ += dryStep; }
-            outputLeft[index] = outputLeft[index] * wetGainCurrent_ + inputLeft[index] * dryGainCurrent_;
-            outputRight[index] = outputRight[index] * wetGainCurrent_ + inputRight[index] * dryGainCurrent_;
+            if (index < rampFrames) { wetGainCurrent_ += wetStep; dryGainCurrent_ += dryStep; comparisonGainCurrent_ += comparisonStep; }
+            outputLeft[index] = (outputLeft[index] * wetGainCurrent_ + inputLeft[index] * dryGainCurrent_) * comparisonGainCurrent_;
+            outputRight[index] = (outputRight[index] * wetGainCurrent_ + inputRight[index] * dryGainCurrent_) * comparisonGainCurrent_;
         }
         const auto leftStatus = graphLeftGuard_.inspectAndMute(outputLeft);
         const auto rightStatus = graphRightGuard_.inspectAndMute(outputRight);
@@ -222,16 +226,19 @@ void ReverbPlaygroundProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
         finishGraphDiagnostics();
         return;
     }
-    const auto wetTarget = wetGainTarget_.load(std::memory_order_relaxed);
-    const auto dryTarget = dryGainTarget_.load(std::memory_order_relaxed);
+    const auto comparisonEnabled = comparisonAuditionEnabled_.load(std::memory_order_relaxed);
+    const auto wetTarget = comparisonEnabled ? comparisonWetGain_.load(std::memory_order_relaxed) : wetGainTarget_.load(std::memory_order_relaxed);
+    const auto dryTarget = comparisonEnabled ? comparisonDryGain_.load(std::memory_order_relaxed) : dryGainTarget_.load(std::memory_order_relaxed);
+    const auto comparisonTarget = comparisonGainTarget_.load(std::memory_order_relaxed);
     const auto rampFrames = std::max<std::size_t>(1, std::min(sampleCount,
         static_cast<std::size_t>(std::max(1.0, activeSampleRate() * 0.010))));
     const auto wetStep = (wetTarget - wetGainCurrent_) / static_cast<float>(rampFrames);
     const auto dryStep = (dryTarget - dryGainCurrent_) / static_cast<float>(rampFrames);
+    const auto comparisonStep = (comparisonTarget - comparisonGainCurrent_) / static_cast<float>(rampFrames);
     for (std::size_t index = 0; index < sampleCount; ++index) {
-        if (index < rampFrames) { wetGainCurrent_ += wetStep; dryGainCurrent_ += dryStep; }
-        outputLeft[index] = outputLeft[index] * wetGainCurrent_ + inputLeft[index] * dryGainCurrent_;
-        outputRight[index] = outputRight[index] * wetGainCurrent_ + inputRight[index] * dryGainCurrent_;
+        if (index < rampFrames) { wetGainCurrent_ += wetStep; dryGainCurrent_ += dryStep; comparisonGainCurrent_ += comparisonStep; }
+        outputLeft[index] = (outputLeft[index] * wetGainCurrent_ + inputLeft[index] * dryGainCurrent_) * comparisonGainCurrent_;
+        outputRight[index] = (outputRight[index] * wetGainCurrent_ + inputRight[index] * dryGainCurrent_) * comparisonGainCurrent_;
     }
     const auto leftStatus = graphLeftGuard_.inspectAndMute(outputLeft);
     const auto rightStatus = graphRightGuard_.inspectAndMute(outputRight);
@@ -333,6 +340,18 @@ void ReverbPlaygroundProcessor::setDryGain(const float value) noexcept
 {
     dryGainTarget_.store(std::clamp(value, 0.0F, 1.0F), std::memory_order_release);
 }
+void ReverbPlaygroundProcessor::setComparisonGain(const float value) noexcept
+{
+    comparisonGainTarget_.store(std::clamp(value, 0.0F, 1.0F), std::memory_order_release);
+}
+void ReverbPlaygroundProcessor::setComparisonAudition(
+    const float wet, const float dry, const float match, const bool enabled) noexcept
+{
+    comparisonWetGain_.store(std::clamp(wet, 0.0F, 1.0F), std::memory_order_release);
+    comparisonDryGain_.store(std::clamp(dry, 0.0F, 1.0F), std::memory_order_release);
+    setComparisonGain(enabled ? match : 1.0F);
+    comparisonAuditionEnabled_.store(enabled, std::memory_order_release);
+}
 void ReverbPlaygroundProcessor::setEmergencyMuted(const bool muted) noexcept { harness_.setEmergencyMuted(muted); }
 void ReverbPlaygroundProcessor::requestSafetyReset() noexcept
 {
@@ -341,6 +360,13 @@ void ReverbPlaygroundProcessor::requestSafetyReset() noexcept
 }
 float ReverbPlaygroundProcessor::wetGain() const noexcept { return wetGainTarget_.load(std::memory_order_acquire); }
 float ReverbPlaygroundProcessor::dryGain() const noexcept { return dryGainTarget_.load(std::memory_order_acquire); }
+float ReverbPlaygroundProcessor::comparisonGain() const noexcept { return comparisonGainTarget_.load(std::memory_order_acquire); }
+juce::String ReverbPlaygroundProcessor::auditionGainsJson() const
+{
+    const nlohmann::ordered_json json { { "wet", wetGain() }, { "dry", dryGain() } };
+    const auto text = json.dump();
+    return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
+}
 bool ReverbPlaygroundProcessor::isEmergencyMuted() const noexcept { return harness_.isEmergencyMuted(); }
 bool ReverbPlaygroundProcessor::isSafetyLatched() const noexcept
 {

@@ -465,6 +465,34 @@ TEST_CASE("Temporary graph preview compiles without mutating saved host state")
     REQUIRE(nlohmann::json::parse(restored.runtimeSnapshotJson().toStdString()).at("restoredPatch") == nlohmann::json::parse(saved));
 }
 
+TEST_CASE("A B comparison gain is smoothed audible and excluded from host state")
+{
+    ReverbPlaygroundProcessor raw; raw.prepareToPlay(48'000.0, 1'024);
+    raw.setWetGain(0.0F); raw.setDryGain(1.0F);
+    raw.setComparisonAudition(0.0F, 1.0F, 1.0F, true);
+    juce::AudioBuffer<float> rawBuffer(2, 1'024); rawBuffer.clear();
+    for (int channel = 0; channel < 2; ++channel)
+        std::fill_n(rawBuffer.getWritePointer(channel), rawBuffer.getNumSamples(), 1.0F);
+    juce::MidiBuffer midi; raw.processBlock(rawBuffer, midi);
+
+    ReverbPlaygroundProcessor compared; compared.prepareToPlay(48'000.0, 1'024);
+    compared.setWetGain(0.0F); compared.setDryGain(1.0F);
+    compared.setComparisonAudition(0.0F, 1.0F, 0.5F, true);
+    juce::AudioBuffer<float> buffer(2, 1'024); buffer.clear();
+    for (int channel = 0; channel < 2; ++channel)
+        std::fill_n(buffer.getWritePointer(channel), buffer.getNumSamples(), 1.0F);
+    compared.processBlock(buffer, midi);
+    REQUIRE(rawBuffer.getSample(0, 1'023) == Catch::Approx(1.0F).margin(1.0e-4F));
+    REQUIRE(buffer.getSample(0, 1'023) == Catch::Approx(0.5F).margin(1.0e-4F));
+
+    juce::MemoryBlock bytes; compared.getStateInformation(bytes);
+    ReverbPlaygroundProcessor restored;
+    restored.setStateInformation(bytes.getData(), static_cast<int>(bytes.getSize()));
+    REQUIRE(restored.wetGain() == Catch::Approx(0.0F));
+    REQUIRE(restored.dryGain() == Catch::Approx(1.0F));
+    REQUIRE(restored.comparisonGain() == Catch::Approx(1.0F));
+}
+
 TEST_CASE("Host state stores independent wet and dry gains without the obsolete master gain")
 {
     ReverbPlaygroundProcessor source;

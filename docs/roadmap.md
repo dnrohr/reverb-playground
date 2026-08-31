@@ -1755,7 +1755,10 @@ Acceptance criteria:
   and never capture them accidentally.
 - Emergency Mute and numerical safety remain downstream and authoritative.
 
-### M27.2 Upgrade A/B comparison snapshots
+### M27.2 Upgrade A/B comparison snapshots — Complete
+
+Status: Complete (2026-08-31). See
+[`ab-comparison-snapshots.md`](ab-comparison-snapshots.md).
 
 Tasks: capture two explicit graph/control snapshots; switch with the existing
 safe publication/crossfade path; offer disclosed loudness matching based on a

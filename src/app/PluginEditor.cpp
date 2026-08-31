@@ -10,6 +10,9 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
           [&processor] { processor.triggerImpulse(); },
           [&processor](const float gain) { processor.setWetGain(gain); },
           [&processor](const float gain) { processor.setDryGain(gain); },
+          [&processor](const float wet, const float dry, const float match, const bool enabled) {
+              processor.setComparisonAudition(wet, dry, match, enabled);
+          },
           [&processor](const bool muted) { processor.setEmergencyMuted(muted); },
           [&processor] { processor.requestSafetyReset(); },
           [] {
@@ -37,6 +40,7 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
           },
           [&processor] { return processor.wetGain(); },
           [&processor] { return processor.dryGain(); },
+          [&processor] { return processor.auditionGainsJson(); },
           [&processor] { return processor.isEmergencyMuted(); },
           [&processor] { return processor.isSafetyLatched(); },
           [&processor] { return processor.runtimeSnapshotJson(); },

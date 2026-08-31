@@ -15,12 +15,14 @@ public:
         std::function<void()> triggerImpulse;
         std::function<void(float)> setWetGain;
         std::function<void(float)> setDryGain;
+        std::function<void(float, float, float, bool)> setComparisonAudition;
         std::function<void(bool)> setEmergencyMuted;
         std::function<void()> resetSafety;
         std::function<void()> chooseAudioDevice;
         std::function<juce::String()> statusText;
         std::function<float()> wetGain;
         std::function<float()> dryGain;
+        std::function<juce::String()> auditionGainsJson;
         std::function<bool()> emergencyMuted;
         std::function<bool()> isSafetyLatched;
         std::function<juce::String()> runtimeSnapshotJson;

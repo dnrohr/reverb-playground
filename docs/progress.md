@@ -1572,3 +1572,26 @@ Results:
   [block bypass](../artifacts/ui/m27-1-audition-overlays/block-bypass.png),
   [workflow](../artifacts/ui/m27-1-audition-overlays/audition-overlay-workflow.mp4), and
   [compact](../artifacts/ui/m27-1-audition-overlays/audition-640x400.png).
+
+## M27.2 verification
+
+- The retired Barr-versus-last-factory shortcut is replaced by two explicit,
+  labeled, immutable session snapshots. Each copies graph/Macro state, quality,
+  viewport, Wet/Dry audition identity, compiled latency, and an exact-graph
+  impulse probe when available.
+- Raw switching has unity comparison gain. Matched mode uses bounded stereo RMS
+  from the two deterministic impulse captures, attenuates only the louder slot,
+  reports both dB adjustments and evidence identity, and refuses missing,
+  short, silent, clipped, or non-finite evidence.
+- A/B switching uses preview-only publication and the established off-thread
+  compile/crossfade/safety path. Comparison Wet/Dry overrides and output gain
+  are 10 ms smoothed and excluded from host state and processed WAV export.
+- The panel identifies added, removed, and changed blocks; Gain/Wet/Dry changes;
+  B-minus-A latency; active slot; and mode. Revert restores the untouched edited
+  graph; Promote creates one undoable graph transaction.
+- Browser QA covers explicit capture, raw switching, honest match refusal,
+  graph replacement, promotion controls, and 640×400 resizing. Evidence:
+  [snapshots](../artifacts/ui/m27-2-ab-comparison/ab-snapshots.png),
+  [raw/refusal](../artifacts/ui/m27-2-ab-comparison/ab-raw-refusal.png),
+  [workflow](../artifacts/ui/m27-2-ab-comparison/ab-snapshot-workflow.mp4), and
+  [compact](../artifacts/ui/m27-2-ab-comparison/ab-640x400.png).

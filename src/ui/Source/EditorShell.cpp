@@ -184,6 +184,15 @@ EditorShell::EditorShell(Callbacks callbacks)
                 arguments[1].toString(),
                 static_cast<double>(arguments[2])));
         })
+        .withNativeFunction("setComparisonAudition", [this](const auto& arguments, auto complete) {
+            if (arguments.size() != 4) { complete(false); return; }
+            callbacks_.setComparisonAudition(static_cast<float>(arguments[0]), static_cast<float>(arguments[1]),
+                static_cast<float>(arguments[2]), static_cast<bool>(arguments[3]));
+            complete(true);
+        })
+        .withNativeFunction("getAuditionGains", [this](const auto&, auto complete) {
+            complete(callbacks_.auditionGainsJson());
+        })
         .withNativeFunction("startImpulseCapture", [this](const auto& arguments, auto complete) {
             if (arguments.size() != 2) { complete(juce::var()); return; }
             complete(callbacks_.startImpulseCapture(

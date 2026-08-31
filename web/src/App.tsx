@@ -17,7 +17,7 @@ import {
 } from '@xyflow/react';
 import { createFlowModel, deleteSelected, parseRuntimeSnapshot, type GraphState, type PatchNodeData, type RuntimeSnapshot } from './graph';
 import { createModuleNode, moduleDefinitions, nextNodeId, type ModuleType } from './modules';
-import { commitGraphEdit, emptyGraphHistory, isHistoryClean, markHistoryClean, redoGraphEdit, snapshotGraph, undoGraphEdit } from './graphHistory';
+import { commitGraphEdit, emptyGraphHistory, isHistoryClean, markHistoryClean, redoGraphEdit, semanticGraphHash, snapshotGraph, undoGraphEdit } from './graphHistory';
 import { copySelectedGraph, pasteGraph, type GraphClipboard } from './graphClipboard';
 import { decorateFeedbackLoops, decorateRunawayFeedbackLoop, inspectFeedbackLoops, inspectMostRelevantFeedbackLoop, type FeedbackLoopInspection } from './loopInspection';
 import { connectGraph, decideConnection, insertSumForOccupiedInput, previewSumForOccupiedInput } from './connectionEditing';
@@ -34,7 +34,7 @@ import { parseEnergyTelemetry, shouldRunEnergyTelemetry, smoothEnergy, type Ener
 import { formatBytes, parseRuntimeDiagnostics, type RuntimeDiagnostics } from './runtimeDiagnostics';
 import { audibleGraphFingerprint, parseGraphPublicationResult } from './topologyPublication';
 import { curveMappingRange, decorateControlPreview, type ControlCurveFamily } from './controlSemantics';
-import { comparisonPatchAfterSelection, comparisonPatchLabel, factoryPatchDescription, factoryPatches, loadFactoryPatch, type ComparisonPatchId, type FactoryPatchId } from './factoryPatches';
+import { factoryPatchDescription, factoryPatches, loadFactoryPatch, type FactoryPatchId } from './factoryPatches';
 import { architectureOverlay, type GateTeachingParameters, type TeachingPatchId } from './architectureOverlay';
 import { parseHostPatchStateResult } from './hostPatchState';
 import { decorateMacroReachability, inspectMacroReachability } from './macroInspection';
@@ -53,6 +53,8 @@ import { assistedTuningSuggestions, createAssistedTuningPreview, supportsAssiste
 import { editorCommandBarHeight, measurementBarHeight } from './workspaceChrome';
 import { detachSubpatchInstance, instantiateSubpatch, subpatchDefinitions, subpatchInstanceStatus } from './subpatches';
 import { applyAuditionOverlay, auditionOverlayLabel, decorateAuditionOverlay, type AuditionOverlay } from './auditionOverlay';
+import { captureComparisonSnapshot, compareSnapshots, comparisonGainLinear, comparisonMatch,
+  type ComparisonMode, type ComparisonSlot, type ComparisonSnapshot } from './comparisonSnapshots';
 import { captureRevisionState, contextTabFor, emphasizeAnalyzeLayout, shouldPollRuntimeDiagnostics, type ContextIntent, type ContextTab } from './contextDock';
 import {
   arrangementPresentation,
@@ -474,6 +476,37 @@ function GravityPresentation({ value, destinationCount, showMeasuredReference, o
   </section>;
 }
 
+function ComparisonPanel({ snapshots, active, mode, match, onCapture, onAudition, onMode, onRevert, onPromote, onClose }: {
+  snapshots: Record<ComparisonSlot, ComparisonSnapshot | null>; active: ComparisonSlot | null; mode: ComparisonMode;
+  match: ReturnType<typeof comparisonMatch>; onCapture(slot: ComparisonSlot): void; onAudition(slot: ComparisonSlot): void;
+  onMode(mode: ComparisonMode): void; onRevert(): void; onPromote(): void; onClose(): void;
+}) {
+  const diff = snapshots.A && snapshots.B ? compareSnapshots(snapshots.A, snapshots.B) : null;
+  const ids = (values: string[]) => values.length ? `${values.slice(0, 3).join(', ')}${values.length > 3 ? ` +${values.length - 3} more` : ''}` : 'none';
+  const slot = (id: ComparisonSlot) => { const item = snapshots[id]; return <article className={active === id ? 'is-active' : ''} key={id}>
+    <header><strong>{id}</strong><span>{item?.label ?? 'EMPTY'}</span></header>
+    {item ? <><p>{item.graph.nodes.length} blocks · {item.graph.edges.length} cables · {item.qualityPolicy}</p>
+      <small>{item.probe?.accepted ? `${item.probe.rmsDb.toFixed(1)} dBFS probe · ${item.latencySamples ?? '—'} samples latency`
+        : item.probe ? item.probe.reason : 'NO MATCH PROBE · CAPTURE IMPULSE FIRST'}</small></> : <p>Capture the current graph explicitly.</p>}
+    <div><button type="button" onClick={() => onCapture(id)}>CAPTURE {id}</button>
+      <button type="button" disabled={!item} aria-pressed={active === id} onClick={() => onAudition(id)}>AUDITION {id}</button></div>
+  </article>; };
+  return <section className="comparison-panel" aria-label="A/B comparison snapshots">
+    <header><div><strong>A/B SNAPSHOTS</strong><span>SESSION ONLY · PREVIEW SAFE</span></div><button type="button" aria-label="Close A/B comparison" onClick={onClose}>×</button></header>
+    <div className="comparison-slots">{slot('A')}{slot('B')}</div>
+    <div className="comparison-mode" role="group" aria-label="Comparison level mode">
+      <button type="button" aria-pressed={mode === 'raw'} onClick={() => onMode('raw')}>RAW / NO COMPENSATION</button>
+      <button type="button" aria-pressed={mode === 'matched'} disabled={!match.accepted} title={match.reason} onClick={() => onMode('matched')}>MATCHED / ATTENUATE ONLY</button>
+    </div>
+    {match.accepted ? <p className="comparison-evidence">MATCH EVIDENCE · A {match.adjustmentA.toFixed(2)} dB · B {match.adjustmentB.toFixed(2)} dB · TARGET {match.targetRmsDb.toFixed(1)} dBFS<br />{match.evidence}</p>
+      : <p className="comparison-refusal">MATCH UNAVAILABLE · {match.reason}</p>}
+    {diff ? <dl className="comparison-diff"><div><dt>BLOCKS</dt><dd>+{ids(diff.addedBlocks)} · −{ids(diff.removedBlocks)} · Δ{ids(diff.changedBlocks)}</dd></div>
+      <div><dt>GAINS</dt><dd>{diff.gainChanges.length ? diff.gainChanges.join(', ') : 'UNCHANGED'}</dd></div>
+      <div><dt>LATENCY B−A</dt><dd>{diff.latencyDeltaSamples === null ? 'UNKNOWN' : `${diff.latencyDeltaSamples >= 0 ? '+' : ''}${diff.latencyDeltaSamples} samples`}</dd></div></dl> : null}
+    <footer><button type="button" disabled={!active} onClick={onRevert}>REVERT TO EDITED GRAPH</button><button type="button" disabled={!active} onClick={onPromote}>PROMOTE ACTIVE / UNDOABLE</button></footer>
+  </section>;
+}
+
 function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const { fitView, setViewport: setFlowViewport, screenToFlowPosition } = useReactFlow();
   const restored = useMemo(() => snapshot.restoredPatch
@@ -493,7 +526,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [fileStatus, setFileStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
   const [activePatchId, setActivePatchId] = useState<FactoryPatchId | 'custom'>(restored ? 'custom' : 'barr-reference');
   const [qualityPolicy, setQualityPolicy] = useState<QualityPolicy>(restored?.source.qualityPolicy ?? 'normal');
-  const [comparisonPatchId, setComparisonPatchId] = useState<ComparisonPatchId>('causal-reverse-envelope');
+  const [comparisonOpen, setComparisonOpen] = useState(false);
+  const [comparisonSnapshots, setComparisonSnapshots] = useState<Record<ComparisonSlot, ComparisonSnapshot | null>>({ A: null, B: null });
+  const [activeComparisonSlot, setActiveComparisonSlot] = useState<ComparisonSlot | null>(null);
+  const [comparisonMode, setComparisonMode] = useState<ComparisonMode>('raw');
   const [teachingEnabled, setTeachingEnabled] = useState(() => {
     try { return window.localStorage.getItem('reverb-playground-teaching') !== 'off'; } catch { return true; }
   });
@@ -518,6 +554,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     patchId: TeachingPatchId;
     gateTeaching: GateTeachingParameters;
     graphRevision: number;
+    graphHash: string;
   } | null>(null);
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const [energyEnabled, setEnergyEnabled] = useState(() => !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -534,6 +571,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [controlPreviewTime, setControlPreviewTime] = useState(() => performance.now() / 1000);
   const audibleFingerprint = useMemo(() => audibleGraphFingerprint(nodes, edges), [edges, nodes]);
   const auditionResult = useMemo(() => applyAuditionOverlay({ nodes, edges }, auditionOverlay), [auditionOverlay, edges, nodes]);
+  const activeComparisonSnapshot = activeComparisonSlot ? comparisonSnapshots[activeComparisonSlot] : null;
+  const comparisonMatchResult = useMemo(() => comparisonMatch(comparisonSnapshots.A, comparisonSnapshots.B), [comparisonSnapshots]);
   const hostStateJson = useMemo(() => writePatchJson(nodes, edges, viewport, qualityPolicy), [edges, nodes, qualityPolicy, viewport]);
   const activePatch = activePatchId === 'custom' ? null : factoryPatchDescription(activePatchId);
   const baseWorkspaceLayout = useMemo(() => resolveWorkspaceLayout(windowWidth, workspacePresentation), [windowWidth, workspacePresentation]);
@@ -602,6 +641,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       capture,
       patchId: activePatchId,
       graphRevision: activeGraphRevision.current,
+      graphHash: auditionOverlay || activeComparisonSlot || tuningPreview ? 'preview-only' : semanticGraphHash({ nodes, edges }),
       gateTeaching: {
         detectorReleaseMilliseconds: parameter('envelope-follower', 'release', 20),
         holdMilliseconds: parameter('hold-gate', 'hold', 120),
@@ -609,7 +649,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       },
     });
     openContext('measurement');
-  }, [activePatchId, nodes, openContext]);
+  }, [activeComparisonSlot, activePatchId, auditionOverlay, edges, nodes, openContext, tuningPreview]);
 
   const loopInspection = useMemo(() => selectedNode
     ? selectedNode.data.type === 'graph-group'
@@ -703,17 +743,21 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     let cancelled = false;
     const timer = window.setTimeout(async () => {
       try {
-        const preview = auditionOverlay !== null && auditionResult.accepted; const graph = preview ? auditionResult.graph : { nodes, edges };
-        const result = parseGraphPublicationResult(await callNative(preview ? 'previewGraph' : 'publishGraph', writePatchJson(graph.nodes, graph.edges, viewport, qualityPolicy)));
+        const overlayPreview = auditionOverlay !== null && auditionResult.accepted;
+        const preview = activeComparisonSnapshot !== null || overlayPreview;
+        const graph = activeComparisonSnapshot?.graph ?? (overlayPreview ? auditionResult.graph : { nodes, edges });
+        const previewViewport = activeComparisonSnapshot?.viewport ?? viewport;
+        const previewQuality = activeComparisonSnapshot?.qualityPolicy ?? qualityPolicy;
+        const result = parseGraphPublicationResult(await callNative(preview ? 'previewGraph' : 'publishGraph', writePatchJson(graph.nodes, graph.edges, previewViewport, previewQuality)));
         if (!cancelled) setGraphStatus(result.accepted
-          ? { kind: 'ok', message: `GRAPH REVISION #${result.revision} QUEUED FOR AUDITION` }
+          ? { kind: 'ok', message: activeComparisonSlot ? `A/B ${activeComparisonSlot} / REVISION #${result.revision} QUEUED / EDITED GRAPH UNCHANGED` : `GRAPH REVISION #${result.revision} QUEUED FOR AUDITION` }
           : { kind: 'error', message: result.error });
       } catch (reason) {
         if (!cancelled && !import.meta.env.DEV) setGraphStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Graph publication failed' });
       }
     }, 35);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [audibleFingerprint, auditionOverlay, auditionResult, qualityPolicy]);
+  }, [activeComparisonSlot, activeComparisonSnapshot, audibleFingerprint, auditionOverlay, auditionResult, edges, nodes, qualityPolicy, viewport]);
 
   useEffect(() => {
     let cancelled = false;
@@ -801,8 +845,59 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   }, [contextTab, diagnosticsPollingEnabled, openContext, workspacePresentation.contextOpen]);
 
   const applyGraph = useCallback((state: { nodes: Node<PatchNodeData>[]; edges: Edge[] }) => {
-    setNodes(state.nodes); setEdges(state.edges); setSelectedNode(null); setSelectedEdge(null); setAuditionOverlay(null);
+    setNodes(state.nodes); setEdges(state.edges); setSelectedNode(null); setSelectedEdge(null); setAuditionOverlay(null); setActiveComparisonSlot(null);
+    void callNative('setComparisonAudition', 0.5, 0, 1, false).catch(() => undefined);
   }, [setEdges, setNodes]);
+
+  const captureComparison = useCallback(async (slot: ComparisonSlot) => {
+    let wetGain = 0.5; let dryGain = 0;
+    try {
+      const payload = await callNative('getAuditionGains');
+      if (payload !== undefined) { const parsed = typeof payload === 'string' ? JSON.parse(payload) : payload as { wet?: unknown; dry?: unknown };
+        if (typeof parsed.wet === 'number' && Number.isFinite(parsed.wet)) wetGain = parsed.wet;
+        if (typeof parsed.dry === 'number' && Number.isFinite(parsed.dry)) dryGain = parsed.dry; }
+    } catch { /* development browser uses documented defaults */ }
+    const currentHash = semanticGraphHash({ nodes, edges });
+    const publication = diagnostics?.topologyPublication;
+    const latencySamples = publication && publication.requestedRevision === publication.activeRevision
+      && publication.pendingRevision === 0 && publication.crossfadeTotalSamples === 0 ? diagnostics.latency.samples : null;
+    const captured = captureComparisonSnapshot({ slot, label: activePatch?.label ?? 'Custom edited graph', graph: { nodes, edges }, viewport, qualityPolicy,
+      wetGain, dryGain, latencySamples,
+      capture: responseCapture?.graphHash === currentHash ? responseCapture.capture : null,
+      captureGraphHash: responseCapture?.graphHash ?? null });
+    setComparisonSnapshots((current) => ({ ...current, [slot]: captured }));
+    if (activeComparisonSlot === slot) { setActiveComparisonSlot(null); void callNative('setComparisonAudition', wetGain, dryGain, 1, false).catch(() => undefined); }
+    setGraphStatus({ kind: 'ok', message: `CAPTURED A/B ${slot} / ${captured.probe?.accepted ? 'MATCH PROBE ATTACHED' : 'RAW READY · CAPTURE IMPULSE BEFORE SNAPSHOT FOR MATCHING'}` });
+  }, [activeComparisonSlot, activePatch?.label, diagnostics?.latency.samples, edges, nodes, qualityPolicy, responseCapture, viewport]);
+
+  const auditionComparison = useCallback((slot: ComparisonSlot, requestedMode = comparisonMode) => {
+    const captured = comparisonSnapshots[slot]; if (!captured) return;
+    const match = comparisonMatch(comparisonSnapshots.A, comparisonSnapshots.B);
+    if (requestedMode === 'matched' && !match.accepted) { setGraphStatus({ kind: 'error', message: `MATCH REFUSED / ${match.reason}` }); return; }
+    const adjustmentDb = requestedMode === 'matched' && match.accepted ? (slot === 'A' ? match.adjustmentA : match.adjustmentB) : 0;
+    setActiveComparisonSlot(slot); setAuditionOverlay(null);
+    void callNative('setComparisonAudition', captured.wetGain, captured.dryGain, comparisonGainLinear(adjustmentDb), true).catch(() => undefined);
+    setGraphStatus({ kind: 'ok', message: `AUDITION A/B ${slot} / ${requestedMode.toUpperCase()} ${adjustmentDb.toFixed(2)} dB / LATENCY ${captured.latencySamples ?? 'UNKNOWN'} SAMPLES` });
+  }, [comparisonMode, comparisonSnapshots]);
+
+  const selectComparisonMode = useCallback((mode: ComparisonMode) => {
+    const match = comparisonMatch(comparisonSnapshots.A, comparisonSnapshots.B);
+    if (mode === 'matched' && !match.accepted) { setGraphStatus({ kind: 'error', message: `MATCH REFUSED / ${match.reason}` }); return; }
+    setComparisonMode(mode); if (activeComparisonSlot) auditionComparison(activeComparisonSlot, mode);
+  }, [activeComparisonSlot, auditionComparison, comparisonSnapshots]);
+
+  const revertComparison = useCallback(() => {
+    setActiveComparisonSlot(null); void callNative('setComparisonAudition', 0.5, 0, 1, false).catch(() => undefined);
+    setGraphStatus({ kind: 'ok', message: 'A/B REVERTED / EXACT EDITED GRAPH RESTORED' });
+  }, []);
+
+  const promoteComparison = useCallback(() => {
+    if (!activeComparisonSnapshot) return;
+    const before = { nodes, edges }; const after = snapshotGraph(activeComparisonSnapshot.graph);
+    applyGraph(after); setViewport(activeComparisonSnapshot.viewport); setQualityPolicy(activeComparisonSnapshot.qualityPolicy);
+    void setFlowViewport(activeComparisonSnapshot.viewport); setGraphHistory((history) => commitGraphEdit(history, `Promote A/B ${activeComparisonSnapshot.slot}`, before, after));
+    setActivePatchId('custom'); setGraphStatus({ kind: 'ok', message: `PROMOTED A/B ${activeComparisonSnapshot.slot} / UNDO AVAILABLE` });
+  }, [activeComparisonSnapshot, applyGraph, edges, nodes, setFlowViewport]);
 
   const activateAuditionOverlay = useCallback((overlay: AuditionOverlay) => {
     const result = applyAuditionOverlay({ nodes, edges }, overlay);
@@ -997,7 +1092,6 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       setActivePatchId(id);
       if (id === 'split-feedback-shimmer') setSplitLoopFocus('shifted');
       if (id === 'reverse-cosmic-shimmer') setReverseCosmicFocus('grains');
-      setComparisonPatchId((current) => comparisonPatchAfterSelection(id, current));
       const description = factoryPatchDescription(id);
       setFileStatus({ kind: 'ok', message: `LOADED FACTORY / ${description.label.toUpperCase()}` });
       requestAnimationFrame(() => void fitView({ padding: 0.16, minZoom: 0.25, maxZoom: 1.1 }));
@@ -1266,12 +1360,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                     {workspacePresentation.arrangement === 'custom' ? <option value="custom">Custom</option> : null}
                   </select>
                 </label>
-                <button role="menuitemradio" aria-checked={activePatchId === 'barr-reference'} type="button"
-                  onClick={() => { void selectFactoryPatch('barr-reference'); setOpenApplicationMenu(null); }}>COMPARE A / BARR</button>
-                <button role="menuitemradio" aria-checked={activePatchId === comparisonPatchId} type="button"
-                  onClick={() => { void selectFactoryPatch(comparisonPatchId); setOpenApplicationMenu(null); }}>
-                  COMPARE B / {comparisonPatchLabel(comparisonPatchId)}
-                </button>
+                <button role="menuitem" type="button" onClick={() => { setComparisonOpen(true); setOpenApplicationMenu(null); }}>A/B SNAPSHOT COMPARISON</button>
                 <button role="menuitemcheckbox" aria-checked={workspacePresentation.modulesOpen} type="button"
                   onClick={() => toggleDock('modules')}>MODULE PALETTE {workspacePresentation.modulesOpen ? 'OPEN' : 'CLOSED'}</button>
                 <button role="menuitemcheckbox" aria-checked={workspacePresentation.contextOpen} type="button"
@@ -1321,11 +1410,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           <span className={`clean-state ${isHistoryClean(graphHistory, { nodes, edges }) ? 'is-clean' : 'is-dirty'}`}>
             {isHistoryClean(graphHistory, { nodes, edges }) ? 'SAVED' : 'UNSAVED'}
           </span>
-          <div className="comparison-switch" role="group" aria-label="Compare Barr reference with selected design">
-            <button type="button" aria-pressed={activePatchId === 'barr-reference'} onClick={() => void selectFactoryPatch('barr-reference')}>A / BARR</button>
-            <button type="button" aria-pressed={activePatchId === comparisonPatchId} onClick={() => void selectFactoryPatch(comparisonPatchId)}>
-              B / {comparisonPatchLabel(comparisonPatchId)}
-            </button>
+          <div className="comparison-switch" role="group" aria-label="A/B snapshot comparison">
+            <button type="button" aria-expanded={comparisonOpen} onClick={() => setComparisonOpen((open) => !open)}>A/B</button>
+            <button type="button" disabled={!comparisonSnapshots.A} aria-pressed={activeComparisonSlot === 'A'} onClick={() => auditionComparison('A')}>A</button>
+            <button type="button" disabled={!comparisonSnapshots.B} aria-pressed={activeComparisonSlot === 'B'} onClick={() => auditionComparison('B')}>B</button>
           </div>
           <button className="energy-toggle" type="button" aria-pressed={energyEnabled} disabled={reducedMotion} onClick={() => setEnergyEnabled((value) => !value)} title={reducedMotion ? 'Disabled by the operating-system reduced-motion preference' : 'Toggle measured node and cable energy'}>
             ENERGY {reducedMotion ? 'REDUCED' : energyEnabled ? 'ON' : 'OFF'}
@@ -1430,6 +1518,9 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <button type="button" aria-label="Dismiss graph status" onClick={() => setGraphStatus(null)}>×</button>
             </div>
           ) : null}
+          {comparisonOpen ? <ComparisonPanel snapshots={comparisonSnapshots} active={activeComparisonSlot} mode={comparisonMode}
+            match={comparisonMatchResult} onCapture={(slot) => void captureComparison(slot)} onAudition={auditionComparison}
+            onMode={selectComparisonMode} onRevert={revertComparison} onPromote={promoteComparison} onClose={() => setComparisonOpen(false)} /> : null}
           {pendingConnection ? (
             <div className="connection-offer" role="dialog" aria-modal="true" aria-labelledby="occupied-title" aria-describedby="occupied-description">
               <strong id="occupied-title">INPUT ALREADY HAS A CABLE</strong>
