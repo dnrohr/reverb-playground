@@ -845,6 +845,24 @@ juce::String ReverbPlaygroundProcessor::publishGraphJson(const juce::String& pat
     }
 }
 
+juce::String ReverbPlaygroundProcessor::previewGraphJson(const juce::String& patchJson)
+{
+    try {
+        auto document = reverb::graph::parsePatchJson(patchJson.toStdString());
+        const auto sampleRate = graphSampleRate_.load(std::memory_order_acquire);
+        const auto maximumBlockSize = graphMaximumBlockSize_.load(std::memory_order_acquire);
+        if (sampleRate <= 0.0 || maximumBlockSize == 0)
+            return R"({"accepted":false,"revision":0,"error":"audio runtime is not prepared"})";
+        const auto revision = graphHost_.requestCompilation(std::move(document), sampleRate, maximumBlockSize, true);
+        graphAudioEnabled_.store(true, std::memory_order_release);
+        const nlohmann::ordered_json result { { "accepted", true }, { "revision", revision }, { "error", "" } };
+        const auto text = result.dump(); return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
+    } catch (const std::exception& error) {
+        const nlohmann::ordered_json result { { "accepted", false }, { "revision", 0 }, { "error", error.what() } };
+        const auto text = result.dump(); return juce::String::fromUTF8(text.data(), static_cast<int>(text.size()));
+    }
+}
+
 juce::String ReverbPlaygroundProcessor::storePatchStateJson(const juce::String& patchJson)
 {
     std::string error;

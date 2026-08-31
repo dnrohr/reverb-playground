@@ -450,6 +450,21 @@ TEST_CASE("Legacy host state without a graph restores safe audition controls")
     REQUIRE_FALSE(nlohmann::json::parse(restored.runtimeSnapshotJson().toStdString()).contains("restoredPatch"));
 }
 
+TEST_CASE("Temporary graph preview compiles without mutating saved host state")
+{
+    ReverbPlaygroundProcessor processor; processor.prepareToPlay(48'000.0, 64);
+    const auto saved = factoryPatch("gravity-diffusion.rvp.json");
+    REQUIRE(nlohmann::json::parse(processor.storePatchStateJson(saved).toStdString()).at("accepted") == true);
+    const auto preview = factoryPatch("causal-reverse-envelope.rvp.json");
+    const auto result = nlohmann::json::parse(processor.previewGraphJson(preview).toStdString());
+    REQUIRE(result.at("accepted") == true); REQUIRE(result.at("revision").get<std::uint64_t>() > 0);
+    const auto snapshot = nlohmann::json::parse(processor.runtimeSnapshotJson().toStdString());
+    REQUIRE(snapshot.at("restoredPatch") == nlohmann::json::parse(saved));
+    juce::MemoryBlock bytes; processor.getStateInformation(bytes);
+    ReverbPlaygroundProcessor restored; restored.setStateInformation(bytes.getData(), static_cast<int>(bytes.getSize()));
+    REQUIRE(nlohmann::json::parse(restored.runtimeSnapshotJson().toStdString()).at("restoredPatch") == nlohmann::json::parse(saved));
+}
+
 TEST_CASE("Host state stores independent wet and dry gains without the obsolete master gain")
 {
     ReverbPlaygroundProcessor source;

@@ -1734,7 +1734,10 @@ Milestone exit criteria:
 Goal: make diagnosis and fair comparison first-class while keeping the module
 library compact and avoiding convenience blocks that conceal signal flow.
 
-### M27.1 Add temporary branch isolate, mute, and block bypass
+### M27.1 Add temporary branch isolate, mute, and block bypass — Complete
+
+Status: Complete (2026-08-31). See
+[`temporary-audition-overlays.md`](temporary-audition-overlays.md).
 
 Tasks: define non-destructive audition overlays for a selected cable, branch,
 loop, or block; distinguish temporary isolate/mute from saved graph Gain edits;

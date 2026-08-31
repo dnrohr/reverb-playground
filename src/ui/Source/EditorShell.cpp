@@ -213,6 +213,13 @@ EditorShell::EditorShell(Callbacks callbacks)
             }
             complete(callbacks_.publishGraphJson(arguments[0].toString()));
         })
+        .withNativeFunction("previewGraph", [this](const auto& arguments, auto complete) {
+            if (arguments.size() != 1) {
+                complete(juce::String(R"({"accepted":false,"revision":0,"error":"expected one patch JSON argument"})"));
+                return;
+            }
+            complete(callbacks_.previewGraphJson(arguments[0].toString()));
+        })
         .withNativeFunction("storePatchState", [this](const auto& arguments, auto complete) {
             if (arguments.size() != 1) {
                 complete(juce::String(R"({"accepted":false,"error":"expected one patch JSON argument"})"));

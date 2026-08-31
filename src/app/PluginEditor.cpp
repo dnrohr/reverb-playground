@@ -52,6 +52,7 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
           [&processor] { return processor.energyTelemetryJson(); },
           [&processor] { return processor.runtimeDiagnosticsJson(); },
           [&processor](const auto& patchJson) { return processor.publishGraphJson(patchJson); },
+          [&processor](const auto& patchJson) { return processor.previewGraphJson(patchJson); },
           [&processor](const auto& patchJson) { return processor.storePatchStateJson(patchJson); },
           juce::StandalonePluginHolder::getInstance() != nullptr,
           [&processor](const juce::File& file) {

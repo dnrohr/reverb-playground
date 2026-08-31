@@ -1549,3 +1549,26 @@ Results:
   [inspector](../artifacts/ui/m26-3-reusable-subpatches/subpatch-inspector.png),
   [workflow](../artifacts/ui/m26-3-reusable-subpatches/subpatch-create-copy-detach.mp4), and
   [compact](../artifacts/ui/m26-3-reusable-subpatches/subpatch-640x400.png).
+
+## M27.1 verification
+
+- Temporary cable/block mute, path/branch isolate, and block bypass now publish
+  through a preview-only graph path. The amber overlay state is excluded from
+  patch files, host state, history, clipboard, dirty identity, factories, and
+  WAV export; committed graph replacement clears it.
+- Preview publication retains the off-thread compiler, bounded crossfade,
+  latency evidence, feedback validation, numerical-safety latch, and Emergency
+  Mute without storing the temporary document. Native qualification proves a
+  different preview cannot mutate serialized host state.
+- Bypass requires one audio input, rewires former outputs explicitly, reports
+  possible latency change, and refuses I/O, ambiguity, or any resulting
+  zero-delay algebraic cycle. Isolate excludes parallel paths that do not pass
+  through the selected cable/block.
+- Impulse capture explicitly says the active overlay is included and changes
+  its action label; WAV export always uses the saved document and excludes it.
+- Browser QA covers cable mute, block bypass, clear-all, graph-replacement
+  recovery, capture disclosure, and 640×400 resizing. Evidence:
+  [cable mute](../artifacts/ui/m27-1-audition-overlays/cable-mute.png),
+  [block bypass](../artifacts/ui/m27-1-audition-overlays/block-bypass.png),
+  [workflow](../artifacts/ui/m27-1-audition-overlays/audition-overlay-workflow.mp4), and
+  [compact](../artifacts/ui/m27-1-audition-overlays/audition-640x400.png).

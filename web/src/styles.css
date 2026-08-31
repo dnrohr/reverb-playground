@@ -651,6 +651,14 @@ button { font: inherit; }
 .subpatch-inspector .property-list dd { max-width: 62%; white-space: normal; overflow-wrap: anywhere; line-height: 1.35; }
 .subpatch-inspector button { width: 100%; }
 .subpatch-inspector small { color: #929da5; font-size: 9px; line-height: 1.4; }
+.audition-overlay-controls { display: grid; gap: 8px; margin-top: 12px; padding: 10px; border: 1px solid #b17a39; background: rgba(94, 55, 20, .2); }
+.audition-overlay-controls header { display: flex; justify-content: space-between; gap: 8px; color: #ffc36d; font: 10px var(--mono); letter-spacing: .07em; }
+.audition-overlay-controls > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.audition-overlay-controls button[aria-pressed="true"], .audition-clear { border-color: #ffd17d; color: #15100a; background: #eab45e; }
+.audition-overlay-controls small { color: #b8a58d; font-size: 9px; line-height: 1.4; }
+.react-flow__node.audition-mute, .react-flow__node.audition-isolate, .react-flow__node.audition-bypass { box-shadow: 0 0 0 3px rgba(242, 180, 78, .78); }
+.react-flow__edge.audition-mute path, .react-flow__edge.audition-isolate path { stroke: #f2b44e; stroke-width: 4; stroke-dasharray: 7 5; }
+.measurement-overlay-disclosure { color: #f2b44e; font: 9px var(--mono); max-width: 160px; }
 .compound-learn-card dl { display: grid; gap: 5px; margin: 0; }
 .compound-learn-card dl div { display: flex; justify-content: space-between; gap: 10px; font-size: 9px; }
 .compound-learn-card dt { color: #9b7db2; }

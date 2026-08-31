@@ -52,6 +52,7 @@ import { RoutedEdge } from './RoutedEdge';
 import { assistedTuningSuggestions, createAssistedTuningPreview, supportsAssistedTuning, type AssistedTuningSuggestionId } from './assistedTuning';
 import { editorCommandBarHeight, measurementBarHeight } from './workspaceChrome';
 import { detachSubpatchInstance, instantiateSubpatch, subpatchDefinitions, subpatchInstanceStatus } from './subpatches';
+import { applyAuditionOverlay, auditionOverlayLabel, decorateAuditionOverlay, type AuditionOverlay } from './auditionOverlay';
 import { captureRevisionState, contextTabFor, emphasizeAnalyzeLayout, shouldPollRuntimeDiagnostics, type ContextIntent, type ContextTab } from './contextDock';
 import {
   arrangementPresentation,
@@ -250,7 +251,7 @@ function LoopInspector({ inspection, activeIndex, onActiveIndex, splitFeedback =
   );
 }
 
-function MeasurementBar({ sampleRate, onCapture }: { sampleRate: number; onCapture: (capture: ImpulseCaptureResult) => void }) {
+function MeasurementBar({ sampleRate, onCapture, overlayLabel }: { sampleRate: number; onCapture: (capture: ImpulseCaptureResult) => void; overlayLabel: string | null }) {
   const [length, setLength] = useState(2000);
   const [threshold, setThreshold] = useState(-80);
   const [status, setStatus] = useState<ImpulseCaptureStatus | null>(null);
@@ -289,7 +290,8 @@ function MeasurementBar({ sampleRate, onCapture }: { sampleRate: number; onCaptu
     <label>MAX LENGTH <select aria-label="Capture maximum length" value={length} disabled={busy} onChange={(event) => setLength(Number(event.target.value))}><option value={500}>500 ms</option><option value={2000}>2,000 ms</option><option value={5000}>5,000 ms</option><option value={10000}>10,000 ms</option></select></label>
     <label>STOP BELOW <select aria-label="Capture stop threshold" value={threshold} disabled={busy} onChange={(event) => setThreshold(Number(event.target.value))}><option value={-60}>-60 dBFS</option><option value={-80}>-80 dBFS</option><option value={-100}>-100 dBFS</option><option value={-120}>-120 dBFS</option></select></label>
     <span className="measurement-check">INPUT ISOLATED</span>
-    <button type="button" disabled={busy || sampleRate <= 0} onClick={() => void start()}>{busy ? 'CAPTURING…' : 'CAPTURE IMPULSE'}</button>
+    {overlayLabel ? <span className="measurement-overlay-disclosure">INCLUDES {overlayLabel}</span> : null}
+    <button type="button" disabled={busy || sampleRate <= 0} onClick={() => void start()}>{busy ? 'CAPTURING…' : overlayLabel ? 'CAPTURE WITH OVERLAY' : 'CAPTURE IMPULSE'}</button>
     <div className="measurement-readout" role="status">
       {error || (sampleRate <= 0 ? 'WAITING FOR AUDIO DEVICE' : result ? `${result.frameCount.toLocaleString()} FRAMES / ${(result.frameCount / result.sampleRate * 1000).toFixed(1)} ms / STOP: ${result.stopReason === 'threshold' ? `${result.stopThresholdDb} dBFS` : 'MAX LENGTH'}` : busy && status ? `${status.capturedMilliseconds.toFixed(1)} / ${status.maximumLengthMilliseconds.toFixed(0)} ms` : '0.1 PEAK / READY')}
     </div>
@@ -506,6 +508,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [splitLoopFocus, setSplitLoopFocus] = useState<SplitShimmerLoopFocus>('shifted');
   const [reverseCosmicFocus, setReverseCosmicFocus] = useState<ReverseCosmicFocus>('grains');
   const [collapsedCompoundIds, setCollapsedCompoundIds] = useState<Set<string>>(() => new Set(['matrix-mixer']));
+  const [auditionOverlay, setAuditionOverlay] = useState<AuditionOverlay | null>(null);
   const [routeFocus, setRouteFocus] = useState<{ edgeId: string; direction: TraceDirection } | null>(null);
   const [tuningOpen, setTuningOpen] = useState(false);
   const [tuningBusy, setTuningBusy] = useState(false);
@@ -530,6 +533,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const activeGraphRevision = useRef(0);
   const [controlPreviewTime, setControlPreviewTime] = useState(() => performance.now() / 1000);
   const audibleFingerprint = useMemo(() => audibleGraphFingerprint(nodes, edges), [edges, nodes]);
+  const auditionResult = useMemo(() => applyAuditionOverlay({ nodes, edges }, auditionOverlay), [auditionOverlay, edges, nodes]);
   const hostStateJson = useMemo(() => writePatchJson(nodes, edges, viewport, qualityPolicy), [edges, nodes, qualityPolicy, viewport]);
   const activePatch = activePatchId === 'custom' ? null : factoryPatchDescription(activePatchId);
   const baseWorkspaceLayout = useMemo(() => resolveWorkspaceLayout(windowWidth, workspacePresentation), [windowWidth, workspacePresentation]);
@@ -650,18 +654,19 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const routingFocusedGraph = useMemo(() => routeFocus
     ? traceCable({ nodes: displayedGraph.nodes, edges: displayedGraph.edges }, routeFocus.edgeId, routeFocus.direction)
     : displayedGraph, [displayedGraph, routeFocus]);
+  const auditionDecoratedGraph = useMemo(() => decorateAuditionOverlay(routingFocusedGraph, auditionOverlay), [auditionOverlay, routingFocusedGraph]);
   const matrixInspections = useMemo(() => inspectMatrixMixers(nodes), [nodes]);
   const matrixInspection = useMemo(() => inspectMatrixMixer(nodes), [nodes]);
   const matrixIsCollapsed = Boolean(matrixInspection?.canCollapse && collapsedCompoundIds.has(matrixInspection.id));
   const compoundDisplayedGraph = useMemo(() => projectCompoundPresentations(
-    routingFocusedGraph.nodes, routingFocusedGraph.edges, matrixInspections, collapsedCompoundIds,
-  ), [collapsedCompoundIds, matrixInspections, routingFocusedGraph]);
+    auditionDecoratedGraph.nodes, auditionDecoratedGraph.edges, matrixInspections, collapsedCompoundIds,
+  ), [auditionDecoratedGraph, collapsedCompoundIds, matrixInspections]);
   const graphGroups = useMemo(() => inspectGraphGroups(nodes), [nodes]);
   const hasCollapsedGraphGroup = graphGroups.some((group) => group.collapsed);
   const groupDisplayedGraph = useMemo(() => collapseGraphGroups(
-    hasCollapsedGraphGroup ? routingFocusedGraph.nodes : compoundDisplayedGraph.nodes,
-    hasCollapsedGraphGroup ? routingFocusedGraph.edges : compoundDisplayedGraph.edges,
-  ), [routingFocusedGraph, hasCollapsedGraphGroup, compoundDisplayedGraph]);
+    hasCollapsedGraphGroup ? auditionDecoratedGraph.nodes : compoundDisplayedGraph.nodes,
+    hasCollapsedGraphGroup ? auditionDecoratedGraph.edges : compoundDisplayedGraph.edges,
+  ), [auditionDecoratedGraph, hasCollapsedGraphGroup, compoundDisplayedGraph]);
   const selectedGroupDisplayedGraph = useMemo(() => selectedNode && ['graph-group', 'compound-summary'].includes(selectedNode.data.type) ? {
     nodes: groupDisplayedGraph.nodes.map((node) => ({ ...node, selected: node.id === selectedNode.id })),
     edges: groupDisplayedGraph.edges,
@@ -698,7 +703,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     let cancelled = false;
     const timer = window.setTimeout(async () => {
       try {
-        const result = parseGraphPublicationResult(await callNative('publishGraph', writePatchJson(nodes, edges, viewport, qualityPolicy)));
+        const preview = auditionOverlay !== null && auditionResult.accepted; const graph = preview ? auditionResult.graph : { nodes, edges };
+        const result = parseGraphPublicationResult(await callNative(preview ? 'previewGraph' : 'publishGraph', writePatchJson(graph.nodes, graph.edges, viewport, qualityPolicy)));
         if (!cancelled) setGraphStatus(result.accepted
           ? { kind: 'ok', message: `GRAPH REVISION #${result.revision} QUEUED FOR AUDITION` }
           : { kind: 'error', message: result.error });
@@ -707,7 +713,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       }
     }, 35);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [audibleFingerprint, qualityPolicy]);
+  }, [audibleFingerprint, auditionOverlay, auditionResult, qualityPolicy]);
 
   useEffect(() => {
     let cancelled = false;
@@ -795,15 +801,21 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   }, [contextTab, diagnosticsPollingEnabled, openContext, workspacePresentation.contextOpen]);
 
   const applyGraph = useCallback((state: { nodes: Node<PatchNodeData>[]; edges: Edge[] }) => {
-    setNodes(state.nodes); setEdges(state.edges); setSelectedNode(null); setSelectedEdge(null);
+    setNodes(state.nodes); setEdges(state.edges); setSelectedNode(null); setSelectedEdge(null); setAuditionOverlay(null);
   }, [setEdges, setNodes]);
+
+  const activateAuditionOverlay = useCallback((overlay: AuditionOverlay) => {
+    const result = applyAuditionOverlay({ nodes, edges }, overlay);
+    if (!result.accepted) { setGraphStatus({ kind: 'error', message: result.message.toUpperCase() }); return; }
+    setAuditionOverlay(overlay); setGraphStatus({ kind: 'ok', message: `TEMPORARY ${result.message.toUpperCase()} / PATCH AND EXPORT UNCHANGED` });
+  }, [edges, nodes]);
 
   const previewAssistedTuning = useCallback(async (id: AssistedTuningSuggestionId) => {
     const preview = createAssistedTuningPreview({ nodes, edges }, id);
     setTuningBusy(true);
     setTuningPreview({ id, graph: preview });
     try {
-      const payload = await callNative('publishGraph', writePatchJson(preview.nodes, preview.edges, viewport, qualityPolicy));
+      const payload = await callNative('previewGraph', writePatchJson(preview.nodes, preview.edges, viewport, qualityPolicy));
       if (payload !== undefined) {
         const result = parseGraphPublicationResult(payload);
         if (!result.accepted) {
@@ -1371,6 +1383,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               </select></label>
             </div>
             <div className="canvas-actions">
+              {auditionOverlay ? <button type="button" className="audition-clear" onClick={() => setAuditionOverlay(null)}>CLEAR {auditionOverlay.kind.toUpperCase()}</button> : null}
               {supportsAssistedTuning({ nodes, edges }) ? <button type="button" className="tuning-open-button"
                 aria-expanded={tuningOpen} onClick={() => setTuningOpen((open) => !open)}>TUNE</button> : null}
               {matrixInspections.map((inspection) => { const collapsed = inspection.canCollapse && collapsedCompoundIds.has(inspection.id); return <button type="button" className="matrix-view-toggle"
@@ -1573,6 +1586,13 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <button type="button" onClick={detachSelectedSubpatch}>DETACH TO ORDINARY BLOCKS</button>
                 <small>Compilation already uses these visible primitives. Definition changes never update this saved instance silently.</small>
               </section> : null}
+              {selectedNode.data.role !== 'io' && selectedNode.data.ports.some((port) => port.signal === 'audio' && port.direction === 'output') && !['graph-group', 'compound-summary'].includes(selectedNode.data.type) ? <section className="audition-overlay-controls" aria-label="Temporary block audition">
+                <header><strong>TEMPORARY AUDITION</strong><span>NOT SAVED / NOT EXPORTED</span></header>
+                <div><button type="button" aria-pressed={auditionOverlay?.kind === 'mute' && auditionOverlay.target === 'node' && auditionOverlay.id === selectedNode.id} onClick={() => activateAuditionOverlay({ kind: 'mute', target: 'node', id: selectedNode.id })}>MUTE OUTPUT</button>
+                  <button type="button" aria-pressed={auditionOverlay?.kind === 'isolate' && auditionOverlay.target === 'node' && auditionOverlay.id === selectedNode.id} onClick={() => activateAuditionOverlay({ kind: 'isolate', target: 'node', id: selectedNode.id })}>ISOLATE PATHS</button>
+                  <button type="button" aria-pressed={auditionOverlay?.kind === 'bypass' && auditionOverlay.id === selectedNode.id} onClick={() => activateAuditionOverlay({ kind: 'bypass', target: 'node', id: selectedNode.id })}>BYPASS BLOCK</button></div>
+                <small>Bypass uses temporary explicit rewiring, may change compiled latency, and is refused if it creates a zero-delay cycle.</small>
+              </section> : null}
               {selectedNode.data.type === 'pitch-shift' ? <PitchShiftVisualization
                 parameters={selectedNode.data.parameters}
                 reducedMotion={reducedMotion}
@@ -1707,6 +1727,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <div><dt>TO</dt><dd>{selectedEdge.target}</dd></div>
                 <div><dt>SIGNAL</dt><dd>{selectedEdge.data?.signal === 'control' ? 'CONTROL / DASHED' : 'AUDIO / SOLID'}</dd></div>
               </dl>
+              {selectedEdge.data?.signal !== 'control' ? <section className="audition-overlay-controls" aria-label="Temporary cable audition">
+                <header><strong>TEMPORARY AUDITION</strong><span>NOT SAVED / NOT EXPORTED</span></header>
+                <div><button type="button" aria-pressed={auditionOverlay?.kind === 'mute' && auditionOverlay.target === 'edge' && auditionOverlay.id === selectedEdge.id} onClick={() => activateAuditionOverlay({ kind: 'mute', target: 'edge', id: selectedEdge.id })}>MUTE CABLE</button>
+                  <button type="button" aria-pressed={auditionOverlay?.kind === 'isolate' && auditionOverlay.target === 'edge' && auditionOverlay.id === selectedEdge.id} onClick={() => activateAuditionOverlay({ kind: 'isolate', target: 'edge', id: selectedEdge.id })}>ISOLATE BRANCH</button></div>
+              </section> : null}
               <section className="cable-routing-inspector" aria-label="Cable routing and focus">
                 <div className="cable-focus-actions">
                   <button type="button" onClick={() => focusCablePath('source')}>TRACE TO SOURCE</button>
@@ -1788,7 +1813,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           </div>
         </aside>
       </section>
-      {measurementDrawerVisible ? <MeasurementBar sampleRate={snapshot.sampleRate} onCapture={receiveCapture} /> : null}
+      {measurementDrawerVisible ? <MeasurementBar sampleRate={snapshot.sampleRate} onCapture={receiveCapture} overlayLabel={auditionOverlayLabel(auditionOverlay)} /> : null}
     </main>
   );
 }

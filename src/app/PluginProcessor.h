@@ -60,6 +60,7 @@ public:
     [[nodiscard]] juce::String runtimeDiagnosticsJson() const;
     [[nodiscard]] juce::String audioFileTransportJson() const;
     [[nodiscard]] juce::String publishGraphJson(const juce::String& patchJson);
+    [[nodiscard]] juce::String previewGraphJson(const juce::String& patchJson);
     [[nodiscard]] juce::String storePatchStateJson(const juce::String& patchJson);
     juce::String startImpulseCapture(double lengthMilliseconds, double stopThresholdDb);
     bool setEnergyTelemetryEnabled(bool enabled) noexcept;
