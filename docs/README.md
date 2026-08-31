@@ -18,6 +18,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Windows package installation](windows-package-installation.md) - install, run, verify, and remove the standalone/VST3 alpha package.
 - [Barr reference tutorial](getting-started-barr-tutorial.md) - clean-install first run, safe audition, measurement, editing, diagnostics, and save/reload.
 - [Module and visualization reference](module-and-visualization-reference.md) - every shipped block, unit, range, socket, display, and constraint.
+- [Module vocabulary and Advanced controls](module-vocabulary-and-advanced-controls.md) - visible naming, channel contracts, behavior badges, and compact disclosure rules.
 - [Factory patch catalog and compatibility](factory-patch-compatibility.md) - shipped families, metadata, admission rules, schema migrations, and CI guarantees.
 - [Alpha usability and safety protocol](alpha-usability-safety-protocol.md) - anonymous participant method, complete task journey, accessibility matrix, and stop rules.
 - [Alpha validation findings](alpha-validation-findings.md) - privacy-preserving session outcomes, prioritized defects, and release-blocker inventory.

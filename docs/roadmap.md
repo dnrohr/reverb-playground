@@ -1777,7 +1777,7 @@ Acceptance criteria:
 - A listening fixture proves raw and matched modes differ as documented without
   altering exported patch semantics.
 
-### M27.3 Refine names and inspector complexity
+### M27.3 Refine names and inspector complexity — Complete
 
 Tasks: audit every module label, port, unit, default, detent, and advanced
 parameter; rename Gain / Invert to Gain while retaining negative inversion;

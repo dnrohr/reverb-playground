@@ -96,7 +96,7 @@ mistaken for processors; Undo and save/reload preserve the visible graph.
 
 ### 3. Build a legal delayed feedback loop — 10 minutes
 
-Goal: add **Delay**, **Gain / Invert**, and, where an input is occupied, an
+Goal: add **Delay**, **Gain**, and, where an input is occupied, an
 explicit **Sum (+)** so some wet output returns to an earlier point through at
 least `10 ms` delay and gain no greater than `0.5` magnitude.
 
@@ -108,7 +108,7 @@ for observation, then follow the documented recovery sequence.
 
 ### 4. Cause and repair an invalid algebraic cycle — 7 minutes
 
-Goal: construct a local **Sum (+)** / **Gain / Invert** cycle with no Delay,
+Goal: construct a local **Sum (+)** / **Gain** cycle with no Delay,
 observe why it is rejected, and repair it by breaking the cycle or inserting a
 Delay.
 

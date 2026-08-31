@@ -1595,3 +1595,23 @@ Results:
   [raw/refusal](../artifacts/ui/m27-2-ab-comparison/ab-raw-refusal.png),
   [workflow](../artifacts/ui/m27-2-ab-comparison/ab-snapshot-workflow.mp4), and
   [compact](../artifacts/ui/m27-2-ab-comparison/ab-640x400.png).
+
+## M27.3 verification
+
+- The public palette label is now Gain while the stable `gain` type and `gain`
+  parameter IDs remain unchanged; negative values still invert polarity.
+- Every primitive has a centralized visible name, signal/channel contract, and
+  audible-role description. Inspector parameter cards retain units and state
+  whether edits are smoothed/modulated or base-only/crossfaded rebuilds.
+- Pitch Shift, Macro, LFO, Curve Mapper, Hold Gate, and every modulation mapping
+  use one native Advanced disclosure. Opening it is presentation-only and does
+  not enter patch state, history, serialization, or audio publication.
+- Automated audits cover all 13 definitions, unique port/parameter IDs,
+  defaults, units, detent, specialist placement, and the complete saved-ID
+  compatibility contract.
+- Browser QA confirmed the native disclosure, vocabulary/accessibility text,
+  and zero horizontal overflow at 640 by 400. Evidence:
+  [Pitch Shift](../artifacts/ui/m27-3-inspector-vocabulary/pitch-advanced.jpg),
+  [Gain](../artifacts/ui/m27-3-inspector-vocabulary/gain-inspector.jpg),
+  [compact](../artifacts/ui/m27-3-inspector-vocabulary/advanced-640x400.jpg), and
+  [workflow](../artifacts/ui/m27-3-inspector-vocabulary/advanced-disclosure-workflow.mp4).

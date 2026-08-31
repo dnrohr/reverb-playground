@@ -1,6 +1,6 @@
 # Editable node creation and deletion
 
-M3.1 turns the module library into the first structural editing surface. Clicking a library item creates a stable, schema-backed block near the viewport center. The primitives are Stereo Input, Stereo Output, Gain / Invert, Sum (`+`), Delay, Allpass, and Low-pass.
+M3.1 turns the module library into the first structural editing surface. Clicking a library item creates a stable, schema-backed block near the viewport center. The primitives are Stereo Input, Stereo Output, Gain, Sum (`+`), Delay, Allpass, and Low-pass. Negative Gain values retain the original polarity-inversion behavior.
 
 IDs use a readable type-plus-number form such as `delay-1` and survive editing, undo, save, and reload. Each block copies ports, parameter ranges, units, and safe initial values from one module registry. Delay values use milliseconds. Gain spans `-1..1`, making inversion explicit without a separate subtraction primitive.
 

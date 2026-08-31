@@ -16,7 +16,7 @@ describe('feedback loop inspection', () => {
     const result = inspectFeedbackLoops(nodes, edges, { nodeId: 'delay' });
     expect(result.loops.map((loop) => loop.edgeIds)).toEqual([['b', 'c', 'a'], ['b', 'd', 'e', 'a']]);
     expect(result.loops[0].nominalDelayMilliseconds).toBe(12.5);
-    expect(result.loops[0].gainElements).toEqual([{ nodeId: 'gain', label: 'Gain / Invert', parameter: 'gain', value: -0.6, unit: 'linear' }]);
+    expect(result.loops[0].gainElements).toEqual([{ nodeId: 'gain', label: 'Gain', parameter: 'gain', value: -0.6, unit: 'linear' }]);
     expect(result.loops[1].filters).toEqual([{ nodeId: 'filter', label: 'Low-pass', parameter: 'cutoff', value: 6400, unit: 'hertz' }]);
   });
 

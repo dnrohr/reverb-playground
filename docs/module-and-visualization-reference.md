@@ -27,20 +27,21 @@ parameters. Branch either output freely; joining channels requires an explicit
 Stereo boundary sink with mono audio inputs `in-l` and `in-r`. It has no
 parameters. Each input accepts one cable.
 
-### Gain / Invert
+### Gain
 
 <!-- module: gain -->
 
 Mono audio input/output with a `gain-mod` control socket. **Gain** is linear,
 `-1.000..+1.000`, step `0.001`, default `+1.000`; negative values invert
 polarity and zero mutes this path. Default modulation depth is `0.5`.
+Inversion remains an ordinary negative Gain value rather than a separate mode.
 
 ### Sum (+)
 
 <!-- module: sum -->
 
 Adds mono audio inputs `in-a` and `in-b` into one mono output with no hidden
-normalization and no parameters. Use **Gain / Invert** before or after it when
+normalization and no parameters. Use **Gain** before or after it when
 level or subtraction is required. Connecting a second source to an occupied
 audio input can insert this block automatically after confirmation.
 
@@ -88,6 +89,8 @@ or reverse playback inside each causal grain. **Phase** is
 `0.000..0.999 cycles`, step `0.001`, default `0`; it deterministically offsets
 the two read heads so paired mono blocks can avoid coincident grain boundaries.
 Direction and Phase have no modulation socket.
+Semitones stays visible in the inspector; Grain, Overlap, Direction, Phase,
+and modulation routing are collected under **Advanced**.
 This is ratio-based musical pitch shift, not fixed-Hz frequency shift, Delay
 modulation, whole-response reversal, or pre-input audio. The initial quality is
 dual grain with linear interpolation and fixed sample-rate-derived latency.
@@ -103,6 +106,8 @@ Sine (`0`) or Triangle (`1`). **Run mode** is Free Run (`0`) or Restart on
 Transport (`1`). Defaults for modulation amount are respectively `1 Hz`,
 `0.25 cycles`, `1`, and `1`; discrete selectors change only at their defined
 integer choices.
+Frequency stays visible; Phase, Waveform, Run mode, and modulation routing are
+collected under **Advanced**.
 
 ### Macro
 
@@ -160,6 +165,18 @@ control input. **Threshold** is unitless `0.00..1.00`, step `0.01`, default
 `0.1..1000.0 ms`, step `0.1 ms`, default `20 ms`. All are base-only in this
 release. The detector can connect directly from Envelope Follower or through
 one Scale / Offset block.
+Threshold stays visible; Attack, Hold, Release, and modulation routing are
+collected under **Advanced**.
+
+## Inspector vocabulary and disclosure
+
+Every selected block states its channel/signal contract and audible role. Each
+parameter retains its unit and reports whether it is a base-only setting,
+smoothed at runtime, modulated, or applied through a click-safe graph rebuild.
+The **Advanced** disclosure is presentation state only: opening or closing it
+does not edit the graph, change audio, enter history, or alter saved patches.
+The summary is a native keyboard- and screen-reader-operable disclosure and
+remains scrollable at compact window widths.
 
 ## Visualizations and inspectors
 

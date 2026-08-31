@@ -15,7 +15,7 @@ import {
   type OnSelectionChangeParams,
   type Viewport,
 } from '@xyflow/react';
-import { createFlowModel, deleteSelected, parseRuntimeSnapshot, type GraphState, type PatchNodeData, type RuntimeSnapshot } from './graph';
+import { createFlowModel, deleteSelected, parseRuntimeSnapshot, type GraphState, type PatchNodeData, type PatchParameter, type RuntimeSnapshot } from './graph';
 import { createModuleNode, moduleDefinitions, nextNodeId, type ModuleType } from './modules';
 import { commitGraphEdit, emptyGraphHistory, isHistoryClean, markHistoryClean, redoGraphEdit, semanticGraphHash, snapshotGraph, undoGraphEdit } from './graphHistory';
 import { copySelectedGraph, pasteGraph, type GraphClipboard } from './graphClipboard';
@@ -56,6 +56,7 @@ import { applyAuditionOverlay, auditionOverlayLabel, decorateAuditionOverlay, ty
 import { captureComparisonSnapshot, compareSnapshots, comparisonGainLinear, comparisonMatch,
   type ComparisonMode, type ComparisonSlot, type ComparisonSnapshot } from './comparisonSnapshots';
 import { captureRevisionState, contextTabFor, emphasizeAnalyzeLayout, shouldPollRuntimeDiagnostics, type ContextIntent, type ContextTab } from './contextDock';
+import { isAdvancedParameter, parameterBehavior, parameterDisplayName, visibleModuleLabel, vocabularyFor } from './moduleVocabulary';
 import {
   arrangementPresentation,
   parseWorkspacePresentation,
@@ -504,6 +505,55 @@ function ComparisonPanel({ snapshots, active, mode, match, onCapture, onAudition
       <div><dt>GAINS</dt><dd>{diff.gainChanges.length ? diff.gainChanges.join(', ') : 'UNCHANGED'}</dd></div>
       <div><dt>LATENCY B−A</dt><dd>{diff.latencyDeltaSamples === null ? 'UNKNOWN' : `${diff.latencyDeltaSamples >= 0 ? '+' : ''}${diff.latencyDeltaSamples} samples`}</dd></div></dl> : null}
     <footer><button type="button" disabled={!active} onClick={onRevert}>REVERT TO EDITED GRAPH</button><button type="button" disabled={!active} onClick={onPromote}>PROMOTE ACTIVE / UNDOABLE</button></footer>
+  </section>;
+}
+
+function InspectorParameter({ node, parameter, showBase, showModulation, onBegin, onChange, onCommit, onModulation }: {
+  node: Node<PatchNodeData>; parameter: PatchParameter; showBase: boolean; showModulation: boolean;
+  onBegin(nodeId: string, parameterId: string, before: number): void;
+  onChange(nodeId: string, parameterId: string, value: number): void; onCommit(): void;
+  onModulation(nodeId: string, parameterId: string, change: Partial<NonNullable<PatchParameter['modulation']>>): void;
+}) {
+  const choices = parameterChoices(parameter.unit); const name = parameterDisplayName(parameter.id);
+  return <section className={`parameter-block${showBase ? '' : ' modulation-only'}`} aria-label={`${visibleModuleLabel(node.data)} ${name}`}>
+    {showBase ? <>
+      <header className="parameter-heading"><span>{name.toUpperCase()}</span><div>{parameterBehavior(node.data, parameter).map((behavior) => <em key={behavior}>{behavior}</em>)}</div></header>
+      <label className="parameter-value"><span className="sr-only">{visibleModuleLabel(node.data)} {name} numeric value</span>
+        {choices ? <select aria-label={`${visibleModuleLabel(node.data)} ${name}`} value={parameter.value}
+          onFocus={() => onBegin(node.id, parameter.id, parameter.value)} onChange={(event) => onChange(node.id, parameter.id, Number(event.target.value))} onBlur={onCommit}>
+          {choices.map((choice) => <option key={choice.value} value={choice.value}>{choice.label}</option>)}</select> : <input
+          className="parameter-number" type="number" min={parameter.minimum} max={parameter.maximum} step={parameter.step} value={parameter.value}
+          aria-label={`${visibleModuleLabel(node.data)} ${name} numeric value ${parameter.unit}`}
+          onFocus={() => onBegin(node.id, parameter.id, parameter.value)} onChange={(event) => onChange(node.id, parameter.id, Number(event.target.value))}
+          onKeyDown={(event) => { if (event.key === 'Enter') onCommit(); }} onBlur={onCommit} />}
+        <strong>{parameter.unit === 'milliseconds' ? 'ms' : parameter.unit === 'hertz' ? 'Hz' : parameter.unit === 'semitones' ? 'st' : ''}</strong>
+      </label>
+      <small>{parameter.unit} · {parameter.minimum.toLocaleString()}…{parameter.maximum.toLocaleString()} · step {parameter.step.toLocaleString()}</small>
+      {!choices ? <input aria-label={`${visibleModuleLabel(node.data)} ${name}`} type="range" min={parameter.minimum} max={parameter.maximum} step={parameter.step} value={parameter.value}
+        onPointerDown={() => onBegin(node.id, parameter.id, parameter.value)} onChange={(event) => onChange(node.id, parameter.id, Number(event.target.value))}
+        onPointerUp={onCommit} onKeyDown={(event) => { if (event.key === 'Enter') onCommit(); }} onBlur={onCommit} /> : null}
+    </> : <header className="parameter-heading"><span>{name.toUpperCase()} MODULATION</span><div><em>ADVANCED</em></div></header>}
+    {showModulation && parameter.modulation ? <section className="modulation-mapping" aria-label={`${visibleModuleLabel(node.data)} ${name} modulation mapping`}>
+      <header><span>CONTROL SOCKET</span><code>{parameter.modulation.portId}</code></header>
+      <div className="mapping-formula">effective = clamp(base + amount × control)</div>
+      <label><span>POLARITY</span><select value={parameter.modulation.polarity}
+        onFocus={() => onBegin(node.id, `${parameter.id} modulation`, parameter.value)}
+        onChange={(event) => onModulation(node.id, parameter.id, { polarity: event.target.value as 'unipolar' | 'bipolar' })} onBlur={onCommit}>
+        <option value="bipolar">BIPOLAR −1…+1</option><option value="unipolar">UNIPOLAR 0…1</option></select></label>
+      <label><span>AMOUNT</span><input type="number" step={parameter.step} value={parameter.modulation.amount}
+        onFocus={() => onBegin(node.id, `${parameter.id} modulation`, parameter.value)} onChange={(event) => onModulation(node.id, parameter.id, { amount: Number(event.target.value) })} onBlur={onCommit} /></label>
+      <div className="mapping-clamp">
+        <label><span>CLAMP MIN</span><input type="number" min={parameter.minimum} max={parameter.modulation.clampMaximum} step={parameter.step} value={parameter.modulation.clampMinimum}
+          onFocus={() => onBegin(node.id, `${parameter.id} modulation`, parameter.value)} onChange={(event) => onModulation(node.id, parameter.id, { clampMinimum: Number(event.target.value) })} onBlur={onCommit} /></label>
+        <label><span>CLAMP MAX</span><input type="number" min={parameter.modulation.clampMinimum} max={parameter.maximum} step={parameter.step} value={parameter.modulation.clampMaximum}
+          onFocus={() => onBegin(node.id, `${parameter.id} modulation`, parameter.value)} onChange={(event) => onModulation(node.id, parameter.id, { clampMaximum: Number(event.target.value) })} onBlur={onCommit} /></label>
+      </div>
+      <footer>{parameter.id === 'delay' && (node.data.type === 'delay' || node.data.type === 'allpass')
+        ? '1 kHz control ticks · linear audio-rate ramp · fractional delay tap; moving time creates Doppler/pitch.'
+        : parameter.id === 'coefficient' && node.data.type === 'allpass'
+          ? '1 kHz control ticks · linear ramp · coefficient hard-limited to −0.95…+0.95.'
+          : '1 kHz control ticks · linear interpolation to audio rate.'}</footer>
+    </section> : null}
   </section>;
 }
 
@@ -1619,7 +1669,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           {selectedNode ? (
             <div className="inspector-content" key={selectedNode.id}>
               <div className="selection-kicker">SELECTED BLOCK</div>
-              <h2>{selectedNode.data.userName?.trim() || selectedNode.data.label}</h2>
+              <h2>{visibleModuleLabel(selectedNode.data)}</h2>
               <code>{selectedNode.id}</code>
               {selectedNode.data.presentation === 'gravity' && selectedMacroInspection ? <GravityPresentation
                 value={selectedNode.data.parameters.find((parameter) => parameter.id === 'value')?.value ?? 0}
@@ -1634,8 +1684,13 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <dl className="property-list">
                 <div><dt>TYPE</dt><dd>{selectedNode.data.type}</dd></div>
                 <div><dt>ROLE</dt><dd>{selectedNode.data.role}</dd></div>
-                <div><dt>PORTS</dt><dd>{selectedNode.data.ports.length} mono</dd></div>
+                <div><dt>SIGNAL / CHANNELS</dt><dd>{vocabularyFor(selectedNode.data)?.signal ?? `${selectedNode.data.ports.length} explicit ports`}</dd></div>
+                <div><dt>PORTS</dt><dd>{selectedNode.data.ports.filter((port) => port.signal === 'audio' && port.direction === 'input').length} audio in · {selectedNode.data.ports.filter((port) => port.signal === 'audio' && port.direction === 'output').length} audio out · {selectedNode.data.ports.filter((port) => port.signal === 'control' && port.direction === 'input').length} control in · {selectedNode.data.ports.filter((port) => port.signal === 'control' && port.direction === 'output').length} control out</dd></div>
               </dl>
+              {vocabularyFor(selectedNode.data) ? <section className="module-contract" aria-label="Module signal and audible role">
+                <strong>AUDIBLE ROLE</strong><p>{vocabularyFor(selectedNode.data)!.audibleRole}</p>
+                {selectedNode.data.type === 'gain' ? <small>Negative Gain values invert polarity; no separate Invert mode or hidden switch is used.</small> : null}
+              </section> : null}
               {selectedNode.data.presentationGroup ? <section className="group-inspector" aria-label="Visual group controls">
                 <label><span>GROUP NAME</span><input aria-label="Group name" defaultValue={selectedNode.data.presentationGroup.name}
                   onKeyDown={(event) => { if (event.key === 'Enter') event.currentTarget.blur(); }}
@@ -1718,82 +1773,21 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 </section>
               ) : null}
               <h3>PARAMETERS</h3>
-              {selectedNode.data.parameters.length ? selectedNode.data.parameters
-                .filter((parameter) => selectedNode.data.presentation !== 'gravity' || parameter.id !== 'value')
-                .map((parameter) => {
-                const choices = parameterChoices(parameter.unit);
-                return (
-                <div className="parameter-card" key={parameter.id}>
-                  <span>{parameter.id.toUpperCase()}</span>
-                  <label className="parameter-value">
-                    <span className="sr-only">{`${selectedNode.data.label} ${parameter.id} numeric value`}</span>
-                    {choices ? <select
-                      aria-label={`${selectedNode.data.label} ${parameter.id}`}
-                      value={parameter.value}
-                      onFocus={() => beginParameterEdit(selectedNode.id, parameter.id, parameter.value)}
-                      onChange={(event) => changeParameter(selectedNode.id, parameter.id, Number(event.target.value))}
-                      onBlur={commitParameterEdit}
-                    >{choices.map((choice) => <option key={choice.value} value={choice.value}>{choice.label}</option>)}</select> : <input
-                      className="parameter-number"
-                      type="number"
-                      min={parameter.minimum}
-                      max={parameter.maximum}
-                      step={parameter.step}
-                      value={parameter.value}
-                      onFocus={() => beginParameterEdit(selectedNode.id, parameter.id, parameter.value)}
-                      onChange={(event) => changeParameter(selectedNode.id, parameter.id, Number(event.target.value))}
-                      onKeyDown={(event) => { if (event.key === 'Enter') commitParameterEdit(); }}
-                      onBlur={commitParameterEdit}
-                    />}
-                    <strong>{parameter.unit === 'milliseconds' ? 'ms' : parameter.unit === 'hertz' ? 'Hz' : parameter.unit === 'semitones' ? 'st' : ''}</strong>
-                  </label>
-                  <small>{parameter.unit}</small>
-                  {!choices ? <input
-                    aria-label={`${selectedNode.data.label} ${parameter.id}`}
-                    type="range"
-                    min={parameter.minimum}
-                    max={parameter.maximum}
-                    step={parameter.step}
-                    value={parameter.value}
-                    onPointerDown={() => beginParameterEdit(selectedNode.id, parameter.id, parameter.value)}
-                    onChange={(event) => changeParameter(selectedNode.id, parameter.id, Number(event.target.value))}
-                    onPointerUp={commitParameterEdit}
-                    onKeyDown={(event) => {
-                      if (!activeEdit.current) beginParameterEdit(selectedNode.id, parameter.id, parameter.value);
-                      if (event.key === 'Enter') commitParameterEdit();
-                    }}
-                    onBlur={commitParameterEdit}
-                  /> : null}
-                  {parameter.modulation ? (
-                    <section className="modulation-mapping" aria-label={`${selectedNode.data.label} ${parameter.id} modulation mapping`}>
-                      <header><span>CONTROL SOCKET</span><code>{parameter.modulation.portId}</code></header>
-                      <div className="mapping-formula">effective = clamp(base + amount × control)</div>
-                      <label>
-                        <span>POLARITY</span>
-                        <select
-                          value={parameter.modulation.polarity}
-                          onFocus={() => beginParameterEdit(selectedNode.id, `${parameter.id} modulation`, parameter.value)}
-                          onChange={(event) => applyModulation(selectedNode.id, parameter.id, { polarity: event.target.value as 'unipolar' | 'bipolar' })}
-                          onBlur={commitParameterEdit}
-                        ><option value="bipolar">BIPOLAR −1…+1</option><option value="unipolar">UNIPOLAR 0…1</option></select>
-                      </label>
-                      <label><span>AMOUNT</span><input type="number" step={parameter.step} value={parameter.modulation.amount} onFocus={() => beginParameterEdit(selectedNode.id, `${parameter.id} modulation`, parameter.value)} onChange={(event) => applyModulation(selectedNode.id, parameter.id, { amount: Number(event.target.value) })} onBlur={commitParameterEdit} /></label>
-                      <div className="mapping-clamp">
-                        <label><span>CLAMP MIN</span><input type="number" min={parameter.minimum} max={parameter.modulation.clampMaximum} step={parameter.step} value={parameter.modulation.clampMinimum} onFocus={() => beginParameterEdit(selectedNode.id, `${parameter.id} modulation`, parameter.value)} onChange={(event) => applyModulation(selectedNode.id, parameter.id, { clampMinimum: Number(event.target.value) })} onBlur={commitParameterEdit} /></label>
-                        <label><span>CLAMP MAX</span><input type="number" min={parameter.modulation.clampMinimum} max={parameter.maximum} step={parameter.step} value={parameter.modulation.clampMaximum} onFocus={() => beginParameterEdit(selectedNode.id, `${parameter.id} modulation`, parameter.value)} onChange={(event) => applyModulation(selectedNode.id, parameter.id, { clampMaximum: Number(event.target.value) })} onBlur={commitParameterEdit} /></label>
-                      </div>
-                      <footer>
-                        {parameter.id === 'delay' && (selectedNode.data.type === 'delay' || selectedNode.data.type === 'allpass')
-                          ? '1 kHz control ticks / linear audio-rate ramp / fractional linear delay tap. Moving time intentionally produces Doppler and pitch effects; control sources are limited to 100 Hz.'
-                          : parameter.id === 'coefficient' && selectedNode.data.type === 'allpass'
-                            ? '1 kHz control ticks / linear audio-rate ramp / coefficient hard-limited to -0.95 through +0.95.'
-                            : '1 kHz control ticks / linear interpolation to audio rate'}
-                      </footer>
-                    </section>
-                  ) : null}
-                </div>
-                );
-              }) : <p className="empty-parameters">No editable parameters.</p>}
+              {selectedNode.data.parameters.length ? <>
+                {selectedNode.data.parameters.filter((parameter) => (selectedNode.data.presentation !== 'gravity' || parameter.id !== 'value') && !isAdvancedParameter(selectedNode.data, parameter.id))
+                  .map((parameter) => <InspectorParameter key={parameter.id} node={selectedNode} parameter={parameter} showBase showModulation={false}
+                    onBegin={beginParameterEdit} onChange={changeParameter} onCommit={commitParameterEdit} onModulation={applyModulation} />)}
+                {selectedNode.data.parameters.some((parameter) => isAdvancedParameter(selectedNode.data, parameter.id) || parameter.modulation) ? <details className="advanced-parameters">
+                  <summary>ADVANCED <span>{selectedNode.data.parameters.filter((parameter) => isAdvancedParameter(selectedNode.data, parameter.id)).length} specialist · {selectedNode.data.parameters.filter((parameter) => parameter.modulation).length} modulation</span></summary>
+                  <p>Opening this disclosure changes presentation only. Audio and saved parameter values remain unchanged.</p>
+                  {selectedNode.data.parameters.filter((parameter) => isAdvancedParameter(selectedNode.data, parameter.id))
+                    .map((parameter) => <InspectorParameter key={parameter.id} node={selectedNode} parameter={parameter} showBase showModulation={Boolean(parameter.modulation)}
+                      onBegin={beginParameterEdit} onChange={changeParameter} onCommit={commitParameterEdit} onModulation={applyModulation} />)}
+                  {selectedNode.data.parameters.filter((parameter) => !isAdvancedParameter(selectedNode.data, parameter.id) && parameter.modulation)
+                    .map((parameter) => <InspectorParameter key={`${parameter.id}-mod`} node={selectedNode} parameter={parameter} showBase={false} showModulation
+                      onBegin={beginParameterEdit} onChange={changeParameter} onCommit={commitParameterEdit} onModulation={applyModulation} />)}
+                </details> : null}
+              </> : <p className="empty-parameters">No editable parameters.</p>}
               <div className="history-actions">
                 <button type="button" disabled={!graphHistory.undo.length} onClick={undoGraph}>UNDO</button>
                 <button type="button" disabled={!graphHistory.redo.length} onClick={redoGraph}>REDO</button>

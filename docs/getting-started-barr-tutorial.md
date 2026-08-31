@@ -26,7 +26,7 @@ if the complete graph is not visible. Follow the solid mono cables from left to
 right:
 
 1. **Stereo Input** exposes separate `out-l` and `out-r` sockets.
-2. **Sum (+)** combines those two mono cables. The following **Gain / Invert**
+2. **Sum (+)** combines those two mono cables. The following **Gain**
    block applies the visible `0.5` normalization.
 3. **Low-pass** removes high-frequency energy before diffusion.
 4. Four shared **Allpass** blocks diffuse the mono signal.

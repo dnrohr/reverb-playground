@@ -1,6 +1,7 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import type { PatchNodeData } from './graph';
 import { PitchShiftVisualization } from './PitchShiftVisualization';
+import { moduleSignalBadge, visibleModuleLabel, vocabularyFor } from './moduleVocabulary';
 
 const prettyUnit = (unit: string) => unit === 'milliseconds' ? 'ms' : unit === 'hertz' ? 'Hz' : unit === 'semitones' ? 'st' : '';
 
@@ -10,7 +11,7 @@ export function PatchNode({ data, selected }: NodeProps & { data: PatchNodeData 
   const topFor = (index: number, total: number) => `${((index + 1) / (total + 1)) * 100}%`;
 
   return (
-    <article className={`patch-node role-${data.role}${selected ? ' is-selected' : ''}`} aria-label={`${data.label} ${data.type}`}>
+    <article className={`patch-node role-${data.role}${selected ? ' is-selected' : ''}`} aria-label={`${visibleModuleLabel(data)} ${moduleSignalBadge(data)}. ${vocabularyFor(data)?.audibleRole ?? data.type}`}>
       {inputs.map((port, index) => (
         <Handle
           className={`port port-${port.signal}`}
@@ -22,8 +23,9 @@ export function PatchNode({ data, selected }: NodeProps & { data: PatchNodeData 
         />
       ))}
       <div className="node-kicker">{data.role}</div>
-      <h3>{data.userName?.trim() || data.label}</h3>
+      <h3>{visibleModuleLabel(data)}</h3>
       <div className="node-type">{data.type}</div>
+      <div className="node-signal">{moduleSignalBadge(data)}</div>
       {data.type === 'envelope-follower' ? <div className="signal-operation">AUDIO → ENVELOPE 0…1</div> : null}
       {data.type === 'hold-gate' ? <div className="signal-operation">AUDIO × CONTROL GATE</div> : null}
       {data.type === 'pitch-shift' ? <div className="signal-operation">MUSICAL RATIO · NOT FIXED HZ / DOPPLER</div> : null}

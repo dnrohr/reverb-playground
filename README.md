@@ -62,6 +62,7 @@ Report reproducible bugs or documentation problems through [GitHub Issues](https
 Useful references:
 
 - [Module and visualization reference](docs/module-and-visualization-reference.md)
+- [Module vocabulary and Advanced controls](docs/module-vocabulary-and-advanced-controls.md)
 - [Processing quality modes](docs/quality-modes.md)
 - [Why the visible graph executor remains the shipping path](docs/factory-specialization-decision.md)
 - [Saving and loading patches](docs/patch-saving-and-loading.md)
