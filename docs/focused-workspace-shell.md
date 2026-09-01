@@ -3,8 +3,8 @@
 M25.1 begins the canvas-first interface by consolidating application commands
 without removing graph, audition, safety, or diagnostic capability. The app icon
 was subsequently added as a separate application-branding change: the supplied
-rounded-square infinity/reverb mark now uses the workspace's cyan, amber,
-off-white, and near-black palette and is embedded in both standalone and plugin
+rounded-square infinity/reverb mark now uses the workspace's cyan, off-white,
+and near-black palette and is embedded in both standalone and plugin
 targets by JUCE.
 
 The extracted Windows executable resource is recorded at
