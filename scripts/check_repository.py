@@ -42,6 +42,7 @@ PROHIBITED_ROOTS = (
 )
 BINARY_ASSET_SUFFIXES = {".gif", ".ico", ".jpeg", ".jpg", ".mp3", ".mp4", ".otf", ".pdf", ".png", ".ttf", ".wav", ".webp", ".woff", ".woff2", ".zip"}
 DOCUMENTED_ASSET_RULES = (
+    re.compile(r"^src/app/Assets/reverb-playground-icon\.png$", re.IGNORECASE),
     re.compile(r"^artifacts/audio/.+\.(json|wav)$", re.IGNORECASE),
     re.compile(r"^artifacts/measurements/m22-rendered-delay-sets/.+\.(json|rvp\.json|wav)$", re.IGNORECASE),
     re.compile(r"^artifacts/measurements/m24-dense-qualification/.+\.(json|wav)$", re.IGNORECASE),

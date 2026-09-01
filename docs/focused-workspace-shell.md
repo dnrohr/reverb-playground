@@ -2,7 +2,15 @@
 
 M25.1 begins the canvas-first interface by consolidating application commands
 without removing graph, audition, safety, or diagnostic capability. The app icon
-is deliberately deferred.
+was subsequently added as a separate application-branding change: the supplied
+rounded-square infinity/reverb mark now uses the workspace's cyan, amber,
+off-white, and near-black palette and is embedded in both standalone and plugin
+targets by JUCE.
+
+The extracted Windows executable resource is recorded at
+[`packaged-executable-icon.png`](../artifacts/ui/application-icon/packaged-executable-icon.png),
+so the evidence verifies the built application rather than only the source
+artwork.
 
 ## Command organization
 

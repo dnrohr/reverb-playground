@@ -2,6 +2,12 @@
 
 Last updated: 2026-09-01
 
+Application branding update: adapted the supplied bottom-left rounded-square
+infinity/reverb concept to the app palette (`#0F1216`, `#45D0CC`, `#F4B54C`,
+and `#EBEFF2`). JUCE now embeds the project-owned PNG at large and small icon
+resolutions for both standalone and plugin targets, with asset provenance and
+repository-validation coverage.
+
 | Task | Status | Evidence |
 |---|---|---|
 | M0.1 Select the primary implementation stack | Complete | ADR 0001; Markdown links verified; commit `e913f5a` on `origin/main` |

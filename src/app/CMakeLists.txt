@@ -1,6 +1,8 @@
 juce_add_plugin(ReverbPlayground
     COMPANY_NAME "Reverb Playground"
     BUNDLE_ID "org.reverbplayground.app"
+    ICON_BIG "Assets/reverb-playground-icon.png"
+    ICON_SMALL "Assets/reverb-playground-icon.png"
     PLUGIN_MANUFACTURER_CODE RvPg
     PLUGIN_CODE Rv01
     NEEDS_WEBVIEW2 TRUE
