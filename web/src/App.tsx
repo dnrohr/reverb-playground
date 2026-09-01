@@ -1139,6 +1139,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       await setFlowViewport(fresh.viewport);
       setGraphHistory(emptyGraphHistory(fresh));
       setPendingConnection(null);
+      setGraphStatus(null);
       setActivePatchId(id);
       if (id === 'split-feedback-shimmer') setSplitLoopFocus('shifted');
       if (id === 'reverse-cosmic-shimmer') setReverseCosmicFocus('grains');
