@@ -1,0 +1,60 @@
+{
+  "format": "reverb-playground-m27-5-product-qualification-v1",
+  "date": "2026-09-01",
+  "sourceCommit": "266b62ac8acaeff485c055c2b152def6b10bcc8f",
+  "architectures": [
+    "Barr Reference",
+    "Four-Line Dense Room",
+    "Reverse Cosmic Shimmer"
+  ],
+  "interactiveChecks": {
+    "branchIsolation": "pass: Tank 1 path and capture inclusion disclosed",
+    "bypassBoundary": "pass: processing block exposes bypass; Stereo I/O does not",
+    "factorySwitchTruth": "pass: transient graph-action status clears on factory selection",
+    "abSwitching": "pass: explicit Reverse Cosmic A and Barr B snapshots; A auditioned",
+    "matchingRefusal": "pass: matched mode disabled until both exact-graph impulse probes exist",
+    "compoundExpansion": "pass: Matrix Mixer 4x4 summary expands to unchanged primitives",
+    "compactInspector": "pass: 640x400 viewport and document scroll width are both 640",
+    "workspaceEmphases": "pass: Balanced, Create Focus, and Learn & Inspect captured"
+  },
+  "automatedChecks": {
+    "webTests": 171,
+    "repositoryTests": 25,
+    "nativeAndCliTests": 252,
+    "typescript": "pass",
+    "productionWebBuild": "pass",
+    "repositoryPolicy": "pass",
+    "documentationContract": "pass",
+    "accessibilityContract": "pass",
+    "releaseContract": "pass"
+  },
+  "package": {
+    "file": "ReverbPlayground-0.1.0-windows-x64.zip",
+    "bytes": 6852243,
+    "sha256": "FFFC77C144A1AE05463884E96A75260B9AF4D2AC457C39C259F0A1C09A583E29",
+    "embeddedCommit": "266b62ac8aca",
+    "validation": "pass",
+    "standaloneColdStart": "alive after 10 seconds"
+  },
+  "hostValidation": {
+    "pluginval": {
+      "version": "1.0.4",
+      "strictness": 10,
+      "seed": "0x960096",
+      "result": "SUCCESS"
+    },
+    "steinbergVst3Validator": {
+      "version": "3.8.1 build 84",
+      "mode": "extensive",
+      "passed": 537,
+      "failed": 0
+    }
+  },
+  "cleanMainCi": {
+    "runId": 33501229460,
+    "url": "https://github.com/dnrohr/reverb-playground/actions/runs/33501229460",
+    "status": "success",
+    "windowsVerificationSeconds": 1652,
+    "packageJobSeconds": 643
+  }
+}

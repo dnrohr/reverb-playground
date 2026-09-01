@@ -1813,7 +1813,10 @@ Acceptance criteria:
 - Neither block is added merely to shorten the palette; rejected proposals and
   their rationale remain documented.
 
-### M27.5 Validate focused diagnosis and comparison
+### M27.5 Validate focused diagnosis and comparison — Complete
+
+Status: Complete (2026-09-01). See
+[`m27-focused-product-qualification.md`](m27-focused-product-qualification.md).
 
 Tasks: exercise branch isolation, bypass refusal, A/B switching, matching,
 compound expansion, compact inspector disclosure, export, and save/reopen on

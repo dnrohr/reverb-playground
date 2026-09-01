@@ -53,7 +53,20 @@ behavior and visually inspected at their native resolution.
 
 ## Release boundary
 
-The exact source commit, Windows package checksum, pluginval result, Steinberg
-validator result, and clean-main CI run are recorded with the final qualification
-after the implementation commit is immutable. This prevents a dirty-worktree
-binary or stale embedded commit from being presented as the release candidate.
+The exact implementation commit is `266b62ac8aca`. Its deterministic Windows
+package is 6,852,243 bytes with SHA-256
+`FFFC77C144A1AE05463884E96A75260B9AF4D2AC457C39C259F0A1C09A583E29`.
+The packaged standalone remained alive through a ten-second cold-start smoke.
+
+Tracktion pluginval 1.0.4 passes at strictness 10 with seed `0x960096`.
+Steinberg VST3 validator 3.8.1 build 84 passes its extensive suite: 537 passed,
+0 failed. Complete sanitized logs are in
+[`artifacts/validation/m27-5-product-qualification/`](../artifacts/validation/m27-5-product-qualification/).
+The checked qualification record is
+[`m27-5-product-qualification.json`](../artifacts/measurements/m27-5-product-qualification.json).
+
+GitHub [Verify run 33501229460](https://github.com/dnrohr/reverb-playground/actions/runs/33501229460)
+passes on clean `main`: Windows verification completed in 27m32s and the
+dependent deterministic package/upload job completed in 10m43s. The workflow
+reports only GitHub's Node 20 action-runtime deprecation notice; the runner
+forces those actions onto Node 24 and both jobs succeed.

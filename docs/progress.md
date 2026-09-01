@@ -1,6 +1,6 @@
 # Roadmap progress
 
-Last updated: 2026-08-30
+Last updated: 2026-09-01
 
 | Task | Status | Evidence |
 |---|---|---|
@@ -101,6 +101,16 @@ Last updated: 2026-08-30
 | M25.3 Consolidate Inspector, Analyze, and Learn | Complete | One persistent tabbed context dock routes editing, measured/estimated/compiled evidence, and documented teaching; revision-stale capture labeling, dormant polling, keyboard tab navigation, screenshots, and interaction video |
 | M25.4 Rebuild the compact audition and measurement drawer | Complete | Bottom compact deck keeps source, playback, file identity, Wet/Dry, Quick Impulse, and drawer state visible; the expansion owns waveform, loop, export, capture settings, progress, and unnormalized-sum disclosure with responsive tests and exercised evidence |
 | M25.5 Validate the three primary user journeys | Complete | Release musician/designer/learner journeys pass in 8-10 commands; measured canvas dominance; standalone-to-WebView keyboard entry and narrow A/B fallback fixed; screenshots/videos and checked JSON qualification record |
+| M26.1 Add assisted explicit-Sum insertion | Complete | Occupied mono audio input offers an explicit preview/confirm Sum insertion; typed connections, graph history, keyboard flow, and UI evidence pass |
+| M26.2 Add collapsible graph groups | Complete | Presentation-only groups collapse/expand without changing saved audio semantics; keyboard, accessibility, compact layout, and UI evidence pass |
+| M26.3 Add reusable expanded subpatches | Complete | Pinned provenance over authoritative primitives, fresh-ID copy/paste, detach, exact compilation, persistence, compact layout, and workflow evidence pass |
+| M26.4 Add large-graph alignment and routing tools | Complete | Alignment, distribution, group arrangement, cable trace/loop focus, routed cable persistence, dense-graph performance, resize, and UI evidence pass |
+| M26.5 Generalize compound block presentation | Complete | Qualified matrix detection collapses only exact authoritative primitives; expansion preserves audio, IDs, persistence, diagnostics, and feedback truth |
+| M27.1 Add temporary branch isolate, mute, and block bypass | Complete | Preview-only audition overlays preserve saved/exported graph semantics, refuse unsafe bypass, integrate measurement disclosure, and retain safety authority |
+| M27.2 Upgrade A/B comparison snapshots | Complete | Explicit immutable A/B snapshots, raw and impulse-matched switching, latency/probe disclosure, safe promotion/revert, persistence isolation, and UI evidence pass |
+| M27.3 Refine names and inspector complexity | Complete | Centralized module vocabulary, Gain naming, common/Advanced disclosure, modulation visibility, compact accessibility, and documentation consistency pass |
+| M27.4 Evaluate a unified Filter and compound Mixer | Complete | Nine-factory structural audit rejects unearned primitives and retains explicit Low-pass/Gain/Sum plus the qualified expandable Matrix Mixer |
+| M27.5 Validate focused diagnosis and comparison | Complete | Three architecture journeys, compact resizing, export/save-state contracts, 171 web + 252 native tests, exact package, pluginval, VST3 validator, and clean-main CI pass |
 
 ## M0.2 verification
 
@@ -1635,3 +1645,29 @@ Results:
 - An arbitrary Mixer is rejected because measured Sum trees do not share one
   honest channel/gain/normalization boundary. UI and audio are unchanged; no
   new screenshot or video is required, and M26.5 evidence remains authoritative.
+
+## M27.5 verification
+
+- Barr Reference qualifies temporary Tank 1 path isolation and eligible-block
+  bypass controls; Stereo I/O correctly exposes no bypass action. Loading a new
+  factory now clears the old graph-action banner as well as the underlying
+  temporary state, fixing the graph-truth defect found during interactive QA.
+- Four-Line Dense Room qualifies Create Focus and exact 4×4 Matrix Mixer
+  expansion. Reverse Cosmic Shimmer qualifies Learn & Inspect with the causal
+  reverse-grain path. Explicit A/B snapshots switch between the two and refuse
+  matched mode honestly until both exact-graph impulse probes exist.
+- At 640×400 the open comparison owns its internal scrolling and document width
+  remains exactly 640 pixels. All three workspace emphases have current stills;
+  the composite video covers assisted Sum, grouping, diagnosis, A/B, and dense
+  routing/resizing.
+- The complete local Release gate passes 171 web, 25 repository, and 252
+  native/CLI tests plus production build, accessibility, documentation,
+  provenance, and release contracts. The exact `266b62ac8aca` package passes
+  manifest/identity validation and a ten-second standalone cold start.
+- pluginval 1.0.4 strictness 10 succeeds; Steinberg validator 3.8.1 extensive
+  mode passes 537/537. Clean-main GitHub Verify run 33501229460 passes both its
+  27m32s Windows gate and 10m43s deterministic package/upload job.
+- Evidence: [qualification](m27-focused-product-qualification.md),
+  [record](../artifacts/measurements/m27-5-product-qualification.json),
+  [host logs](../artifacts/validation/m27-5-product-qualification/), and
+  [UI](../artifacts/ui/m27-5-product-qualification/).
