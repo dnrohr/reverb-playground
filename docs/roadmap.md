@@ -1,7 +1,7 @@
 # Visual Reverb Constructor / Inspector Roadmap
 
 Status: living execution roadmap
-Date: 2026-08-29
+Date: 2026-09-01
 Product definition: [visual-reverb-constructor-spec.md](visual-reverb-constructor-spec.md)
 
 ## Delivery policy
@@ -43,6 +43,12 @@ UI tasks require a current screenshot. Interactive, animated, audio-reactive, or
 | M25. Focused workspace shell | The canvas becomes the dominant surface while application, audition, inspection, and safety controls remain easy to reach | Switch among balanced, creation, and learning arrangements at every supported window size without losing state or hiding safety |
 | M26. Scalable graph construction | Dense architectures remain explicit but become faster to build, organize, and navigate | Insert a visible Sum automatically, collapse and expand graph structure, and clean a large schematic without changing its sound |
 | M27. Audition, comparison, and block-language refinement | Users can diagnose branches, compare designs fairly, and understand a smaller, clearer module vocabulary | Isolate a path, compare two revisions with honest level handling, and expand every compound block to its authoritative primitives |
+| M28. Guidance and rendered help | Learning becomes contextual, readable, and organized around user workflows rather than a repeated global mode | Open rendered architecture help, select a block for useful audible guidance, and complete the first-patch workflow without raw Markdown |
+| M29. Hierarchical compound schematics | Dense compounds remain compact on the parent canvas and open into an immediately live nested schematic | Move and reconnect a compact Matrix Mixer, open its 4×4 internals, edit a Gain live, and return without changing graph truth |
+| M30. Interaction and state correctness | Every visible control follows authoritative state, tuning is intelligible, and temporary audition has predictable toggle behavior | Change parameters through every supported path, combine tuning suggestions, and toggle audition without stale controls or hidden state |
+| M31. Predictable layout and construction | Graph cleanup and module creation behave geometrically and reduce cable crossings | Drag a module into place, flip its presentation, ungroup it, and arrange/distribute a selection without overlap |
+| M32. Crash recovery and emergency safety | Failures leave actionable local evidence and Emergency Mute is always one shortcut away | Recover a local minidump/text report after a forced crash and silence audio globally from the keyboard |
+| M33. Usability alpha refresh | The accumulated workflow, hierarchy, reliability, and safety changes ship as one coherent alpha update | Install the next alpha, follow its user guide, exercise the primary workflows, and reproduce its package/host/CI qualification |
 
 ---
 
@@ -1838,6 +1844,559 @@ Milestone exit criteria:
 
 ---
 
+## M28. Guidance and rendered help
+
+Goal: replace the confusing global learning state with rendered Help articles
+and concise selection-specific guidance while retaining **Learn & Inspect** as a
+useful workspace arrangement.
+
+### M28.1 Simplify the learning state model
+
+Tasks: retain **Learn & Inspect** as a presentation-only workspace arrangement;
+remove the global Learn on/off state and its duplicate entry points; move
+architecture discovery into Help; keep contextual explanations in the inspector
+only when they are relevant to the selected block, cable, loop, or factory.
+
+Acceptance criteria:
+
+- Workspace arrangement changes remain outside patch/audio semantics and do not
+  enable or disable documentation elsewhere.
+- No duplicate Learn toggle or permanently repeated Barr card remains.
+- Existing contextual-learning preferences migrate without corrupting saved
+  patches or host state.
+- Help and inspector content are completely operable by keyboard and screen
+  reader at compact and desktop sizes.
+
+### M28.2 Add a rendered in-app documentation reader
+
+Tasks: render the existing Markdown research and user documentation as styled
+in-app articles; support headings, tables, diagrams, links, code, breadcrumbs,
+searchable navigation, and a return to the prior editor context; keep the source
+Markdown authoritative and available offline.
+
+Acceptance criteria:
+
+- Users never encounter raw, unstyled Markdown through the normal Help path.
+- Keith Barr research, architecture distinctions, diagrams, source links, and
+  project-authored versus documented claims retain their provenance labels.
+- Article navigation does not change the graph, audio, history, viewport, or
+  current selection.
+- Links, headings, zoom/scaling, focus order, contrast, and reduced-motion
+  behavior pass automated and interactive accessibility checks.
+
+### M28.3 Rewrite block descriptions and diagnostics language
+
+Tasks: give every primitive a concise audible-purpose description covering what
+it does, what increasing its main control sounds like, why it is used, and its
+important latency/safety implications; replace unexplained status language such
+as **Base only** and **Crossfaded rebuild** with **Steady graph** and
+**Transitioning to edited graph**, retaining technical detail in diagnostics.
+
+Acceptance criteria:
+
+- Every palette and inspector block uses the same centralized description and
+  names the signal type, channel count, units, audible role, and edit behavior.
+- Plain labels never conceal active crossfades, compilation failures, latency,
+  or safety state; the detailed view retains exact technical values.
+- Factory teaching text, accessibility labels, user documentation, and tests use
+  the same vocabulary.
+- Existing serialized type and parameter IDs remain unchanged.
+
+### M28.4 Publish a workflow-oriented user guide
+
+Tasks: document loading and auditioning a factory, tracing a signal path,
+building a first reverb, editing and comparing variants, temporary diagnosis,
+assisted tuning, nested compounds, audio-file playback/export, feedback safety,
+and crash-report collection; link each workflow from Help and the README.
+
+Acceptance criteria:
+
+- A new user can complete each workflow from a clean install without developer
+  tools, prior project knowledge, or a DAW except where the guide explicitly
+  describes the VST3 path.
+- Instructions match current labels and include expected visible/audible results,
+  recovery steps, and limitations.
+- Documentation checks validate every local link, command, screenshot, and named
+  control.
+- A clean-install walkthrough records unclear or missing steps before completion.
+
+### M28.5 Validate guidance across the three workspace emphases
+
+Tasks: exercise Help, contextual descriptions, and the user guide from Balanced,
+Create Focus, and Learn & Inspect at supported window sizes and Windows scaling;
+verify navigation returns to unchanged editing state.
+
+Acceptance criteria:
+
+- Contextual guidance is useful and non-repetitive on Barr Reference, Four-Line
+  Dense Room, and Reverse Cosmic Shimmer.
+- Rendered articles remain readable without reducing the schematic permanently.
+- Current screenshots cover Help, a block description, and compact navigation;
+  a video demonstrates opening an article and returning to the unchanged graph.
+
+Milestone exit criteria:
+
+- Learning is discoverable under Help, explanations appear where needed, and no
+  global mode ambiguously changes what the user is allowed to learn.
+
+---
+
+## M29. Hierarchical compound schematics
+
+Goal: replace oversized or artifact-prone inline compound expansion with honest
+parent blocks whose authoritative primitives are edited in a nested schematic.
+
+### M29.1 Define group, compound, and reusable-subpatch semantics
+
+Tasks: specify visual groups as current-canvas layout organization, compounds as
+recognized views over existing primitives, and reusable subpatches as versioned
+instances; define ownership, stable IDs, boundary ports, copy/paste, deletion,
+detach, nesting depth, validation, automation, and migration rules.
+
+Acceptance criteria:
+
+- The three concepts have distinct serialized and UI behavior and never become
+  interchangeable merely because they share a box presentation.
+- Compounds and subpatches introduce no hidden DSP node, normalization, latency,
+  or feedback edge.
+- Legacy collapsed Matrix Mixer and reusable-subpatch state migrates
+  deterministically with exact graph/audio identity.
+- Invalid boundary maps, recursive nesting, dangling ports, and unsupported
+  mutations fail before publication with actionable paths.
+
+### M29.2 Implement movable collapsed blocks with proxy ports
+
+Tasks: project every connection crossing a compound boundary onto a stable named
+proxy port; replace dashed boundary artifacts with ordinary parent-level cables;
+allow the collapsed block to move, select, rename, reconnect, copy, paste, and
+participate in layout commands like an ordinary block.
+
+Acceptance criteria:
+
+- Each parent cable maps one-to-one to an explicit internal boundary port and
+  follows the collapsed block without visual artifacts.
+- Reconnecting a proxy changes only the explicit boundary connection and is
+  immediately visible inside the nested schematic.
+- Moving or renaming the collapsed block is presentation-only; deleting it
+  clearly identifies and atomically removes its internal graph.
+- Undo/redo, save/reopen, host state, clipboard IDs, Energy, loop inspection,
+  warnings, and accessibility remain coherent in both presentations.
+
+### M29.3 Add nested schematic navigation with immediate live editing
+
+Tasks: open compounds and reusable subpatches into a dedicated canvas with
+stable Input/Output boundary blocks, breadcrumbs and Back, an independently
+saved viewport, and the existing inspector/Analyze/audition tools; publish every
+legal internal parameter or topology edit through the same continuous runtime
+path as a parent-canvas edit, with no modal Apply step.
+
+Acceptance criteria:
+
+- Opening and closing a nested schematic changes only presentation and retains
+  selection/context where possible.
+- Continuous internal parameter edits reach audio and all visible controls
+  immediately; topology edits use the normal off-thread compile/crossfade path.
+- One coherent undo/redo history spans parent and nested edits, and Back never
+  commits, cancels, or duplicates an edit implicitly.
+- Breadcrumbs, keyboard traversal, focus restoration, compact windows, and
+  screen-reader naming remain usable through the supported nesting limit.
+
+### M29.4 Preserve diagnostics and graph truth across hierarchy
+
+Tasks: aggregate parent-level Energy, warning, latency, loop, memory, and safety
+indicators from authoritative internals; navigate from a parent warning to the
+offending internal block; make export, impulse capture, A/B, and temporary
+audition state explicit at both levels.
+
+Acceptance criteria:
+
+- Parent summaries are derived views and can always reveal the exact primitive,
+  cable, loop, or boundary responsible for a value or failure.
+- Feedback validation crosses hierarchy without accepting a zero-delay cycle or
+  counting one visible edge twice.
+- Temporary audition, A/B snapshots, save/load, offline export, and host restore
+  operate on the same semantic graph regardless of the open level.
+- Collapsing or navigating never changes rendered samples, latency, prepared
+  memory, Energy lanes, or numerical-safety authority.
+
+### M29.5 Migrate and qualify the Four-Line Matrix Mixer
+
+Tasks: replace the current inline Matrix Mixer summary with a compact movable
+four-input/four-output block; open the same 16 Gains and 12 Sums in a nested
+schematic; exercise immediate Gain editing, proxy reconnection, move, copy,
+save/reopen, automation, audition, expansion migration, and dense feedback
+inspection.
+
+Acceptance criteria:
+
+- The collapsed Matrix Mixer remains compact and readable without dashed-line
+  artifacts or forcing the parent canvas to reserve its internal dimensions.
+- Every matrix coefficient slider updates immediately from mouse, numeric entry,
+  automation, Macro/control mapping, undo/redo, factory load, and host restore.
+- Nested and permanently expanded reference renders are sample-identical across
+  supported rates, block partitions, save/reopen, and host state.
+- Screenshots cover parent and nested views at desktop/compact sizes; a video
+  shows move, open, continuous edit, Back, reconnect, undo, and reopen.
+
+Milestone exit criteria:
+
+- Dense compounds occupy one honest parent block while their complete executable
+  structure remains one navigation step away and continuously audible while edited.
+
+---
+
+## M30. Interaction and state correctness
+
+Goal: make parameter display, temporary audition, and assisted tuning reflect one
+authoritative state immediately and explain every reversible operation plainly.
+
+### M30.1 Unify visible parameter synchronization
+
+Tasks: audit and centralize parameter state delivery from pointer/numeric edits,
+control modulation, Matrix edits, assisted previews, factory loads, patch/host
+restore, automation, native runtime snapshots, undo/redo, A/B promotion, and
+topology publication; remove view-dependent refresh behavior.
+
+Acceptance criteria:
+
+- Every visible slider, numeric field, button, badge, and Analyze value updates
+  within the documented UI cadence after every supported change source.
+- Opening Analyze or changing selection is never required to reveal the current
+  value.
+- Display state distinguishes saved base, live modulated, audition preview, and
+  pending topology values without conflating them.
+- Deterministic tests cover every update source and reject feedback loops between
+  UI publication and native state.
+
+### M30.2 Make temporary audition explicitly toggleable
+
+Tasks: make Mute, Isolate, and Bypass buttons toggle their active operation off;
+retain **Clear audition** and Escape as deliberate global exits; do not clear an
+audition merely by clicking empty canvas; verify graph edits and patch changes
+clear or recompute incompatible previews safely.
+
+Acceptance criteria:
+
+- Pressing the active audition button restores the exact edited graph and prior
+  audition gains without changing patch/history/export state.
+- Only one clearly identified audition state is active; switching operations is
+  atomic, click-safe, and reflected in the canvas, inspector, measurement, and
+  audio runtime.
+- Escape and Clear audition work from parent/nested canvases and all inspector
+  tabs; ordinary deselection does not alter audio.
+- Audio tests prove mute, isolate, and bypass affect the intended path and that
+  clear/toggle restoration is deterministic and finite.
+
+### M30.3 Make assisted tuning cumulative and understandable
+
+Tasks: identify every suggestion's parameter set, expected audible effect, and
+compatibility; allow compatible suggestions to accumulate; flag overlapping
+suggestions as conflicts or replacements; rename **Accept + add to undo** to
+**Apply tuning** and **Cancel / restore exact** to **Discard preview**; create a
+separate named undo step for each application.
+
+Acceptance criteria:
+
+- A suggestion lists exactly what it changes and preserves before preview.
+- Applying compatible suggestions retains earlier changes and produces
+  deterministic cumulative parameters; conflicting suggestions cannot silently
+  overwrite one another.
+- Discard preview restores the byte-equivalent pre-preview semantic graph and
+  live audio state; Apply tuning becomes ordinary saved graph state.
+- Preview/apply/discard, undo/redo, save/reopen, nested editing, and rapid
+  continuous audition remain finite, click-safe, and accessibility-labeled.
+
+### M30.4 Validate interaction truth on representative architectures
+
+Tasks: run the synchronization, audition, and tuning matrix on Barr Reference,
+Four-Line Dense Room, and Reverse Cosmic Shimmer with compact/desktop layouts,
+keyboard control, continuous automation, and save/reopen.
+
+Acceptance criteria:
+
+- No stale visible control or unexplained preview state remains in the exercised
+  matrix.
+- Temporary state never leaks into ordinary export or persisted patch/host state.
+- Current screenshots cover parameter synchronization and cumulative tuning; a
+  video demonstrates toggle audition and cross-view live updates.
+
+Milestone exit criteria:
+
+- The value a user sees, the state they hear, and the state that will be saved
+  are distinguishable, current, and reversible everywhere in the editor.
+
+---
+
+## M31. Predictable layout and construction
+
+Goal: make placement and cleanup tools reduce work and crossings without moving
+blocks unexpectedly, overlapping them, or leaving stale inspector context.
+
+### M31.1 Define non-overlapping alignment and distribution geometry
+
+Tasks: specify whether each command uses centers, edges, or bounding boxes;
+preserve the outer selected blocks; distribute equal free gaps horizontally or
+vertically; account for block dimensions, locked I/O, groups, compounds, routed
+cables, and insufficient available span; preview or refuse impossible layouts.
+
+Acceptance criteria:
+
+- Distribution never overlaps selected block bounding boxes and is deterministic
+  regardless of selection order.
+- The outermost eligible blocks stay fixed unless the command explicitly says it
+  will expand the selection span.
+- Locked, nested, collapsed, and mixed-size selections produce documented results
+  or a clear refusal rather than partial movement.
+- Every layout operation is presentation-only, one undo step, save/reopen stable,
+  and covered by exact geometry tests.
+
+### M31.2 Replace Arrange Group Grid with a bounded layout
+
+Tasks: choose rows/columns from member count, dimensions, available aspect ratio,
+and saved spacing; avoid unrelated blocks and group-boundary clipping; preserve a
+stable anchor; offer a preview when the result materially expands the group.
+
+Acceptance criteria:
+
+- Representative groups from 2 through the supported maximum arrange without
+  internal overlap or collision with protected neighboring content.
+- Repeated arrangement is idempotent and does not drift across save/reopen or
+  display scale.
+- The result remains readable at compact and desktop sizes and routes boundary
+  cables from stable positions.
+
+### M31.3 Add presentation-only horizontal block flipping
+
+Tasks: allow eligible blocks to face left-to-right or right-to-left so ports can
+reduce cable crossings; keep signal direction, port identity, automation, audio,
+and accessibility unambiguous; defer arbitrary rotation unless measured need
+justifies its label/port complexity.
+
+Acceptance criteria:
+
+- Flipping changes only node presentation and cable attachment geometry, never
+  semantic source/target direction or rendered audio.
+- Labels, values, socket shapes, keyboard port order, and arrow/direction cues
+  remain readable and non-mirrored.
+- Orientation round-trips through patch/host state, copy/paste, groups,
+  compounds, undo/redo, and legacy migration.
+- Crossing-count fixtures demonstrate a useful reduction without introducing
+  ambiguous backward signal flow.
+
+### M31.4 Support palette drag-to-create
+
+Tasks: drag a module or reusable subpatch from the left palette onto an exact
+canvas location with an accessible drag preview; retain click-to-create and
+keyboard creation as equivalent fallbacks; handle pan/zoom, nested canvases,
+invalid drops, compact drawers, and typed singleton I/O constraints.
+
+Acceptance criteria:
+
+- The dropped block appears under the preview at every supported zoom, viewport,
+  display scale, and nested level.
+- Invalid or cancelled drops create no graph/history residue; valid creation is
+  one undoable edit with the same defaults and IDs as click/keyboard creation.
+- Pointer, keyboard, screen-reader, and touch-capable paths retain equivalent
+  functionality without requiring drag precision.
+
+### M31.5 Repair group and context transitions
+
+Tasks: make Ungroup immediately refresh the inspector/tab and selection to a
+valid member or empty context; audit collapse, expand, delete, detach, Back, and
+layout commands for stale selected nodes, tabs, warnings, and focus.
+
+Acceptance criteria:
+
+- No inspector references a deleted summary, group, compound, or subpatch after
+  the command completes.
+- Focus moves predictably to a surviving element or the canvas, with an accessible
+  status announcement and no unintended audio change.
+- Selection/context restoration is deterministic through undo/redo and nested
+  navigation.
+
+### M31.6 Validate dense graph cleanup
+
+Tasks: construct and clean representative Barr, Four-Line, and Reverse Cosmic
+graphs using drag creation, flipping, grouping, grid, alignment, distribution,
+and hierarchy; exercise resize and keyboard-only alternatives.
+
+Acceptance criteria:
+
+- The workflows reduce manual placement/crossing work without semantic graph or
+  audio changes, overlap, stale context, or window-fill regression.
+- Screenshots cover flipped routing and an arranged dense group; a video shows
+  drag creation, distribute, grid, ungroup, and undo across resize.
+
+Milestone exit criteria:
+
+- Layout commands are predictable enough to trust on a dense patch and direct
+  manipulation is faster without sacrificing keyboard accessibility.
+
+---
+
+## M32. Crash recovery and emergency safety
+
+Goal: turn crashes into private, actionable local evidence and make immediate
+silencing available regardless of current editor focus or presentation level.
+
+### M32.1 Establish crash and hang observability
+
+Tasks: reproduce and classify known standalone and hosted failures where
+possible; inventory current exception, assertion, log, and termination paths;
+define bounded startup/runtime breadcrumbs and a crash-report schema containing
+version, commit, platform, phase, active factory, graph hash/revision, audio
+configuration, and recent safety/publication status without source audio or patch
+content by default.
+
+Acceptance criteria:
+
+- Forced crash, unhandled exception, assertion, startup failure, and clean exit
+  are distinguishable in deterministic development fixtures.
+- Crash instrumentation does not allocate, block, log, lock, or access the
+  filesystem from the real-time audio callback.
+- The schema documents included, excluded, truncated, and potentially sensitive
+  fields and remains bounded under repeated failures.
+
+### M32.2 Write local minidumps and plain-text summaries
+
+Tasks: install a Windows process-level crash handler for the standalone and the
+safe plugin boundary; write a local minidump plus human-readable summary through
+a pre-established non-audio-thread path; use collision-safe names, retention
+limits, atomic completion, and an in-app **Open crash reports folder** command;
+never upload automatically.
+
+Acceptance criteria:
+
+- A forced supported crash produces a readable summary and debugger-openable
+  minidump with matching incident ID, exact version/commit, and timestamp.
+- Partial writes are distinguishable, recursive handler failure terminates
+  safely, and old reports obey a documented bounded retention policy.
+- No report is transmitted, attached, or shared without a separate explicit user
+  action; Help explains location, contents, privacy, and issue-report steps.
+- Standalone and VST3 behavior is qualified without destabilizing host shutdown,
+  exception boundaries, or real-time processing.
+
+### M32.3 Add recovery guidance and safe state restoration
+
+Tasks: detect the prior abnormal exit, offer to open reports and restore the last
+known-valid autosaved graph in a disabled/safe-audition state, keep the original
+patch untouched, and allow starting clean; document recovery and repeated-crash
+fallback behavior.
+
+Acceptance criteria:
+
+- Recovery is opt-in, identifies the exact candidate state, and never overwrites
+  a user patch or host project automatically.
+- Restored graphs pass normal validation/memory/safety gates before publication;
+  invalid or repeated-crashing candidates are quarantined with a clear path.
+- Declining recovery produces a clean default start and retains the report for
+  later inspection.
+
+### M32.4 Add a global Emergency Mute shortcut
+
+Tasks: bind `Ctrl/Cmd+Shift+M` to the existing authoritative Emergency Mute;
+expose it in menus and Help; handle focus in inputs, dialogs, parent/nested
+canvases, A/B, audition, and audio drawers; retain explicit safety-latch recovery.
+
+Acceptance criteria:
+
+- The shortcut silences the final output from every editor context and never
+  toggles merely because the key repeats or focus is inside a text control.
+- Menu, shortcut, button, native processor, accessibility announcement, and
+  diagnostics reflect one latched mute state.
+- Temporary audition, A/B, preview, export, and nested navigation cannot bypass
+  the mute or clear a numerical-safety latch implicitly.
+- Native and UI tests prove bounded activation and explicit recovery under legal
+  audio, runaway feedback, and non-finite output.
+
+### M32.5 Qualify crash privacy, recovery, and safety
+
+Tasks: run forced-crash/restart/report/recovery fixtures, host lifecycle checks,
+retention/privacy inspection, Emergency Mute keyboard tests, and clean shutdown;
+record report samples with private paths/data sanitized.
+
+Acceptance criteria:
+
+- Reports are sufficient to identify symbolized failure location and runtime
+  context without including loaded audio, full patches, or automatic telemetry.
+- Recovery and Emergency Mute remain usable at minimum size and by keyboard/screen
+  reader, with current screenshot/video evidence.
+- Full Release, pluginval, VST3 validator, package, and clean-main CI gates pass.
+
+Milestone exit criteria:
+
+- A crash leaves a private actionable report and a safe recovery choice, while
+  dangerous audio can always be silenced immediately from the keyboard.
+
+---
+
+## M33. Usability alpha refresh
+
+Goal: ship M28-M32 as one coherent, documented alpha rather than a collection of
+unannounced development changes.
+
+### M33.1 Run the integrated workflow regression
+
+Tasks: repeat first audition, first construction, nested Matrix editing,
+parameter synchronization, cumulative tuning, temporary diagnosis, A/B,
+audio-file playback/export, dense layout cleanup, crash recovery, and Emergency
+Mute on clean settings at supported sizes/scales and in standalone/VST3 hosts.
+
+Acceptance criteria:
+
+- Every workflow has explicit expected state/audio, save/reopen, undo/redo,
+  accessibility, real-time safety, and failure/recovery evidence.
+- No stale control, hidden graph mutation, hierarchy mismatch, layout overlap,
+  window-fill regression, or undocumented crash remains in the release matrix.
+- Automated tests and current screenshots/video cover the complete user-facing
+  change set; human listening remains explicitly separate where required.
+
+### M33.2 Prepare the next alpha release
+
+Tasks: choose the next alpha version at release time; update user-facing README,
+rendered Help/user guide, release notes, compatibility/migration notes, crash
+report instructions, screenshots/video, package identity, checksums, and
+download/install/remove paths; summarize known limitations and external
+validation still outstanding.
+
+Acceptance criteria:
+
+- A new user can identify, install, launch, learn, build, audition, save, reopen,
+  export, recover, and report a crash using only shipped documentation.
+- Version and 12-character commit agree in the editor, package manifest, release
+  notes, archive, checksum, and CI artifacts.
+- Release notes distinguish fixed behavior, new hierarchy/workflows, migrations,
+  known limitations, and privacy boundaries without overstating Barr provenance
+  or reverse-reverb equivalence.
+
+### M33.3 Qualify and publish the alpha candidate
+
+Tasks: build/package from a clean immutable commit; validate standalone cold
+start, VST3 hosts, pluginval strictness 10, Steinberg extensive mode, migration,
+crash artifacts, user guide, provenance, accessibility, and clean-main CI;
+publish through the existing release structure only after every automated and
+available manual gate passes.
+
+Acceptance criteria:
+
+- The deterministic package contains the standalone, VST3, license/notices,
+  rendered guidance entry points, crash instructions, build identity, and
+  checksum expected by the README.
+- Supported formats pass their existing host and safety matrices from the exact
+  release commit; CI uploads the same identified artifacts.
+- Any gate requiring external participants or human listening is reported as an
+  explicit remaining dependency rather than silently claimed or substituted.
+- The release tag, GitHub release, package links, and roadmap/progress record all
+  identify the same verified candidate.
+
+Milestone exit criteria:
+
+- The next alpha presents a coherent workflow from first launch through dense
+  hierarchical editing and safe failure recovery, with reproducible artifacts
+  and honest outstanding human-validation boundaries.
+
+---
+
 ## Recommended UI execution sequence
 
 1. M25.1-M25.2 - establish the compact shell and responsive dock contract.
@@ -1852,9 +2411,23 @@ Milestone exit criteria:
 7. M27.1-M27.3 - add diagnosis/comparison and simplify the visible vocabulary.
 8. M27.4-M27.5 - admit any new blocks only from measured need, then run complete
    product qualification.
+9. M28 - simplify learning and establish the vocabulary/user guide before
+   changing navigation and compound editing.
+10. M30.1-M30.3 - repair authoritative state synchronization, audition toggles,
+    and cumulative tuning before those controls are reused inside hierarchy.
+11. M29.1-M29.4 - define and implement proxy-port hierarchy and immediate nested
+    editing; then M29.5 migrates and qualifies the Matrix Mixer.
+12. M31 - build predictable layout, flipping, palette drag, and context repair on
+    top of the stable parent/nested graph model.
+13. M32 - add local crash evidence, recovery, and the global Emergency Mute
+    shortcut after the interaction/state boundaries are stable.
+14. M33 - run the integrated regression and publish the next coherent alpha only
+    after M28-M32 meet their individual exit criteria.
 
 This sequence deliberately reorganizes existing behavior before adding new
-graph semantics. Each milestone remains independently releasable.
+graph semantics. Parameter-state repair precedes nested editing so a hierarchy
+cannot multiply stale-control bugs. Each milestone remains independently
+releasable; M33 is the explicit combined alpha boundary.
 
 ---
 

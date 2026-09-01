@@ -111,6 +111,12 @@ Last updated: 2026-09-01
 | M27.3 Refine names and inspector complexity | Complete | Centralized module vocabulary, Gain naming, common/Advanced disclosure, modulation visibility, compact accessibility, and documentation consistency pass |
 | M27.4 Evaluate a unified Filter and compound Mixer | Complete | Nine-factory structural audit rejects unearned primitives and retains explicit Low-pass/Gain/Sum plus the qualified expandable Matrix Mixer |
 | M27.5 Validate focused diagnosis and comparison | Complete | Three architecture journeys, compact resizing, export/save-state contracts, 171 web + 252 native tests, exact package, pluginval, VST3 validator, and clean-main CI pass |
+| M28 Guidance and rendered help | Planned | Retain Learn & Inspect as a layout; replace global learning state with rendered Help, contextual block guidance, plain diagnostics, and a workflow user guide |
+| M29 Hierarchical compound schematics | Planned | Movable proxy-port compounds open a dedicated live nested schematic; Matrix internals remain authoritative and update audio immediately |
+| M30 Interaction and state correctness | Planned | Unify visible parameter updates, toggle temporary audition explicitly, and make compatible assisted tunings cumulative with plain apply/discard language |
+| M31 Predictable layout and construction | Planned | Non-overlapping distribute/grid, presentation-only horizontal flip, palette drag creation, and correct group/context transitions |
+| M32 Crash recovery and emergency safety | Planned | Local minidump plus plain-text summary with no automatic upload, safe recovery choices, and global Ctrl/Cmd+Shift+M Emergency Mute |
+| M33 Usability alpha refresh | Planned | Integrated workflow regression, updated rendered guidance/release materials, exact package/host qualification, and the next coherent alpha publication |
 
 ## M0.2 verification
 
