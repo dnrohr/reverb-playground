@@ -47,9 +47,8 @@ It uses the same bounded traversal that drives highlighting. Reduced-motion
 mode makes the move immediate.
 
 Gravity control, exact value, predicted guide, focus, mapping list, and
-highlights are outside the optional teaching-card condition. **Learn Off** may
-hide contextual cards and response annotations but leaves all Gravity control
-and inspection available.
+highlights remain independent of contextual guidance. M28 removed the global
+Learn switch; Gravity control and inspection are consistently available.
 
 ## Evidence
 

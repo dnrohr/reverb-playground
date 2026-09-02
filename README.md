@@ -61,6 +61,7 @@ Report reproducible bugs or documentation problems through [GitHub Issues](https
 
 Useful references:
 
+- [User guide](docs/user-guide.md) — complete workflows for auditioning, building, comparing, diagnosing, tuning, exporting, and recovery; also rendered offline under **Help → User Guide**
 - [Module and visualization reference](docs/module-and-visualization-reference.md)
 - [Module vocabulary and Advanced controls](docs/module-vocabulary-and-advanced-controls.md)
 - [Filter and Mixer block decision](docs/filter-and-mixer-block-decision.md)

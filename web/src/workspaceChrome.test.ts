@@ -18,7 +18,7 @@ describe('focused workspace chrome', () => {
       'SAVE PATCH', 'OPEN PATCH…', 'AUDIO DEVICE…', 'RESET PATCH',
       'UNDO', 'REDO', 'COPY', 'PASTE', 'DELETE SELECTION',
       'A/B SNAPSHOT COMPARISON', 'PROCESSING QUALITY', 'ENERGY', 'DIAGNOSTICS',
-      'CONTEXTUAL LEARNING', 'KEITH BARR ARCHITECTURE NOTES',
+      'USER GUIDE', 'KEITH BARR ARCHITECTURES', 'MODULE REFERENCE',
     ]) expect(appSource).toContain(command);
     expect(appSource).not.toContain('className="factory-picker quality-picker"');
     expect(appSource).not.toContain('className="comparison-switch comparison-four"');

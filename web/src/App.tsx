@@ -24,8 +24,9 @@ import { connectGraph, decideConnection, insertSumForOccupiedInput, previewSumFo
 import { PatchNode } from './PatchNode';
 import { callNative } from './nativeBridge';
 import { parsePatchJson, writePatchJson, type QualityPolicy } from './patchPersistence';
-import researchText from '../../docs/keith-barr-reverb-architectures.md?raw';
 import { teachingTopicFor, type TeachingTopic } from './teaching';
+import { HelpReader } from './HelpReader';
+import type { HelpArticleId } from './helpLibrary';
 import { parseImpulseCaptureResult, parseImpulseCaptureStatus, type ImpulseCaptureResult, type ImpulseCaptureStatus } from './impulseCapture';
 import { analyseResponse, decayPoints, frameWindow, rt60Explanation, waveformBuckets } from './responseAnalysis';
 import { analyseDensity } from './densityAnalysis';
@@ -56,7 +57,7 @@ import { applyAuditionOverlay, auditionOverlayLabel, decorateAuditionOverlay, ty
 import { captureComparisonSnapshot, compareSnapshots, comparisonGainLinear, comparisonMatch,
   type ComparisonMode, type ComparisonSlot, type ComparisonSnapshot } from './comparisonSnapshots';
 import { captureRevisionState, contextTabFor, emphasizeAnalyzeLayout, shouldPollRuntimeDiagnostics, type ContextIntent, type ContextTab } from './contextDock';
-import { isAdvancedParameter, parameterBehavior, parameterDisplayName, visibleModuleLabel, vocabularyFor } from './moduleVocabulary';
+import { isAdvancedParameter, moduleVocabulary, parameterBehavior, parameterDisplayName, visibleModuleLabel, vocabularyFor } from './moduleVocabulary';
 import {
   arrangementPresentation,
   parseWorkspacePresentation,
@@ -73,7 +74,7 @@ const modules = [
   { group: 'CONTROL', items: moduleDefinitions.filter((item) => item.role === 'control') },
 ];
 const contextTabs: ContextTab[] = ['inspect', 'analyze', 'learn'];
-const contextTabLabels: Record<ContextTab, string> = { inspect: 'Inspect', analyze: 'Analyze', learn: 'Learn' };
+const contextTabLabels: Record<ContextTab, string> = { inspect: 'Inspect', analyze: 'Analyze', learn: 'Guide' };
 
 const parameterChoices = (unit: string): { value: number; label: string }[] | null => {
   if (unit === 'boolean') return [{ value: 0, label: 'OFF' }, { value: 1, label: 'ON' }];
@@ -92,8 +93,8 @@ function formatValue(value: number, unit: string) {
   return value.toFixed(2);
 }
 
-function TeachingCard({ topic, onDismiss, onResearch }: {
-  topic: TeachingTopic; onDismiss: () => void; onResearch: () => void;
+function TeachingCard({ topic, onDismiss, onHelp }: {
+  topic: TeachingTopic; onDismiss: () => void; onHelp: () => void;
 }) {
   return (
     <section className="teaching-card" aria-label="Contextual explanation">
@@ -102,7 +103,7 @@ function TeachingCard({ topic, onDismiss, onResearch }: {
       <h4>DOCUMENTED BARR / MIDIVERB</h4><p>{topic.documented}</p>
       <h4>THIS RECONSTRUCTION</h4><p>{topic.reconstruction}</p>
       <h4>LISTEN / NOTICE</h4><p>{topic.takeaway}</p>
-      <button className="research-link" type="button" onClick={onResearch}>READ OFFLINE ARCHITECTURE RESEARCH</button>
+      <button className="research-link" type="button" onClick={onHelp}>OPEN RELATED HELP ARTICLE</button>
     </section>
   );
 }
@@ -154,7 +155,7 @@ function AssistedTuningPanel({ previewId, busy, onPreview, onAccept, onCancel, o
         </button>
       </article>)}
     </div>
-    <footer><button type="button" disabled={!previewId || busy} onClick={onAccept}>ACCEPT + ADD TO UNDO</button><button type="button" disabled={!previewId || busy} onClick={onCancel}>CANCEL / RESTORE EXACT</button></footer>
+    <footer><button type="button" disabled={!previewId || busy} onClick={onAccept}>APPLY TUNING</button><button type="button" disabled={!previewId || busy} onClick={onCancel}>DISCARD PREVIEW</button></footer>
   </section>;
 }
 
@@ -301,11 +302,10 @@ function MeasurementBar({ sampleRate, onCapture, overlayLabel }: { sampleRate: n
   </section>;
 }
 
-function ResponseViewer({ capture, patchId, gateTeaching, teachingEnabled, captureRevision, activeRevision, onClose }: {
+function ResponseViewer({ capture, patchId, gateTeaching, captureRevision, activeRevision, onClose }: {
   capture: ImpulseCaptureResult;
   patchId: TeachingPatchId;
   gateTeaching: GateTeachingParameters;
-  teachingEnabled: boolean;
   captureRevision: number;
   activeRevision: number;
   onClose: () => void;
@@ -313,10 +313,7 @@ function ResponseViewer({ capture, patchId, gateTeaching, teachingEnabled, captu
   const analysis = useMemo(() => analyseResponse(capture), [capture]);
   const displayedRt60 = patchId === 'level-gated-room' ? null : analysis.rt60Seconds;
   const displayedRt60Refusal = patchId === 'level-gated-room' ? 'abrupt-cutoff' as const : analysis.rt60Refusal;
-  const teachingOverlay = useMemo(
-    () => teachingEnabled ? architectureOverlay(capture, patchId, gateTeaching) : null,
-    [capture, gateTeaching, patchId, teachingEnabled],
-  );
+  const teachingOverlay = useMemo(() => architectureOverlay(capture, patchId, gateTeaching), [capture, gateTeaching, patchId]);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState(0);
   const [densityVisible, setDensityVisible] = useState(false);
@@ -392,7 +389,7 @@ function ResponseViewer({ capture, patchId, gateTeaching, teachingEnabled, captu
         <span>CREST {region.crestFactor.toFixed(2)}</span><span>REPEAT {region.recurrence.toFixed(2)} @ {region.recurrenceMilliseconds.toFixed(1)} ms</span>
         <span>FLAT {region.spectralFlatness.toFixed(2)}</span><span>STEREO {region.stereoCorrelation.toFixed(2)}</span>
       </section>)}</div>
-      {teachingEnabled ? <p className="density-teaching"><strong>READ TOGETHER:</strong> Density near 1 with lower crest means a noise-like temporal field. Strong recurrence marks repeating or ringing structure. Flatness describes spectrum, not temporal density; stereo correlation describes width, not quality.</p> : null}
+      <p className="density-teaching"><strong>READ TOGETHER:</strong> Density near 1 with lower crest means a noise-like temporal field. Strong recurrence marks repeating or ringing structure. Flatness describes spectrum, not temporal density; stereo correlation describes width, not quality.</p>
     </section> : null}
     {teachingOverlay ? <section className="architecture-explanation" aria-label="Architecture explanation">
       <strong>{teachingOverlay.title}</strong><span>{teachingOverlay.explanation}</span>
@@ -580,11 +577,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [comparisonSnapshots, setComparisonSnapshots] = useState<Record<ComparisonSlot, ComparisonSnapshot | null>>({ A: null, B: null });
   const [activeComparisonSlot, setActiveComparisonSlot] = useState<ComparisonSlot | null>(null);
   const [comparisonMode, setComparisonMode] = useState<ComparisonMode>('raw');
-  const [teachingEnabled, setTeachingEnabled] = useState(() => {
-    try { return window.localStorage.getItem('reverb-playground-teaching') !== 'off'; } catch { return true; }
-  });
   const [dismissedTeaching, setDismissedTeaching] = useState<string | null>(null);
-  const [researchOpen, setResearchOpen] = useState(false);
+  const [helpArticleId, setHelpArticleId] = useState<HelpArticleId | null>(null);
   const [contextTab, setContextTab] = useState<ContextTab>('inspect');
   const [graphHistory, setGraphHistory] = useState(() => emptyGraphHistory(initial));
   const [graphStatus, setGraphStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
@@ -633,6 +627,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
   useEffect(() => {
     void callNative('standaloneAuditionAvailable').then((available) => setStandaloneAvailable(available === true));
+  }, []);
+
+  useEffect(() => {
+    try { window.localStorage.removeItem('reverb-playground-teaching'); }
+    catch { /* legacy preference is safely ignored when storage is unavailable */ }
   }, []);
 
   useEffect(() => {
@@ -713,14 +712,14 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     ? inspectMostRelevantFeedbackLoop(nodes, edges) : null, [diagnostics?.mute.safetyLatched, edges, nodes]);
   const normalizedLoopIndex = loopInspection?.loops.length ? activeLoopIndex % loopInspection.loops.length : 0;
   const loopDecoratedGraph = useMemo(() => decorateFeedbackLoops(nodes, edges, loopInspection, normalizedLoopIndex), [edges, loopInspection, nodes, normalizedLoopIndex]);
-  const splitFocusedGraph = useMemo(() => activePatchId === 'split-feedback-shimmer' && teachingEnabled
+  const splitFocusedGraph = useMemo(() => activePatchId === 'split-feedback-shimmer'
     ? decorateSplitShimmerFocus(loopDecoratedGraph.nodes, loopDecoratedGraph.edges, splitLoopFocus)
     : loopDecoratedGraph,
-  [activePatchId, loopDecoratedGraph, splitLoopFocus, teachingEnabled]);
-  const reverseCosmicFocusedGraph = useMemo(() => activePatchId === 'reverse-cosmic-shimmer' && teachingEnabled
+  [activePatchId, loopDecoratedGraph, splitLoopFocus]);
+  const reverseCosmicFocusedGraph = useMemo(() => activePatchId === 'reverse-cosmic-shimmer'
     ? decorateReverseCosmicFocus(splitFocusedGraph.nodes, splitFocusedGraph.edges, reverseCosmicFocus)
     : splitFocusedGraph,
-  [activePatchId, reverseCosmicFocus, splitFocusedGraph, teachingEnabled]);
+  [activePatchId, reverseCosmicFocus, splitFocusedGraph]);
   const safetyDecoratedGraph = useMemo(() => decorateRunawayFeedbackLoop(reverseCosmicFocusedGraph.nodes, reverseCosmicFocusedGraph.edges, runawayLoopInspection), [reverseCosmicFocusedGraph, runawayLoopInspection]);
   const energyDecoratedGraph = useMemo(() => decorateEnergy(safetyDecoratedGraph.nodes, safetyDecoratedGraph.edges, energyLevels), [energyLevels, safetyDecoratedGraph]);
   const selectedMappingRange = useMemo(() => {
@@ -1363,14 +1362,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   }, [savePatch]);
 
   const teachingKey = selectedNode?.id ?? 'overview';
-  const showTeaching = teachingEnabled && selectedNode?.data.type !== 'compound-summary' && dismissedTeaching !== teachingKey;
-  const toggleTeaching = useCallback(() => {
-    setTeachingEnabled((current) => {
-      const next = !current;
-      try { window.localStorage.setItem('reverb-playground-teaching', next ? 'on' : 'off'); } catch { /* preference remains session-local */ }
-      return next;
-    });
-  }, []);
+  const teachingTopic = selectedNode?.data.type !== 'compound-summary' ? teachingTopicFor(selectedNode?.id) : null;
+  const showTeaching = Boolean(teachingTopic) && dismissedTeaching !== teachingKey;
 
   const measurementDrawerVisible = !standaloneAvailable || workspacePresentation.auditionOpen;
   return (
@@ -1380,6 +1373,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         <nav className="application-menus" aria-label="Application menus">
           {(['file', 'edit', 'view', 'help'] as const).map((menu) => <div className="application-menu" key={menu}>
             <button type="button" aria-haspopup="menu" aria-expanded={openApplicationMenu === menu}
+              data-help-launcher={menu === 'help' ? 'true' : undefined}
               onClick={() => setOpenApplicationMenu((open) => open === menu ? null : menu)}>{menu.toUpperCase()}</button>
             {openApplicationMenu === menu ? <div className="application-menu-popover" role="menu" aria-label={`${menu} menu`}>
               {menu === 'file' ? <>
@@ -1434,8 +1428,9 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                   onClick={() => { openContext('diagnostics'); setOpenApplicationMenu(null); }}>ANALYZE / DIAGNOSTICS</button>
               </> : null}
               {menu === 'help' ? <>
-                <button role="menuitemcheckbox" aria-checked={teachingEnabled} type="button" onClick={() => { toggleTeaching(); setOpenApplicationMenu(null); }}>CONTEXTUAL LEARNING {teachingEnabled ? 'ON' : 'OFF'}</button>
-                <button role="menuitem" type="button" onClick={() => { setResearchOpen(true); openContext('research'); setOpenApplicationMenu(null); }}>KEITH BARR ARCHITECTURE NOTES</button>
+                <button role="menuitem" type="button" onClick={() => { setHelpArticleId('user-guide'); setOpenApplicationMenu(null); }}>USER GUIDE</button>
+                <button role="menuitem" type="button" onClick={() => { setHelpArticleId('barr-architectures'); setOpenApplicationMenu(null); }}>KEITH BARR ARCHITECTURES</button>
+                <button role="menuitem" type="button" onClick={() => { setHelpArticleId('module-reference'); setOpenApplicationMenu(null); }}>MODULE REFERENCE</button>
                 {snapshot.productVersion && snapshot.buildCommit ? <span className="menu-build">REVERB PLAYGROUND v{snapshot.productVersion}<br />{snapshot.buildCommit}</span> : null}
               </> : null}
             </div> : null}
@@ -1495,7 +1490,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
             <section className="module-group" key={section.group}>
               <h2>{section.group}</h2>
               {section.items.map((item) => (
-                <button className={`module-item${item.role === 'control' ? ' module-control' : ''}`} key={item.type} type="button" onClick={() => addModule(item.type)}>
+                <button className={`module-item${item.role === 'control' ? ' module-control' : ''}`} key={item.type} type="button"
+                  title={`${moduleVocabulary[item.type].audibleRole} ${moduleVocabulary[item.type].increasingControl}`}
+                  aria-label={`${item.label}. ${moduleVocabulary[item.type].signal}. ${moduleVocabulary[item.type].audibleRole}`}
+                  onClick={() => addModule(item.type)}>
                   <span className="module-glyph" aria-hidden="true" />
                   <span>{item.label}</span>
                 </button>
@@ -1650,7 +1648,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         </section>
 
         <aside className={`inspector context-dock${workspaceLayout.contextVisible ? ' dock-visible' : ' dock-hidden'}`} aria-label="Context dock" aria-hidden={!workspaceLayout.contextVisible}>
-          <div className="pane-heading context-heading"><span>CONTEXT</span><div><button className="teaching-toggle" type="button" aria-pressed={teachingEnabled} title="Toggle contextual explanations and response architecture overlays" onClick={toggleTeaching}>LEARN {teachingEnabled ? 'ON' : 'OFF'}</button><button className="dock-close" type="button" aria-label="Close context dock" onClick={() => toggleDock('context')}>›</button></div></div>
+          <div className="pane-heading context-heading"><span>CONTEXT</span><div><button className="dock-close" type="button" aria-label="Close context dock" onClick={() => toggleDock('context')}>›</button></div></div>
           <div className="context-tabs" role="tablist" aria-label="Context views">
             {contextTabs.map((tab) => <button id={`context-tab-${tab}`} role="tab" type="button" key={tab}
               aria-label={tab === 'inspect' ? 'Inspector context' : `${contextTabLabels[tab]} context`}
@@ -1690,6 +1688,9 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               </dl>
               {vocabularyFor(selectedNode.data) ? <section className="module-contract" aria-label="Module signal and audible role">
                 <strong>AUDIBLE ROLE</strong><p>{vocabularyFor(selectedNode.data)!.audibleRole}</p>
+                <strong>INCREASE / LISTEN</strong><p>{vocabularyFor(selectedNode.data)!.increasingControl}</p>
+                <strong>WHY USE IT</strong><p>{vocabularyFor(selectedNode.data)!.purpose}</p>
+                <strong>LATENCY / SAFETY</strong><p>{vocabularyFor(selectedNode.data)!.latencySafety}</p>
                 {selectedNode.data.type === 'gain' ? <small>Negative Gain values invert polarity; no separate Invert mode or hidden switch is used.</small> : null}
               </section> : null}
               {selectedNode.data.presentationGroup ? <section className="group-inspector" aria-label="Visual group controls">
@@ -1867,7 +1868,6 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               capture={responseCapture.capture}
               patchId={responseCapture.patchId}
               gateTeaching={responseCapture.gateTeaching}
-              teachingEnabled={teachingEnabled}
               captureRevision={responseCapture.graphRevision}
               activeRevision={activeGraphRevision.current}
               onClose={() => setResponseCapture(null)}
@@ -1878,28 +1878,26 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
           <section id="context-panel-learn" className="context-panel context-learn" role="tabpanel" aria-labelledby="context-tab-learn" hidden={contextTab !== 'learn'}>
             <div className="context-evidence-heading"><strong>ARCHITECTURE &amp; LISTENING</strong><span>DOCUMENTED / EXPLANATORY</span></div>
-            {selectedNode?.data.compoundPresentation && teachingEnabled ? <section className="compound-learn-card" aria-label="Compound presentation explanation">
+            {selectedNode?.data.compoundPresentation ? <section className="compound-learn-card" aria-label="Compound presentation explanation">
               <header><span>{selectedNode.data.label.toUpperCase()}</span><strong>EXPANDABLE VIEW</strong></header>
               <p>{selectedNode.data.compoundPresentation.learn}</p>
               <dl><div><dt>SUMMARY</dt><dd>navigation and aggregate evidence</dd></div><div><dt>EXPANDED</dt><dd>saved and executable authority</dd></div></dl>
               <button type="button" onClick={() => { setContextTab('inspect'); setCompoundCollapsed(selectedNode.data.compoundPresentation!.id, false); }}>EXPAND + INSPECT PRIMITIVES</button>
             </section> : null}
-            {activePatchId === 'dense-figure-eight' && teachingEnabled ? <DenseFigureEightTeaching /> : null}
-            {activePatchId === 'four-line-dense-room' && teachingEnabled ? <FourLineFdnTeaching collapsed={matrixIsCollapsed} /> : null}
-            {activePatchId === 'safe-parallel-shimmer' && teachingEnabled ? <ParallelShimmerTeaching selectedNodeId={selectedNode?.id} /> : null}
-            {activePatchId === 'split-feedback-shimmer' && teachingEnabled ? <SplitFeedbackShimmerTeaching focus={splitLoopFocus} onFocus={setSplitLoopFocus} /> : null}
-            {activePatchId === 'reverse-cosmic-shimmer' && teachingEnabled ? <ReverseCosmicShimmerTeaching focus={reverseCosmicFocus} onFocus={setReverseCosmicFocus} /> : null}
-            {showTeaching ? <TeachingCard topic={teachingTopicFor(selectedNode?.id)} onDismiss={() => setDismissedTeaching(teachingKey)} onResearch={() => setResearchOpen(true)} /> : null}
-            {!teachingEnabled ? <section className="learn-disabled"><strong>CONTEXTUAL LEARNING IS OFF</strong><p>Inspector editing remains available. Enable Learn to restore documented architecture and listening guidance.</p><button type="button" onClick={toggleTeaching}>ENABLE LEARN</button></section> : null}
-            {researchOpen ? <section className="research-inline" aria-label="Keith Barr architecture research">
-              <header><div><span>OFFLINE RESEARCH / DOCUMENTED SOURCES</span><h2>Keith Barr reverb architectures</h2></div><button type="button" onClick={() => setResearchOpen(false)}>COLLAPSE</button></header>
-              <pre>{researchText}</pre>
-            </section> : !showTeaching ? <button className="research-link" type="button" onClick={() => setResearchOpen(true)}>OPEN KEITH BARR ARCHITECTURE LIBRARY</button> : null}
+            {activePatchId === 'dense-figure-eight' ? <DenseFigureEightTeaching /> : null}
+            {activePatchId === 'four-line-dense-room' ? <FourLineFdnTeaching collapsed={matrixIsCollapsed} /> : null}
+            {activePatchId === 'safe-parallel-shimmer' ? <ParallelShimmerTeaching selectedNodeId={selectedNode?.id} /> : null}
+            {activePatchId === 'split-feedback-shimmer' ? <SplitFeedbackShimmerTeaching focus={splitLoopFocus} onFocus={setSplitLoopFocus} /> : null}
+            {activePatchId === 'reverse-cosmic-shimmer' ? <ReverseCosmicShimmerTeaching focus={reverseCosmicFocus} onFocus={setReverseCosmicFocus} /> : null}
+            {showTeaching && teachingTopic ? <TeachingCard topic={teachingTopic} onDismiss={() => setDismissedTeaching(teachingKey)} onHelp={() => setHelpArticleId('barr-architectures')} /> : null}
+            {!selectedNode && activePatchId === 'barr-reference' ? <section className="guide-empty"><strong>SELECT A BLOCK FOR CONTEXT</strong><p>Barr-specific explanations appear only for the selected documented or reconstructed element. Open Help for the complete sourced architecture article.</p></section> : null}
+            <button className="research-link" type="button" onClick={() => setHelpArticleId('user-guide')}>OPEN OFFLINE HELP LIBRARY</button>
           </section>
           </div>
         </aside>
       </section>
       {measurementDrawerVisible ? <MeasurementBar sampleRate={snapshot.sampleRate} onCapture={receiveCapture} overlayLabel={auditionOverlayLabel(auditionOverlay)} /> : null}
+      {helpArticleId ? <HelpReader articleId={helpArticleId} onArticle={setHelpArticleId} onClose={() => setHelpArticleId(null)} /> : null}
     </main>
   );
 }

@@ -17,8 +17,6 @@ describe('unified context dock', () => {
     expect(contextTabFor('matrix')).toBe('analyze');
     expect(contextTabFor('measurement')).toBe('analyze');
     expect(contextTabFor('diagnostics')).toBe('analyze');
-    expect(contextTabFor('teaching')).toBe('learn');
-    expect(contextTabFor('research')).toBe('learn');
   });
 
   it('makes detailed polling dormant unless analysis or visible Energy needs it', () => {
@@ -51,5 +49,7 @@ describe('unified context dock', () => {
     expect(appSource).toContain('hidden={contextTab !== \'analyze\'}');
     expect(appSource).toContain('hidden={contextTab !== \'learn\'}');
     expect(patchPersistenceSource).not.toContain('contextTab');
+    expect(appSource).toContain("learn: 'Guide'");
+    expect(appSource).not.toContain('reverb-playground-teaching\', next');
   });
 });

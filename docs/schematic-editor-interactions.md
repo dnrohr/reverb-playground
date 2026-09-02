@@ -48,9 +48,15 @@ The toolbar's **Saved/Unsaved** badge compares the current semantic-plus-layout 
 
 Selecting a block or cable also inspects directed feedback. The active complete loop is amber, alternate matching loops are violet/dashed, and Previous/Next cycles shared or nested results. The inspector reports nominal delay and constituent gain/polarity/filter elements. See [Feedback-loop highlighting](feedback-loop-highlighting.md).
 
-## Learn mode
+## Guidance and Help
 
-The inspector's **Learn On/Off** control reveals or hides contextual explanations without changing the graph or selected parameters. It also enables/disables measured architecture regions and explanatory prose in the response viewer. A card can be dismissed for its current context. Cards and overlays distinguish documented Barr/MIDIVerb evidence from choices in this reconstruction and link to research bundled into the offline reader. See [Contextual teaching](contextual-teaching.md) and [Visualization teaching overlays and A/B comparison](visualization-teaching-overlays.md).
+**Learn & Inspect** is a workspace arrangement, not a mode: it widens the
+context dock without enabling or disabling content. The **Guide** tab presents
+selection- or factory-specific explanations. Help-menu articles render the
+authoritative offline Markdown and return to the unchanged editor context.
+Cards and response overlays distinguish documented Barr/MIDIVerb evidence from
+choices in this reconstruction. See [Contextual guidance and rendered Help](contextual-teaching.md)
+and [Visualization teaching overlays and A/B comparison](visualization-teaching-overlays.md).
 
 ## Signal semantics
 

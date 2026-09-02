@@ -1844,13 +1844,13 @@ Milestone exit criteria:
 
 ---
 
-## M28. Guidance and rendered help
+## M28. Guidance and rendered help — Complete
 
 Goal: replace the confusing global learning state with rendered Help articles
 and concise selection-specific guidance while retaining **Learn & Inspect** as a
 useful workspace arrangement.
 
-### M28.1 Simplify the learning state model
+### M28.1 Simplify the learning state model — Complete
 
 Tasks: retain **Learn & Inspect** as a presentation-only workspace arrangement;
 remove the global Learn on/off state and its duplicate entry points; move
@@ -1867,7 +1867,7 @@ Acceptance criteria:
 - Help and inspector content are completely operable by keyboard and screen
   reader at compact and desktop sizes.
 
-### M28.2 Add a rendered in-app documentation reader
+### M28.2 Add a rendered in-app documentation reader — Complete
 
 Tasks: render the existing Markdown research and user documentation as styled
 in-app articles; support headings, tables, diagrams, links, code, breadcrumbs,
@@ -1884,7 +1884,7 @@ Acceptance criteria:
 - Links, headings, zoom/scaling, focus order, contrast, and reduced-motion
   behavior pass automated and interactive accessibility checks.
 
-### M28.3 Rewrite block descriptions and diagnostics language
+### M28.3 Rewrite block descriptions and diagnostics language — Complete
 
 Tasks: give every primitive a concise audible-purpose description covering what
 it does, what increasing its main control sounds like, why it is used, and its
@@ -1902,7 +1902,7 @@ Acceptance criteria:
   the same vocabulary.
 - Existing serialized type and parameter IDs remain unchanged.
 
-### M28.4 Publish a workflow-oriented user guide
+### M28.4 Publish a workflow-oriented user guide — Complete
 
 Tasks: document loading and auditioning a factory, tracing a signal path,
 building a first reverb, editing and comparing variants, temporary diagnosis,
@@ -1920,7 +1920,7 @@ Acceptance criteria:
   control.
 - A clean-install walkthrough records unclear or missing steps before completion.
 
-### M28.5 Validate guidance across the three workspace emphases
+### M28.5 Validate guidance across the three workspace emphases — Complete
 
 Tasks: exercise Help, contextual descriptions, and the user guide from Balanced,
 Create Focus, and Learn & Inspect at supported window sizes and Windows scaling;
@@ -1933,6 +1933,20 @@ Acceptance criteria:
 - Rendered articles remain readable without reducing the schematic permanently.
 - Current screenshots cover Help, a block description, and compact navigation;
   a video demonstrates opening an article and returning to the unchanged graph.
+
+Completion evidence:
+
+- The searchable offline reader renders six source Markdown articles with
+  headings, tables, diagrams, code, breadcrumbs, provenance, and internal
+  article navigation.
+- Automated contracts cover the Help catalog, local link routing, centralized
+  primitive vocabulary, preference retirement, contextual selection behavior,
+  and plain runtime-transition language.
+- Interactive validation covered Balanced, Create Focus, and Learn & Inspect at
+  desktop and compact sizes. Graph node count, selection, and viewport transform
+  were identical before and after the recorded Help round trip.
+- Current evidence is stored under
+  [`artifacts/ui/m28-guidance-rendered-help`](../artifacts/ui/m28-guidance-rendered-help/).
 
 Milestone exit criteria:
 

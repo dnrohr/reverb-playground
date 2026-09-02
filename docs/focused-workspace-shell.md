@@ -23,7 +23,7 @@ status visible. Less frequent actions live in four conventional menus:
 | File | Save Patch, Open Patch, Audio Device, Reset Patch |
 | Edit | Undo, Redo, Copy, Paste, Delete Selection |
 | View | processing quality, Energy, Diagnostics |
-| Help | contextual learning, Keith Barr architecture notes, build version |
+| Help | rendered user guide, Keith Barr architectures, module reference, build version |
 
 Save, Open, Undo, Redo, Copy, Paste, Delete Selection, and Reset Patch retain
 their documented keyboard shortcuts. Escape closes an open application menu.

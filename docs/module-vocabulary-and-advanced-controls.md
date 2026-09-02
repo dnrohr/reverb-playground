@@ -27,14 +27,18 @@ is no separate invert switch or saved mode. A factory or user-defined block
 name remains visible because descriptive instance names are useful teaching
 labels.
 
-Every selected block now exposes its signal/channel contract, port counts, and
-audible role. Parameters show units and behavior badges:
+Every selected block now exposes its signal/channel contract, port counts,
+audible role, the sound of increasing its primary control, why it is useful,
+and its important latency or safety implication. The palette uses the same
+centralized descriptions in its tooltip and accessible name. Parameters show
+units and behavior badges:
 
 - **Modulated / Smoothed** means a visible control socket can move the value
   through the runtime smoothing path.
 - **Smoothed runtime** identifies a performance value such as Macro Value.
-- **Base only / Crossfaded rebuild** means the setting is compiled off-thread
-  and published through the existing click-safe graph crossfade.
+- **Steady graph / Transitioning to edited graph** means the displayed value is
+  the edited target and publication uses the existing click-safe graph
+  transition. Detailed diagnostics retain exact revisions and crossfade values.
 
 ## Disclosure contract
 

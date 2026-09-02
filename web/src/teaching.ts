@@ -6,12 +6,6 @@ export interface TeachingTopic {
 }
 
 const topics: Record<string, TeachingTopic> = {
-  overview: {
-    title: 'One visible signal story',
-    documented: 'MIDIVerb I evidence describes a mono summed input, extensive coefficient-0.5 allpasses, a recirculating tank, and different internal sums feeding the two DAC outputs.',
-    reconstruction: 'This first playable graph keeps stereo input cables explicit, deliberately becomes mono at the Sum block, and creates two visible output branches. It is Barr-inspired, not a ROM-program emulation.',
-    takeaway: 'Trace left to right: input becomes one dense temporal field, then two related views of that field create stereo.',
-  },
   sum: {
     title: 'Why stereo becomes mono here',
     documented: 'The documented MIDIVerb I signal path has a mono summed input and stereo output. Its reverb program builds one shared ambient field rather than two independent input tanks.',
@@ -62,12 +56,12 @@ const topics: Record<string, TeachingTopic> = {
   },
 };
 
-export function teachingTopicFor(nodeId?: string): TeachingTopic {
-  if (!nodeId) return topics.overview;
+export function teachingTopicFor(nodeId?: string): TeachingTopic | null {
+  if (!nodeId) return null;
   if (nodeId === 'tank-1' || nodeId === 'tank-2') return topics.tank;
   if (nodeId === 'diffuser-1' || nodeId === 'diffuser-2') return topics.diffuser;
   if (nodeId === 'input-filter') return topics.filter;
   if (nodeId === 'input') return topics.input;
   if (nodeId === 'output') return topics.output;
-  return topics[nodeId] ?? topics.overview;
+  return topics[nodeId] ?? null;
 }

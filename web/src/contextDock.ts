@@ -1,13 +1,13 @@
 import type { WorkspaceLayout } from './workspaceLayout';
 
 export type ContextTab = 'inspect' | 'analyze' | 'learn';
-export type ContextIntent = 'node' | 'cable' | 'loop' | 'matrix' | 'measurement' | 'diagnostics' | 'teaching' | 'research';
+export type ContextIntent = 'node' | 'cable' | 'loop' | 'matrix' | 'measurement' | 'diagnostics';
 export type EvidenceKind = 'EDITED' | 'MEASURED' | 'ESTIMATED' | 'PREDICTED' | 'DOCUMENTED' | 'COMPILED' | 'PREPARED';
 
 export function contextTabFor(intent: ContextIntent): ContextTab {
   if (intent === 'node' || intent === 'cable' || intent === 'loop') return 'inspect';
   if (intent === 'matrix' || intent === 'measurement' || intent === 'diagnostics') return 'analyze';
-  return 'learn';
+  return 'analyze';
 }
 
 export function shouldPollRuntimeDiagnostics(tab: ContextTab, contextVisible: boolean, energyVisible: boolean): boolean {

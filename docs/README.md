@@ -8,6 +8,8 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 
 ## Reading order
 
+- [User guide](user-guide.md) - clean-install workflows for factory audition, tracing, construction, comparison, diagnosis, tuning, export, and recovery.
+- [Contextual guidance and rendered Help](contextual-teaching.md) - the simplified guidance state, offline article reader, and editor-state separation.
 - [Keith Barr architectures](keith-barr-reverb-architectures.md) - the conceptual and historical overview.
 - [BarrVerb code review](barrverb-code-review.md) - a line-by-line architectural review, implementation differences, and engineering risks.
 - [Source map](sources.md) - primary sources, reverse-engineering artifacts, informed secondary commentary, and leads for further research.

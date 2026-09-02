@@ -14,7 +14,7 @@ The plot uses redundant line shapes so it remains readable without color:
 
 Up to three high-recurrence windows receive explicit `REPEAT <lag> ms` markers. Early, middle, and late cards show density, active peaks per second, crest factor, recurrence and lag, spectral flatness, and stereo correlation. These are separate dimensions, not a hidden quality score.
 
-With **Learn On**, the panel explains the main interpretation boundary: density and crest describe the temporal field; recurrence exposes periodicity; spectral flatness describes coloration; stereo correlation describes relationship between channels. A spectrally flat impulse can still be temporally sparse, and a dense tail can still ring.
+The panel explains the main interpretation boundary directly: density and crest describe the temporal field; recurrence exposes periodicity; spectral flatness describes coloration; stereo correlation describes relationship between channels. A spectrally flat impulse can still be temporally sparse, and a dense tail can still ring.
 
 ## Runtime boundary
 

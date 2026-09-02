@@ -8,6 +8,16 @@ infinity/reverb concept to the app palette (`#0F1216`, `#45D0CC`, and
 resolutions for both standalone and plugin targets, with asset provenance and
 repository-validation coverage.
 
+M28 guidance and rendered Help is complete. Help now opens a searchable offline
+article library instead of raw Markdown or a global learning mode; contextual
+guidance appears only for relevant selections; every primitive shares one
+audible-purpose and safety vocabulary; and the workflow-oriented
+[`user guide`](user-guide.md) covers first sound through export and recovery.
+Desktop, compact, and all three workspace arrangements were exercised, including
+an unchanged graph/selection/viewport Help round trip. Current screenshots and
+video are in
+[`artifacts/ui/m28-guidance-rendered-help`](../artifacts/ui/m28-guidance-rendered-help/).
+
 | Task | Status | Evidence |
 |---|---|---|
 | M0.1 Select the primary implementation stack | Complete | ADR 0001; Markdown links verified; commit `e913f5a` on `origin/main` |
@@ -117,7 +127,7 @@ repository-validation coverage.
 | M27.3 Refine names and inspector complexity | Complete | Centralized module vocabulary, Gain naming, common/Advanced disclosure, modulation visibility, compact accessibility, and documentation consistency pass |
 | M27.4 Evaluate a unified Filter and compound Mixer | Complete | Nine-factory structural audit rejects unearned primitives and retains explicit Low-pass/Gain/Sum plus the qualified expandable Matrix Mixer |
 | M27.5 Validate focused diagnosis and comparison | Complete | Three architecture journeys, compact resizing, export/save-state contracts, 171 web + 252 native tests, exact package, pluginval, VST3 validator, and clean-main CI pass |
-| M28 Guidance and rendered help | Planned | Retain Learn & Inspect as a layout; replace global learning state with rendered Help, contextual block guidance, plain diagnostics, and a workflow user guide |
+| M28 Guidance and rendered help | Complete | Searchable rendered offline Help; selection-specific guidance; centralized plain-language module contracts; workflow user guide; three-arrangement compact/desktop validation; screenshots/video |
 | M29 Hierarchical compound schematics | Planned | Movable proxy-port compounds open a dedicated live nested schematic; Matrix internals remain authoritative and update audio immediately |
 | M30 Interaction and state correctness | Planned | Unify visible parameter updates, toggle temporary audition explicitly, and make compatible assisted tunings cumulative with plain apply/discard language |
 | M31 Predictable layout and construction | Planned | Non-overlapping distribute/grid, presentation-only horizontal flip, palette drag creation, and correct group/context transitions |

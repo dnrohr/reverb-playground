@@ -1,32 +1,51 @@
-# Contextual teaching
+# Contextual guidance and rendered Help
 
-M2.5 turns the inspector into an optional learning surface without changing its editing role. With **Learn On**, the empty inspector explains the whole reference and each selected block receives a short contextual card. The card sits below ordinary identity, parameter, and history controls inside the already-scrollable inspector, so it never covers the patch canvas.
+M28 replaces the old global Learn preference with two independent,
+presentation-only surfaces. **Learn & Inspect** remains a workspace arrangement
+that widens the context dock. **Help** owns the rendered offline article library.
+Neither surface changes the graph, audio, undo history, selection, or viewport.
 
-## Evidence labels
+## Selection-specific guidance
 
-Every card separates three ideas:
+The **Guide** tab shows architecture or listening guidance only when it is
+relevant to the selected block or active factory. Barr cards retain three
+evidence labels:
 
-- **Documented Barr / MIDIVerb** states what the cited research supports;
-- **This reconstruction** identifies the product's deliberate approximation or current limitation;
-- **Listen / Notice** gives the user a concrete perceptual or structural question.
+- **Documented Barr / MIDIVerb** states what cited research supports.
+- **This reconstruction** identifies an approximation or implementation choice.
+- **Listen / Notice** gives a concrete perceptual or structural question.
 
-This distinction is especially important for feedback. Barr's mature vocabulary and analyzed MIDIVerb programs use recirculation, but the current M2 development reference is a finite feed-forward slice. Tank cards say that plainly instead of drawing or implying a feedback path that the runtime does not contain.
+The Mono Sum, stereo taps, tank stages, diffuser, filter, input, and output have
+specific cards. An unrelated selection never falls back to a permanently
+repeated Barr overview. Factory-specific panels remain available for Dense
+Figure Eight, Four-Line Dense Room, shimmer, and Reverse Cosmic designs. The ×
+button dismisses only the current card and does not change selection or audio.
 
-## Required contexts
+## Offline article library
 
-- **Mono Sum** explains the documented mono-summed input and why this stereo-input plugin deliberately becomes mono at one visible block.
-- **Left Tap** and **Right Tap** explain different views of one shared field and distinguish the simplified terminal allpasses from literal ROM tap maps.
-- **Tank** explains why diffusion is valuable inside a historical feedback loop and why future feedback must remain explicit, delayed, bounded, and visible.
-- Input, output, low-pass, diffuser, and the unselected reference overview provide the same fact/implementation separation.
+**Help → User Guide**, **Keith Barr Architectures**, and **Module Reference**
+open a modal article library. The library renders the repository Markdown with
+headings, tables, code/ASCII diagrams, lists, links, breadcrumbs, and searchable
+navigation. The source path and offline/rendered provenance are visible in each
+article. Known local documentation links stay inside the library; external
+source links remain links.
 
-## Dismissal and preference
+Closing with **Return to Editor** or Escape restores focus and exposes the same
+graph, audio, history, viewport, and selection because Help state is never part
+of patch persistence. Compact widths stack navigation above the article. Native
+focus order, visible focus styling, textual evidence labels, and the global
+reduced-motion rule remain authoritative.
 
-The × button dismisses the current context without changing selection or parameters. Selecting another context can show its explanation. **Learn On/Off** disables or enables all teaching cards and stores that preference locally in the embedded browser profile. Editing, audition, save/load, and canvas navigation continue while teaching is off.
+## Preference migration
 
-## Offline research
-
-**Read Offline Architecture Research** opens a dismissible, scrollable reader containing the complete repository document [Keith Barr reverb architectures](keith-barr-reverb-architectures.md). Vite bundles that Markdown text into the editor JavaScript at build time; opening it performs no network request and does not depend on a browser or external site.
+The obsolete `reverb-playground-teaching` local-storage preference is removed
+once during startup and otherwise ignored. No migration touches patch JSON or
+host state. Contextual explanations and measured response annotations are now
+available consistently rather than being enabled in several different places.
 
 ## Verification
 
-Web tests assert the required mono-sum, shared stereo-tap, and honest feedback language. Interactive QA verified context switching, per-card dismissal, global disable, preference persistence after reload, and opening/closing the bundled research reader. Evidence is stored under `artifacts/ui/m2-5-contextual-teaching`.
+Web tests cover the article catalog, search, local-link routing, rendered block
+types, keyboard return, absence of duplicate Learn controls, contextual-card
+specificity, vocabulary completeness, and patch-persistence separation. Current
+M28 evidence is stored under `artifacts/ui/m28-guidance-rendered-help/`.

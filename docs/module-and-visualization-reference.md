@@ -151,8 +151,8 @@ Linear curve fields when loaded.
 
 Converts mono audio magnitude to normalized `0..1` control. **Attack** is
 `0.1..500.0 ms`, step `0.1 ms`, default `5 ms`. **Release** is `1..5000 ms`,
-step `1 ms`, default `100 ms`. These timing parameters are base-only and have
-no modulation sockets in this release.
+step `1 ms`, default `100 ms`. These timing parameters have no modulation
+sockets in this release and use the displayed steady-graph transition.
 
 ### Hold Gate
 
@@ -162,17 +162,18 @@ Passes or attenuates its mono audio input under a separate normalized `gate`
 control input. **Threshold** is unitless `0.00..1.00`, step `0.01`, default
 `0.50`. **Attack** is `0.1..100.0 ms`, step `0.1 ms`, default `2 ms`;
 **Hold** is `1..2000 ms`, step `1 ms`, default `250 ms`; **Release** is
-`0.1..1000.0 ms`, step `0.1 ms`, default `20 ms`. All are base-only in this
-release. The detector can connect directly from Envelope Follower or through
+`0.1..1000.0 ms`, step `0.1 ms`, default `20 ms`. All use the displayed
+steady-graph transition in this release. The detector can connect directly from Envelope Follower or through
 one Scale / Offset block.
 Threshold stays visible; Attack, Hold, Release, and modulation routing are
 collected under **Advanced**.
 
 ## Inspector vocabulary and disclosure
 
-Every selected block states its channel/signal contract and audible role. Each
-parameter retains its unit and reports whether it is a base-only setting,
-smoothed at runtime, modulated, or applied through a click-safe graph rebuild.
+Every selected block states its channel/signal contract, audible role, primary
+control direction, purpose, and latency/safety note. Each parameter retains its
+unit and reports whether it is a **Steady graph** target, **Transitioning to
+edited graph**, smoothed at runtime, or modulated.
 The **Advanced** disclosure is presentation state only: opening or closing it
 does not edit the graph, change audio, enter history, or alter saved patches.
 The summary is a native keyboard- and screen-reader-operable disclosure and
@@ -240,8 +241,8 @@ while closed it adds no audio-thread, polling, or background analysis work.
 For the reverse-envelope factory, measured onset-to-peak and -40 dB landmarks
 label rising energy and the late peak. For the gated factory, gate/open, hold,
 release, and cutoff regions derive from captured samples and visible gate
-timings. **Learn Off** removes overlays and explanatory prose but does not
-change audio. **A / Barr** and **B / Reverse Env** or **B / Gated** load normal
+timings. Guidance remains an annotation and does not change audio. **A / Barr**
+and **B / Reverse Env** or **B / Gated** load normal
 visible factory graphs through the same runtime transition as other edits.
 
 ### Control previews

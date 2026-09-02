@@ -11,6 +11,9 @@ describe('module vocabulary and inspector disclosure', () => {
       expect(vocabulary.displayName.length).toBeGreaterThan(0);
       expect(vocabulary.signal).toMatch(/AUDIO|CONTROL/);
       expect(vocabulary.audibleRole).toMatch(/[.]$/);
+      expect(vocabulary.increasingControl).toMatch(/[.]$/);
+      expect(vocabulary.purpose).toMatch(/[.]$/);
+      expect(vocabulary.latencySafety).toMatch(/[.]$/);
       expect(new Set(definition.ports.map((port) => `${port.direction}:${port.id}`)).size).toBe(definition.ports.length);
       expect(new Set(definition.parameters.map((parameter) => parameter.id)).size).toBe(definition.parameters.length);
       for (const parameter of definition.parameters) {
@@ -50,10 +53,10 @@ describe('module vocabulary and inspector disclosure', () => {
     expect(isAdvancedParameter(gate.data, 'threshold')).toBe(false);
     expect(isAdvancedParameter(gate.data, 'hold')).toBe(true);
   });
-  it('labels modulation as smoothed and base-only fields as crossfaded rebuilds', () => {
+  it('labels modulation as smoothed and static edits with plain graph-transition language', () => {
     const gain = createModuleNode('gain', 'gain', { x: 0, y: 0 });
     expect(parameterBehavior(gain.data, gain.data.parameters[0])).toEqual(['MODULATED', 'SMOOTHED']);
     const gate = createModuleNode('hold-gate', 'gate', { x: 0, y: 0 });
-    expect(parameterBehavior(gate.data, gate.data.parameters[0])).toEqual(['BASE ONLY', 'CROSSFADED REBUILD']);
+    expect(parameterBehavior(gate.data, gate.data.parameters[0])).toEqual(['STEADY GRAPH', 'TRANSITIONING TO EDITED GRAPH']);
   });
 });

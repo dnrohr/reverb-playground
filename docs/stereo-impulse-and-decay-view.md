@@ -33,7 +33,7 @@ These are refusal rules, not error states. A longer/quieter capture may make an 
 
 ## Architecture teaching layer
 
-Factory captures can add optional measured architecture annotations without changing the underlying waveform or decay. Causal Reverse Envelope marks its rising-energy span, late peak, and -40 dB crossing. Level-Gated Room marks gate/open, hold, release, and measured cutoff using the captured graph's visible timing controls; its explicit abrupt truncation withholds RT60 even when a pre-cutoff regression exists. Barr, custom, and silent captures remain unannotated. **Learn Off** removes these graphics and their explanatory copy. See [Visualization teaching overlays and A/B comparison](visualization-teaching-overlays.md).
+Factory captures can add measured architecture annotations without changing the underlying waveform or decay. Causal Reverse Envelope marks its rising-energy span, late peak, and -40 dB crossing. Level-Gated Room marks gate/open, hold, release, and measured cutoff using the captured graph's visible timing controls; its explicit abrupt truncation withholds RT60 even when a pre-cutoff regression exists. Barr, custom, and silent captures remain unannotated. See [Visualization teaching overlays and A/B comparison](visualization-teaching-overlays.md).
 
 ## Evidence
 

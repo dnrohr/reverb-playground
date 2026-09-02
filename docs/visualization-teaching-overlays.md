@@ -1,6 +1,6 @@
 # Visualization teaching overlays and A/B comparison
 
-M6.4 adds an optional explanatory layer to the existing stereo impulse/decay viewer. The waveform and Schroeder decay remain measured evidence; teaching regions are annotations over that evidence and never alter audio, capture samples, zoom, RT60, or the saved patch.
+M6.4 added an explanatory layer to the existing stereo impulse/decay viewer. The waveform and Schroeder decay remain measured evidence; guidance regions are annotations over that evidence and never alter audio, capture samples, zoom, RT60, or the saved patch.
 
 ## Measured landmarks
 
@@ -18,9 +18,13 @@ For **Level-Gated Room**, the viewer labels **Gate Open**, **Hold**, and **Relea
 
 Barr/reference, custom, and silent captures receive no architecture-specific overlay. The generic stereo waveform, decay, metrics, and RT60/refusal behavior remain available.
 
-## Learn control
+## Guidance presentation
 
-The existing **Learn On/Off** preference now controls both inspector teaching cards and response architecture overlays. It persists in local editor preferences. Turning it off removes region graphics and explanatory prose while retaining the unannotated capture. This gives experienced users an evidence-only view and keeps all explanations available offline in this documentation.
+M28 removes the global Learn preference. Architecture annotations appear when a
+captured factory has a relevant measured interpretation; Barr, custom, and
+silent captures remain unannotated. Exact samples and metrics stay visually and
+semantically distinct from explanatory labels. The complete explanation remains
+available through rendered Help without changing the capture or graph.
 
 ## A/B workflow
 
