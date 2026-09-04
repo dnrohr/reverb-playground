@@ -60,6 +60,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Compound-block presentation](compound-block-presentation.md) - reusable summary boundaries, expanded primitive authority, evidence aggregation, and Matrix qualification.
 - [Reusable subpatches](reusable-subpatches.md) - pinned definition provenance over expanded primitives, explicit ports, recovery, and Diffuse Delay qualification.
 - [Temporary audition overlays](temporary-audition-overlays.md) - non-persistent cable/block mute, path isolate, safe bypass, preview publication, and export/capture disclosure.
+- [Interaction and state correctness](interaction-state-correctness.md) - authoritative parameter layers, toggleable temporary audition, cumulative assisted tuning, and M30 qualification.
 - [A/B comparison snapshots](ab-comparison-snapshots.md) - explicit session slots, raw and measured attenuation-only matching, graph/gain/latency diffs, revert, and undoable promotion.
 - [Feedback-loop highlighting](feedback-loop-highlighting.md) - bounded directed-cycle analysis, active/alternate styling, and topology-derived loop facts.
 - [Impulse audition and capture](impulse-audition-and-capture.md) - safe stimulus, visible bounds, live-input isolation, lock-free capture publication, and deterministic repeats.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyAuditionOverlay } from './auditionOverlay';
+import { applyAuditionOverlay, toggleAuditionOverlay } from './auditionOverlay';
 import { createModuleNode } from './modules';
 
 const edge = (id: string, source: string, target: string, targetHandle = 'in') => ({ id, source, sourceHandle: 'out', target, targetHandle, data: { signal: 'audio' } });
@@ -29,5 +29,17 @@ describe('temporary audition overlays', () => {
     const ambiguous = graph(); ambiguous.edges.push(edge('extra', 'input', 'gain')); expect(applyAuditionOverlay(ambiguous, { kind: 'bypass', target: 'node', id: 'gain' }).accepted).toBe(false);
     const loop = graph(); loop.edges.push(edge('loop', 'delay', 'gain'));
     expect(applyAuditionOverlay(loop, { kind: 'bypass', target: 'node', id: 'delay' }).message).toMatch(/zero-delay/);
+  });
+
+  it('toggles the active operation off and switches another operation atomically', () => {
+    const mute = { kind: 'mute', target: 'node', id: 'gain' } as const;
+    const isolate = { kind: 'isolate', target: 'node', id: 'gain' } as const;
+    expect(toggleAuditionOverlay(null, mute)).toEqual(mute);
+    expect(toggleAuditionOverlay(mute, mute)).toBeNull();
+    expect(toggleAuditionOverlay(mute, isolate)).toEqual(isolate);
+    const original = graph();
+    const preview = applyAuditionOverlay(original, mute).graph;
+    expect(preview).not.toEqual(original);
+    expect(applyAuditionOverlay(original, toggleAuditionOverlay(mute, mute)).graph).toBe(original);
   });
 });

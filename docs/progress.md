@@ -139,7 +139,7 @@ video are in
 | M27.5 Validate focused diagnosis and comparison | Complete | Three architecture journeys, compact resizing, export/save-state contracts, 171 web + 252 native tests, exact package, pluginval, VST3 validator, and clean-main CI pass |
 | M28 Guidance and rendered help | Complete | Searchable rendered offline Help; selection-specific guidance; centralized plain-language module contracts; workflow user guide; three-arrangement compact/desktop validation; screenshots/video |
 | M29 Hierarchical compound schematics | Complete | Persistent movable parent/proxy blocks; live nested editing; stable boundary IDs; exact primitive/audio authority; web/native validation and desktop/compact evidence |
-| M30 Interaction and state correctness | Planned | Unify visible parameter updates, toggle temporary audition explicitly, and make compatible assisted tunings cumulative with plain apply/discard language |
+| M30 Interaction and state correctness | Complete | Revision-gated authoritative parameter layers, explicit audition toggles/global exits, cumulative conflict-aware tuning, representative tests, and desktop/compact evidence |
 | M31 Predictable layout and construction | Planned | Non-overlapping distribute/grid, presentation-only horizontal flip, palette drag creation, and correct group/context transitions |
 | M32 Crash recovery and emergency safety | Planned | Local minidump plus plain-text summary with no automatic upload, safe recovery choices, and global Ctrl/Cmd+Shift+M Emergency Mute |
 | M33 Usability alpha refresh | Planned | Integrated workflow regression, updated rendered guidance/release materials, exact package/host qualification, and the next coherent alpha publication |
@@ -1703,3 +1703,25 @@ Results:
   [record](../artifacts/measurements/m27-5-product-qualification.json),
   [host logs](../artifacts/validation/m27-5-product-qualification/), and
   [UI](../artifacts/ui/m27-5-product-qualification/).
+
+## M30 verification
+
+- Parameter cards now render saved base, calculated live modulation, audition
+  preview, and pending topology as separate named layers. A revision gate accepts
+  the newest pointer, numeric, Matrix, load/restore, automation/native, history,
+  A/B, or topology publication and rejects stale native echoes without feeding
+  them back to the runtime.
+- Mute, Isolate, and Bypass toggle off when their active button is pressed. Clear
+  audition and Escape are global exits across parent/nested canvases and context
+  tabs; empty-canvas deselection preserves the current audible question.
+- Four-Line assisted tuning declares exact parameter sets plus preserved state.
+  Disjoint suggestions preview cumulatively from the edited graph; overlaps are
+  exposed as conflicts/replacements. Apply tuning creates one named undo step per
+  suggestion and Discard preview republishes the exact baseline.
+- Deterministic web coverage exercises every synchronization source, all audition
+  overlay operations and exact toggle restoration, tuning compatibility,
+  cumulative parameters, separate undo, and persistence boundaries. Existing
+  native graph publication, crossfade, finite-output, host-state, capture, and
+  processed-export tests remain the audio/runtime authority.
+- Reviewed desktop/compact stills and the interaction walkthrough are recorded in
+  [`artifacts/ui/m30-interaction-state`](../artifacts/ui/m30-interaction-state/).

@@ -74,15 +74,24 @@ Snapshots are session-only. Promotion is a normal undoable graph edit.
 Select an audio block or cable and use **Mute**, **Isolate**, or **Bypass** in
 the inspector. Temporary audition does not modify the saved patch or exported
 WAV. Bypass is refused when its explicit temporary rewiring would create a
-zero-delay cycle. Use **Clear Audition** to leave diagnosis.
+zero-delay cycle. Press an active Mute, Isolate, or Bypass button again to toggle
+it off. **Clear Audition** and `Escape` are global exits; clicking empty canvas
+only changes selection and does not change audio.
 
 ## Use assisted tuning
 
-Supported graphs show **Tune** above the canvas. A suggestion explains which
-parameters it changes and publishes an audition-only runtime. **Apply tuning**
-commits the visible values as one undoable edit. **Discard preview** restores
-the exact edited graph. Suggestions are design aids, not claims of a uniquely
-correct reverb.
+Supported graphs show **Tune** above the canvas. A suggestion lists its exact
+parameters, audible intent, preserved settings, and compatibility before it
+publishes an audition-only runtime. Compatible suggestions accumulate from the
+current edited graph. An overlapping suggestion is labeled as a conflict or
+replacement instead of silently overwriting earlier work. **Apply tuning** commits
+each suggestion as its own undoable edit. **Discard preview** restores the exact
+edited graph. Suggestions are design aids, not claims of a uniquely correct reverb.
+
+Parameter cards keep saved and heard state explicit. **Saved** is the base value
+written to the patch. **Live** is the current modulated value. **Preview** belongs
+to temporary tuning or A/B audition, and **Pending topology** means a compiled
+revision has not yet become active. These labels update without opening Analyze.
 
 ## Inspect groups and compounds
 

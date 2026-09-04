@@ -54,10 +54,11 @@ import { compoundMembers, deleteHierarchy, expandHierarchyConnection, hierarchyA
 import { collapseGraphGroups, createGraphGroup, inspectGraphGroups, removeGraphGroup, renameGraphGroup, setGraphGroupCollapsed } from './graphGroups';
 import { addCableWaypoint, alignSelectedNodes, arrangeGraphGroup, cableLayout, clearCableWaypoints, setRoutingPortal, traceCable, updateCableWaypoint, type AlignmentCommand, type TraceDirection } from './graphRouting';
 import { RoutedEdge } from './RoutedEdge';
-import { assistedTuningSuggestions, createAssistedTuningPreview, supportsAssistedTuning, type AssistedTuningSuggestionId } from './assistedTuning';
+import { assessAssistedTuning, assistedTuningSuggestions, createAssistedTuningPreview, supportsAssistedTuning, type AssistedTuningSuggestionId } from './assistedTuning';
+import { resolveParameterDisplay, type ParameterDisplayState } from './parameterDisplay';
 import { editorCommandBarHeight, measurementBarHeight } from './workspaceChrome';
 import { detachSubpatchInstance, instantiateSubpatch, subpatchDefinitions, subpatchInstanceStatus } from './subpatches';
-import { applyAuditionOverlay, auditionOverlayLabel, decorateAuditionOverlay, type AuditionOverlay } from './auditionOverlay';
+import { applyAuditionOverlay, auditionOverlayLabel, decorateAuditionOverlay, toggleAuditionOverlay, type AuditionOverlay } from './auditionOverlay';
 import { captureComparisonSnapshot, compareSnapshots, comparisonGainLinear, comparisonMatch,
   type ComparisonMode, type ComparisonSlot, type ComparisonSnapshot } from './comparisonSnapshots';
 import { captureRevisionState, contextTabFor, emphasizeAnalyzeLayout, shouldPollRuntimeDiagnostics, type ContextIntent, type ContextTab } from './contextDock';
@@ -141,8 +142,9 @@ function MatrixMixerInspector({ inspection }: { inspection: MatrixMixerInspectio
   </section>;
 }
 
-function AssistedTuningPanel({ previewId, busy, onPreview, onAccept, onCancel, onClose }: {
+function AssistedTuningPanel({ previewId, appliedIds, graph, busy, onPreview, onAccept, onCancel, onClose }: {
   previewId: AssistedTuningSuggestionId | null; busy: boolean;
+  appliedIds: AssistedTuningSuggestionId[]; graph: GraphState;
   onPreview: (id: AssistedTuningSuggestionId) => void; onAccept: () => void;
   onCancel: () => void; onClose: () => void;
 }) {
@@ -150,14 +152,17 @@ function AssistedTuningPanel({ previewId, busy, onPreview, onAccept, onCancel, o
     <header><div><span>ASSISTED TUNING</span><strong>PREVIEW IS NOT SAVED</strong></div><button type="button" aria-label="Close assisted tuning" onClick={onClose}>×</button></header>
     <p>Each option publishes a crossfaded audition runtime while the visible and saved graph remain exact.</p>
     <div className="tuning-suggestions">
-      {assistedTuningSuggestions.map((suggestion) => <article className={previewId === suggestion.id ? 'is-previewing' : ''} key={suggestion.id}>
+      {assistedTuningSuggestions.map((suggestion) => { const compatibility = assessAssistedTuning(graph, suggestion.id, appliedIds); return <article className={previewId === suggestion.id ? 'is-previewing' : ''} key={suggestion.id}>
         <div><strong>{suggestion.label}</strong><span>{suggestion.summary}</span></div>
         <p>{suggestion.reason}</p>
-        <ul>{suggestion.changes.map((change) => <li key={change}>{change}</li>)}</ul>
-        <button type="button" disabled={busy} aria-pressed={previewId === suggestion.id} onClick={() => onPreview(suggestion.id)}>
-          {previewId === suggestion.id ? 'PREVIEWING' : 'PREVIEW'}
+        <ul>{suggestion.changes.map((change) => <li key={change}>{change}</li>)}
+          {suggestion.preserves.map((item) => <li className="tuning-preserves" key={item}>Preserves: {item}</li>)}</ul>
+        <small className={`tuning-compatibility is-${compatibility.kind}`}>{compatibility.kind.toUpperCase()} · {compatibility.message}<br />
+          PARAMETERS · {compatibility.parameterKeys.join(', ')}</small>
+        <button type="button" disabled={busy || compatibility.kind !== 'compatible'} aria-pressed={previewId === suggestion.id} onClick={() => onPreview(suggestion.id)}>
+          {previewId === suggestion.id ? 'PREVIEWING' : compatibility.kind === 'replacement' ? 'ALREADY APPLIED' : compatibility.kind === 'conflict' ? 'CONFLICT' : 'PREVIEW'}
         </button>
-      </article>)}
+      </article>; })}
     </div>
     <footer><button type="button" disabled={!previewId || busy} onClick={onAccept}>APPLY TUNING</button><button type="button" disabled={!previewId || busy} onClick={onCancel}>DISCARD PREVIEW</button></footer>
   </section>;
@@ -509,8 +514,9 @@ function ComparisonPanel({ snapshots, active, mode, match, onCapture, onAudition
   </section>;
 }
 
-function InspectorParameter({ node, parameter, showBase, showModulation, onBegin, onChange, onCommit, onModulation }: {
+function InspectorParameter({ node, parameter, display, showBase, showModulation, onBegin, onChange, onCommit, onModulation }: {
   node: Node<PatchNodeData>; parameter: PatchParameter; showBase: boolean; showModulation: boolean;
+  display: ParameterDisplayState;
   onBegin(nodeId: string, parameterId: string, before: number): void;
   onChange(nodeId: string, parameterId: string, value: number): void; onCommit(): void;
   onModulation(nodeId: string, parameterId: string, change: Partial<NonNullable<PatchParameter['modulation']>>): void;
@@ -530,6 +536,13 @@ function InspectorParameter({ node, parameter, showBase, showModulation, onBegin
         <strong>{parameter.unit === 'milliseconds' ? 'ms' : parameter.unit === 'hertz' ? 'Hz' : parameter.unit === 'semitones' ? 'st' : ''}</strong>
       </label>
       <small>{parameter.unit} · {parameter.minimum.toLocaleString()}…{parameter.maximum.toLocaleString()} · step {parameter.step.toLocaleString()}</small>
+      <dl className="parameter-state" aria-label={`${name} state layers`}>
+        <div><dt>SAVED</dt><dd>{display.savedBase.toLocaleString(undefined, { maximumFractionDigits: 4 })}</dd></div>
+        {display.liveModulated ? <div><dt>LIVE</dt><dd>{display.liveValue.toLocaleString(undefined, { maximumFractionDigits: 4 })}</dd></div> : null}
+        {display.previewValue !== null ? <div><dt>PREVIEW</dt><dd>{display.previewValue.toLocaleString(undefined, { maximumFractionDigits: 4 })}</dd></div> : null}
+        {display.pendingTopology ? <div><dt>PENDING</dt><dd>TOPOLOGY</dd></div> : null}
+        <div className="parameter-state-label"><dt>STATE</dt><dd>{display.label}</dd></div>
+      </dl>
       {!choices ? <input aria-label={`${visibleModuleLabel(node.data)} ${name}`} type="range" min={parameter.minimum} max={parameter.maximum} step={parameter.step} value={parameter.value}
         onPointerDown={() => onBegin(node.id, parameter.id, parameter.value)} onChange={(event) => onChange(node.id, parameter.id, Number(event.target.value))}
         onPointerUp={onCommit} onKeyDown={(event) => { if (event.key === 'Enter') onCommit(); }} onBlur={onCommit} /> : null}
@@ -577,6 +590,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const pasteCount = useRef(0);
   const loadInput = useRef<HTMLInputElement | null>(null);
   const occupiedConfirm = useRef<HTMLButtonElement | null>(null);
+  const parameterPublicationRevisions = useRef(new Map<string, number>());
   const [fileStatus, setFileStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
   const [activePatchId, setActivePatchId] = useState<FactoryPatchId | 'custom'>(restored ? 'custom' : 'barr-reference');
   const [qualityPolicy, setQualityPolicy] = useState<QualityPolicy>(restored?.source.qualityPolicy ?? 'normal');
@@ -623,6 +637,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const audibleFingerprint = useMemo(() => audibleGraphFingerprint(nodes, edges), [edges, nodes]);
   const auditionResult = useMemo(() => applyAuditionOverlay({ nodes, edges }, auditionOverlay), [auditionOverlay, edges, nodes]);
   const activeComparisonSnapshot = activeComparisonSlot ? comparisonSnapshots[activeComparisonSlot] : null;
+  const parameterPreviewGraph = tuningPreview?.graph ?? activeComparisonSnapshot?.graph ?? null;
   const comparisonMatchResult = useMemo(() => comparisonMatch(comparisonSnapshots.A, comparisonSnapshots.B), [comparisonSnapshots]);
   const hostStateJson = useMemo(() => writePatchJson(nodes, edges, viewport, qualityPolicy), [edges, nodes, qualityPolicy, viewport]);
   const activePatch = activePatchId === 'custom' ? null : factoryPatchDescription(activePatchId);
@@ -631,6 +646,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     contextTab === 'analyze' && workspacePresentation.contextOpen), [baseWorkspaceLayout, contextTab, workspacePresentation.contextOpen]);
   const diagnosticsPollingEnabled = shouldPollRuntimeDiagnostics(contextTab,
     workspacePresentation.contextOpen, shouldRunEnergyTelemetry(energyEnabled, reducedMotion));
+  const appliedTuningIds = useMemo(() => graphHistory.undo.flatMap((edit) => {
+    const match = /^Apply tuning: (smoother|less-metallic|wider|less-modulated)$/.exec(edit.label);
+    return match ? [match[1] as AssistedTuningSuggestionId] : [];
+  }), [graphHistory.undo]);
 
   useEffect(() => {
     void callNative('standaloneAuditionAvailable').then((available) => setStandaloneAvailable(available === true));
@@ -963,12 +982,29 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   }, [activeComparisonSnapshot, applyGraph, edges, nodes, setFlowViewport]);
 
   const activateAuditionOverlay = useCallback((overlay: AuditionOverlay) => {
-    const result = applyAuditionOverlay({ nodes, edges }, overlay);
+    const nextOverlay = toggleAuditionOverlay(auditionOverlay, overlay);
+    if (!nextOverlay) {
+      setAuditionOverlay(null);
+      setGraphStatus({ kind: 'ok', message: `CLEARED ${overlay.kind.toUpperCase()} / EXACT EDITED GRAPH AND PRIOR AUDITION GAINS RESTORED` });
+      return;
+    }
+    const result = applyAuditionOverlay({ nodes, edges }, nextOverlay);
     if (!result.accepted) { setGraphStatus({ kind: 'error', message: result.message.toUpperCase() }); return; }
-    setAuditionOverlay(overlay); setGraphStatus({ kind: 'ok', message: `TEMPORARY ${result.message.toUpperCase()} / PATCH AND EXPORT UNCHANGED` });
-  }, [edges, nodes]);
+    setAuditionOverlay(nextOverlay); setGraphStatus({ kind: 'ok', message: `TEMPORARY ${result.message.toUpperCase()} / PATCH AND EXPORT UNCHANGED` });
+  }, [auditionOverlay, edges, nodes]);
+
+  const clearAuditionOverlay = useCallback(() => {
+    if (!auditionOverlay) return;
+    setAuditionOverlay(null);
+    setGraphStatus({ kind: 'ok', message: 'CLEARED TEMPORARY AUDITION / EXACT EDITED GRAPH AND PRIOR AUDITION GAINS RESTORED' });
+  }, [auditionOverlay]);
 
   const previewAssistedTuning = useCallback(async (id: AssistedTuningSuggestionId) => {
+    const compatibility = assessAssistedTuning({ nodes, edges }, id, appliedTuningIds);
+    if (compatibility.kind !== 'compatible') {
+      setGraphStatus({ kind: 'error', message: `TUNING ${compatibility.kind.toUpperCase()} / ${compatibility.message.toUpperCase()}` });
+      return;
+    }
     const preview = createAssistedTuningPreview({ nodes, edges }, id);
     setTuningBusy(true);
     setTuningPreview({ id, graph: preview });
@@ -989,7 +1025,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         setGraphStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Tuning preview failed' });
       }
     } finally { setTuningBusy(false); }
-  }, [edges, nodes, qualityPolicy, viewport]);
+  }, [appliedTuningIds, edges, nodes, qualityPolicy, viewport]);
 
   const cancelAssistedTuning = useCallback(async () => {
     setTuningBusy(true);
@@ -1007,10 +1043,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     const after = tuningPreview.graph;
     applyGraph(after);
     setGraphHistory((history) => commitGraphEdit(history,
-      `Accept ${tuningPreview.id.replace('-', ' ')} tuning`, before, after));
+      `Apply tuning: ${tuningPreview.id}`, before, after));
     setActivePatchId('custom');
     setTuningPreview(null);
-    setGraphStatus({ kind: 'ok', message: `ACCEPTED ${tuningPreview.id.replace('-', ' ').toUpperCase()} / UNDO AVAILABLE` });
+    setGraphStatus({ kind: 'ok', message: `APPLIED ${tuningPreview.id.replace('-', ' ').toUpperCase()} / CUMULATIVE SAVED GRAPH / SEPARATE UNDO STEP` });
   }, [applyGraph, edges, nodes, tuningPreview]);
 
   useEffect(() => {
@@ -1125,17 +1161,27 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       && sourceNode.data.parameters.find((parameter) => parameter.id === 'center-detent')?.value === 1;
     const appliedValue = sourceNode?.data.type === 'macro' && parameterId === 'value'
       && detentEnabled && Math.abs(value) <= 0.02 ? 0 : value;
-    const update = (node: Node<PatchNodeData>) => node.id !== nodeId ? node : {
-      ...node,
-      data: {
-        ...node.data,
-        parameters: node.data.parameters.map((parameter) => parameter.id === parameterId ? { ...parameter, value: appliedValue } : parameter),
-      },
+    const key = `${nodeId}.${parameterId}`;
+    const revision = (parameterPublicationRevisions.current.get(key) ?? 0) + 1;
+    parameterPublicationRevisions.current.set(key, revision);
+    const publishVisibleValue = (authoritativeValue: number) => {
+      const update = (node: Node<PatchNodeData>) => node.id !== nodeId ? node : {
+        ...node,
+        data: {
+          ...node.data,
+          parameters: node.data.parameters.map((parameter) => parameter.id === parameterId ? { ...parameter, value: authoritativeValue } : parameter),
+        },
+      };
+      setNodes((current) => current.map(update));
+      setSelectedNode((current) => current ? update(current) : null);
     };
-    setNodes((current) => current.map(update));
-    setSelectedNode((current) => current ? update(current) : null);
+    publishVisibleValue(appliedValue);
     if (sourceNode?.data.runtimeBound || (sourceNode?.data.type === 'macro' && parameterId === 'value')) {
-      try { void callNative('setRuntimeParameter', nodeId, parameterId, appliedValue).catch(() => undefined); }
+      try { void callNative('setRuntimeParameter', nodeId, parameterId, appliedValue).then((authoritative) => {
+        if (typeof authoritative === 'number' && Number.isFinite(authoritative)
+          && parameterPublicationRevisions.current.get(key) === revision)
+          publishVisibleValue(authoritative);
+      }).catch(() => undefined); }
       catch { /* browser prototype has no native bridge */ }
     }
   }, [nodes, setNodes]);
@@ -1389,6 +1435,16 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         setOpenApplicationMenu(null);
         return;
       }
+      if (event.key === 'Escape' && auditionOverlay) {
+        event.preventDefault();
+        clearAuditionOverlay();
+        return;
+      }
+      if (event.key === 'Escape' && tuningPreview) {
+        event.preventDefault();
+        void cancelAssistedTuning();
+        return;
+      }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
         event.preventDefault();
         if (event.shiftKey) redoGraph(); else undoGraph();
@@ -1408,7 +1464,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [activeHierarchyId, beginCreateGroup, closeHierarchy, copySelection, openApplicationMenu, pasteSelection, redoGraph, removeSelection, resetPatch, undoGraph]);
+  }, [activeHierarchyId, auditionOverlay, beginCreateGroup, cancelAssistedTuning, clearAuditionOverlay, closeHierarchy, copySelection, openApplicationMenu, pasteSelection, redoGraph, removeSelection, resetPatch, tuningPreview, undoGraph]);
 
   const beginParameterEdit = useCallback((nodeId: string, parameterId: string, _before: number) => {
     activeEdit.current = { label: `Edit ${nodeId}.${parameterId}`, before: snapshotGraph({ nodes, edges }) };
@@ -1645,7 +1701,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               </select></label>
             </div>
             <div className="canvas-actions">
-              {auditionOverlay ? <button type="button" className="audition-clear" onClick={() => setAuditionOverlay(null)}>CLEAR {auditionOverlay.kind.toUpperCase()}</button> : null}
+              {auditionOverlay ? <button type="button" className="audition-clear" onClick={clearAuditionOverlay}>CLEAR AUDITION</button> : null}
               {supportsAssistedTuning({ nodes, edges }) ? <button type="button" className="tuning-open-button"
                 aria-expanded={tuningOpen} onClick={() => setTuningOpen((open) => !open)}>TUNE</button> : null}
               {!activeHierarchy && matrixInspection ? <button type="button" className="matrix-view-toggle"
@@ -1797,7 +1853,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           <section id="context-panel-inspect" className="context-panel context-inspect" role="tabpanel" aria-labelledby="context-tab-inspect" hidden={contextTab !== 'inspect'}>
           <div className="context-evidence-heading"><strong>PATCH VALUES</strong><span>EDITED / SAVED</span></div>
           {tuningOpen && supportsAssistedTuning({ nodes, edges }) ? <AssistedTuningPanel
-            previewId={tuningPreview?.id ?? null} busy={tuningBusy}
+            previewId={tuningPreview?.id ?? null} appliedIds={appliedTuningIds} graph={{ nodes, edges }} busy={tuningBusy}
             onPreview={(id) => { void previewAssistedTuning(id); }} onAccept={acceptAssistedTuning}
             onCancel={() => { void cancelAssistedTuning(); }} onClose={() => {
               if (tuningPreview) void cancelAssistedTuning();
@@ -1922,16 +1978,22 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <h3>PARAMETERS</h3>
               {selectedNode.data.parameters.length ? <>
                 {selectedNode.data.parameters.filter((parameter) => (selectedNode.data.presentation !== 'gravity' || parameter.id !== 'value') && !isAdvancedParameter(selectedNode.data, parameter.id))
-                  .map((parameter) => <InspectorParameter key={parameter.id} node={selectedNode} parameter={parameter} showBase showModulation={false}
+                  .map((parameter) => <InspectorParameter key={parameter.id} node={selectedNode} parameter={parameter}
+                    display={resolveParameterDisplay(selectedNode, parameter, displayedGraph.edges, parameterPreviewGraph,
+                      (diagnostics?.topologyPublication.pendingRevision ?? 0) > 0)} showBase showModulation={false}
                     onBegin={beginParameterEdit} onChange={changeParameter} onCommit={commitParameterEdit} onModulation={applyModulation} />)}
                 {selectedNode.data.parameters.some((parameter) => isAdvancedParameter(selectedNode.data, parameter.id) || parameter.modulation) ? <details className="advanced-parameters">
                   <summary>ADVANCED <span>{selectedNode.data.parameters.filter((parameter) => isAdvancedParameter(selectedNode.data, parameter.id)).length} specialist · {selectedNode.data.parameters.filter((parameter) => parameter.modulation).length} modulation</span></summary>
                   <p>Opening this disclosure changes presentation only. Audio and saved parameter values remain unchanged.</p>
                   {selectedNode.data.parameters.filter((parameter) => isAdvancedParameter(selectedNode.data, parameter.id))
-                    .map((parameter) => <InspectorParameter key={parameter.id} node={selectedNode} parameter={parameter} showBase showModulation={Boolean(parameter.modulation)}
+                    .map((parameter) => <InspectorParameter key={parameter.id} node={selectedNode} parameter={parameter}
+                      display={resolveParameterDisplay(selectedNode, parameter, displayedGraph.edges, parameterPreviewGraph,
+                        (diagnostics?.topologyPublication.pendingRevision ?? 0) > 0)} showBase showModulation={Boolean(parameter.modulation)}
                       onBegin={beginParameterEdit} onChange={changeParameter} onCommit={commitParameterEdit} onModulation={applyModulation} />)}
                   {selectedNode.data.parameters.filter((parameter) => !isAdvancedParameter(selectedNode.data, parameter.id) && parameter.modulation)
-                    .map((parameter) => <InspectorParameter key={`${parameter.id}-mod`} node={selectedNode} parameter={parameter} showBase={false} showModulation
+                    .map((parameter) => <InspectorParameter key={`${parameter.id}-mod`} node={selectedNode} parameter={parameter}
+                      display={resolveParameterDisplay(selectedNode, parameter, displayedGraph.edges, parameterPreviewGraph,
+                        (diagnostics?.topologyPublication.pendingRevision ?? 0) > 0)} showBase={false} showModulation
                       onBegin={beginParameterEdit} onChange={changeParameter} onCommit={commitParameterEdit} onModulation={applyModulation} />)}
                 </details> : null}
               </> : <p className="empty-parameters">No editable parameters.</p>}

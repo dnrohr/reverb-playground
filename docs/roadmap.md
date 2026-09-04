@@ -2071,12 +2071,15 @@ Completion evidence:
 
 ---
 
-## M30. Interaction and state correctness
+## M30. Interaction and state correctness — Complete
 
 Goal: make parameter display, temporary audition, and assisted tuning reflect one
 authoritative state immediately and explain every reversible operation plainly.
 
-### M30.1 Unify visible parameter synchronization
+### M30.1 Unify visible parameter synchronization — Complete
+
+Status: Complete (2026-09-04). See
+[`interaction-state-correctness.md`](interaction-state-correctness.md).
 
 Tasks: audit and centralize parameter state delivery from pointer/numeric edits,
 control modulation, Matrix edits, assisted previews, factory loads, patch/host
@@ -2094,7 +2097,9 @@ Acceptance criteria:
 - Deterministic tests cover every update source and reject feedback loops between
   UI publication and native state.
 
-### M30.2 Make temporary audition explicitly toggleable
+### M30.2 Make temporary audition explicitly toggleable — Complete
+
+Status: Complete (2026-09-04).
 
 Tasks: make Mute, Isolate, and Bypass buttons toggle their active operation off;
 retain **Clear audition** and Escape as deliberate global exits; do not clear an
@@ -2113,7 +2118,9 @@ Acceptance criteria:
 - Audio tests prove mute, isolate, and bypass affect the intended path and that
   clear/toggle restoration is deterministic and finite.
 
-### M30.3 Make assisted tuning cumulative and understandable
+### M30.3 Make assisted tuning cumulative and understandable — Complete
+
+Status: Complete (2026-09-04).
 
 Tasks: identify every suggestion's parameter set, expected audible effect, and
 compatibility; allow compatible suggestions to accumulate; flag overlapping
@@ -2132,7 +2139,10 @@ Acceptance criteria:
 - Preview/apply/discard, undo/redo, save/reopen, nested editing, and rapid
   continuous audition remain finite, click-safe, and accessibility-labeled.
 
-### M30.4 Validate interaction truth on representative architectures
+### M30.4 Validate interaction truth on representative architectures — Complete
+
+Status: Complete (2026-09-04). Evidence is stored under
+[`artifacts/ui/m30-interaction-state`](../artifacts/ui/m30-interaction-state/).
 
 Tasks: run the synchronization, audition, and tuning matrix on Barr Reference,
 Four-Line Dense Room, and Reverse Cosmic Shimmer with compact/desktop layouts,

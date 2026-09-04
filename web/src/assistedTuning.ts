@@ -9,22 +9,59 @@ export interface AssistedTuningSuggestion {
   summary: string;
   reason: string;
   changes: string[];
+  preserves: string[];
+  parameterPatterns: RegExp[];
 }
 
 export const assistedTuningSuggestions: AssistedTuningSuggestion[] = [
   { id: 'smoother', label: 'SMOOTHER', summary: 'Use the best eligible rendered delay set.',
     reason: 'The measured candidate lowers recurrence while retaining dense, decorrelated decay.',
-    changes: ['Tank delays → 35.2 / 45.9 / 72.7 / 110.3 ms', 'Return gains recalculated for the same 2.1 s RT60'] },
+    changes: ['Tank delays → 35.2 / 45.9 / 72.7 / 110.3 ms', 'Return gains recalculated for the same 2.1 s RT60'],
+    preserves: ['Topology, damping, Width, and diffuser modulation'],
+    parameterPatterns: [/^line-delay-[1-4]\.delay$/, /^line-return-[1-4]\.gain$/] },
   { id: 'less-metallic', label: 'LESS METALLIC', summary: 'Darken each circulation path.',
     reason: 'Lower damping cutoffs suppress persistent high-frequency modes without changing topology.',
-    changes: ['Line damping cutoffs × 0.72', 'Minimum cutoff remains 1,200 Hz'] },
+    changes: ['Line damping cutoffs × 0.72', 'Minimum cutoff remains 1,200 Hz'],
+    preserves: ['Delay set, decay returns, Width, and modulation'],
+    parameterPatterns: [/^line-damping-[1-4]\.cutoff$/] },
   { id: 'wider', label: 'WIDER', summary: 'Move the explicit Width macro toward its wide endpoint.',
     reason: 'The right pickup vector diverges farther from the left while preserving its vector energy.',
-    changes: ['Right pickup vector → 65% toward the wide endpoint', 'Pickup vector energy normalized; no hidden decorrelator'] },
+    changes: ['Right pickup vector → 65% toward the wide endpoint', 'Pickup vector energy normalized; no hidden decorrelator'],
+    preserves: ['Tank delays, decay, damping, and diffuser modulation'],
+    parameterPatterns: [/^right-pickup-[1-4]\.gain$/, /^width-macro\.value$/] },
   { id: 'less-modulated', label: 'LESS MODULATED', summary: 'Reduce moving-diffuser depth.',
     reason: 'Shallower delay motion reduces pitch movement while retaining slow decorrelation.',
-    changes: ['Per-line allpass modulation depth → 0.12 ms', 'LFO rates and visible routing unchanged'] },
+    changes: ['Per-line allpass modulation depth → 0.12 ms', 'LFO rates and visible routing unchanged'],
+    preserves: ['Delay set, decay, damping, Width, and LFO rates'],
+    parameterPatterns: [/^line-diffusion-[1-4]\.delay$/] },
 ];
+
+export interface AssistedTuningCompatibility {
+  kind: 'compatible' | 'replacement' | 'conflict';
+  parameterKeys: string[];
+  overlap: string[];
+  message: string;
+}
+
+export function assistedTuningParameterKeys(state: GraphState, id: AssistedTuningSuggestionId): string[] {
+  const suggestion = assistedTuningSuggestions.find((item) => item.id === id)!;
+  return state.nodes.flatMap((node) => node.data.parameters
+    .map((parameter) => `${node.id}.${parameter.id}`)
+    .filter((key) => suggestion.parameterPatterns.some((pattern) => pattern.test(key)))).sort();
+}
+
+export function assessAssistedTuning(state: GraphState, id: AssistedTuningSuggestionId,
+  applied: AssistedTuningSuggestionId[]): AssistedTuningCompatibility {
+  const parameterKeys = assistedTuningParameterKeys(state, id);
+  const previous = applied.flatMap((appliedId) => assistedTuningParameterKeys(state, appliedId));
+  const overlap = parameterKeys.filter((key) => previous.includes(key));
+  if (!overlap.length) return { kind: 'compatible', parameterKeys, overlap,
+    message: applied.length ? 'Compatible with applied tuning; earlier changes are preserved.' : 'Compatible with the current graph.' };
+  if (applied.includes(id)) return { kind: 'replacement', parameterKeys, overlap,
+    message: 'This tuning has already been applied. Previewing it again would replace the same parameter set.' };
+  return { kind: 'conflict', parameterKeys, overlap,
+    message: `Conflicts with applied tuning at ${overlap.join(', ')}.` };
+}
 
 function updateParameter(node: Node<PatchNodeData>, parameterId: string,
   update: (parameter: PatchNodeData['parameters'][number]) => PatchNodeData['parameters'][number]) {

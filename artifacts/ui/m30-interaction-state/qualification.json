@@ -1,0 +1,103 @@
+{
+  "milestone": "M30",
+  "capturedUtc": "2026-09-04T18:22:33Z",
+  "surface": "Vite editor using the native runtime-snapshot contract",
+  "architectures": [
+    "Barr Reference",
+    "Four-Line Dense Room",
+    "Reverse Cosmic Shimmer"
+  ],
+  "viewports": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "evidence": [
+        "01-tuning-parameters-desktop.png",
+        "02-cumulative-tuning-desktop.png",
+        "03-layered-parameter-desktop.png"
+      ]
+    },
+    {
+      "name": "compact",
+      "width": 899,
+      "height": 650,
+      "documentScrollWidth": 899,
+      "documentScrollHeight": 650,
+      "evidence": [
+        "04-layered-parameter-compact.png"
+      ]
+    }
+  ],
+  "observed": {
+    "parameterLayers": [
+      "saved base",
+      "live modulated",
+      "audition preview",
+      "pending topology"
+    ],
+    "fourLineLiveExample": {
+      "parameter": "line-delay-1.delay",
+      "savedMilliseconds": 35.2,
+      "observedLiveMilliseconds": 44.198
+    },
+    "audition": {
+      "activeMuteAriaPressed": true,
+      "activeButtonToggleRestored": true,
+      "escapeRestored": true,
+      "clearButtonVisibleOnlyWhenActive": true,
+      "ordinaryDeselectionPreservesOverlay": true
+    },
+    "tuning": {
+      "firstApplication": "smoother",
+      "secondPreview": "less-metallic",
+      "firstMarkedReplacement": true,
+      "secondMarkedCompatible": true,
+      "earlierDelayValuePreserved": true,
+      "separateUndoLabels": true
+    },
+    "reverseCosmic": {
+      "pitchParameterLayersVisible": 5,
+      "muteToggleAriaPressed": true,
+      "clearRestored": true
+    },
+    "barrReference": {
+      "runtimeSnapshotIdentityCoveredByNativeTests": true,
+      "factoryTransitionCompleted": true
+    }
+  },
+  "automatedCoverage": {
+    "web": "43 files / 201 tests",
+    "nativeAndCli": "253 tests",
+    "sources": [
+      "pointer",
+      "numeric",
+      "control-modulation",
+      "matrix-edit",
+      "assisted-preview",
+      "factory-load",
+      "patch-restore",
+      "host-restore",
+      "automation",
+      "native-snapshot",
+      "undo",
+      "redo",
+      "ab-promotion",
+      "topology-publication"
+    ]
+  },
+  "video": {
+    "file": "interaction-state-workflow.mp4",
+    "codec": "h264",
+    "width": 1440,
+    "height": 900,
+    "durationSeconds": 9,
+    "chapters": [
+      "layered parameter state",
+      "mute active",
+      "mute toggled off",
+      "isolate active",
+      "Escape restored"
+    ]
+  }
+}

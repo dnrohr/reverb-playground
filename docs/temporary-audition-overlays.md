@@ -2,8 +2,10 @@
 
 M27.1 adds diagnostic mute, isolate, and block bypass without turning a listening
 question into a saved graph edit. The selected block or cable receives an amber
-treatment and the canvas always offers **Clear Mute**, **Clear Isolate**, or
-**Clear Bypass** while an overlay is active.
+treatment and the canvas always offers **Clear Audition** while an overlay is
+active. Pressing the active operation again or pressing `Escape` is equivalent.
+Switching to another operation is atomic, while clicking empty canvas only
+changes selection and deliberately leaves the audible preview active.
 
 ## State boundary
 

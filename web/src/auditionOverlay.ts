@@ -73,3 +73,7 @@ export function decorateAuditionOverlay(state: GraphState, overlay: AuditionOver
 }
 
 export const auditionOverlayLabel = (overlay: AuditionOverlay | null) => !overlay ? null : `${overlay.kind.toUpperCase()} ${overlay.target.toUpperCase()} ${overlay.id}`;
+
+export function toggleAuditionOverlay(current: AuditionOverlay | null, requested: AuditionOverlay): AuditionOverlay | null {
+  return current?.kind === requested.kind && current.target === requested.target && current.id === requested.id ? null : requested;
+}

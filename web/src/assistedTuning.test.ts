@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createAssistedTuningPreview, supportsAssistedTuning } from './assistedTuning';
+import { assessAssistedTuning, assistedTuningParameterKeys, createAssistedTuningPreview, supportsAssistedTuning } from './assistedTuning';
 import { parsePatchJson, writePatchJson } from './patchPersistence';
 import { commitGraphEdit, emptyGraphHistory, undoGraphEdit } from './graphHistory';
 import type { RuntimeSnapshot } from './graph';
@@ -35,5 +35,30 @@ describe('non-destructive assisted tuning', () => {
     expect(history.undo).toHaveLength(1);
     const undone = undoGraphEdit(history);
     expect(writePatchJson(undone.edit!.before.nodes, undone.edit!.before.edges, graph.viewport)).toBe(original);
+  });
+
+  it('declares exact disjoint parameter sets and accumulates compatible suggestions', () => {
+    const smootherKeys = assistedTuningParameterKeys(graph, 'smoother');
+    const darkerKeys = assistedTuningParameterKeys(graph, 'less-metallic');
+    expect(smootherKeys).toHaveLength(8);
+    expect(darkerKeys).toHaveLength(4);
+    expect(smootherKeys.filter((key) => darkerKeys.includes(key))).toEqual([]);
+    expect(assessAssistedTuning(graph, 'less-metallic', ['smoother'])).toMatchObject({ kind: 'compatible', overlap: [] });
+    expect(assessAssistedTuning(graph, 'smoother', ['smoother'])).toMatchObject({ kind: 'replacement', overlap: smootherKeys });
+
+    const smoother = createAssistedTuningPreview(graph, 'smoother');
+    const cumulative = createAssistedTuningPreview(smoother, 'less-metallic');
+    expect(cumulative.nodes.find((node) => node.id === 'line-delay-1')?.data.parameters[0]?.value).toBe(35.2);
+    expect(cumulative.nodes.find((node) => node.id === 'line-damping-1')?.data.parameters[0]?.value)
+      .toBeLessThan(graph.nodes.find((node) => node.id === 'line-damping-1')!.data.parameters[0]!.value);
+  });
+
+  it('creates a separate named undo step for each cumulative application', () => {
+    const smoother = createAssistedTuningPreview(graph, 'smoother');
+    let history = commitGraphEdit(emptyGraphHistory(graph), 'Apply tuning: smoother', graph, smoother);
+    const cumulative = createAssistedTuningPreview(smoother, 'wider');
+    history = commitGraphEdit(history, 'Apply tuning: wider', smoother, cumulative);
+    expect(history.undo.map((edit) => edit.label)).toEqual(['Apply tuning: smoother', 'Apply tuning: wider']);
+    expect(undoGraphEdit(history).edit?.before).toEqual(expect.objectContaining({ nodes: smoother.nodes }));
   });
 });
