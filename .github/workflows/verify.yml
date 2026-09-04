@@ -13,7 +13,9 @@ jobs:
   windows:
     name: Windows MSVC
     runs-on: windows-2022
-    timeout-minutes: 30
+    # A clean Windows runner currently needs about 40 minutes for the full
+    # web, native, accessibility, and packaging-policy verification suite.
+    timeout-minutes: 60
 
     steps:
       - name: Check out source

@@ -12,7 +12,9 @@ jobs:
   windows-alpha:
     name: Build and publish Windows alpha
     runs-on: windows-2022
-    timeout-minutes: 35
+    # Release verification includes the same clean Windows build as Verify,
+    # followed by deterministic packaging, so keep enough headroom for both.
+    timeout-minutes: 75
 
     steps:
       - name: Check out tagged source
