@@ -1,5 +1,5 @@
 import type { Edge, Node, XYPosition } from '@xyflow/react';
-import type { GraphState, PatchNodeData } from './graph';
+import type { GraphState, HierarchyPresentation, PatchNodeData } from './graph';
 import { createModuleNode } from './modules';
 
 export interface SubpatchPortBinding {
@@ -47,8 +47,15 @@ export function instantiateSubpatch(state: GraphState, definition: SubpatchDefin
   const instanceId = uniqueInstanceId(state.nodes); const built = definition.instantiate(instanceId, position);
   const metadata: SubpatchInstance = { id: instanceId, definitionId: definition.id, definitionVersion: definition.version,
     definitionName: definition.name, memberNodeIds: built.nodes.map((node) => node.id), ports: built.ports };
+  const hierarchy: HierarchyPresentation = {
+    id: instanceId, kind: 'subpatch', name: definition.name, collapsed: true,
+    memberNodeIds: [...metadata.memberNodeIds], position: { ...position }, nestedViewport: { x: 0, y: 0, zoom: 1 },
+    ports: built.ports.map((port) => ({ id: port.id, name: port.id.toUpperCase(), signal: port.signal,
+      direction: port.direction, targets: [{ nodeId: port.nodeId, portId: port.portId }] })),
+  };
   const nodes = built.nodes.map((node) => ({ ...node, selected: true, className: `${node.className ?? ''} subpatch-member`,
-    data: { ...node.data, runtimeBound: false, subpatchInstance: structuredClone(metadata) } }));
+    data: { ...node.data, runtimeBound: false, subpatchInstance: structuredClone(metadata),
+      hierarchyPresentation: structuredClone(hierarchy) } }));
   return { nodes: [...state.nodes.map((node) => ({ ...node, selected: false })), ...nodes],
     edges: [...state.edges.map((item) => ({ ...item, selected: false })), ...built.edges] };
 }
@@ -71,5 +78,6 @@ export function subpatchInstanceStatus(instance: SubpatchInstance, nodes: Node<P
 
 export function detachSubpatchInstance(state: GraphState, instanceId: string): GraphState {
   return { nodes: state.nodes.map((node) => node.data.subpatchInstance?.id === instanceId
-    ? { ...node, className: node.className?.replace(/\s*subpatch-member\b/g, ''), data: { ...node.data, subpatchInstance: undefined } } : node), edges: state.edges };
+    ? { ...node, className: node.className?.replace(/\s*subpatch-member\b/g, ''),
+      data: { ...node.data, subpatchInstance: undefined, hierarchyPresentation: undefined } } : node), edges: state.edges };
 }

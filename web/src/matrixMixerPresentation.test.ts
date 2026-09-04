@@ -6,6 +6,8 @@ import { parsePatchJson } from './patchPersistence';
 import { copySelectedGraph, pasteGraph } from './graphClipboard';
 import { semanticGraphHash } from './graphHistory';
 import { decorateFeedbackLoops, inspectFeedbackLoops } from './loopInspection';
+import { hierarchyActualEdgeIds, inspectHierarchyPresentations, materializeHierarchyPresentations,
+  projectNestedHierarchy, updateHierarchyPresentation } from './compoundPresentation';
 
 const snapshot: RuntimeSnapshot = { contractVersion: 2, engineId: 'barr-reference', sampleRate: 48_000,
   nodes: [{ id: 'sum', type: 'sum', label: 'Sum', role: 'routing', position: { x: 0, y: 0 },
@@ -31,17 +33,40 @@ describe('Matrix Mixer compound presentation', () => {
     const decorated = graph.nodes.map((node) => inspection.memberNodeIds.includes(node.id) ? { ...node, className: 'energy-level-3 loop-active' } : node);
     const compact = collapseMatrixMixer(decorated, graph.edges, inspection, true);
     expect(compact.nodes).toHaveLength(graph.nodes.length - 27);
-    const summary = compact.nodes.find((node) => node.id === 'compound-view-matrix-mixer')!;
+    const summary = compact.nodes.find((node) => node.id === 'hierarchy-view-matrix-mixer')!;
     const members = new Set(inspection.memberNodeIds);
     const crossingCount = graph.edges.filter((edge) => members.has(edge.source) !== members.has(edge.target)).length;
-    expect(crossingCount).toBe(20); expect(summary.data.ports).toHaveLength(crossingCount);
+    expect(crossingCount).toBe(20); expect(summary.data.ports).toHaveLength(8);
     expect(summary.data.runtimeBound).toBe(false);
-    expect(summary.data.compoundPresentation).toMatchObject({ authoritativeNodeCount: 28, kind: 'matrix-mixer-4x4' });
+    expect(summary.data.compoundPresentation).toMatchObject({ authoritativeNodeCount: 28, kind: 'compound' });
     expect(summary.className).toContain('energy-level-3'); expect(summary.className).toContain('loop-active');
-    expect(compact.edges.filter((edge) => edge.source === summary.id || edge.target === summary.id)).toHaveLength(crossingCount);
-    expect(compact.edges.every((edge) => graph.edges.some((source) => source.id === edge.id))).toBe(true);
+    const parentEdges = compact.edges.filter((edge) => edge.source === summary.id || edge.target === summary.id);
+    expect(parentEdges).toHaveLength(8);
+    expect(new Set(parentEdges.flatMap(hierarchyActualEdgeIds)).size).toBe(crossingCount);
     expect(semanticGraphHash({ nodes: graph.nodes, edges: graph.edges })).toBe(semanticGraphHash(graph));
     expect(collapseMatrixMixer(graph.nodes, graph.edges, inspection, false)).toEqual({ nodes: graph.nodes, edges: graph.edges });
+  });
+
+  it('opens the same 28 primitives behind eight stable nested boundary blocks', () => {
+    const inspection = inspectMatrixMixer(graph.nodes)!;
+    const materialized = materializeHierarchyPresentations(graph, [inspection]);
+    const hierarchy = inspectHierarchyPresentations(materialized.nodes)[0]!;
+    expect(hierarchy.ports.map((port) => port.id)).toEqual(['in-1', 'in-2', 'in-3', 'in-4', 'out-1', 'out-2', 'out-3', 'out-4']);
+    const nested = projectNestedHierarchy(materialized.nodes, materialized.edges, hierarchy);
+    expect(nested.nodes.filter((node) => node.data.type === 'hierarchy-boundary')).toHaveLength(8);
+    expect(nested.nodes.filter((node) => node.data.type !== 'hierarchy-boundary')).toHaveLength(28);
+    expect(new Set(nested.edges.map((edge) => edge.id)).size).toBe(nested.edges.length);
+  });
+
+  it('moves the parent without changing primitive layout or semantic identity', () => {
+    const inspection = inspectMatrixMixer(graph.nodes)!;
+    const materialized = materializeHierarchyPresentations(graph, [inspection]);
+    const beforePositions = materialized.nodes.map((node) => ({ id: node.id, position: node.position }));
+    const semantic = semanticGraphHash(materialized);
+    const moved = updateHierarchyPresentation(materialized, inspection.id, { position: { x: 900, y: 450 } });
+    expect(moved.nodes.map((node) => ({ id: node.id, position: node.position }))).toEqual(beforePositions);
+    expect(semanticGraphHash(moved)).toBe(semantic);
+    expect(inspectHierarchyPresentations(moved.nodes)[0]!.position).toEqual({ x: 900, y: 450 });
   });
 
   it('copies a collapsed summary as its exact primitives and recognizes the pasted compound independently', () => {
@@ -68,7 +93,7 @@ describe('Matrix Mixer compound presentation', () => {
     expect(loop.loops.length).toBeGreaterThan(0);
     const decorated = decorateFeedbackLoops(graph.nodes, graph.edges, loop, 0);
     const compact = collapseMatrixMixer(decorated.nodes, decorated.edges, inspection, true);
-    expect(compact.nodes.find((node) => node.id === 'compound-view-matrix-mixer')?.className).toContain('loop-active');
+    expect(compact.nodes.find((node) => node.id === 'hierarchy-view-matrix-mixer')?.className).toContain('loop-active');
     expect(new Set(compact.edges.map((edge) => edge.id)).size).toBe(compact.edges.length);
   });
 });

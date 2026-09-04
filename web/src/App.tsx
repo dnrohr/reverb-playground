@@ -9,11 +9,13 @@ import {
   useEdgesState,
   useNodesState,
   useReactFlow,
+  applyNodeChanges,
   type Edge,
   type Connection,
   type Node,
   type OnSelectionChangeParams,
   type Viewport,
+  type NodeChange,
 } from '@xyflow/react';
 import { createFlowModel, deleteSelected, parseRuntimeSnapshot, type GraphState, type PatchNodeData, type PatchParameter, type RuntimeSnapshot } from './graph';
 import { createModuleNode, moduleDefinitions, nextNodeId, type ModuleType } from './modules';
@@ -46,7 +48,9 @@ import { parallelShimmerBranch, parallelShimmerTeaching } from './parallelShimme
 import { decorateSplitShimmerFocus, splitFeedbackShimmerTeaching, splitShimmerLoopKind, type SplitShimmerLoopFocus } from './splitFeedbackShimmerTeaching';
 import { decorateReverseCosmicFocus, reverseCosmicShimmerTeaching, type ReverseCosmicFocus } from './reverseCosmicShimmerTeaching';
 import { inspectMatrixMixer, inspectMatrixMixers, type MatrixMixerInspection } from './matrixMixerPresentation';
-import { compoundMembers, projectCompoundPresentations } from './compoundPresentation';
+import { compoundMembers, deleteHierarchy, expandHierarchyConnection, hierarchyActualEdgeIds, inspectHierarchyPresentations,
+  materializeHierarchyPresentations, projectHierarchyRoot, projectNestedHierarchy, renameHierarchy,
+  setHierarchyViewport, updateHierarchyPresentation } from './compoundPresentation';
 import { collapseGraphGroups, createGraphGroup, inspectGraphGroups, removeGraphGroup, renameGraphGroup, setGraphGroupCollapsed } from './graphGroups';
 import { addCableWaypoint, alignSelectedNodes, arrangeGraphGroup, cableLayout, clearCableWaypoints, setRoutingPortal, traceCable, updateCableWaypoint, type AlignmentCommand, type TraceDirection } from './graphRouting';
 import { RoutedEdge } from './RoutedEdge';
@@ -558,8 +562,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const { fitView, setViewport: setFlowViewport, screenToFlowPosition } = useReactFlow();
   const restored = useMemo(() => snapshot.restoredPatch
     ? parsePatchJson(JSON.stringify(snapshot.restoredPatch), snapshot) : null, [snapshot]);
-  const initial = useMemo(() => restored ?? { ...createFlowModel(snapshot), viewport: { x: 0, y: 0, zoom: 1 } }, [restored, snapshot]);
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node<PatchNodeData>>(initial.nodes);
+  const initial = useMemo(() => {
+    const base = restored ?? { ...createFlowModel(snapshot), viewport: { x: 0, y: 0, zoom: 1 } };
+    return { ...base, ...materializeHierarchyPresentations(base, inspectMatrixMixers(base.nodes)) };
+  }, [restored, snapshot]);
+  const [nodes, setNodes] = useNodesState<Node<PatchNodeData>>(initial.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initial.edges);
   const [selectedNode, setSelectedNode] = useState<Node<PatchNodeData> | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
@@ -587,7 +594,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [activeLoopIndex, setActiveLoopIndex] = useState(0);
   const [splitLoopFocus, setSplitLoopFocus] = useState<SplitShimmerLoopFocus>('shifted');
   const [reverseCosmicFocus, setReverseCosmicFocus] = useState<ReverseCosmicFocus>('grains');
-  const [collapsedCompoundIds, setCollapsedCompoundIds] = useState<Set<string>>(() => new Set(['matrix-mixer']));
+  const [activeHierarchyId, setActiveHierarchyId] = useState<string | null>(null);
   const [auditionOverlay, setAuditionOverlay] = useState<AuditionOverlay | null>(null);
   const [routeFocus, setRouteFocus] = useState<{ edgeId: string; direction: TraceDirection } | null>(null);
   const [tuningOpen, setTuningOpen] = useState(false);
@@ -746,16 +753,20 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const auditionDecoratedGraph = useMemo(() => decorateAuditionOverlay(routingFocusedGraph, auditionOverlay), [auditionOverlay, routingFocusedGraph]);
   const matrixInspections = useMemo(() => inspectMatrixMixers(nodes), [nodes]);
   const matrixInspection = useMemo(() => inspectMatrixMixer(nodes), [nodes]);
-  const matrixIsCollapsed = Boolean(matrixInspection?.canCollapse && collapsedCompoundIds.has(matrixInspection.id));
-  const compoundDisplayedGraph = useMemo(() => projectCompoundPresentations(
-    auditionDecoratedGraph.nodes, auditionDecoratedGraph.edges, matrixInspections, collapsedCompoundIds,
-  ), [auditionDecoratedGraph, collapsedCompoundIds, matrixInspections]);
+  const hierarchyPresentations = useMemo(() => inspectHierarchyPresentations(nodes), [nodes]);
+  const activeHierarchy = useMemo(() => hierarchyPresentations.find((item) => item.id === activeHierarchyId) ?? null,
+    [activeHierarchyId, hierarchyPresentations]);
+  const matrixIsCollapsed = Boolean(matrixInspection
+    && hierarchyPresentations.find((item) => item.id === matrixInspection.id)?.collapsed);
+  const compoundDisplayedGraph = useMemo(() => projectHierarchyRoot(
+    auditionDecoratedGraph.nodes, auditionDecoratedGraph.edges, hierarchyPresentations,
+  ), [auditionDecoratedGraph, hierarchyPresentations]);
   const graphGroups = useMemo(() => inspectGraphGroups(nodes), [nodes]);
   const hasCollapsedGraphGroup = graphGroups.some((group) => group.collapsed);
-  const groupDisplayedGraph = useMemo(() => collapseGraphGroups(
-    hasCollapsedGraphGroup ? auditionDecoratedGraph.nodes : compoundDisplayedGraph.nodes,
-    hasCollapsedGraphGroup ? auditionDecoratedGraph.edges : compoundDisplayedGraph.edges,
-  ), [auditionDecoratedGraph, hasCollapsedGraphGroup, compoundDisplayedGraph]);
+  const groupDisplayedGraph = useMemo(() => hasCollapsedGraphGroup && !activeHierarchy
+    ? collapseGraphGroups(compoundDisplayedGraph.nodes, compoundDisplayedGraph.edges)
+    : compoundDisplayedGraph,
+  [activeHierarchy, compoundDisplayedGraph, hasCollapsedGraphGroup]);
   const selectedGroupDisplayedGraph = useMemo(() => selectedNode && ['graph-group', 'compound-summary'].includes(selectedNode.data.type) ? {
     nodes: groupDisplayedGraph.nodes.map((node) => ({ ...node, selected: node.id === selectedNode.id })),
     edges: groupDisplayedGraph.edges,
@@ -767,7 +778,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     try { return previewSumForOccupiedInput({ nodes, edges }, pendingConnection); }
     catch { return null; }
   }, [edges, nodes, pendingConnection, pendingSignal]);
-  const connectionDisplayedGraph = sumPreviewGraph ?? selectedGroupDisplayedGraph;
+  const nestedDisplayedGraph = useMemo(() => activeHierarchy
+    ? projectNestedHierarchy(auditionDecoratedGraph.nodes, auditionDecoratedGraph.edges, activeHierarchy)
+    : null, [activeHierarchy, auditionDecoratedGraph]);
+  const connectionDisplayedGraph = activeHierarchy ? nestedDisplayedGraph! : (sumPreviewGraph ?? selectedGroupDisplayedGraph);
   const focusSelectedMacro = useCallback(() => {
     if (!selectedMacroInspection) return;
     const ids = new Set(gravityFocusNodeIds(selectedMacroInspection));
@@ -1030,29 +1044,61 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     const existingInstances = nodes.filter((node) => node.data.subpatchInstance).length / 2;
     const after = instantiateSubpatch(before, definition, { x: center.x - 220, y: center.y + 130 + existingInstances * 70 });
     applyGraph(after); setGraphHistory((history) => commitGraphEdit(history, `Create ${definition.name} subpatch`, before, after));
-    setActivePatchId('custom'); setGraphStatus({ kind: 'ok', message: `CREATED ${definition.name.toUpperCase()} / 2 EXPANDED PRIMITIVES / UNDO AVAILABLE` });
+    setActivePatchId('custom'); setGraphStatus({ kind: 'ok', message: `CREATED ${definition.name.toUpperCase()} / NESTED 2-PRIMITIVE SUBPATCH / UNDO AVAILABLE` });
   }, [applyGraph, edges, nodes, screenToFlowPosition]);
 
   const removeSelection = useCallback(() => {
-    if (selectedNode?.data.type === 'graph-group' || selectedNode?.data.type === 'compound-summary') { setGraphStatus({ kind: 'error', message: 'PRESENTATION SUMMARIES CANNOT BE DELETED / EXPAND TO EDIT AUTHORITATIVE BLOCKS' }); return; }
+    if (selectedNode?.data.type === 'graph-group') { setGraphStatus({ kind: 'error', message: 'VISUAL GROUP SUMMARIES CANNOT BE DELETED / UNGROUP OR EXPAND FIRST' }); return; }
+    if (selectedNode?.data.hierarchyBoundary) { setGraphStatus({ kind: 'error', message: 'BOUNDARY BLOCKS ARE STABLE NAVIGATION PORTS AND CANNOT BE DELETED' }); return; }
+    if (selectedNode?.data.type === 'compound-summary' && selectedNode.data.hierarchyPresentation) {
+      const hierarchy = selectedNode.data.hierarchyPresentation; const before = { nodes, edges };
+      const after = deleteHierarchy(before, hierarchy.id); applyGraph(after);
+      setGraphHistory((history) => commitGraphEdit(history, `Delete ${hierarchy.name}`, before, after));
+      setActivePatchId('custom'); setGraphStatus({ kind: 'ok', message: `DELETED ${hierarchy.name.toUpperCase()} + ${hierarchy.memberNodeIds.length} INTERNAL BLOCKS + INCIDENT CABLES / UNDO AVAILABLE` }); return;
+    }
+    if (selectedEdge) {
+      const actualIds = new Set(hierarchyActualEdgeIds(selectedEdge));
+      if (actualIds.size > 1 || !actualIds.has(selectedEdge.id)) {
+        const before = { nodes, edges }; const after = { nodes, edges: edges.filter((edge) => !actualIds.has(edge.id)) };
+        applyGraph(after); setGraphHistory((history) => commitGraphEdit(history, 'Delete hierarchy boundary cable', before, after));
+        setGraphStatus({ kind: 'ok', message: `DELETED PROXY + ${actualIds.size} EXPLICIT INTERNAL CABLES / UNDO AVAILABLE` }); return;
+      }
+    }
     const protectedNode = nodes.find((node) => node.selected && (node.data.type === 'stereo-input' || node.data.type === 'stereo-output'));
     if (protectedNode) { setGraphStatus({ kind: 'error', message: `${protectedNode.data.label} is required and cannot be deleted.` }); return; }
     const before = { nodes, edges }; const after = deleteSelected(nodes, edges); if (after.nodes.length === nodes.length && after.edges.length === edges.length) return;
     applyGraph(after); setGraphHistory((history) => commitGraphEdit(history, 'Delete selection', before, after)); setGraphStatus({ kind: 'ok', message: 'DELETED SELECTION + INCIDENT CABLES / UNDO AVAILABLE' });
-  }, [applyGraph, edges, nodes, selectedNode]);
+  }, [applyGraph, edges, nodes, selectedEdge, selectedNode]);
 
   const undoGraph = useCallback(() => { const result = undoGraphEdit(graphHistory); if (!result.edit) return; applyGraph(result.edit.before); publishRuntimeParameters(result.edit.before); setGraphHistory(result.history); setGraphStatus({ kind: 'ok', message: `UNDID ${result.edit.label.toUpperCase()}` }); }, [applyGraph, graphHistory, publishRuntimeParameters]);
   const redoGraph = useCallback(() => { const result = redoGraphEdit(graphHistory); if (!result.edit) return; applyGraph(result.edit.after); publishRuntimeParameters(result.edit.after); setGraphHistory(result.history); setGraphStatus({ kind: 'ok', message: `REDID ${result.edit.label.toUpperCase()}` }); }, [applyGraph, graphHistory, publishRuntimeParameters]);
 
   const commitConnection = useCallback((connection: Connection) => {
-    const before = { nodes, edges }; const decision = decideConnection(nodes, edges, connection);
-    if (decision.kind === 'invalid') { setGraphStatus({ kind: 'error', message: decision.message }); return; }
-    if (decision.kind === 'occupied') {
-      setPendingConnection(connection); setGraphStatus({ kind: 'error', message: 'INPUT OCCUPIED / REPLACE ITS CABLE OR INSERT +' }); return;
+    const before = { nodes, edges };
+    const expanded = expandHierarchyConnection(connectionDisplayedGraph.nodes, edges, connection);
+    if (!expanded.length) { setGraphStatus({ kind: 'error', message: 'BOUNDARY CONNECTION HAS NO AUTHORITATIVE INTERNAL ENDPOINT' }); return; }
+    if (expanded.length === 1 && expanded[0]!.source === connection.source && expanded[0]!.target === connection.target) {
+      const decision = decideConnection(nodes, edges, connection);
+      if (decision.kind === 'invalid') { setGraphStatus({ kind: 'error', message: decision.message }); return; }
+      if (decision.kind === 'occupied') {
+        setPendingConnection(connection); setGraphStatus({ kind: 'error', message: 'INPUT OCCUPIED / REPLACE ITS CABLE OR INSERT +' }); return;
+      }
+      const after = connectGraph(before, connection); applyGraph(after);
+      setGraphHistory((history) => commitGraphEdit(history, 'Create cable', before, after));
+      setGraphStatus({ kind: 'ok', message: `CONNECTED ${decision.signal.toUpperCase()} CABLE` }); return;
     }
-    const after = connectGraph(before, connection); applyGraph(after);
-    setGraphHistory((history) => commitGraphEdit(history, 'Create cable', before, after)); setGraphStatus({ kind: 'ok', message: `CONNECTED ${decision.signal.toUpperCase()} CABLE` });
-  }, [applyGraph, edges, nodes]);
+    let after = before; let signal = 'audio';
+    for (const translated of expanded) {
+      const decision = decideConnection(after.nodes, after.edges, translated);
+      if (decision.kind === 'invalid') { setGraphStatus({ kind: 'error', message: `BOUNDARY ${decision.message}` }); return; }
+      if (decision.kind === 'occupied') {
+        setGraphStatus({ kind: 'error', message: 'BOUNDARY INPUT OCCUPIED / SELECT THE PARENT CABLE AND DELETE BEFORE RECONNECTING' }); return;
+      }
+      signal = decision.signal; after = connectGraph(after, translated);
+    }
+    applyGraph(after); setGraphHistory((history) => commitGraphEdit(history, 'Connect hierarchy boundary', before, after));
+    setGraphStatus({ kind: 'ok', message: `CONNECTED ${signal.toUpperCase()} PROXY / ${expanded.length} EXPLICIT INTERNAL CABLE${expanded.length === 1 ? '' : 'S'}` });
+  }, [applyGraph, connectionDisplayedGraph.nodes, edges, nodes]);
 
   const resolveOccupied = useCallback((action: 'replace' | 'sum' | 'cancel') => {
     const connection = pendingConnection; setPendingConnection(null); if (!connection || action === 'cancel') { setGraphStatus(null); return; }
@@ -1119,25 +1165,29 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
   const resetPatch = useCallback(() => {
     const resetId = activePatchId === 'custom' ? 'barr-reference' : activePatchId;
-    const fresh = loadFactoryPatch(resetId, snapshot);
+    const loaded = loadFactoryPatch(resetId, snapshot);
+    const fresh = { ...loaded, ...materializeHierarchyPresentations(loaded, inspectMatrixMixers(loaded.nodes)) };
     const before = { nodes, edges };
     applyGraph(fresh);
     publishRuntimeParameters(fresh);
     setGraphHistory((history) => commitGraphEdit(history, 'Reset patch', before, fresh));
     setPendingConnection(null);
+    setActiveHierarchyId(null);
     setActivePatchId(resetId);
     requestAnimationFrame(() => void fitView({ padding: 0.16, minZoom: 0.25, maxZoom: 1.1 }));
   }, [activePatchId, applyGraph, edges, fitView, nodes, publishRuntimeParameters, snapshot]);
 
   const selectFactoryPatch = useCallback(async (id: FactoryPatchId) => {
     try {
-      const fresh = loadFactoryPatch(id, snapshot);
+      const loaded = loadFactoryPatch(id, snapshot);
+      const fresh = { ...loaded, ...materializeHierarchyPresentations(loaded, inspectMatrixMixers(loaded.nodes)) };
       applyGraph(fresh);
       publishRuntimeParameters(fresh);
       setViewport(fresh.viewport);
       await setFlowViewport(fresh.viewport);
       setGraphHistory(emptyGraphHistory(fresh));
       setPendingConnection(null);
+      setActiveHierarchyId(null);
       setGraphStatus(null);
       setActivePatchId(id);
       if (id === 'split-feedback-shimmer') setSplitLoopFocus('shifted');
@@ -1217,8 +1267,24 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
   const runAlignment = useCallback((command: AlignmentCommand) => {
     const label = command === 'left' ? 'Align left' : command === 'top' ? 'Align top' : `Distribute ${command}`;
-    commitLayoutEdit(label, (state) => alignSelectedNodes(state, command));
-  }, [commitLayoutEdit]);
+    const selectedHierarchy = selectedNode?.data.type === 'compound-summary'
+      ? selectedNode.data.hierarchyPresentation : null;
+    commitLayoutEdit(label, (state) => {
+      if (!selectedHierarchy) return alignSelectedNodes(state, command);
+      const members = new Set(selectedHierarchy.memberNodeIds);
+      const parent = projectHierarchyRoot(state.nodes, state.edges, [selectedHierarchy]).nodes
+        .find((node) => node.id === `hierarchy-view-${selectedHierarchy.id}`);
+      if (!parent) throw new Error(`Hierarchy '${selectedHierarchy.id}' cannot be projected for layout.`);
+      const visibleOrdinary = state.nodes.filter((node) => !members.has(node.id));
+      const aligned = alignSelectedNodes({ nodes: [...visibleOrdinary, { ...parent, selected: true }], edges: [] }, command);
+      const positions = new Map(aligned.nodes.filter((node) => node.id !== parent.id)
+        .map((node) => [node.id, node.position]));
+      const parentPosition = aligned.nodes.find((node) => node.id === parent.id)!.position;
+      const positioned = { nodes: state.nodes.map((node) => positions.has(node.id)
+        ? { ...node, position: { ...positions.get(node.id)! } } : node), edges: state.edges };
+      return updateHierarchyPresentation(positioned, selectedHierarchy.id, { position: { ...parentPosition } });
+    });
+  }, [commitLayoutEdit, selectedNode]);
 
   const arrangeSelectedGroup = useCallback(() => {
     const groupId = selectedNode?.data.presentationGroup?.id
@@ -1237,19 +1303,73 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     void fitView({ nodes: nodes.filter((node) => loop.nodeIds.includes(node.id)), padding: 0.22, duration: reducedMotion ? 0 : 350, maxZoom: 1.1 });
   }, [fitView, loopInspection, nodes, normalizedLoopIndex, reducedMotion]);
 
-  const setCompoundCollapsed = useCallback((id: string, collapsed: boolean) => {
-    const inspection = matrixInspections.find((candidate) => candidate.id === id); if (!inspection) return;
-    if (collapsed && !inspection.canCollapse) { setGraphStatus({ kind: 'error', message: inspection.reason.toUpperCase() }); return; }
-    setCollapsedCompoundIds((current) => { const next = new Set(current); if (collapsed) next.add(id); else next.delete(id); return next; });
-    if (!collapsed) {
-      setSelectedNode(null);
-      requestAnimationFrame(() => void fitView({ nodes: nodes.filter((node) => inspection.memberNodeIds.includes(node.id)), padding: 0.14, duration: reducedMotion ? 0 : 350, maxZoom: 1 }));
-    }
-    setGraphStatus({ kind: 'ok', message: `${collapsed ? 'COLLAPSED' : 'EXPANDED'} ${inspection.label.toUpperCase()} / PRESENTATION ONLY` });
-  }, [fitView, matrixInspections, nodes, reducedMotion]);
+  const changeSelectedHierarchyName = useCallback((id: string, name: string) => {
+    try {
+      const before = { nodes, edges }; const after = renameHierarchy(before, id, name);
+      setNodes(after.nodes); setGraphHistory((history) => commitGraphEdit(history, 'Rename compound', before, after));
+      const updated = inspectHierarchyPresentations(after.nodes).find((item) => item.id === id);
+      setSelectedNode((current) => current && updated ? { ...current, data: { ...current.data,
+        label: updated.name, hierarchyPresentation: updated } } : current);
+      setActivePatchId('custom'); setGraphStatus({ kind: 'ok', message: `RENAMED COMPOUND ${updated?.name.toUpperCase()} / PRESENTATION ONLY` });
+    } catch (reason) { setGraphStatus({ kind: 'error', message: reason instanceof Error ? reason.message.toUpperCase() : 'RENAME FAILED' }); }
+  }, [edges, nodes, setNodes]);
+
+  const openHierarchy = useCallback((id: string) => {
+    const hierarchy = hierarchyPresentations.find((candidate) => candidate.id === id); if (!hierarchy) return;
+    setNodes((current) => current.map((node) => node.selected ? { ...node, selected: false } : node));
+    setSelectedNode(null); setSelectedEdge(null); setActiveHierarchyId(id);
+    requestAnimationFrame(() => {
+      setSelectedNode(null); setSelectedEdge(null);
+      window.setTimeout(() => {
+        if (hierarchy.nestedViewport.x !== 0 || hierarchy.nestedViewport.y !== 0) {
+          void setFlowViewport(hierarchy.nestedViewport); return;
+        }
+        const nested = projectNestedHierarchy(nodes, edges, hierarchy);
+        void fitView({ nodes: nested.nodes, padding: 0.16, duration: reducedMotion ? 0 : 300, maxZoom: 1 });
+      }, 60);
+    });
+    setGraphStatus({ kind: 'ok', message: `OPENED ${hierarchy.name.toUpperCase()} / LIVE AUTHORITATIVE PRIMITIVES` });
+  }, [edges, fitView, hierarchyPresentations, nodes, reducedMotion, setFlowViewport]);
+
+  const closeHierarchy = useCallback(() => {
+    if (!activeHierarchy) return;
+    const id = activeHierarchy.id;
+    const parent = projectHierarchyRoot(nodes, edges, [activeHierarchy]).nodes
+      .find((node) => node.id === `hierarchy-view-${id}`) ?? null;
+    setNodes((current) => current.map((node) => node.selected ? { ...node, selected: false } : node));
+    setActiveHierarchyId(null); setSelectedNode(parent ? { ...parent, selected: true } : null); setSelectedEdge(null);
+    requestAnimationFrame(() => {
+      void setFlowViewport(viewport);
+      window.setTimeout(() => document.querySelector<HTMLElement>(`[data-id="hierarchy-view-${id}"]`)?.focus(), 0);
+    });
+    setGraphStatus({ kind: 'ok', message: `BACK TO PATCH / ${activeHierarchy.name.toUpperCase()} REMAINS LIVE` });
+  }, [activeHierarchy, edges, nodes, setFlowViewport, viewport]);
+
+  const handleViewportChange = useCallback((next: Viewport) => {
+    if (!activeHierarchyId) setViewport(next);
+  }, [activeHierarchyId]);
+
+  const handleViewportEnd = useCallback((_event: MouseEvent | TouchEvent | null, next: Viewport) => {
+    if (!activeHierarchyId) return;
+    setNodes((current) => setHierarchyViewport({ nodes: current, edges: [] }, activeHierarchyId, next).nodes);
+  }, [activeHierarchyId, setNodes]);
+
+  const handleNodesChange = useCallback((changes: NodeChange<Node<PatchNodeData>>[]) => {
+    setNodes((current) => {
+      const authoritativeIds = new Set(current.map((node) => node.id));
+      let next = applyNodeChanges(changes.filter((change) => 'id' in change && authoritativeIds.has(change.id)), current);
+      for (const change of changes) {
+        if (change.type !== 'position' || !change.position || !change.id.startsWith('hierarchy-view-')) continue;
+        const id = change.id.slice('hierarchy-view-'.length);
+        next = updateHierarchyPresentation({ nodes: next, edges: [] }, id, { position: { ...change.position } }).nodes;
+      }
+      return next;
+    });
+  }, [setNodes]);
 
   const handleSelection = useCallback(({ nodes: selectedNodes, edges: selectedEdges }: OnSelectionChangeParams) => {
-    const node = (selectedNodes[0] as Node<PatchNodeData> | undefined) ?? null;
+    const hierarchyNode = selectedNodes.find((candidate) => (candidate as Node<PatchNodeData>).data.type === 'compound-summary') as Node<PatchNodeData> | undefined;
+    const node = hierarchyNode ?? (selectedNodes[0] as Node<PatchNodeData> | undefined) ?? null;
     const edge = selectedEdges[0] ?? null;
     if (!node && !edge && selectedNode && ['graph-group', 'compound-summary'].includes(selectedNode.data.type)) return;
     setSelectedNode(node);
@@ -1261,6 +1381,9 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
+      if (event.altKey && event.key === 'ArrowLeft' && activeHierarchyId) {
+        event.preventDefault(); closeHierarchy(); return;
+      }
       if (event.key === 'Escape' && openApplicationMenu) {
         event.preventDefault();
         setOpenApplicationMenu(null);
@@ -1285,7 +1408,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [beginCreateGroup, copySelection, openApplicationMenu, pasteSelection, redoGraph, removeSelection, resetPatch, undoGraph]);
+  }, [activeHierarchyId, beginCreateGroup, closeHierarchy, copySelection, openApplicationMenu, pasteSelection, redoGraph, removeSelection, resetPatch, undoGraph]);
 
   const beginParameterEdit = useCallback((nodeId: string, parameterId: string, _before: number) => {
     activeEdit.current = { label: `Edit ${nodeId}.${parameterId}`, before: snapshotGraph({ nodes, edges }) };
@@ -1324,11 +1447,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
   const loadPatch = useCallback(async (file: File) => {
     try {
-      const loaded = parsePatchJson(await file.text(), snapshot);
-      setNodes(loaded.nodes);
-      setEdges(loaded.edges);
-      setViewport(loaded.viewport);
-      setQualityPolicy(loaded.source.qualityPolicy);
+      const parsed = parsePatchJson(await file.text(), snapshot);
+      const loaded = { ...parsed, ...materializeHierarchyPresentations(parsed, inspectMatrixMixers(parsed.nodes)) };
+      setNodes(loaded.nodes); setEdges(loaded.edges); setViewport(loaded.viewport);
+      setQualityPolicy(loaded.source.qualityPolicy); setActiveHierarchyId(null);
       await setFlowViewport(loaded.viewport);
       for (const node of loaded.nodes) {
         for (const parameter of node.data.parameters)
@@ -1503,7 +1625,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           <section className="module-group subpatch-library">
             <h2>SUBPATCHES</h2>
             {subpatchDefinitions.map((definition) => <button className="module-item subpatch-item" key={definition.id} type="button"
-              title={definition.description} onClick={() => addSubpatch(definition.id)}><span className="module-glyph" aria-hidden="true" /><span>{definition.name}</span><small>v{definition.version} · expands to 2</small></button>)}
+              title={definition.description} onClick={() => addSubpatch(definition.id)}><span className="module-glyph" aria-hidden="true" /><span>{definition.name}</span><small>v{definition.version} · opens to 2</small></button>)}
           </section>
           <div className="signal-legend" aria-label="Cable styles">
             <div><span className="legend-line audio-line" /> AUDIO / SOLID</div>
@@ -1513,7 +1635,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
         <section className="canvas-pane" aria-label="Patch canvas">
           <div className="canvas-toolbar">
-            <div><strong>PATCH CANVAS</strong><span>{Math.round(viewport.zoom * 100)}%</span>
+            <div className="hierarchy-breadcrumbs" aria-label="Schematic breadcrumbs">
+              {activeHierarchy ? <button type="button" onClick={closeHierarchy} aria-label="Back to parent patch">← BACK</button> : null}
+              <strong>{activeHierarchy ? `PATCH / ${activeHierarchy.name.toUpperCase()}` : 'PATCH CANVAS'}</strong>
+              <span>{Math.round((activeHierarchy?.nestedViewport.zoom ?? viewport.zoom) * 100)}%</span>
               <label className="workspace-picker"><span>WORKSPACE</span><select aria-label="Workspace arrangement" value={workspacePresentation.arrangement}
                 onChange={(event) => selectWorkspaceArrangement(event.target.value as WorkspaceArrangement)}>
                 <option value="balanced">Balanced</option><option value="create">Create Focus</option><option value="learn">Learn &amp; Inspect</option>{workspacePresentation.arrangement === 'custom' ? <option value="custom">Custom</option> : null}
@@ -1523,15 +1648,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               {auditionOverlay ? <button type="button" className="audition-clear" onClick={() => setAuditionOverlay(null)}>CLEAR {auditionOverlay.kind.toUpperCase()}</button> : null}
               {supportsAssistedTuning({ nodes, edges }) ? <button type="button" className="tuning-open-button"
                 aria-expanded={tuningOpen} onClick={() => setTuningOpen((open) => !open)}>TUNE</button> : null}
-              {matrixInspections.map((inspection) => { const collapsed = inspection.canCollapse && collapsedCompoundIds.has(inspection.id); return <button type="button" className="matrix-view-toggle"
-                key={inspection.id} disabled={!inspection.canCollapse} title={inspection.reason} aria-pressed={!collapsed}
-                onClick={() => setCompoundCollapsed(inspection.id, !collapsed)}>
-                {!inspection.canCollapse ? `${inspection.label.toUpperCase()} EXPANDED / UNSAFE` : `${collapsed ? 'EXPAND' : 'COLLAPSE'} ${inspection.label.toUpperCase()}`}
-              </button>; })}
-              {matrixInspection ? <button type="button" className="matrix-view-toggle"
+              {!activeHierarchy && matrixInspection ? <button type="button" className="matrix-view-toggle"
                 onClick={() => {
-                  setSelectedNode(compoundDisplayedGraph.nodes.find((node) => node.id === `compound-view-${matrixInspection.id}`)
-                  ?? { id: `compound-view-${matrixInspection.id}`, type: 'patchNode', position: { x: 0, y: 0 }, data: {
+                  setSelectedNode(compoundDisplayedGraph.nodes.find((node) => node.id === `hierarchy-view-${matrixInspection.id}`)
+                  ?? { id: `hierarchy-view-${matrixInspection.id}`, type: 'patchNode', position: { x: 0, y: 0 }, data: {
                     label: 'Matrix Mixer 4×4', type: 'compound-summary', role: 'routing', runtimeBound: false,
                     ports: [], parameters: [],
                     compoundPresentation: { id: matrixInspection.id, kind: matrixInspection.kind, memberNodeIds: matrixInspection.memberNodeIds,
@@ -1541,6 +1661,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 }}>
                 INSPECT MATRIX
               </button> : null}
+              {activeHierarchy ? <button type="button" className="matrix-view-toggle" onClick={closeHierarchy}>BACK TO PATCH</button> : null}
             </div>
           </div>
           <input
@@ -1595,28 +1716,45 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               edges={connectionDisplayedGraph.edges}
               nodeTypes={{ patchNode: PatchNode }}
               edgeTypes={{ smoothstep: RoutedEdge }}
-              onNodesChange={onNodesChange}
+              onNodesChange={handleNodesChange}
               onEdgesChange={onEdgesChange}
               onNodeDragStart={() => { dragStart.current = snapshotGraph({ nodes, edges }); }}
               onNodeDragStop={(_event, movedNode, movedNodes) => {
                 const before = dragStart.current; dragStart.current = null; if (!before) return;
+                if (movedNode.id.startsWith('hierarchy-view-')) {
+                  const hierarchyId = movedNode.id.slice('hierarchy-view-'.length);
+                  const after = updateHierarchyPresentation(before, hierarchyId, { position: { ...movedNode.position } });
+                  setNodes(after.nodes); setGraphHistory((history) => commitGraphEdit(history, `Move ${hierarchyId}`, before, after));
+                  setGraphStatus({ kind: 'ok', message: `MOVED ${hierarchyId.toUpperCase()} / PRESENTATION ONLY / UNDO AVAILABLE` }); return;
+                }
                 const positions = new Map(movedNodes.map((node) => [node.id, node.position]));
                 positions.set(movedNode.id, movedNode.position);
                 const after = { nodes: nodes.map((node) => positions.has(node.id) ? { ...node, position: { ...positions.get(node.id)! } } : node), edges };
                 setGraphHistory((history) => commitGraphEdit(history, `Move ${movedNode.id}`, before, after));
               }}
               onConnect={commitConnection}
-              isValidConnection={(connection) => decideConnection(nodes, edges, { source: connection.source, sourceHandle: connection.sourceHandle ?? null, target: connection.target, targetHandle: connection.targetHandle ?? null }).kind !== 'invalid'}
+              isValidConnection={(connection) => {
+                const translated = expandHierarchyConnection(connectionDisplayedGraph.nodes, edges,
+                  { source: connection.source, sourceHandle: connection.sourceHandle ?? null,
+                    target: connection.target, targetHandle: connection.targetHandle ?? null });
+                return translated.length > 0 && translated.every((candidate) => decideConnection(nodes, edges, candidate).kind !== 'invalid');
+              }}
               defaultEdgeOptions={{ interactionWidth: 24 }}
               onSelectionChange={handleSelection}
               onNodeClick={(_event, node) => {
                 if (!['graph-group', 'compound-summary'].includes((node as Node<PatchNodeData>).data.type)) return;
                 const selected = node as Node<PatchNodeData>; setSelectedNode(selected); setSelectedEdge(null); openContext('node');
               }}
+              onNodeDoubleClick={(_event, node) => {
+                const data = (node as Node<PatchNodeData>).data;
+                const hierarchy = data.type === 'compound-summary' ? data.hierarchyPresentation : undefined;
+                if (hierarchy) openHierarchy(hierarchy.id);
+              }}
               onEdgeClick={(_event, edge) => { setSelectedEdge(edges.find((candidate) => candidate.id === edge.id) ?? edge); setSelectedNode(null); setActiveLoopIndex(0); openContext('cable'); }}
               onPaneClick={() => { setSelectedNode(null); setSelectedEdge(null); setRouteFocus(null); }}
-              onViewportChange={setViewport}
-              defaultViewport={initial.viewport}
+              onViewportChange={handleViewportChange}
+              onMoveEnd={handleViewportEnd}
+              defaultViewport={activeHierarchy?.nestedViewport ?? initial.viewport}
               fitView={!restored}
               fitViewOptions={{ padding: 0.16, minZoom: 0.58, maxZoom: 1.1 }}
               minZoom={0.2}
@@ -1631,7 +1769,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               edgesFocusable
               elevateEdgesOnSelect
               proOptions={{ hideAttribution: false }}
-              aria-label={`${activePatch?.label ?? 'Custom'} patch graph`}
+              aria-label={activeHierarchy ? `${activeHierarchy.name} nested schematic, level 2 of 4` : `${activePatch?.label ?? 'Custom'} patch graph`}
             >
               <Background color="#34414a" gap={22} size={1.2} variant={BackgroundVariant.Dots} />
               <Controls position="bottom-left" showInteractive={false} />
@@ -1643,7 +1781,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 maskColor="rgba(9, 12, 15, 0.78)"
               />
             </ReactFlow>
-            <div className="interaction-hint">SPACE + DRAG PAN · WHEEL ZOOM · SHIFT BOX SELECT · DELETE REMOVE · R RESET</div>
+            <div className="interaction-hint">{activeHierarchy ? 'ALT+LEFT BACK · LIVE EDITS · ' : ''}SPACE + DRAG PAN · WHEEL ZOOM · SHIFT BOX SELECT · DELETE REMOVE · R RESET</div>
           </div>
         </section>
 
@@ -1706,21 +1844,28 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <small>Nested groups are intentionally unsupported.</small>
               </section> : null}
               {selectedNode.data.compoundPresentation ? <section className="compound-inspector" aria-label="Compound presentation authority">
-                <header><strong>COMPOUND SUMMARY</strong><span>PRESENTATION ONLY</span></header>
+                <header><strong>{selectedNode.data.hierarchyPresentation?.kind === 'subpatch' ? 'REUSABLE SUBPATCH' : 'COMPOUND BLOCK'}</strong><span>DERIVED VIEW</span></header>
+                {selectedNode.data.hierarchyPresentation ? <label><span>BLOCK NAME</span><input aria-label="Compound block name"
+                  defaultValue={selectedNode.data.hierarchyPresentation.name}
+                  onKeyDown={(event) => { if (event.key === 'Enter') event.currentTarget.blur(); }}
+                  onBlur={(event) => { if (event.currentTarget.value.trim() !== selectedNode.data.hierarchyPresentation?.name)
+                    changeSelectedHierarchyName(selectedNode.data.hierarchyPresentation!.id, event.currentTarget.value); }} /></label> : null}
                 <p>{selectedNode.data.compoundPresentation.summary}</p>
                 <dl className="property-list">
                   <div><dt>AUTHORITY</dt><dd>{selectedNode.data.compoundPresentation.authoritativeNodeCount} ordinary blocks</dd></div>
                   <div><dt>INTERNAL</dt><dd>{selectedNode.data.compoundPresentation.internalConnectionCount} ordinary cables</dd></div>
-                  <div><dt>BOUNDARY</dt><dd>{selectedNode.data.ports.length} one-to-one ports</dd></div>
+                  <div><dt>BOUNDARY</dt><dd>{selectedNode.data.ports.length} stable named proxy ports</dd></div>
                   <div><dt>ENERGY</dt><dd>maximum visible member lane; never summed twice</dd></div>
-                  <div><dt>LATENCY</dt><dd>compiled from expanded primitives</dd></div>
+                  <div><dt>LATENCY</dt><dd>{diagnostics ? `${diagnostics.latency.milliseconds.toFixed(2)} ms active graph / derived from primitives` : 'compiled from expanded primitives'}</dd></div>
+                  <div><dt>MEMORY</dt><dd>{diagnostics ? `${formatBytes(diagnostics.delayMemory.bytes)} active graph / derived from primitives` : 'prepared from expanded primitive delays'}</dd></div>
+                  <div><dt>SAFETY</dt><dd>{diagnostics?.mute.safetyLatched ? 'latched / reveal the highlighted internal loop' : 'same primitive graph validator and runtime guard'}</dd></div>
                   <div><dt>WARNINGS</dt><dd>{diagnostics?.topologyPublication.failure || 'none active'}</dd></div>
                 </dl>
                 {matrixInspections.find((inspection) => inspection.id === selectedNode.data.compoundPresentation?.id)
                   ? <MatrixMixerInspector inspection={matrixInspections.find((inspection) => inspection.id === selectedNode.data.compoundPresentation?.id)!} /> : null}
-                <div><button type="button" onClick={() => setCompoundCollapsed(selectedNode.data.compoundPresentation!.id, false)}>EXPAND IN PLACE</button>
+                <div><button type="button" onClick={() => openHierarchy(selectedNode.data.compoundPresentation!.id)}>OPEN SCHEMATIC</button>
                   <button type="button" onClick={copySelection}>COPY {selectedNode.data.compoundPresentation.authoritativeNodeCount} PRIMITIVES</button></div>
-                <small>The summary cannot be edited or compiled. Expand to change coefficients, cables, or automation.</small>
+                <small>Double-click also opens the nested canvas. It edits these same live primitives with no Apply step.</small>
               </section> : null}
               {selectedNode.data.subpatchInstance ? <section className="subpatch-inspector" aria-label="Reusable subpatch instance">
                 <header><strong>REUSABLE SUBPATCH</strong><span>PINNED DEFINITION</span></header>
@@ -1879,10 +2024,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           <section id="context-panel-learn" className="context-panel context-learn" role="tabpanel" aria-labelledby="context-tab-learn" hidden={contextTab !== 'learn'}>
             <div className="context-evidence-heading"><strong>ARCHITECTURE &amp; LISTENING</strong><span>DOCUMENTED / EXPLANATORY</span></div>
             {selectedNode?.data.compoundPresentation ? <section className="compound-learn-card" aria-label="Compound presentation explanation">
-              <header><span>{selectedNode.data.label.toUpperCase()}</span><strong>EXPANDABLE VIEW</strong></header>
+              <header><span>{selectedNode.data.label.toUpperCase()}</span><strong>NESTED SCHEMATIC</strong></header>
               <p>{selectedNode.data.compoundPresentation.learn}</p>
-              <dl><div><dt>SUMMARY</dt><dd>navigation and aggregate evidence</dd></div><div><dt>EXPANDED</dt><dd>saved and executable authority</dd></div></dl>
-              <button type="button" onClick={() => { setContextTab('inspect'); setCompoundCollapsed(selectedNode.data.compoundPresentation!.id, false); }}>EXPAND + INSPECT PRIMITIVES</button>
+              <dl><div><dt>PARENT</dt><dd>navigation and aggregate evidence</dd></div><div><dt>NESTED</dt><dd>saved and executable authority</dd></div></dl>
+              <button type="button" onClick={() => { setContextTab('inspect'); openHierarchy(selectedNode.data.compoundPresentation!.id); }}>OPEN + INSPECT PRIMITIVES</button>
             </section> : null}
             {activePatchId === 'dense-figure-eight' ? <DenseFigureEightTeaching /> : null}
             {activePatchId === 'four-line-dense-room' ? <FourLineFdnTeaching collapsed={matrixIsCollapsed} /> : null}

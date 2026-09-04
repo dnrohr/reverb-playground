@@ -236,6 +236,36 @@ TEST_CASE("Pinned reusable subpatch metadata round trips over authoritative prim
     REQUIRE_FALSE(validate(ioMember).valid());
 }
 
+TEST_CASE("Hierarchical compound layout round trips without changing executable graph truth")
+{
+    using namespace reverb::graph;
+    auto graph = parsePatchJson(readFixture("patches/valid/barr-minimal.json"));
+    const auto semanticNodes = graph.nodes;
+    const auto semanticConnections = graph.connections;
+    graph.layout.hierarchies = { LayoutHierarchyPresentation {
+        "allpass-compound", "compound", "Input diffuser", true, { "allpass-1" }, 420.0, 180.0,
+        Viewport { -15.0, 22.0, 0.85 }, {
+            HierarchyPortBinding { "in", "IN", SignalType::audio, PortDirection::input, { PortReference { "allpass-1", "in" } } },
+            HierarchyPortBinding { "out", "OUT", SignalType::audio, PortDirection::output, { PortReference { "allpass-1", "out" } } },
+        }, std::nullopt,
+    } };
+    const auto validation = validate(graph); CAPTURE(validation.errors); REQUIRE(validation.valid());
+    const auto restored = parsePatchJson(writePatchJson(graph));
+    REQUIRE(restored.layout.hierarchies == graph.layout.hierarchies);
+    REQUIRE(restored.nodes == semanticNodes);
+    REQUIRE(restored.connections == semanticConnections);
+
+    auto dangling = graph;
+    dangling.layout.hierarchies.front().ports.front().targets.front().portId = "missing";
+    REQUIRE_FALSE(validate(dangling).valid());
+    auto recursive = graph;
+    recursive.layout.hierarchies.front().parentId = recursive.layout.hierarchies.front().id;
+    REQUIRE_FALSE(validate(recursive).valid());
+    auto unmapped = graph;
+    unmapped.layout.hierarchies.front().ports.pop_back();
+    REQUIRE_FALSE(validate(unmapped).valid());
+}
+
 TEST_CASE("Validator rejects zero-delay cycles and accepts delayed feedback")
 {
     using namespace reverb::graph;

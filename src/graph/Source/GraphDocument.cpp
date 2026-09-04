@@ -1,5 +1,6 @@
 #include <reverb/graph/GraphDocument.h>
 
+#include <algorithm>
 #include <cmath>
 #include <ranges>
 #include <string_view>
@@ -8,6 +9,8 @@
 
 namespace reverb::graph {
 namespace {
+
+constexpr std::size_t maximumHierarchyDepth = 1;
 
 struct LocatedPort final {
     const Port* port {};
@@ -214,6 +217,108 @@ ValidationResult validate(const GraphDocument& document)
             const auto actual = ports.find(portKey(binding.nodeId, binding.portId));
             if (actual == ports.end() || actual->second.port->signal != binding.signal || actual->second.port->direction != binding.direction)
                 result.errors.push_back("subpatch instance '" + instance.id + "' port '" + binding.id + "' does not match its primitive endpoint");
+        }
+    }
+
+    std::unordered_set<std::string> hierarchyIds;
+    std::unordered_set<std::string> hierarchyMemberIds;
+    std::unordered_map<std::string, std::string> hierarchyParents;
+    for (const auto& hierarchy : document.layout.hierarchies) {
+        if (hierarchy.id.empty() || !hierarchyIds.insert(hierarchy.id).second)
+            result.errors.push_back("hierarchy IDs must be non-empty and unique");
+        if (hierarchy.kind != "compound" && hierarchy.kind != "subpatch")
+            result.errors.push_back("hierarchy '" + hierarchy.id + "' has unsupported kind '" + hierarchy.kind + "'");
+        if (hierarchy.name.empty() || hierarchy.name.size() > 64)
+            result.errors.push_back("hierarchy '" + hierarchy.id + "' name must contain 1 through 64 characters");
+        if (hierarchy.memberNodeIds.empty() || hierarchy.ports.empty())
+            result.errors.push_back("hierarchy '" + hierarchy.id + "' requires members and explicit boundary ports");
+        if (!std::isfinite(hierarchy.x) || !std::isfinite(hierarchy.y)
+            || !std::isfinite(hierarchy.nestedViewport.x) || !std::isfinite(hierarchy.nestedViewport.y)
+            || !std::isfinite(hierarchy.nestedViewport.zoom) || hierarchy.nestedViewport.zoom <= 0.0)
+            result.errors.push_back("hierarchy '" + hierarchy.id + "' contains an invalid position or nested viewport");
+        std::unordered_set<std::string> localMembers;
+        for (const auto& nodeId : hierarchy.memberNodeIds) {
+            if (!nodeIds.contains(nodeId) || !localMembers.insert(nodeId).second || !hierarchyMemberIds.insert(nodeId).second)
+                result.errors.push_back("hierarchy '" + hierarchy.id + "' has an invalid, duplicate, or shared member '" + nodeId + "'");
+            const auto member = std::ranges::find(document.nodes, nodeId, &Node::id);
+            if (member != document.nodes.end() && (member->type == "stereo-input" || member->type == "stereo-output"))
+                result.errors.push_back("hierarchy '" + hierarchy.id + "' cannot contain I/O node '" + nodeId + "'");
+        }
+        std::unordered_set<std::string> localPorts;
+        for (const auto& binding : hierarchy.ports) {
+            if (binding.id.empty() || !localPorts.insert(binding.id).second || binding.name.empty()
+                || binding.name.size() > 32 || binding.targets.empty()) {
+                result.errors.push_back("hierarchy '" + hierarchy.id + "' has invalid boundary port '" + binding.id + "'");
+                continue;
+            }
+            for (const auto& target : binding.targets) {
+                if (!localMembers.contains(target.nodeId)) {
+                    result.errors.push_back("hierarchy '" + hierarchy.id + "' port '" + binding.id
+                        + "' targets non-member '" + target.nodeId + "." + target.portId + "'");
+                    continue;
+                }
+                const auto actual = ports.find(portKey(target.nodeId, target.portId));
+                if (actual == ports.end() || actual->second.port->signal != binding.signal
+                    || actual->second.port->direction != binding.direction) {
+                    result.errors.push_back("hierarchy '" + hierarchy.id + "' port '" + binding.id
+                        + "' does not match internal port '" + target.nodeId + "." + target.portId + "'");
+                }
+            }
+            if (binding.direction == PortDirection::input) {
+                std::unordered_set<std::string> externalSources;
+                for (const auto& connection : document.connections) {
+                    if (localMembers.contains(connection.from.nodeId)) continue;
+                    if (std::ranges::any_of(binding.targets, [&](const auto& target) {
+                        return target.nodeId == connection.to.nodeId && target.portId == connection.to.portId;
+                    })) externalSources.insert(portKey(connection.from.nodeId, connection.from.portId));
+                }
+                if (externalSources.size() > 1)
+                    result.errors.push_back("hierarchy '" + hierarchy.id + "' port '" + binding.id
+                        + "' has divergent external sources; reconnect the parent proxy as one boundary operation");
+            }
+        }
+        for (const auto& connection : document.connections) {
+            const auto sourceInside = localMembers.contains(connection.from.nodeId);
+            const auto targetInside = localMembers.contains(connection.to.nodeId);
+            if (sourceInside == targetInside) continue;
+            const auto direction = targetInside ? PortDirection::input : PortDirection::output;
+            const auto& endpoint = targetInside ? connection.to : connection.from;
+            const auto matched = std::ranges::any_of(hierarchy.ports, [&](const auto& binding) {
+                return binding.direction == direction && std::ranges::any_of(binding.targets, [&](const auto& target) {
+                    return target.nodeId == endpoint.nodeId && target.portId == endpoint.portId;
+                });
+            });
+            if (!matched)
+                result.errors.push_back("hierarchy '" + hierarchy.id + "' has unmapped crossing connection '"
+                    + connection.id + "' at '" + endpoint.nodeId + "." + endpoint.portId + "'");
+        }
+        if (hierarchy.parentId) hierarchyParents[hierarchy.id] = *hierarchy.parentId;
+    }
+    for (const auto& [id, parent] : hierarchyParents) {
+        if (!hierarchyIds.contains(parent)) {
+            result.errors.push_back("hierarchy '" + id + "' references missing parent '" + parent + "'");
+            continue;
+        }
+        std::unordered_set<std::string> seen;
+        auto cursor = id;
+        std::size_t depth = 0;
+        while (true) {
+            const auto next = hierarchyParents.find(cursor);
+            if (next == hierarchyParents.end()) break;
+            if (!seen.insert(cursor).second) {
+                result.errors.push_back("hierarchy '" + id + "' is recursive");
+                break;
+            }
+            if (seen.contains(next->second)) {
+                result.errors.push_back("hierarchy '" + id + "' is recursive");
+                break;
+            }
+            cursor = next->second;
+            if (++depth >= maximumHierarchyDepth) {
+                result.errors.push_back("hierarchy '" + id + "' exceeds nesting depth "
+                    + std::to_string(maximumHierarchyDepth));
+                break;
+            }
         }
     }
 

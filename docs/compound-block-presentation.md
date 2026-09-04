@@ -1,61 +1,53 @@
 # Compound-block presentation
 
-M26.5 defines a reusable presentation contract for dense structures whose
-saved and executable form remains an ordinary primitive graph. The Four-Line
-Dense Room's 4×4 Matrix Mixer is the first qualified compound: its summary can
-collapse 16 signed Gain blocks and 12 explicit Sum blocks, then expand those
-same stable IDs in place.
+M26.5 established the original rule that a compound is a derived view over
+ordinary primitives, never a hidden DSP node. M29 keeps that authority rule and
+replaces inline expansion with a saved movable parent and a live nested canvas.
+The complete current contract is in
+[Hierarchical schematics](hierarchical-schematics.md).
 
-## Authority contract
+## Authority
 
-A compound recognizer returns a stable presentation ID, kind, label, complete
-member IDs, collapse admission result, inspector summary, and Learn text. The
-projection creates a temporary `compound-summary` node only when every member
-is present and collapse is admitted. That node is not runtime-bound, has no
-parameters, cannot be deleted, and is never serialized or published.
+The saved and executable graph remains the exact primitive node and cable
+arrays. A compound recognizer supplies stable membership, a display name, and
+boundary mappings. Its parent and nested Input/Output blocks exist only in the
+editor projection. Automation, compilation, latency, safety, Energy, audition,
+offline rendering, and host restore address the primitive IDs.
 
-The input node and edge arrays remain authoritative. Expansion therefore
-reveals the exact pre-collapse objects and positions without reconstruction,
-migration, normalization, or identity changes. Parameter editing, automation,
-compilation, latency, safety, warnings, and host state always operate on the
-ordinary primitives.
+The parent position, name, collapse state, named proxy ports, member IDs, and
+nested viewport are serialized as optional schema-v2 layout data. Presentation
+changes therefore affect the document/save hash but never its semantic hash or
+rendered samples.
 
-## Boundary and evidence
+## Matrix qualification
 
-Every real cable that crosses the member boundary becomes one typed summary
-port. Its existing edge ID, signal data, routing layout, Energy decoration,
-feedback decoration, and diagnostic relationship are retained; internal cables
-are merely omitted from the projection. The Matrix summary exposes all 20
-crossing cables—including control/macro routes—instead of the former eight
-factory-specific synthetic audio edges.
+The Four-Line Dense Room's 4×4 Matrix Mixer is the first qualified compound.
+It owns 16 finite signed Gain coefficients and 12 explicit Sums. Its four input
+proxies each fan out to four explicit Gain-input cables from one external
+source; its four output proxies map one-to-one to the final Sum outputs. The
+compact parent therefore has eight ordinary mono ports while retaining all 20
+crossing cable identities in its boundary metadata.
 
-The summary inherits the strongest member Energy lane and loop/safety/focus
-decoration without summing telemetry a second time. Its inspector reports the
-authoritative primitive count, internal cable count, one-to-one boundary count,
-compiled-latency authority, and active publication warning. Matrix-specific
-coefficients and row/column energy remain available inside that generic shell.
-Learn explicitly distinguishes the compact navigation view from expanded edit
-authority.
+The recognizer admits normalized orthogonal and non-amplifying matrices. If a
+row or column energy exceeds unity, the edited primitives remain visible and no
+automatic normalization conceals the change. Complete copies receive fresh
+primitive, cable, hierarchy, and boundary IDs. Partial or structurally changed
+copies become ordinary graph material.
 
-## Clipboard and multiple instances
+Parent Energy and loop/safety/focus decoration are derived from members without
+double counting. Inspect reports the authoritative primitive/cable counts,
+stable proxy count, Matrix coefficients, row/column energy, compiled-latency
+authority, and active warnings; opening the nested canvas reveals the exact
+primitive or feedback path behind that summary.
 
-Copying a selected summary copies its 28 authoritative primitives and internal
-cables, never the temporary summary. Paste assigns ordinary fresh node/cable
-IDs. The Matrix recognizer qualifies the pasted suffix as an independent
-compound with the same visible coefficients; it starts expanded and can be
-collapsed independently. Partial or edited structures remain ordinary visible
-graphs unless they still satisfy the full recognizer contract.
+## Historical M26.5 evidence
 
-## Matrix admission
-
-All 16 finite coefficients and all 12 sums must be present. The summary remains
-available for normalized orthogonal or non-amplifying matrices. If any row or
-column energy exceeds unity, collapse is refused and the edited primitives stay
-visible; no automatic normalization conceals the change.
-
-## Evidence
+The former inline presentation remains documented by:
 
 - `artifacts/ui/m26-5-compound-presentation/matrix-summary-inspector.png`
 - `artifacts/ui/m26-5-compound-presentation/matrix-expanded-authority.png`
 - `artifacts/ui/m26-5-compound-presentation/compound-expand-copy.mp4`
 - `artifacts/ui/m26-5-compound-presentation/compound-640x400.png`
+
+Current M29 evidence is under
+`artifacts/ui/m29-hierarchical-compounds/`.

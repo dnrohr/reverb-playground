@@ -1,8 +1,13 @@
 # Reusable subpatches
 
+> M29 now places each reusable instance as a compact parent that opens into the
+> same authoritative primitives described below. See
+> [Hierarchical schematics](hierarchical-schematics.md) for navigation, proxy
+> ports, copy/paste, persistence, nesting, and migration behavior.
+
 M26.3 introduces reusable construction without making a new hidden DSP block.
 The first definition, **Diffuse Delay v1**, places one All-pass followed by one
-Delay. Every instance is immediately expanded into those ordinary primitives;
+Delay. Every instance opens into those ordinary primitives;
 the graph compiler, Energy telemetry, latency analysis, feedback validation,
 diagnostics, automation, and rendering receive the same document they would
 receive if the two blocks and cable had been created manually.
@@ -77,9 +82,10 @@ schema; older documents without `layout.subpatches` load unchanged.
 
 1. Choose **Diffuse Delay** under **Subpatches** in the module palette.
 2. Connect its visible All-pass input and Delay output like ordinary mono ports.
-3. Select either teal-outlined member to inspect definition, version, instance
-   identity, explicit port mappings, and recovery/update status.
-4. Edit the ordinary parameters independently, copy/paste the pair, or choose
+3. Select the compact parent to inspect definition, version, instance identity,
+   explicit port mappings, and recovery/update status; double-click it to open
+   the two authoritative blocks.
+4. Edit the ordinary parameters independently, copy/paste the parent, or choose
    **Detach to ordinary blocks**.
 
 ## Evidence

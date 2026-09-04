@@ -20,6 +20,8 @@ export function copySelectedGraph(state: GraphState): GraphClipboard | null {
       delete node.data.subpatchInstance;
       node.className = node.className?.replace(/\s*subpatch-member\b/g, '');
     }
+    const hierarchy = node.data.hierarchyPresentation;
+    if (hierarchy && !hierarchy.memberNodeIds.every((id) => selectedIds.has(id))) delete node.data.hierarchyPresentation;
   }
   const ids = new Set(nodes.map((node) => node.id));
   const edges = state.edges.filter((edge) => ids.has(edge.source) && ids.has(edge.target)).map((edge) => structuredClone(edge));
@@ -42,6 +44,8 @@ export function pasteGraph(state: GraphState, clipboard: GraphClipboard, offset 
   const groupReplacements = new Map<string, string>();
   const instanceIds = new Set(state.nodes.flatMap((node) => node.data.subpatchInstance ? [node.data.subpatchInstance.id] : []));
   const instanceReplacements = new Map<string, string>();
+  const hierarchyIds = new Set(state.nodes.flatMap((node) => node.data.hierarchyPresentation ? [node.data.hierarchyPresentation.id] : []));
+  const hierarchyReplacements = new Map<string, string>();
   const nodes = clipboard.nodes.map((source) => {
     const id = uniqueId(source.id, nodeIds);
     replacements.set(source.id, id);
@@ -63,6 +67,26 @@ export function pasteGraph(state: GraphState, clipboard: GraphClipboard, offset 
     node.data.subpatchInstance = { ...source, id: instanceId,
       memberNodeIds: source.memberNodeIds.map((id) => replacements.get(id)!).filter(Boolean),
       ports: source.ports.map((port) => ({ ...port, nodeId: replacements.get(port.nodeId)! })).filter((port) => port.nodeId),
+    };
+  }
+  for (const node of nodes) if (node.data.hierarchyPresentation
+    && !hierarchyReplacements.has(node.data.hierarchyPresentation.id)) {
+    hierarchyReplacements.set(node.data.hierarchyPresentation.id,
+      uniqueId(node.data.hierarchyPresentation.id, hierarchyIds));
+  }
+  for (const node of nodes) if (node.data.hierarchyPresentation) {
+    const source = node.data.hierarchyPresentation;
+    const hierarchyId = hierarchyReplacements.get(source.id)!;
+    node.data.hierarchyPresentation = {
+      ...source,
+      id: hierarchyId,
+      name: `${source.name} copy`.slice(0, 64),
+      position: { x: source.position.x + offset, y: source.position.y + offset },
+      memberNodeIds: source.memberNodeIds.map((id) => replacements.get(id)!).filter(Boolean),
+      ports: source.ports.map((port) => ({ ...port, targets: port.targets.map((target) => ({
+        ...target, nodeId: replacements.get(target.nodeId)!,
+      })).filter((target) => target.nodeId) })),
+      ...(source.parentId ? { parentId: hierarchyReplacements.get(source.parentId) } : {}),
     };
   }
   const edges = clipboard.edges.map((source) => {

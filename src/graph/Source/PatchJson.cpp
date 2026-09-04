@@ -285,6 +285,35 @@ GraphDocument parsePatchJson(const std::string_view jsonText)
             document.layout.subpatches.push_back(std::move(instance));
         }
     }
+    if (const auto hierarchies = layout.find("hierarchies"); hierarchies != layout.end()) {
+        for (const auto& hierarchyJson : *hierarchies) {
+            const auto& position = hierarchyJson.at("position");
+            const auto& nestedViewport = hierarchyJson.at("nestedViewport");
+            LayoutHierarchyPresentation hierarchy {
+                .id = hierarchyJson.at("id").get<std::string>(),
+                .kind = hierarchyJson.at("kind").get<std::string>(),
+                .name = hierarchyJson.at("name").get<std::string>(),
+                .collapsed = hierarchyJson.at("collapsed").get<bool>(),
+                .memberNodeIds = hierarchyJson.at("memberNodeIds").get<std::vector<std::string>>(),
+                .x = position.at("x").get<double>(),
+                .y = position.at("y").get<double>(),
+                .nestedViewport = { nestedViewport.at("x").get<double>(), nestedViewport.at("y").get<double>(), nestedViewport.at("zoom").get<double>() },
+            };
+            for (const auto& portJson : hierarchyJson.at("ports")) {
+                HierarchyPortBinding port {
+                    .id = portJson.at("id").get<std::string>(),
+                    .name = portJson.at("name").get<std::string>(),
+                    .signal = parseSignalType(portJson.at("signal").get<std::string>()),
+                    .direction = parseDirection(portJson.at("direction").get<std::string>()),
+                };
+                for (const auto& targetJson : portJson.at("targets")) port.targets.push_back(parseReference(targetJson));
+                hierarchy.ports.push_back(std::move(port));
+            }
+            if (const auto parentId = hierarchyJson.find("parentId"); parentId != hierarchyJson.end())
+                hierarchy.parentId = parentId->get<std::string>();
+            document.layout.hierarchies.push_back(std::move(hierarchy));
+        }
+    }
 
     return document;
 }
@@ -367,6 +396,27 @@ std::string writePatchJson(const GraphDocument& document)
             { "memberNodeIds", instance.memberNodeIds }, { "ports", std::move(ports) } });
     }
     if (!subpatchArray.empty()) layoutJson["subpatches"] = std::move(subpatchArray);
+    Json hierarchyArray = Json::array();
+    for (const auto& hierarchy : document.layout.hierarchies) {
+        Json ports = Json::array();
+        for (const auto& port : hierarchy.ports) {
+            Json targets = Json::array();
+            for (const auto& target : port.targets) targets.push_back(writeReference(target));
+            ports.push_back({ { "id", port.id }, { "name", port.name }, { "signal", toString(port.signal) },
+                { "direction", toString(port.direction) }, { "targets", std::move(targets) } });
+        }
+        Json entry {
+            { "id", hierarchy.id }, { "kind", hierarchy.kind }, { "name", hierarchy.name },
+            { "collapsed", hierarchy.collapsed }, { "memberNodeIds", hierarchy.memberNodeIds },
+            { "position", { { "x", hierarchy.x }, { "y", hierarchy.y } } },
+            { "nestedViewport", { { "x", hierarchy.nestedViewport.x }, { "y", hierarchy.nestedViewport.y },
+                { "zoom", hierarchy.nestedViewport.zoom } } },
+            { "ports", std::move(ports) },
+        };
+        if (hierarchy.parentId) entry["parentId"] = *hierarchy.parentId;
+        hierarchyArray.push_back(std::move(entry));
+    }
+    if (!hierarchyArray.empty()) layoutJson["hierarchies"] = std::move(hierarchyArray);
 
     const Json root {
         { "schemaVersion", GraphDocument::schemaVersion },

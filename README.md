@@ -34,7 +34,7 @@ For a guided tour, follow [Getting started: hear and inspect the Barr reference]
 
 ## What you can explore
 
-- A schematic editor with mono cables, stereo input/output, explicit sums, and visible feedback paths
+- A schematic editor with mono cables, stereo input/output, explicit sums, visible feedback paths, and live nested compound schematics
 - Delay, allpass, gain, low-pass, pitch-shift, modulation, envelope, and gate building blocks
 - Barr-inspired, shimmer, reverse-style, gated, and gravity-controlled factory topologies
 - Audio-file playback, looping, seeking, wet/dry comparison, and processed-file export
@@ -69,6 +69,7 @@ Useful references:
 - [Why the visible graph executor remains the shipping path](docs/factory-specialization-decision.md)
 - [Saving and loading patches](docs/patch-saving-and-loading.md)
 - [Schematic editor interactions](docs/schematic-editor-interactions.md)
+- [Hierarchical compounds and reusable subpatches](docs/hierarchical-schematics.md)
 - [Keith Barr reverb architecture research](docs/keith-barr-reverb-architectures.md)
 - [Large modulated, reverse, and shimmer topology research](docs/large-modulated-and-shimmer-reverb-topologies.md)
 - [Dense figure-eight reference design](docs/dense-figure-eight-design.md)

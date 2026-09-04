@@ -1,0 +1,75 @@
+{
+  "milestone": "M29",
+  "capturedUtc": "2026-09-04T12:15:00Z",
+  "surface": "Vite editor using the native runtime-snapshot contract",
+  "factory": "Four-Line Dense Room",
+  "viewports": [
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 900,
+      "evidence": [
+        "01-matrix-parent-desktop.png",
+        "02-matrix-nested-desktop.png"
+      ]
+    },
+    {
+      "name": "compact",
+      "width": 899,
+      "height": 650,
+      "workspace": "Create Focus",
+      "evidence": [
+        "03-matrix-parent-compact.png",
+        "04-matrix-nested-compact.png"
+      ]
+    }
+  ],
+  "observed": {
+    "collapsedParents": 1,
+    "parentAudioInputs": 4,
+    "parentAudioOutputs": 4,
+    "nestedGainBlocks": 16,
+    "nestedSumBlocks": 12,
+    "nestedBoundaryBlocks": 8,
+    "dashedCompoundBoundaryArtifacts": 0,
+    "navigation": [
+      "double-click parent",
+      "Open schematic",
+      "breadcrumb",
+      "Back to patch",
+      "Alt+Left"
+    ],
+    "parentMovement": "keyboard and pointer-compatible React Flow position changes update saved hierarchy layout only",
+    "focusReturn": "Back reselects and focuses the parent",
+    "viewportPolicy": "root and nested viewports are independent; nested movement is persisted after interaction"
+  },
+  "automatedCoverage": {
+    "web": "42 files / 183 tests after final additions",
+    "native": "hierarchy JSON round-trip plus invalid target, recursion, depth, and unmapped-boundary rejection",
+    "qualifiedInteractions": [
+      "move and rename",
+      "open and Back",
+      "continuous parameter history",
+      "four-way proxy reconnect expansion",
+      "proxy delete and undo",
+      "copy/paste fresh IDs",
+      "save/reopen and host-state preservation",
+      "semantic graph identity"
+    ]
+  },
+  "video": {
+    "file": "matrix-hierarchy-workflow.mp4",
+    "width": 1280,
+    "height": 720,
+    "durationSeconds": 12.6,
+    "chapters": [
+      "move",
+      "open",
+      "continuous edit",
+      "Back",
+      "proxy reconnect",
+      "undo",
+      "reopen"
+    ]
+  }
+}

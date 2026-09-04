@@ -30,6 +30,8 @@ export const moduleVocabulary: Record<ModuleType, ModuleVocabulary> = {
 export const vocabularyFor = (data: PatchNodeData): ModuleVocabulary | null => moduleVocabulary[data.type as ModuleType] ?? null;
 
 export function moduleSignalBadge(data: PatchNodeData): string {
+  if (data.hierarchyPresentation && data.type === 'compound-summary') return `${data.ports.filter((port) => port.direction === 'input').length} IN → ${data.ports.filter((port) => port.direction === 'output').length} OUT`;
+  if (data.hierarchyBoundary) return `${data.hierarchyBoundary.direction.toUpperCase()} BOUNDARY`;
   if (data.type === 'stereo-input') return 'STEREO → 2× MONO';
   if (data.type === 'stereo-output') return '2× MONO → STEREO';
   if (data.type === 'envelope-follower') return 'MONO AUDIO → CONTROL';

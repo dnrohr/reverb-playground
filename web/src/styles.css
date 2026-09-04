@@ -678,13 +678,39 @@ button { font: inherit; }
 }
 
 .react-flow__node.compound-summary-boundary .patch-node {
-  width: 210px;
-  min-height: 112px;
+  width: 232px;
+  height: 142px;
+  min-height: 142px;
+  padding: 14px 44px;
+  box-sizing: border-box;
   border-style: double;
   border-color: #c28cff;
   box-shadow: 0 0 0 1px rgb(194 140 255 / 28%), 0 16px 35px rgb(0 0 0 / 30%);
 }
-.react-flow__node.compound-summary-boundary .node-type::after { content: ' · EXPANDABLE'; color: #c28cff; }
+.react-flow__node.compound-summary-boundary .energy-meter { margin-top: 10px; }
+.hierarchy-parent h3 { margin-top: 5px; text-align: center; white-space: nowrap; }
+.hierarchy-topology { margin-top: 8px; color: var(--cyan); font: 8px var(--mono); text-align: center; white-space: nowrap; }
+.hierarchy-open-cue { margin-top: 5px; color: #d9b8f0; font: 8px var(--mono); text-align: center; white-space: nowrap; }
+.hierarchy-side-label { position: absolute; top: 5px; color: #8d9ca5; font: 7px var(--mono); letter-spacing: .08em; }
+.hierarchy-side-in { left: 9px; }
+.hierarchy-side-out { right: 9px; }
+.hierarchy-node-summary { display: grid; gap: 2px; margin-top: 10px; color: #d9b8f0; font: 9px var(--mono); letter-spacing: .08em; }
+.hierarchy-node-summary b { color: var(--cyan); font-size: 12px; }
+.hierarchy-port-anchor { position: absolute; z-index: 3; width: 25px; height: 1px; transform: translateY(-50%); pointer-events: none; }
+.hierarchy-port-anchor .react-flow__handle { top: 0 !important; pointer-events: auto; }
+.hierarchy-port-anchor i { position: absolute; top: -5px; color: #b7c4ca; font: normal 8px var(--mono); letter-spacing: .03em; white-space: nowrap; }
+.hierarchy-port-in { left: 0; }
+.hierarchy-port-in .react-flow__handle { left: -5px; }
+.hierarchy-port-in i { left: 8px; }
+.hierarchy-port-out { right: 0; }
+.hierarchy-port-out .react-flow__handle { right: -5px; }
+.hierarchy-port-out i { right: 8px; text-align: right; }
+.react-flow__node.hierarchy-boundary-node .patch-node { width: 112px; min-height: 74px; border-color: var(--cyan); background: #14252a; }
+.react-flow__node.hierarchy-boundary-node .node-signal, .react-flow__node.hierarchy-boundary-node .energy-meter { display: none; }
+.react-flow__node.hierarchy-boundary-node .node-type::after { content: ' · NESTED I/O'; color: var(--cyan); }
+.hierarchy-breadcrumbs { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.hierarchy-breadcrumbs > button { border: 1px solid #3e6970; background: #13272c; color: var(--cyan); font: 9px var(--mono); }
+.hierarchy-breadcrumbs > strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .compound-inspector, .compound-learn-card { display: grid; gap: 9px; margin-top: 12px; padding: 11px; border: 1px solid #74588b; background: #14121a; }
 .compound-inspector > header, .compound-learn-card > header { display: flex; justify-content: space-between; gap: 8px; color: #d9b8f0; font: 10px var(--mono); letter-spacing: .08em; }
 .compound-inspector > header span, .compound-learn-card > header strong { color: var(--amber); }

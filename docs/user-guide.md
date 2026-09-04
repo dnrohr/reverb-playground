@@ -89,9 +89,13 @@ correct reverb.
 Visual groups organize ordinary blocks. Collapsing a group changes only
 presentation; expanding it restores every authoritative primitive and cable.
 The Four-Line Dense Room's Matrix Mixer summarizes the visible 4×4 network.
-Expand it to inspect its 16 Gain coefficients and 12 Sum blocks. Current
-compounds expand in place; nested schematic navigation is planned but is not
-part of this release.
+Its compact parent has four mono inputs and four mono outputs. Double-click it
+or choose **Open schematic** in Inspect to edit its 16 Gain coefficients and 12
+Sum blocks on a dedicated live canvas. Use **Back to patch** or `Alt+Left` to
+return; there is no Apply step, and undo/redo spans both levels. Reusable
+subpatches use the same interaction while retaining their versioned provenance.
+See [Hierarchical schematics](hierarchical-schematics.md) for boundary,
+migration, copy/paste, and deletion details.
 
 ## Play and export an audio file
 

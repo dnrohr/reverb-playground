@@ -1955,12 +1955,12 @@ Milestone exit criteria:
 
 ---
 
-## M29. Hierarchical compound schematics
+## M29. Hierarchical compound schematics — Complete
 
 Goal: replace oversized or artifact-prone inline compound expansion with honest
 parent blocks whose authoritative primitives are edited in a nested schematic.
 
-### M29.1 Define group, compound, and reusable-subpatch semantics
+### M29.1 Define group, compound, and reusable-subpatch semantics — Complete
 
 Tasks: specify visual groups as current-canvas layout organization, compounds as
 recognized views over existing primitives, and reusable subpatches as versioned
@@ -1978,7 +1978,7 @@ Acceptance criteria:
 - Invalid boundary maps, recursive nesting, dangling ports, and unsupported
   mutations fail before publication with actionable paths.
 
-### M29.2 Implement movable collapsed blocks with proxy ports
+### M29.2 Implement movable collapsed blocks with proxy ports — Complete
 
 Tasks: project every connection crossing a compound boundary onto a stable named
 proxy port; replace dashed boundary artifacts with ordinary parent-level cables;
@@ -1996,7 +1996,7 @@ Acceptance criteria:
 - Undo/redo, save/reopen, host state, clipboard IDs, Energy, loop inspection,
   warnings, and accessibility remain coherent in both presentations.
 
-### M29.3 Add nested schematic navigation with immediate live editing
+### M29.3 Add nested schematic navigation with immediate live editing — Complete
 
 Tasks: open compounds and reusable subpatches into a dedicated canvas with
 stable Input/Output boundary blocks, breadcrumbs and Back, an independently
@@ -2015,7 +2015,7 @@ Acceptance criteria:
 - Breadcrumbs, keyboard traversal, focus restoration, compact windows, and
   screen-reader naming remain usable through the supported nesting limit.
 
-### M29.4 Preserve diagnostics and graph truth across hierarchy
+### M29.4 Preserve diagnostics and graph truth across hierarchy — Complete
 
 Tasks: aggregate parent-level Energy, warning, latency, loop, memory, and safety
 indicators from authoritative internals; navigate from a parent warning to the
@@ -2033,7 +2033,7 @@ Acceptance criteria:
 - Collapsing or navigating never changes rendered samples, latency, prepared
   memory, Energy lanes, or numerical-safety authority.
 
-### M29.5 Migrate and qualify the Four-Line Matrix Mixer
+### M29.5 Migrate and qualify the Four-Line Matrix Mixer — Complete
 
 Tasks: replace the current inline Matrix Mixer summary with a compact movable
 four-input/four-output block; open the same 16 Gains and 12 Sums in a nested
@@ -2056,6 +2056,18 @@ Milestone exit criteria:
 
 - Dense compounds occupy one honest parent block while their complete executable
   structure remains one navigation step away and continuously audible while edited.
+
+Completion evidence:
+
+- [`hierarchical-schematics.md`](hierarchical-schematics.md) defines the distinct
+  group, compound, and reusable-subpatch contracts, explicit one-level nesting limit,
+  proxy expansion, migration, validation, and single-authority behavior.
+- Web and native tests cover deterministic migration, boundary validation,
+  recursive/dangling refusal, parent movement, copy/paste identity, atomic
+  deletion, save/load and host-state preservation, and semantic equivalence.
+- Desktop and compact parent/nested screenshots plus the move/open/edit/Back/
+  reconnect/undo/reopen walkthrough are stored under
+  [`artifacts/ui/m29-hierarchical-compounds`](../artifacts/ui/m29-hierarchical-compounds/).
 
 ---
 

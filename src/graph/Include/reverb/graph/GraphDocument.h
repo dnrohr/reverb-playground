@@ -125,12 +125,36 @@ struct LayoutSubpatchInstance final {
     friend bool operator==(const LayoutSubpatchInstance&, const LayoutSubpatchInstance&) = default;
 };
 
+struct HierarchyPortBinding final {
+    std::string id;
+    std::string name;
+    SignalType signal { SignalType::audio };
+    PortDirection direction { PortDirection::input };
+    std::vector<PortReference> targets;
+    friend bool operator==(const HierarchyPortBinding&, const HierarchyPortBinding&) = default;
+};
+
+struct LayoutHierarchyPresentation final {
+    std::string id;
+    std::string kind;
+    std::string name;
+    bool collapsed { true };
+    std::vector<std::string> memberNodeIds;
+    double x { 0.0 };
+    double y { 0.0 };
+    Viewport nestedViewport;
+    std::vector<HierarchyPortBinding> ports;
+    std::optional<std::string> parentId;
+    friend bool operator==(const LayoutHierarchyPresentation&, const LayoutHierarchyPresentation&) = default;
+};
+
 struct Layout final {
     std::vector<NodePosition> nodes;
     Viewport viewport;
     std::vector<LayoutGroup> groups;
     std::vector<LayoutCable> cables;
     std::vector<LayoutSubpatchInstance> subpatches;
+    std::vector<LayoutHierarchyPresentation> hierarchies;
 
     friend bool operator==(const Layout&, const Layout&) = default;
 };

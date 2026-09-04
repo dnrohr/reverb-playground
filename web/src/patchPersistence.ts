@@ -1,14 +1,15 @@
 import type { Edge, Node, Viewport } from '@xyflow/react';
-import { requiredIoError, type CableLayout, type PatchNodeData, type RuntimeSnapshot } from './graph';
+import { requiredIoError, type CableLayout, type HierarchyPresentation, type PatchNodeData, type RuntimeSnapshot } from './graph';
 import { createModuleNode, moduleByType, type ModuleType } from './modules';
 import { inspectGraphGroups } from './graphGroups';
 import { inspectSubpatchInstances, type SubpatchInstance } from './subpatches';
+import { inspectHierarchyPresentations, validateHierarchyPresentations } from './compoundPresentation';
 
 export const patchSchemaVersion = 2 as const;
 export const patchEngineVersion = '0.1';
 export type QualityPolicy = 'draft' | 'normal' | 'high';
 interface SavedParameter { id: string; value: number; unit: string; modulation?: NonNullable<PatchNodeData['parameters'][number]['modulation']> }
-interface SavedPatch { schemaVersion: 2; engineVersion: string; qualityPolicy: QualityPolicy; semantic: { nodes: Array<{ id: string; type: string; name?: string; presentation?: 'gravity'; ports: PatchNodeData['ports']; parameters: SavedParameter[] }>; connections: Array<{ id: string; from: { nodeId: string; portId: string }; to: { nodeId: string; portId: string } }> }; layout: { nodes: Array<{ nodeId: string; x: number; y: number }>; viewport: Viewport; groups?: Array<{ id: string; name: string; collapsed: boolean; nodeIds: string[] }>; cables?: Array<{ edgeId: string; waypoints?: Array<{ x: number; y: number }>; portal?: { name: string } }>; subpatches?: SubpatchInstance[] } }
+interface SavedPatch { schemaVersion: 2; engineVersion: string; qualityPolicy: QualityPolicy; semantic: { nodes: Array<{ id: string; type: string; name?: string; presentation?: 'gravity'; ports: PatchNodeData['ports']; parameters: SavedParameter[] }>; connections: Array<{ id: string; from: { nodeId: string; portId: string }; to: { nodeId: string; portId: string } }> }; layout: { nodes: Array<{ nodeId: string; x: number; y: number }>; viewport: Viewport; groups?: Array<{ id: string; name: string; collapsed: boolean; nodeIds: string[] }>; cables?: Array<{ edgeId: string; waypoints?: Array<{ x: number; y: number }>; portal?: { name: string } }>; subpatches?: SubpatchInstance[]; hierarchies?: HierarchyPresentation[] } }
 export interface LoadedPatch { nodes: Node<PatchNodeData>[]; edges: Edge[]; viewport: Viewport; source: SavedPatch; warnings: string[] }
 function fail(message: string): never { throw new Error(`Patch load rejected: ${message}`); }
 function object(value: unknown, path: string): Record<string, unknown> { if (typeof value !== 'object' || value === null || Array.isArray(value)) fail(`${path} must be an object`); return value as Record<string, unknown>; }
@@ -34,7 +35,24 @@ function parseModulation(value: unknown, expected: PatchNodeData['parameters'][n
   return { portId: expected.modulation.portId, amount, polarity: mapping.polarity as 'unipolar' | 'bipolar', clampMinimum, clampMaximum };
 }
 
-export function createSavedPatch(nodes: Node<PatchNodeData>[], edges: Edge[], viewport: Viewport, qualityPolicy: QualityPolicy = 'normal'): SavedPatch { const groups = inspectGraphGroups(nodes); const cables = edges.flatMap((edge) => edge.data?.layout ? [{ edgeId: edge.id, ...(structuredClone(edge.data.layout) as CableLayout) }] : []); const subpatches = inspectSubpatchInstances(nodes); return { schemaVersion: patchSchemaVersion, engineVersion: patchEngineVersion, qualityPolicy, semantic: { nodes: nodes.map((node) => ({ id: node.id, type: node.data.type, ...(node.data.userName ? { name: node.data.userName } : {}), ...(node.data.presentation ? { presentation: node.data.presentation } : {}), ports: node.data.ports.map((port) => ({ ...port })), parameters: node.data.parameters.map(({ id, value, unit, modulation }) => ({ id, value, unit, ...(modulation ? { modulation: { ...modulation } } : {}) })) })), connections: edges.map((edge) => ({ id: edge.id, from: { nodeId: edge.source, portId: String(edge.sourceHandle ?? '') }, to: { nodeId: edge.target, portId: String(edge.targetHandle ?? '') } })) }, layout: { nodes: nodes.map((node) => ({ nodeId: node.id, x: node.position.x, y: node.position.y })), viewport: { ...viewport }, ...(groups.length ? { groups } : {}), ...(cables.length ? { cables } : {}), ...(subpatches.length ? { subpatches } : {}) } }; }
+export function createSavedPatch(nodes: Node<PatchNodeData>[], edges: Edge[], viewport: Viewport, qualityPolicy: QualityPolicy = 'normal'): SavedPatch {
+  const hierarchyErrors = validateHierarchyPresentations(nodes, edges);
+  if (hierarchyErrors.length) fail(hierarchyErrors[0]!);
+  const groups = inspectGraphGroups(nodes);
+  const cables = edges.flatMap((edge) => edge.data?.layout ? [{ edgeId: edge.id, ...(structuredClone(edge.data.layout) as CableLayout) }] : []);
+  const subpatches = inspectSubpatchInstances(nodes);
+  const hierarchies = inspectHierarchyPresentations(nodes);
+  return { schemaVersion: patchSchemaVersion, engineVersion: patchEngineVersion, qualityPolicy,
+    semantic: { nodes: nodes.map((node) => ({ id: node.id, type: node.data.type,
+      ...(node.data.userName ? { name: node.data.userName } : {}), ...(node.data.presentation ? { presentation: node.data.presentation } : {}),
+      ports: node.data.ports.map((port) => ({ ...port })), parameters: node.data.parameters.map(({ id, value, unit, modulation }) =>
+        ({ id, value, unit, ...(modulation ? { modulation: { ...modulation } } : {}) })) })),
+      connections: edges.map((edge) => ({ id: edge.id, from: { nodeId: edge.source, portId: String(edge.sourceHandle ?? '') },
+        to: { nodeId: edge.target, portId: String(edge.targetHandle ?? '') } })) },
+    layout: { nodes: nodes.map((node) => ({ nodeId: node.id, x: node.position.x, y: node.position.y })), viewport: { ...viewport },
+      ...(groups.length ? { groups } : {}), ...(cables.length ? { cables } : {}), ...(subpatches.length ? { subpatches } : {}),
+      ...(hierarchies.length ? { hierarchies } : {}) } };
+}
 export function writePatchJson(nodes: Node<PatchNodeData>[], edges: Edge[], viewport: Viewport, qualityPolicy: QualityPolicy = 'normal'): string { return `${JSON.stringify(createSavedPatch(nodes, edges, viewport, qualityPolicy), null, 2)}\n`; }
 
 export function parsePatchJson(text: string, reference: RuntimeSnapshot): LoadedPatch {
@@ -82,7 +100,7 @@ export function parsePatchJson(text: string, reference: RuntimeSnapshot): Loaded
   const ports = new Map(nodes.map((node) => [node.id, new Map(node.data.ports.map((port) => [port.id, port]))])); const edgeIds = new Set<string>(); const occupiedInputs = new Set<string>(); const edges: Edge[] = savedConnectionList.map((unknownConnection, index) => {
     const connection = object(unknownConnection, `semantic.connections[${index}]`); exactKeys(connection, ['id', 'from', 'to'], `semantic.connections[${index}]`); const from = object(connection.from, `connection.from`); const to = object(connection.to, `connection.to`); exactKeys(from, ['nodeId', 'portId'], 'connection.from'); exactKeys(to, ['nodeId', 'portId'], 'connection.to'); if (typeof connection.id !== 'string' || edgeIds.has(connection.id)) fail(`connection identity at index ${index} is invalid or duplicated`); const edgeId = connection.id as string; edgeIds.add(edgeId); const sourceNode = String(from.nodeId); const targetNode = String(to.nodeId); const targetKey = `${targetNode}.${String(to.portId)}`; const source = ports.get(sourceNode)?.get(String(from.portId)); const target = ports.get(targetNode)?.get(String(to.portId)); if (!source || source.direction !== 'output' || !target || target.direction !== 'input' || source.signal !== target.signal) fail(`connection '${edgeId}' has invalid endpoints`); if (occupiedInputs.has(targetKey)) fail(`input '${targetKey}' has more than one cable; insert Sum (+)`); occupiedInputs.add(targetKey); return { id: edgeId, source: sourceNode, sourceHandle: String(from.portId), target: targetNode, targetHandle: String(to.portId), type: 'smoothstep', className: `signal-edge signal-${source.signal}`, data: { signal: source.signal }, interactionWidth: 24 };
   });
-  const layout = object(root.layout, 'layout'); exactKeys(layout, ['nodes', 'viewport'], 'layout', ['groups', 'cables', 'subpatches']); if (!Array.isArray(layout.nodes) || layout.nodes.length !== nodes.length) fail('layout must position every node exactly once'); const layoutNodes = layout.nodes as unknown[]; const positions = new Map<string, {x:number;y:number}>(); layoutNodes.forEach((unknownPosition, index) => { const position = object(unknownPosition, `layout.nodes[${index}]`); exactKeys(position, ['nodeId', 'x', 'y'], `layout.nodes[${index}]`); if (typeof position.nodeId !== 'string' || !ids.has(position.nodeId) || positions.has(position.nodeId)) fail(`layout node identity at index ${index} is invalid or duplicated`); const nodeId = position.nodeId as string; positions.set(nodeId, { x: finite(position.x, `${nodeId}.x`), y: finite(position.y, `${nodeId}.y`) }); }); nodes.forEach((node) => { node.position = positions.get(node.id)!; });
+  const layout = object(root.layout, 'layout'); exactKeys(layout, ['nodes', 'viewport'], 'layout', ['groups', 'cables', 'subpatches', 'hierarchies']); if (!Array.isArray(layout.nodes) || layout.nodes.length !== nodes.length) fail('layout must position every node exactly once'); const layoutNodes = layout.nodes as unknown[]; const positions = new Map<string, {x:number;y:number}>(); layoutNodes.forEach((unknownPosition, index) => { const position = object(unknownPosition, `layout.nodes[${index}]`); exactKeys(position, ['nodeId', 'x', 'y'], `layout.nodes[${index}]`); if (typeof position.nodeId !== 'string' || !ids.has(position.nodeId) || positions.has(position.nodeId)) fail(`layout node identity at index ${index} is invalid or duplicated`); const nodeId = position.nodeId as string; positions.set(nodeId, { x: finite(position.x, `${nodeId}.x`), y: finite(position.y, `${nodeId}.y`) }); }); nodes.forEach((node) => { node.position = positions.get(node.id)!; });
   const groups = layout.groups ?? []; if (!Array.isArray(groups)) fail('layout.groups must be an array');
   const groupIds = new Set<string>(); const groupedNodes = new Set<string>();
   for (const [index, unknownGroup] of groups.entries()) {
@@ -123,5 +141,61 @@ export function parsePatchJson(text: string, reference: RuntimeSnapshot): Loaded
     subpatchIds.add(saved.id); const metadata: SubpatchInstance = { id: saved.id, definitionId: saved.definitionId, definitionVersion: Number(saved.definitionVersion), definitionName: saved.definitionName, memberNodeIds: [...memberSet], ports: bindings };
     nodes.forEach((node) => { if (memberSet.has(node.id)) { node.className = `${node.className ?? ''} subpatch-member`; node.data.subpatchInstance = structuredClone(metadata); } });
   }
+  const hierarchies = layout.hierarchies ?? [];
+  if (!Array.isArray(hierarchies)) fail('layout.hierarchies must be an array');
+  const hierarchyIds = new Set<string>(); const hierarchyMembers = new Set<string>();
+  for (const [index, unknownHierarchy] of hierarchies.entries()) {
+    const saved = object(unknownHierarchy, `layout.hierarchies[${index}]`);
+    exactKeys(saved, ['id', 'kind', 'name', 'collapsed', 'memberNodeIds', 'position', 'nestedViewport', 'ports'],
+      `layout.hierarchies[${index}]`, ['parentId']);
+    if (typeof saved.id !== 'string' || !saved.id || hierarchyIds.has(saved.id)) fail(`hierarchy identity at index ${index} is invalid or duplicated`);
+    if (saved.kind !== 'compound' && saved.kind !== 'subpatch') fail(`hierarchy '${String(saved.id)}' has unsupported kind '${String(saved.kind)}'`);
+    if (typeof saved.name !== 'string' || !saved.name.trim() || saved.name.length > 64) fail(`hierarchy '${saved.id}' name must contain 1 through 64 characters`);
+    if (typeof saved.collapsed !== 'boolean' || !Array.isArray(saved.memberNodeIds) || !saved.memberNodeIds.length)
+      fail(`hierarchy '${saved.id}' requires collapsed state and member primitives`);
+    if (saved.parentId !== undefined && (typeof saved.parentId !== 'string' || !saved.parentId)) fail(`hierarchy '${saved.id}' has an invalid parentId`);
+    const position = object(saved.position, `hierarchy '${saved.id}'.position`);
+    exactKeys(position, ['x', 'y'], `hierarchy '${saved.id}'.position`);
+    const nestedViewport = object(saved.nestedViewport, `hierarchy '${saved.id}'.nestedViewport`);
+    exactKeys(nestedViewport, ['x', 'y', 'zoom'], `hierarchy '${saved.id}'.nestedViewport`);
+    const memberNodeIds = (saved.memberNodeIds as unknown[]).map((memberId) => {
+      if (typeof memberId !== 'string' || !ids.has(memberId) || hierarchyMembers.has(memberId))
+        fail(`hierarchy '${saved.id}' has invalid, duplicated, or shared member '${String(memberId)}'`);
+      hierarchyMembers.add(memberId); return memberId;
+    });
+    if (!Array.isArray(saved.ports) || !saved.ports.length) fail(`hierarchy '${saved.id}' requires explicit boundary ports`);
+    const portIds = new Set<string>();
+    const hierarchyPorts = (saved.ports as unknown[]).map((unknownPort, portIndex) => {
+      const port = object(unknownPort, `hierarchy '${saved.id}' port ${portIndex}`);
+      exactKeys(port, ['id', 'name', 'signal', 'direction', 'targets'], `hierarchy '${saved.id}' port ${portIndex}`);
+      if (typeof port.id !== 'string' || !port.id || portIds.has(port.id) || typeof port.name !== 'string' || !port.name.trim()
+        || port.name.length > 32 || (port.signal !== 'audio' && port.signal !== 'control')
+        || (port.direction !== 'input' && port.direction !== 'output') || !Array.isArray(port.targets) || !port.targets.length)
+        fail(`hierarchy '${saved.id}' has invalid boundary port ${portIndex}`);
+      portIds.add(port.id);
+      const targets = (port.targets as unknown[]).map((unknownTarget, targetIndex) => {
+        const target = object(unknownTarget, `hierarchy '${saved.id}' port '${port.id}' target ${targetIndex}`);
+        exactKeys(target, ['nodeId', 'portId'], `hierarchy '${saved.id}' port '${port.id}' target ${targetIndex}`);
+        if (typeof target.nodeId !== 'string' || !memberNodeIds.includes(target.nodeId) || typeof target.portId !== 'string')
+          fail(`hierarchy '${saved.id}' port '${port.id}' has a dangling target`);
+        const actual = nodes.find((node) => node.id === target.nodeId)?.data.ports.find((candidate) => candidate.id === target.portId);
+        if (!actual || actual.signal !== port.signal || actual.direction !== port.direction)
+          fail(`hierarchy '${saved.id}' port '${port.id}' does not match '${target.nodeId}.${target.portId}'`);
+        return { nodeId: target.nodeId, portId: target.portId };
+      });
+      return { id: port.id, name: port.name.trim(), signal: port.signal, direction: port.direction, targets } as HierarchyPresentation['ports'][number];
+    });
+    hierarchyIds.add(saved.id);
+    const metadata: HierarchyPresentation = { id: saved.id, kind: saved.kind, name: saved.name.trim(), collapsed: saved.collapsed,
+      memberNodeIds, position: { x: finite(position.x, `hierarchy '${saved.id}'.position.x`), y: finite(position.y, `hierarchy '${saved.id}'.position.y`) },
+      nestedViewport: { x: finite(nestedViewport.x, `hierarchy '${saved.id}'.nestedViewport.x`),
+        y: finite(nestedViewport.y, `hierarchy '${saved.id}'.nestedViewport.y`),
+        zoom: finite(nestedViewport.zoom, `hierarchy '${saved.id}'.nestedViewport.zoom`) },
+      ports: hierarchyPorts, ...(saved.parentId ? { parentId: saved.parentId as string } : {}) };
+    if (metadata.nestedViewport.zoom <= 0) fail(`hierarchy '${saved.id}' nested viewport zoom must be positive`);
+    nodes.forEach((node) => { if (memberNodeIds.includes(node.id)) node.data.hierarchyPresentation = structuredClone(metadata); });
+  }
+  const hierarchyErrors = validateHierarchyPresentations(nodes, edges);
+  if (hierarchyErrors.length) fail(hierarchyErrors[0]!);
   const rawViewport = object(layout.viewport, 'layout.viewport'); exactKeys(rawViewport, ['x', 'y', 'zoom'], 'layout.viewport'); const viewport = { x: finite(rawViewport.x, 'viewport.x'), y: finite(rawViewport.y, 'viewport.y'), zoom: finite(rawViewport.zoom, 'viewport.zoom') }; if (viewport.zoom <= 0) fail('viewport.zoom must be positive'); return { nodes, edges, viewport, source: createSavedPatch(nodes, edges, viewport, qualityPolicy), warnings };
 }

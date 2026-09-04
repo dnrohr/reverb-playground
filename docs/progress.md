@@ -1,6 +1,16 @@
 # Roadmap progress
 
-Last updated: 2026-09-01
+Last updated: 2026-09-04
+
+M29 hierarchical schematics are complete. Dense recognized compounds and
+versioned subpatches are now movable saved parents with stable mono proxy ports;
+they open into a dedicated, immediately live nested canvas with breadcrumbs,
+Back, independent viewport persistence, and one undo history. The Four-Line
+Matrix exposes four inputs and four outputs over its unchanged 16 Gains, 12
+Sums, and 20 explicit crossing cables. Web/native persistence, validation,
+migration, clipboard, diagnostics, and semantic-identity tests pass, with
+desktop/compact evidence in
+[`artifacts/ui/m29-hierarchical-compounds`](../artifacts/ui/m29-hierarchical-compounds/).
 
 Application branding update: adapted the supplied bottom-left rounded-square
 infinity/reverb concept to the app palette (`#0F1216`, `#45D0CC`, and
@@ -128,7 +138,7 @@ video are in
 | M27.4 Evaluate a unified Filter and compound Mixer | Complete | Nine-factory structural audit rejects unearned primitives and retains explicit Low-pass/Gain/Sum plus the qualified expandable Matrix Mixer |
 | M27.5 Validate focused diagnosis and comparison | Complete | Three architecture journeys, compact resizing, export/save-state contracts, 171 web + 252 native tests, exact package, pluginval, VST3 validator, and clean-main CI pass |
 | M28 Guidance and rendered help | Complete | Searchable rendered offline Help; selection-specific guidance; centralized plain-language module contracts; workflow user guide; three-arrangement compact/desktop validation; screenshots/video |
-| M29 Hierarchical compound schematics | Planned | Movable proxy-port compounds open a dedicated live nested schematic; Matrix internals remain authoritative and update audio immediately |
+| M29 Hierarchical compound schematics | Complete | Persistent movable parent/proxy blocks; live nested editing; stable boundary IDs; exact primitive/audio authority; web/native validation and desktop/compact evidence |
 | M30 Interaction and state correctness | Planned | Unify visible parameter updates, toggle temporary audition explicitly, and make compatible assisted tunings cumulative with plain apply/discard language |
 | M31 Predictable layout and construction | Planned | Non-overlapping distribute/grid, presentation-only horizontal flip, palette drag creation, and correct group/context transitions |
 | M32 Crash recovery and emergency safety | Planned | Local minidump plus plain-text summary with no automatic upload, safe recovery choices, and global Ctrl/Cmd+Shift+M Emergency Mute |

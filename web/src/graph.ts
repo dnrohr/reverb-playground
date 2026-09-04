@@ -26,6 +26,31 @@ export interface PatchParameter {
   };
 }
 
+export interface HierarchyPortTarget {
+  nodeId: string;
+  portId: string;
+}
+
+export interface HierarchyPortBinding {
+  id: string;
+  name: string;
+  signal: SignalType;
+  direction: PortDirection;
+  targets: HierarchyPortTarget[];
+}
+
+export interface HierarchyPresentation {
+  id: string;
+  kind: 'compound' | 'subpatch';
+  name: string;
+  collapsed: boolean;
+  memberNodeIds: string[];
+  position: { x: number; y: number };
+  nestedViewport: { x: number; y: number; zoom: number };
+  ports: HierarchyPortBinding[];
+  parentId?: string;
+}
+
 export interface PatchNodeData extends Record<string, unknown> {
   label: string;
   type: string;
@@ -54,6 +79,14 @@ export interface PatchNodeData extends Record<string, unknown> {
     definitionName: string;
     memberNodeIds: string[];
     ports: Array<{ id: string; signal: 'audio' | 'control'; direction: 'input' | 'output'; nodeId: string; portId: string }>;
+  };
+  hierarchyPresentation?: HierarchyPresentation;
+  hierarchyBoundary?: {
+    hierarchyId: string;
+    portId: string;
+    name: string;
+    direction: PortDirection;
+    targets: HierarchyPortTarget[];
   };
 }
 
