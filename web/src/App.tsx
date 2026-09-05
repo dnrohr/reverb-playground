@@ -30,6 +30,7 @@ import { teachingTopicFor, type TeachingTopic } from './teaching';
 import { HelpReader } from './HelpReader';
 import type { HelpArticleId } from './helpLibrary';
 import { parseImpulseCaptureResult, parseImpulseCaptureStatus, type ImpulseCaptureResult, type ImpulseCaptureStatus } from './impulseCapture';
+import { outputNormalization } from './outputNormalization';
 import { analyseResponse, decayPoints, frameWindow, rt60Explanation, waveformBuckets } from './responseAnalysis';
 import { analyseDensity } from './densityAnalysis';
 import { decorateEnergy } from './energyDecoration';
@@ -265,12 +266,13 @@ function LoopInspector({ inspection, activeIndex, onActiveIndex, splitFeedback =
   );
 }
 
-function MeasurementBar({ sampleRate, onCapture, overlayLabel }: { sampleRate: number; onCapture: (capture: ImpulseCaptureResult) => void; overlayLabel: string | null }) {
+function MeasurementBar({ sampleRate, onCapture, overlayLabel, autoNormalizeAvailable }: { sampleRate: number; onCapture: (capture: ImpulseCaptureResult, autoNormalize: boolean) => void; overlayLabel: string | null; autoNormalizeAvailable: boolean }) {
   const [length, setLength] = useState(2000);
   const [threshold, setThreshold] = useState(-80);
   const [status, setStatus] = useState<ImpulseCaptureStatus | null>(null);
   const [result, setResult] = useState<ImpulseCaptureResult | null>(null);
   const [error, setError] = useState('');
+  const [autoNormalize, setAutoNormalize] = useState(false);
 
   const start = useCallback(async () => {
     setError(''); setResult(null);
@@ -290,13 +292,13 @@ function MeasurementBar({ sampleRate, onCapture, overlayLabel }: { sampleRate: n
         if (next.state === 'complete') {
           window.clearInterval(timer);
           return callNative('getImpulseCapture').then((capture) => {
-            const parsed = parseImpulseCaptureResult(capture); setResult(parsed); onCapture(parsed);
+            const parsed = parseImpulseCaptureResult(capture); setResult(parsed); onCapture(parsed, autoNormalize);
           });
         }
       }).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'Capture status failed'));
     }, 100);
     return () => window.clearInterval(timer);
-  }, [onCapture, status?.state]);
+  }, [autoNormalize, onCapture, status?.state]);
 
   const busy = status?.state === 'armed' || status?.state === 'capturing';
   return <section className={`measurement-bar ${busy ? 'is-capturing' : ''}`} aria-label="Impulse response capture">
@@ -304,6 +306,10 @@ function MeasurementBar({ sampleRate, onCapture, overlayLabel }: { sampleRate: n
     <label>MAX LENGTH <select aria-label="Capture maximum length" value={length} disabled={busy} onChange={(event) => setLength(Number(event.target.value))}><option value={500}>500 ms</option><option value={2000}>2,000 ms</option><option value={5000}>5,000 ms</option><option value={10000}>10,000 ms</option></select></label>
     <label>STOP BELOW <select aria-label="Capture stop threshold" value={threshold} disabled={busy} onChange={(event) => setThreshold(Number(event.target.value))}><option value={-60}>-60 dBFS</option><option value={-80}>-80 dBFS</option><option value={-100}>-100 dBFS</option><option value={-120}>-120 dBFS</option></select></label>
     <span className="measurement-check">INPUT ISOLATED</span>
+    <label className="measurement-check" title={autoNormalizeAvailable ? 'Set Stereo Output gain from the captured stereo peak' : 'Clear temporary audition modes before normalizing'}>
+      <input type="checkbox" checked={autoNormalize} disabled={busy || !autoNormalizeAvailable}
+        onChange={(event) => setAutoNormalize(event.target.checked)} /> AUTO-NORMALIZE OUTPUT
+    </label>
     {overlayLabel ? <span className="measurement-overlay-disclosure">INCLUDES {overlayLabel}</span> : null}
     <button type="button" disabled={busy || sampleRate <= 0} onClick={() => void start()}>{busy ? 'CAPTURING…' : overlayLabel ? 'CAPTURE WITH OVERLAY' : 'CAPTURE IMPULSE'}</button>
     <div className="measurement-readout" role="status">
@@ -720,7 +726,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     setContextTab(nextTab);
     window.setTimeout(() => document.getElementById(`context-tab-${nextTab}`)?.focus(), 0);
   }, []);
-  const receiveCapture = useCallback((capture: ImpulseCaptureResult) => {
+  const receiveCapture = useCallback((capture: ImpulseCaptureResult, autoNormalize: boolean) => {
     const parameter = (type: string, id: string, fallback: number) => nodes
       .find((node) => node.data.type === type)?.data.parameters
       .find((candidate) => candidate.id === id)?.value ?? fallback;
@@ -735,8 +741,28 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
         releaseMilliseconds: parameter('hold-gate', 'release', 8),
       },
     });
+    if (autoNormalize) {
+      const output = nodes.find((node) => node.data.type === 'stereo-output');
+      const outputParameter = output?.data.parameters.find((candidate) => candidate.id === 'gain');
+      const normalization = outputParameter ? outputNormalization(capture, outputParameter.value) : null;
+      if (output && outputParameter && normalization) {
+        const before = { nodes, edges };
+        const update = (node: Node<PatchNodeData>) => node.id !== output.id ? node : { ...node, data: { ...node.data,
+          parameters: node.data.parameters.map((candidate) => candidate.id === 'gain' ? { ...candidate, value: normalization.gain } : candidate) } };
+        const after = { nodes: nodes.map(update), edges };
+        setNodes(after.nodes);
+        setSelectedNode((current) => current?.id === output.id ? update(current) : current);
+        setGraphHistory((history) => commitGraphEdit(history, 'Auto-normalize output from impulse response', before, after));
+        setActivePatchId('custom');
+        if (output.data.runtimeBound)
+          void callNative('setRuntimeParameter', output.id, 'gain', normalization.gain).catch(() => undefined);
+        setGraphStatus({ kind: 'ok', message: `AUTO-NORMALIZED OUTPUT / ${normalization.gain.toFixed(2)}×${normalization.limited ? ' / LIMITED AT +40 dB' : ' / TARGET −0.1 dBFS'} / UNDO AVAILABLE` });
+      } else {
+        setGraphStatus({ kind: 'error', message: 'AUTO-NORMALIZE REFUSED / CAPTURE IS SILENT OR OUTPUT GAIN IS UNAVAILABLE' });
+      }
+    }
     openContext('measurement');
-  }, [activeComparisonSlot, activePatchId, auditionOverlay, edges, nodes, openContext, tuningPreview]);
+  }, [activeComparisonSlot, activePatchId, auditionOverlay, edges, nodes, openContext, setNodes, tuningPreview]);
 
   const loopInspection = useMemo(() => selectedNode
     ? selectedNode.data.type === 'graph-group'
@@ -1488,7 +1514,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
   const handleSelection = useCallback(({ nodes: selectedNodes, edges: selectedEdges }: OnSelectionChangeParams) => {
     const hierarchyNode = selectedNodes.find((candidate) => (candidate as Node<PatchNodeData>).data.type === 'compound-summary') as Node<PatchNodeData> | undefined;
-    const node = hierarchyNode ?? (selectedNodes[0] as Node<PatchNodeData> | undefined) ?? null;
+    const selectedCandidate = hierarchyNode ?? (selectedNodes[0] as Node<PatchNodeData> | undefined);
+    const node = selectedCandidate
+      ? nodes.find((candidate) => candidate.id === selectedCandidate.id) ?? selectedCandidate
+      : null;
     const edge = selectedEdges[0] ?? null;
     if (!node && !edge && selectedNode && ['graph-group', 'compound-summary'].includes(selectedNode.data.type)) return;
     setSelectedNode(node);
@@ -1496,7 +1525,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     setActiveLoopIndex(0);
     if (node) openContext('node');
     else if (edge) openContext('cable');
-  }, [openContext, selectedNode]);
+  }, [nodes, openContext, selectedNode]);
 
   const activateEmergencyMute = useCallback(() => {
     void callNative('setEmergencyMuted', true).then(() => {
@@ -2246,7 +2275,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           </div>
         </aside>
       </section>
-      {measurementDrawerVisible ? <MeasurementBar sampleRate={snapshot.sampleRate} onCapture={receiveCapture} overlayLabel={auditionOverlayLabel(auditionOverlay)} /> : null}
+      {measurementDrawerVisible ? <MeasurementBar sampleRate={snapshot.sampleRate} onCapture={receiveCapture}
+        overlayLabel={auditionOverlayLabel(auditionOverlay)} autoNormalizeAvailable={!auditionOverlay && !activeComparisonSlot && !tuningPreview} /> : null}
       {helpArticleId ? <HelpReader articleId={helpArticleId} onArticle={setHelpArticleId} onClose={() => setHelpArticleId(null)} /> : null}
     </main>
   );
@@ -2265,7 +2295,8 @@ export function App() {
           { id: 'input', type: 'stereo-input', label: 'Stereo Input', role: 'io', position: { x: 80, y: 180 },
             ports: [{ id: 'out-l', signal: 'audio', direction: 'output' }, { id: 'out-r', signal: 'audio', direction: 'output' }], parameters: [] },
           { id: 'output', type: 'stereo-output', label: 'Stereo Output', role: 'io', position: { x: 520, y: 180 },
-            ports: [{ id: 'in-l', signal: 'audio', direction: 'input' }, { id: 'in-r', signal: 'audio', direction: 'input' }], parameters: [] },
+            ports: [{ id: 'in-l', signal: 'audio', direction: 'input' }, { id: 'in-r', signal: 'audio', direction: 'input' }],
+            parameters: [{ id: 'gain', value: 1, unit: 'linear', minimum: 0, maximum: 100, step: 0.01 }] },
         ],
         connections: [
           { id: 'left', source: 'input', sourcePort: 'out-l', target: 'output', targetPort: 'in-l', signal: 'audio' },

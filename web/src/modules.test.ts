@@ -15,6 +15,14 @@ describe('editable module library', () => {
     }
   });
 
+  it('exposes a high-range shared Stereo Output gain', () => {
+    const output = createModuleNode('stereo-output', 'output', { x: 0, y: 0 });
+    expect(output.data.parameters).toEqual([
+      expect.objectContaining({ id: 'gain', value: 1, unit: 'linear', minimum: 0, maximum: 100, step: 0.01 }),
+    ]);
+    expect(output.data.parameters[0].modulation).toBeUndefined();
+  });
+
   it('defines Pitch Shift as one mono musical-ratio processor with explicit grain controls', () => {
     const pitch = createModuleNode('pitch-shift', 'pitch-shift-1', { x: 0, y: 0 });
     expect(pitch.data.label).toBe('Pitch Shift');

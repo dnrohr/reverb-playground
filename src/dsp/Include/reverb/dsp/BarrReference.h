@@ -36,6 +36,7 @@ private:
     Allpass tankTwo_;
     Allpass leftTap_;
     Allpass rightTap_;
+    Gain outputGain_;
 };
 
 } // namespace reverb::dsp

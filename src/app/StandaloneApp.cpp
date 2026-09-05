@@ -1,6 +1,7 @@
 #include "StartupProgress.h"
 #include "CrashRecovery.h"
 
+#include <BinaryData.h>
 #include <JuceHeader.h>
 #include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
 
@@ -41,6 +42,9 @@ private:
         explicit Content(reverb::app::StartupProgress& progress)
             : progress_(progress)
             , startedAtMilliseconds_(juce::Time::getMillisecondCounterHiRes())
+            , logo_(juce::ImageFileFormat::loadFrom(
+                  BinaryData::reverbplaygroundicon_png,
+                  static_cast<std::size_t>(BinaryData::reverbplaygroundicon_pngSize)))
         {
             setAccessible(true);
             setTitle("Reverb Playground startup status");
@@ -52,6 +56,19 @@ private:
             graphics.fillAll(juce::Colour(0xff090d10));
 
             auto area = getLocalBounds().reduced(42);
+            const auto desktopScale = static_cast<float>(juce::jmax(1.0,
+                getPeer() != nullptr ? getPeer()->getPlatformScaleFactor() : 1.0));
+            auto logoArea = juce::Rectangle<int> {
+                juce::jmax(42, juce::roundToInt(static_cast<float>(getWidth()) / desktopScale) - 170),
+                42, 128, 128 };
+            area.removeFromRight(142);
+            area.removeFromRight(28);
+            if (logo_.isValid()) {
+                graphics.setOpacity(0.94F);
+                graphics.drawImage(logo_, logoArea.toFloat(),
+                    juce::RectanglePlacement::stretchToFit);
+                graphics.setOpacity(1.0F);
+            }
             graphics.setColour(juce::Colour(0xfff2b44e));
             graphics.setFont(juce::FontOptions(14.0f, juce::Font::bold));
             graphics.drawText("REVERB PLAYGROUND", area.removeFromTop(24), juce::Justification::left);
@@ -95,6 +112,7 @@ private:
 
         reverb::app::StartupProgress& progress_;
         double startedAtMilliseconds_ {};
+        juce::Image logo_;
     };
 
     void timerCallback() override

@@ -50,3 +50,25 @@ TEST_CASE("Barr reference impulse produces finite distinct stereo wet output")
     REQUIRE(std::ranges::all_of(outputLeft, [](const float sample) { return sample == 0.0F; }));
     REQUIRE(std::ranges::all_of(outputRight, [](const float sample) { return sample == 0.0F; }));
 }
+
+TEST_CASE("Barr reference applies the visible Stereo Output gain equally after both taps")
+{
+    constexpr std::size_t sampleCount = 8'000;
+    reverb::dsp::BarrReference unity;
+    reverb::dsp::BarrReference boosted;
+    unity.prepare(48'000.0);
+    boosted.prepare(48'000.0);
+    boosted.setParameterTarget(reverb::dsp::BarrParameterId::outputGain, 12.0);
+    boosted.resetForMeasurement();
+    std::vector<float> input(sampleCount, 0.0F), unityLeft(sampleCount), unityRight(sampleCount),
+        boostedLeft(sampleCount), boostedRight(sampleCount);
+    input.front() = 1.0F;
+
+    unity.process(input, input, unityLeft, unityRight);
+    boosted.process(input, input, boostedLeft, boostedRight);
+
+    for (std::size_t frame = 0; frame < sampleCount; ++frame) {
+        REQUIRE(boostedLeft[frame] == unityLeft[frame] * 12.0F);
+        REQUIRE(boostedRight[frame] == unityRight[frame] * 12.0F);
+    }
+}

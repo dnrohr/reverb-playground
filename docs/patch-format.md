@@ -109,6 +109,12 @@ Delay time defaults to milliseconds. Conversion to sample counts occurs when a r
 
 Parameters are base values. Each parameter records its control socket, amount, bipolar/unipolar polarity, and clamp range. A typed control cable supplies the normalized source value; the effective value follows the formula in [Control-rate graph semantics](control-rate-graph-semantics.md). Mapping metadata is never hidden inside the serialized numeric value.
 
+The required `stereo-output` node may carry one static `gain` parameter in
+linear units from `0` through `100`, defaulting to unity. It scales both output
+channels after the visible graph and does not enter feedback paths. Schema-v2
+patches saved before this field existed load with unity gain and a migration
+warning.
+
 ## Layout
 
 Layout contains zero or one position per known node and a viewport. Semantic validation rejects positions for unknown nodes, duplicate positions, and non-positive zoom.

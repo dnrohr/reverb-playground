@@ -34,6 +34,13 @@ TEST_CASE("Barr UI snapshot is generated from the DSP runtime identity")
     REQUIRE(tank->at("parameters").at(0).at("modulation").at("polarity") == "bipolar");
     REQUIRE(tank->at("parameters").at(0).at("modulation").at("clampMinimum") == 0.1);
     REQUIRE(tank->at("parameters").at(0).at("modulation").at("clampMaximum") == 100.0);
+    const auto output = std::ranges::find_if(json.at("nodes"), [](const auto& node) {
+        return node.at("id") == "output";
+    });
+    REQUIRE(output != json.at("nodes").end());
+    REQUIRE(output->at("parameters").at(0).at("value") == 1.0);
+    REQUIRE(output->at("parameters").at(0).at("maximum") == 100.0);
+    REQUIRE_FALSE(output->at("parameters").at(0).contains("modulation"));
     REQUIRE(json.at("outsidePatch").size() == 2);
 }
 

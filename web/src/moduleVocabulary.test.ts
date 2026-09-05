@@ -30,7 +30,7 @@ describe('module vocabulary and inspector disclosure', () => {
   });
   it('preserves the public saved type and parameter ID contract', () => {
     expect(Object.fromEntries(moduleDefinitions.map((definition) => [definition.type, definition.parameters.map((parameter) => parameter.id)]))).toEqual({
-      'stereo-input': [], 'stereo-output': [], gain: ['gain'], sum: [], delay: ['delay'],
+      'stereo-input': [], 'stereo-output': ['gain'], gain: ['gain'], sum: [], delay: ['delay'],
       allpass: ['delay', 'coefficient'], lowpass: ['cutoff'],
       'pitch-shift': ['semitones', 'grain', 'overlap', 'direction', 'phase'],
       macro: ['value', 'default-value', 'center-detent'],

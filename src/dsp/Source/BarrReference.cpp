@@ -25,6 +25,7 @@ void BarrReference::prepare(const double sampleRate)
     prepareAllpass(tankTwo_, "tank-2");
     prepareAllpass(leftTap_, "left-tap");
     prepareAllpass(rightTap_, "right-tap");
+    outputGain_.prepare(sampleRate, static_cast<float>(barrReferenceParameter("output", "gain")));
 }
 
 void BarrReference::setParameterTarget(const BarrParameterId id, const double value) noexcept
@@ -44,6 +45,7 @@ void BarrReference::setParameterTarget(const BarrParameterId id, const double va
     case BarrParameterId::leftTapCoefficient: leftTap_.setCoefficient(static_cast<float>(value)); break;
     case BarrParameterId::rightTapDelay: rightTap_.setDelayMilliseconds(value); break;
     case BarrParameterId::rightTapCoefficient: rightTap_.setCoefficient(static_cast<float>(value)); break;
+    case BarrParameterId::outputGain: outputGain_.setTargetLinear(static_cast<float>(value)); break;
     case BarrParameterId::count: break;
     }
 }
@@ -77,6 +79,7 @@ void BarrReference::resetForMeasurement() noexcept
     tankTwo_.settleParameters();
     leftTap_.settleParameters();
     rightTap_.settleParameters();
+    outputGain_.settleTarget();
 }
 
 void BarrReference::process(
@@ -125,6 +128,7 @@ void BarrReference::process(
     if (instrument)
         telemetry->observeMono(BarrEnergyLane::leftTap, left);
     rightTap_.process(right);
+    outputGain_.processStereo(left, right);
     if (instrument) {
         telemetry->observeMono(BarrEnergyLane::rightTap, right);
         telemetry->observeStereo(BarrEnergyLane::output, left, right);

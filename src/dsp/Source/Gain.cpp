@@ -53,4 +53,18 @@ void Gain::process(const std::span<float> samples) noexcept
     }
 }
 
+void Gain::processStereo(const std::span<float> left, const std::span<float> right) noexcept
+{
+    const auto count = std::min(left.size(), right.size());
+    for (std::size_t index = 0; index < count; ++index) {
+        if (remaining_ > 0) {
+            linear_ += step_;
+            if (--remaining_ == 0)
+                linear_ = target_;
+        }
+        left[index] *= linear_;
+        right[index] *= linear_;
+    }
+}
+
 } // namespace reverb::dsp

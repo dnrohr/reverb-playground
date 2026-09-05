@@ -173,6 +173,9 @@ void addNodeContractErrors(const Node& node, std::vector<std::string>& errors)
     } else if (node.type == "stereo-output") {
         if (!hasPorts(node, { { "in-l", PortDirection::input }, { "in-r", PortDirection::input } }))
             errors.push_back("node '" + node.id + "' must expose audio inputs in-l and in-r");
+        if (parameter(node, "gain") != nullptr
+            && !parameterInRange(node, "gain", "linear", 0.0, 100.0))
+            errors.push_back("node '" + node.id + "' output gain must be finite linear units from 0 through 100");
     } else if (node.type == "sum") {
         const auto generic = hasPorts(node, { { "in-a", PortDirection::input }, { "in-b", PortDirection::input }, { "out", PortDirection::output } });
         const auto reference = hasPorts(node, { { "in-l", PortDirection::input }, { "in-r", PortDirection::input }, { "out", PortDirection::output } });
@@ -346,6 +349,7 @@ struct PreparedAcyclicRuntime::Impl final {
     std::size_t inputRightBuffer {};
     std::size_t outputLeftInput {};
     std::size_t outputRightInput {};
+    float outputGain { 1.0F };
     std::vector<std::string> schedule;
     std::vector<std::vector<float>> buffers;
     std::vector<Operation> operations;
@@ -744,6 +748,10 @@ void PreparedAcyclicRuntime::process(
         processBlockRange(cursor, implementation_->operations.size());
         std::ranges::copy(fullBuffer(implementation_->outputLeftInput), outputLeft.begin());
         std::ranges::copy(fullBuffer(implementation_->outputRightInput), outputRight.begin());
+        if (implementation_->outputGain != 1.0F) {
+            reverb::dsp::block::gain(outputLeft, implementation_->outputGain);
+            reverb::dsp::block::gain(outputRight, implementation_->outputGain);
+        }
         measureEnergy();
         return;
     }
@@ -837,6 +845,10 @@ void PreparedAcyclicRuntime::process(
     }
     std::ranges::copy(buffer(implementation_->outputLeftInput), outputLeft.begin());
     std::ranges::copy(buffer(implementation_->outputRightInput), outputRight.begin());
+    if (implementation_->outputGain != 1.0F) {
+        reverb::dsp::block::gain(outputLeft, implementation_->outputGain);
+        reverb::dsp::block::gain(outputRight, implementation_->outputGain);
+    }
     measureEnergy();
 }
 
@@ -1172,6 +1184,8 @@ AcyclicCompileResult compileAcyclicGraph(
         };
         implementation->outputLeftInput = inputBuffer(outputId, "in-l");
         implementation->outputRightInput = inputBuffer(outputId, "in-r");
+        if (const auto* gain = parameter(*outputNode, "gain"))
+            implementation->outputGain = static_cast<float>(gain->value);
 
         for (const auto& id : result.schedule) {
             if (const auto macro = std::ranges::find(controlPlan.macros, id, &ControlRatePlan::MacroNode::nodeId);

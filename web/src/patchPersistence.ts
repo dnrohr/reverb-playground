@@ -78,7 +78,8 @@ export function parsePatchJson(text: string, reference: RuntimeSnapshot): Loaded
     savedPorts.forEach((unknownPort, portIndex) => { const port = object(unknownPort, `node '${savedId}' port`); exactKeys(port, ['id', 'signal', 'direction'], `node '${savedId}' port`); const expected = expectedPorts.find((candidate) => candidate.id === port.id); if (!expected || port.signal !== expected.signal || port.direction !== expected.direction) fail(`port ${portIndex} differs for node '${savedId}'`); });
     const legacyCurveMapper = savedType === 'control-map' && savedParameters.length === 3 && expectedParameters.length === 8;
     const legacyPitchPhase = savedType === 'pitch-shift' && savedParameters.length === 4 && expectedParameters.length === 5;
-    if (!Array.isArray(saved.parameters) || (saved.parameters.length !== expectedParameters.length && !legacyCurveMapper && !legacyPitchPhase)) fail(`parameters differ for node '${saved.id}'`);
+    const legacyOutputGain = savedType === 'stereo-output' && savedParameters.length === 0 && expectedParameters.length === 1;
+    if (!Array.isArray(saved.parameters) || (saved.parameters.length !== expectedParameters.length && !legacyCurveMapper && !legacyPitchPhase && !legacyOutputGain)) fail(`parameters differ for node '${saved.id}'`);
     const values: PatchNodeData['parameters'] = savedParameters.map((unknownParameter, parameterIndex) => {
       const parameter = object(unknownParameter, `node '${savedId}' parameter`);
       const expected = expectedParameters[parameterIndex];
@@ -93,6 +94,7 @@ export function parsePatchJson(text: string, reference: RuntimeSnapshot): Loaded
     });
     if (legacyCurveMapper) values.push(...structuredClone(expectedParameters.slice(3)));
     if (legacyPitchPhase) values.push(structuredClone(expectedParameters[4]!));
+    if (legacyOutputGain) { values.push(structuredClone(expectedParameters[0]!)); warnings.push(`Migrated Stereo Output '${savedId}' with unity gain.`); }
     const base = referenceNode ? { id: savedId, type: 'patchNode', position: { x: 0, y: 0 }, data: { label: referenceNode.label, type: referenceNode.type, role: referenceNode.role, ports: structuredClone(referenceNode.ports), parameters: values, runtimeBound: true } } as Node<PatchNodeData> : createModuleNode(savedType as ModuleType, savedId, { x: 0, y: 0 });
     base.data.parameters = values; if (typeof saved.name === 'string') base.data.userName = saved.name;
     if (saved.presentation === 'gravity') base.data.presentation = 'gravity'; nodes.push(base);

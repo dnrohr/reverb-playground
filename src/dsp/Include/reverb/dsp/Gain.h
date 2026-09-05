@@ -12,6 +12,7 @@ public:
     void settleTarget() noexcept;
     [[nodiscard]] float getLinear() const noexcept;
     void process(std::span<float> samples) noexcept;
+    void processStereo(std::span<float> left, std::span<float> right) noexcept;
 
 private:
     float linear_ { 1.0F };

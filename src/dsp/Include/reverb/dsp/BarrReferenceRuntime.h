@@ -27,6 +27,7 @@ enum class BarrParameterId {
     leftTapCoefficient,
     rightTapDelay,
     rightTapCoefficient,
+    outputGain,
     count,
 };
 

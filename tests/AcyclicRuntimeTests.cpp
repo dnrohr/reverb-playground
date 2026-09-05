@@ -131,6 +131,29 @@ TEST_CASE("Constructed gain and sum graph matches direct reference calculation")
     }
 }
 
+TEST_CASE("Stereo Output applies one high-range gain after the graph without entering feedback")
+{
+    auto graph = gainSumGraph();
+    graph.nodes.back().parameters.push_back({ "gain", 24.0, "linear" });
+    auto compiled = compileAcyclicGraph(graph, 48'000.0, 8);
+    REQUIRE(compiled.valid());
+    std::array left { 1.0F, -0.5F };
+    std::array right { 0.25F, -0.25F };
+    std::array<float, 2> outputLeft {}, outputRight {};
+
+    compiled.runtime->process(left, right, outputLeft, outputRight);
+
+    REQUIRE(outputLeft == std::array { 12.0F, -9.0F });
+    REQUIRE(outputRight == std::array { 6.0F, -6.0F });
+
+    graph.nodes.back().parameters[0].value = 100.01;
+    const auto invalid = compileAcyclicGraph(graph, 48'000.0, 8);
+    REQUIRE_FALSE(invalid.valid());
+    REQUIRE(std::ranges::any_of(invalid.errors, [](const auto& error) {
+        return error.find("output gain") != std::string::npos;
+    }));
+}
+
 TEST_CASE("Maximum linear graph fuses static gains without corrupting boundaries")
 {
     constexpr std::size_t gainCount = 250;

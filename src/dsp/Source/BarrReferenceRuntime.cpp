@@ -23,6 +23,13 @@ constexpr Parameter parameter(
         modulationPort, modulationAmount, "bipolar" };
 }
 
+constexpr Parameter staticParameter(
+    BarrParameterId runtimeId, std::string_view id, double value, std::string_view unit,
+    double minimum, double maximum, double step)
+{
+    return { runtimeId, id, value, unit, minimum, maximum, step, {}, 0.0, {} };
+}
+
 constexpr std::array inputPorts { audioOutput("out-l"), audioOutput("out-r") };
 constexpr std::array sumPorts {
     audioInput("in-l"), audioInput("in-r"), controlInput("gain-mod"), audioOutput("out")
@@ -63,6 +70,9 @@ constexpr std::array rightTapParameters {
     parameter(BarrParameterId::rightTapDelay, "delay", 37.11, "milliseconds", 0.1, 100.0, 0.01, "delay-mod", 2.0),
     parameter(BarrParameterId::rightTapCoefficient, "coefficient", 0.5, "unitless", -0.95, 0.95, 0.001, "coefficient-mod", 0.25)
 };
+constexpr std::array outputParameters {
+    staticParameter(BarrParameterId::outputGain, "gain", 1.0, "linear", 0.0, 100.0, 0.01)
+};
 
 constexpr std::array nodes {
     RuntimeNodeDefinition { "input", "stereo-input", "Stereo Input", "io", inputPorts, noParameters },
@@ -74,7 +84,7 @@ constexpr std::array nodes {
     RuntimeNodeDefinition { "tank-2", "allpass", "Tank 2", "tank", allpassPorts, tankTwoParameters },
     RuntimeNodeDefinition { "left-tap", "allpass", "Left Tap", "tap", allpassPorts, leftTapParameters },
     RuntimeNodeDefinition { "right-tap", "allpass", "Right Tap", "tap", allpassPorts, rightTapParameters },
-    RuntimeNodeDefinition { "output", "stereo-output", "Stereo Output", "io", outputPorts, noParameters },
+    RuntimeNodeDefinition { "output", "stereo-output", "Stereo Output", "io", outputPorts, outputParameters },
 };
 
 constexpr std::array connections {

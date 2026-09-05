@@ -1,5 +1,6 @@
 juce_add_binary_data(reverb_editor_assets
     SOURCES
+        ../app/Assets/reverb-playground-icon.png
         WebAssets/index.html
         WebAssets/editor.css
         WebAssets/editor.js)

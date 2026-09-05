@@ -45,6 +45,10 @@ after that boundary. The editor still replaces the shell as soon as the actual
 audio holder is ready; the bar does not delay audio or claim to measure driver
 progress.
 
+The application icon is embedded into the executable and shown in the open
+space at the right side of the startup shell. It is decorative; the text status
+and progress line remain the accessible source of startup state.
+
 ## Shutdown and failure behavior
 
 Closing the shell requests ordinary application shutdown. Shutdown marks the

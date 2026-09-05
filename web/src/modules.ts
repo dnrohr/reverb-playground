@@ -23,7 +23,7 @@ const staticParameter = (id: string, value: number, unit: string, minimum: numbe
 
 export const moduleDefinitions: ModuleDefinition[] = [
   { type: 'stereo-input', label: 'Stereo Input', role: 'io', ports: [audioOut('out-l'), audioOut('out-r')], parameters: [] },
-  { type: 'stereo-output', label: 'Stereo Output', role: 'io', ports: [audioIn('in-l'), audioIn('in-r')], parameters: [] },
+  { type: 'stereo-output', label: 'Stereo Output', role: 'io', ports: [audioIn('in-l'), audioIn('in-r')], parameters: [staticParameter('gain', 1, 'linear', 0, 100, 0.01)] },
   { type: 'gain', label: 'Gain', role: 'routing', ports: [audioIn(), controlIn('gain-mod'), audioOut()], parameters: [parameter('gain', 1, 'linear', -1, 1, 0.001, 0.5)] },
   { type: 'sum', label: 'Sum (+)', role: 'routing', ports: [audioIn('in-a'), audioIn('in-b'), audioOut()], parameters: [] },
   { type: 'delay', label: 'Delay', role: 'delay', ports: [audioIn(), controlIn('delay-mod'), audioOut()], parameters: [parameter('delay', 10, 'milliseconds', 0.1, 10000, 0.01, 10)] },

@@ -173,7 +173,8 @@ export function parseRuntimeSnapshot(input: unknown): RuntimeSnapshot {
       requireCondition(Number.isFinite(parameter.minimum) && Number.isFinite(parameter.maximum) && parameter.minimum < parameter.maximum, `invalid range on ${node.id}.${parameter.id}`);
       requireCondition(Number.isFinite(parameter.step) && parameter.step > 0, `invalid step on ${node.id}.${parameter.id}`);
       const modulation = parameter.modulation;
-      requireCondition(typeof modulation === 'object' && modulation !== null, `missing modulation mapping on ${node.id}.${parameter.id}`);
+      if (modulation === undefined) continue;
+      requireCondition(typeof modulation === 'object' && modulation !== null, `invalid modulation mapping on ${node.id}.${parameter.id}`);
       requireCondition(typeof modulation.portId === 'string', `invalid modulation socket on ${node.id}.${parameter.id}`);
       const socket = ports.get(modulation.portId);
       requireCondition(socket?.signal === 'control' && socket.direction === 'input', `modulation socket is not a control input on ${node.id}.${parameter.id}`);
