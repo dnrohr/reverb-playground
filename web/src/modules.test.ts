@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createModuleNode, moduleDefinitions, nextNodeId } from './modules';
+import { createModuleNode, moduleDefinitions, modulePositionForDrop, nextNodeId } from './modules';
 
 describe('editable module library', () => {
+  it('centers palette drops deterministically in graph coordinates', () => {
+    expect(modulePositionForDrop({ x: 640, y: 360 })).toEqual({ x: 548.5, y: 307.5 });
+  });
+
   it('defines every M3.1 primitive with safe deterministic defaults', () => {
     expect(moduleDefinitions.map((item) => item.type)).toEqual(['stereo-input', 'stereo-output', 'gain', 'sum', 'delay', 'allpass', 'lowpass', 'pitch-shift', 'macro', 'lfo', 'control-map', 'envelope-follower', 'hold-gate']);
     for (const definition of moduleDefinitions) {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent as ReactDragEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import {
   Background,
   BackgroundVariant,
@@ -18,7 +18,7 @@ import {
   type NodeChange,
 } from '@xyflow/react';
 import { createFlowModel, deleteSelected, parseRuntimeSnapshot, type GraphState, type PatchNodeData, type PatchParameter, type RuntimeSnapshot } from './graph';
-import { createModuleNode, moduleDefinitions, nextNodeId, type ModuleType } from './modules';
+import { createModuleNode, moduleDefinitions, modulePositionForDrop, nextNodeId, type ModuleType } from './modules';
 import { commitGraphEdit, emptyGraphHistory, isHistoryClean, markHistoryClean, redoGraphEdit, semanticGraphHash, snapshotGraph, undoGraphEdit } from './graphHistory';
 import { copySelectedGraph, pasteGraph, type GraphClipboard } from './graphClipboard';
 import { decorateFeedbackLoops, decorateRunawayFeedbackLoop, inspectFeedbackLoops, inspectMostRelevantFeedbackLoop, type FeedbackLoopInspection } from './loopInspection';
@@ -48,11 +48,11 @@ import { parallelShimmerBranch, parallelShimmerTeaching } from './parallelShimme
 import { decorateSplitShimmerFocus, splitFeedbackShimmerTeaching, splitShimmerLoopKind, type SplitShimmerLoopFocus } from './splitFeedbackShimmerTeaching';
 import { decorateReverseCosmicFocus, reverseCosmicShimmerTeaching, type ReverseCosmicFocus } from './reverseCosmicShimmerTeaching';
 import { inspectMatrixMixer, inspectMatrixMixers, type MatrixMixerInspection } from './matrixMixerPresentation';
-import { compoundMembers, deleteHierarchy, expandHierarchyConnection, hierarchyActualEdgeIds, inspectHierarchyPresentations,
+import { addHierarchyMembers, compoundMembers, deleteHierarchy, expandHierarchyConnection, hierarchyActualEdgeIds, inspectHierarchyPresentations,
   materializeHierarchyPresentations, projectHierarchyRoot, projectNestedHierarchy, renameHierarchy,
   setHierarchyViewport, updateHierarchyPresentation } from './compoundPresentation';
 import { collapseGraphGroups, createGraphGroup, inspectGraphGroups, removeGraphGroup, renameGraphGroup, setGraphGroupCollapsed } from './graphGroups';
-import { addCableWaypoint, alignSelectedNodes, arrangeGraphGroup, cableLayout, clearCableWaypoints, setRoutingPortal, traceCable, updateCableWaypoint, type AlignmentCommand, type TraceDirection } from './graphRouting';
+import { addCableWaypoint, alignSelectedNodes, arrangeGraphGroup, cableLayout, clearCableWaypoints, flipSelectedNodes, setRoutingPortal, traceCable, updateCableWaypoint, type AlignmentCommand, type TraceDirection } from './graphRouting';
 import { RoutedEdge } from './RoutedEdge';
 import { assessAssistedTuning, assistedTuningSuggestions, createAssistedTuningPreview, supportsAssistedTuning, type AssistedTuningSuggestionId } from './assistedTuning';
 import { resolveParameterDisplay, type ParameterDisplayState } from './parameterDisplay';
@@ -605,6 +605,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
   const [graphStatus, setGraphStatus] = useState<{ kind: 'ok' | 'error'; message: string } | null>(null);
   const [pendingConnection, setPendingConnection] = useState<Connection | null>(null);
   const [groupNameDraft, setGroupNameDraft] = useState<string | null>(null);
+  const [paletteDrag, setPaletteDrag] = useState<{ kind: 'module' | 'subpatch'; id: string; label: string; x: number; y: number } | null>(null);
   const [activeLoopIndex, setActiveLoopIndex] = useState(0);
   const [splitLoopFocus, setSplitLoopFocus] = useState<SplitShimmerLoopFocus>('shifted');
   const [reverseCosmicFocus, setReverseCosmicFocus] = useState<ReverseCosmicFocus>('grains');
@@ -801,6 +802,12 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     ? projectNestedHierarchy(auditionDecoratedGraph.nodes, auditionDecoratedGraph.edges, activeHierarchy)
     : null, [activeHierarchy, auditionDecoratedGraph]);
   const connectionDisplayedGraph = activeHierarchy ? nestedDisplayedGraph! : (sumPreviewGraph ?? selectedGroupDisplayedGraph);
+  useEffect(() => {
+    if (!selectedNode || ['graph-group', 'compound-summary'].includes(selectedNode.data.type)) return;
+    const current = nodes.find((node) => node.id === selectedNode.id);
+    if (current && current.data.orientation !== selectedNode.data.orientation)
+      setSelectedNode({ ...selectedNode, data: { ...selectedNode.data, orientation: current.data.orientation }, selected: true });
+  }, [nodes, selectedNode]);
   const focusSelectedMacro = useCallback(() => {
     if (!selectedMacroInspection) return;
     const ids = new Set(gravityFocusNodeIds(selectedMacroInspection));
@@ -1063,25 +1070,54 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       }
   }, []);
 
-  const addModule = useCallback((type: ModuleType) => {
+  const addModule = useCallback((type: ModuleType, droppedAt?: { x: number; y: number }) => {
     if ((type === 'stereo-input' || type === 'stereo-output') && nodes.some((node) => node.data.type === type)) {
       setGraphStatus({ kind: 'error', message: `Exactly one ${type === 'stereo-input' ? 'Stereo Input' : 'Stereo Output'} is required and already exists.` }); return;
     }
     const before = { nodes, edges }; const draftCount = nodes.filter((item) => !item.data.runtimeBound).length;
-    const center = screenToFlowPosition({ x: window.innerWidth * .5, y: window.innerHeight * .5 });
-    const node = createModuleNode(type, nextNodeId(type, nodes), { x: center.x - 190 + (draftCount % 3) * 190, y: center.y - 100 + Math.floor(draftCount / 3) * 130 });
-    const after = { nodes: [...nodes.map((item) => ({ ...item, selected: false })), { ...node, selected: true }], edges };
-    applyGraph(after); setSelectedNode(node); setGraphHistory((history) => commitGraphEdit(history, `Create ${node.data.label}`, before, after)); setGraphStatus({ kind: 'ok', message: `CREATED ${node.id} / DRAFT GRAPH` });
-  }, [applyGraph, edges, nodes, screenToFlowPosition]);
+    const center = droppedAt ?? screenToFlowPosition({ x: window.innerWidth * .5, y: window.innerHeight * .5 });
+    const node = createModuleNode(type, nextNodeId(type, nodes), droppedAt
+      ? modulePositionForDrop(center)
+      : { x: center.x - 190 + (draftCount % 3) * 190, y: center.y - 100 + Math.floor(draftCount / 3) * 130 });
+    let after: GraphState = { nodes: [...nodes.map((item) => ({ ...item, selected: false })), { ...node, selected: true }], edges };
+    if (activeHierarchyId) after = addHierarchyMembers(after, activeHierarchyId, [node.id]);
+    applyGraph(after); setSelectedNode(after.nodes.find((item) => item.id === node.id) ?? node); setGraphHistory((history) => commitGraphEdit(history, `Create ${node.data.label}`, before, after)); setGraphStatus({ kind: 'ok', message: `CREATED ${node.id} / DRAFT GRAPH` });
+  }, [activeHierarchyId, applyGraph, edges, nodes, screenToFlowPosition]);
 
-  const addSubpatch = useCallback((definitionId: string) => {
+  const addSubpatch = useCallback((definitionId: string, droppedAt?: { x: number; y: number }) => {
     const definition = subpatchDefinitions.find((candidate) => candidate.id === definitionId); if (!definition) return;
-    const before = { nodes, edges }; const center = screenToFlowPosition({ x: window.innerWidth * .5, y: window.innerHeight * .5 });
+    const before = { nodes, edges }; const center = droppedAt ?? screenToFlowPosition({ x: window.innerWidth * .5, y: window.innerHeight * .5 });
     const existingInstances = nodes.filter((node) => node.data.subpatchInstance).length / 2;
-    const after = instantiateSubpatch(before, definition, { x: center.x - 220, y: center.y + 130 + existingInstances * 70 });
+    let after = instantiateSubpatch(before, definition, droppedAt
+      ? modulePositionForDrop(center)
+      : { x: center.x - 220, y: center.y + 130 + existingInstances * 70 });
+    if (activeHierarchyId) {
+      const added = after.nodes.filter((node) => !nodes.some((existing) => existing.id === node.id)).map((node) => node.id);
+      after = addHierarchyMembers(after, activeHierarchyId, added);
+    }
     applyGraph(after); setGraphHistory((history) => commitGraphEdit(history, `Create ${definition.name} subpatch`, before, after));
     setActivePatchId('custom'); setGraphStatus({ kind: 'ok', message: `CREATED ${definition.name.toUpperCase()} / NESTED 2-PRIMITIVE SUBPATCH / UNDO AVAILABLE` });
-  }, [applyGraph, edges, nodes, screenToFlowPosition]);
+  }, [activeHierarchyId, applyGraph, edges, nodes, screenToFlowPosition]);
+
+  const beginPaletteDrag = useCallback((event: ReactDragEvent, kind: 'module' | 'subpatch', id: string, label: string) => {
+    event.dataTransfer.effectAllowed = 'copy';
+    event.dataTransfer.setData('application/x-reverb-palette', JSON.stringify({ kind, id }));
+    setPaletteDrag({ kind, id, label, x: event.clientX, y: event.clientY });
+  }, []);
+
+  const dropPaletteItem = useCallback((event: ReactDragEvent) => {
+    event.preventDefault();
+    let item: { kind: 'module' | 'subpatch'; id: string } | null = null;
+    try { item = JSON.parse(event.dataTransfer.getData('application/x-reverb-palette')); } catch { /* invalid external drop */ }
+    setPaletteDrag(null);
+    if (!item || (item.kind !== 'module' && item.kind !== 'subpatch')) {
+      setGraphStatus({ kind: 'error', message: 'DROP CANCELLED / GRAPH UNCHANGED' }); return;
+    }
+    const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+    if (item.kind === 'module' && moduleDefinitions.some((definition) => definition.type === item!.id)) addModule(item.id as ModuleType, position);
+    else if (item.kind === 'subpatch' && subpatchDefinitions.some((definition) => definition.id === item!.id)) addSubpatch(item.id, position);
+    else setGraphStatus({ kind: 'error', message: 'DROP REJECTED / UNKNOWN PALETTE ITEM / GRAPH UNCHANGED' });
+  }, [addModule, addSubpatch, screenToFlowPosition]);
 
   const removeSelection = useCallback(() => {
     if (selectedNode?.data.type === 'graph-group') { setGraphStatus({ kind: 'error', message: 'VISUAL GROUP SUMMARIES CANNOT BE DELETED / UNGROUP OR EXPAND FIRST' }); return; }
@@ -1291,6 +1327,17 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           : setGraphGroupCollapsed(before, group.id, action === 'collapse');
       applyGraph(after); setGraphHistory((history) => commitGraphEdit(history,
         action === 'ungroup' ? 'Ungroup blocks' : action === 'rename' ? 'Rename group' : `${action} group`, before, after));
+      const memberIds = inspectGraphGroups(before.nodes).find((candidate) => candidate.id === group.id)?.nodeIds ?? [];
+      const survivingMember = [...after.nodes].filter((node) => memberIds.includes(node.id)).sort((a, b) => a.id.localeCompare(b.id))[0] ?? null;
+      const contextNode = action === 'collapse'
+        ? collapseGraphGroups(after.nodes, after.edges).nodes.find((node) => node.id === `group-view-${group.id}`) ?? survivingMember
+        : survivingMember;
+      setSelectedNode(contextNode ? { ...contextNode, selected: true } : null); setSelectedEdge(null); setContextTab('inspect');
+      requestAnimationFrame(() => window.setTimeout(() => {
+        const id = contextNode?.id;
+        if (id) document.querySelector<HTMLElement>(`[data-id="${id}"]`)?.focus();
+        else document.querySelector<HTMLElement>('.react-flow__pane')?.focus();
+      }, 0));
       setActivePatchId('custom'); setGraphStatus({ kind: 'ok', message: `${action.toUpperCase()} GROUP / LAYOUT ONLY / AUDIO GRAPH UNCHANGED` });
     } catch (reason) { setGraphStatus({ kind: 'error', message: reason instanceof Error ? reason.message.toUpperCase() : 'GROUP EDIT FAILED' }); }
   }, [applyGraph, edges, nodes, selectedNode]);
@@ -1307,9 +1354,17 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
       const before = { nodes, edges }; const after = transform(before); applyGraph(after);
       setGraphHistory((history) => commitGraphEdit(history, label, before, after)); setActivePatchId('custom');
       if (selectedEdge) setSelectedEdge(after.edges.find((edge) => edge.id === selectedEdge.id) ?? null);
+      if (selectedNode) {
+        const projected = selectedNode.data.type === 'compound-summary'
+          ? projectHierarchyRoot(after.nodes, after.edges).nodes.find((node) => node.id === selectedNode.id)
+          : selectedNode.data.type === 'graph-group'
+            ? collapseGraphGroups(after.nodes, after.edges).nodes.find((node) => node.id === selectedNode.id)
+            : after.nodes.find((node) => node.id === selectedNode.id);
+        setSelectedNode(projected ? { ...projected, selected: true } : null);
+      }
       setGraphStatus({ kind: 'ok', message: `${label.toUpperCase()} / LAYOUT ONLY / AUDIO GRAPH UNCHANGED` });
     } catch (reason) { setGraphStatus({ kind: 'error', message: reason instanceof Error ? reason.message.toUpperCase() : 'LAYOUT EDIT FAILED' }); }
-  }, [applyGraph, edges, nodes, selectedEdge]);
+  }, [applyGraph, edges, nodes, selectedEdge, selectedNode]);
 
   const runAlignment = useCallback((command: AlignmentCommand) => {
     const label = command === 'left' ? 'Align left' : command === 'top' ? 'Align top' : `Distribute ${command}`;
@@ -1338,6 +1393,13 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     if (!groupId) { setGraphStatus({ kind: 'error', message: 'SELECT A GROUP OR ONE OF ITS MEMBERS FIRST' }); return; }
     commitLayoutEdit('Arrange group grid', (state) => arrangeGraphGroup(state, groupId));
   }, [commitLayoutEdit, nodes, selectedNode]);
+
+  const flipSelection = useCallback(() => {
+    const hierarchy = selectedNode?.data.type === 'compound-summary' ? selectedNode.data.hierarchyPresentation : null;
+    commitLayoutEdit('Flip block presentation', (state) => hierarchy
+      ? updateHierarchyPresentation(state, hierarchy.id, { orientation: hierarchy.orientation === 'reverse' ? undefined : 'reverse' })
+      : flipSelectedNodes(state));
+  }, [commitLayoutEdit, selectedNode]);
 
   const focusCablePath = useCallback((direction: TraceDirection) => {
     if (!selectedEdge) return; const traced = traceCable({ nodes, edges }, selectedEdge.id, direction); setRouteFocus({ edgeId: selectedEdge.id, direction });
@@ -1570,7 +1632,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <button role="menuitem" type="button" onClick={() => { runAlignment('top'); setOpenApplicationMenu(null); }}>ALIGN SELECTED TOP</button>
                 <button role="menuitem" type="button" onClick={() => { runAlignment('horizontal'); setOpenApplicationMenu(null); }}>DISTRIBUTE HORIZONTALLY</button>
                 <button role="menuitem" type="button" onClick={() => { runAlignment('vertical'); setOpenApplicationMenu(null); }}>DISTRIBUTE VERTICALLY</button>
-                <button role="menuitem" type="button" onClick={() => { arrangeSelectedGroup(); setOpenApplicationMenu(null); }}>ARRANGE GROUP GRID</button>
+                <button role="menuitem" type="button" onClick={() => { arrangeSelectedGroup(); setOpenApplicationMenu(null); }}>ARRANGE GROUP (BOUNDED)</button>
+                <button role="menuitem" type="button" onClick={() => { flipSelection(); setOpenApplicationMenu(null); }}>FLIP BLOCK HORIZONTALLY</button>
                 <button role="menuitem" type="button" onClick={() => { removeSelection(); setOpenApplicationMenu(null); }}>DELETE SELECTION <kbd>DEL</kbd></button>
               </> : null}
               {menu === 'view' ? <>
@@ -1663,14 +1726,18 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
             <span>MODULES</span>
             <div><span className="pane-count">{moduleDefinitions.length}</span><button className="dock-close" type="button" aria-label="Close module palette" onClick={() => toggleDock('modules')}>‹</button></div>
           </div>
-          <p className="pane-help">Click a primitive to place it near the canvas center. Audio cables are mono.</p>
+          <p className="pane-help">Click or press Enter to create near center. Drag for exact placement. Audio cables are mono.</p>
           {modules.map((section) => (
             <section className="module-group" key={section.group}>
               <h2>{section.group}</h2>
               {section.items.map((item) => (
                 <button className={`module-item${item.role === 'control' ? ' module-control' : ''}`} key={item.type} type="button"
+                  draggable
                   title={`${moduleVocabulary[item.type].audibleRole} ${moduleVocabulary[item.type].increasingControl}`}
                   aria-label={`${item.label}. ${moduleVocabulary[item.type].signal}. ${moduleVocabulary[item.type].audibleRole}`}
+                  onDragStart={(event) => beginPaletteDrag(event, 'module', item.type, item.label)}
+                  onDrag={(event) => { if (event.clientX || event.clientY) setPaletteDrag((current) => current ? { ...current, x: event.clientX, y: event.clientY } : null); }}
+                  onDragEnd={() => setPaletteDrag(null)}
                   onClick={() => addModule(item.type)}>
                   <span className="module-glyph" aria-hidden="true" />
                   <span>{item.label}</span>
@@ -1681,7 +1748,11 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           <section className="module-group subpatch-library">
             <h2>SUBPATCHES</h2>
             {subpatchDefinitions.map((definition) => <button className="module-item subpatch-item" key={definition.id} type="button"
-              title={definition.description} onClick={() => addSubpatch(definition.id)}><span className="module-glyph" aria-hidden="true" /><span>{definition.name}</span><small>v{definition.version} · opens to 2</small></button>)}
+              draggable title={definition.description}
+              onDragStart={(event) => beginPaletteDrag(event, 'subpatch', definition.id, definition.name)}
+              onDrag={(event) => { if (event.clientX || event.clientY) setPaletteDrag((current) => current ? { ...current, x: event.clientX, y: event.clientY } : null); }}
+              onDragEnd={() => setPaletteDrag(null)}
+              onClick={() => addSubpatch(definition.id)}><span className="module-glyph" aria-hidden="true" /><span>{definition.name}</span><small>v{definition.version} · opens to 2</small></button>)}
           </section>
           <div className="signal-legend" aria-label="Cable styles">
             <div><span className="legend-line audio-line" /> AUDIO / SOLID</div>
@@ -1764,7 +1835,12 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
               <div><button type="button" disabled={!groupNameDraft.trim()} onClick={commitCreateGroup}>CREATE GROUP</button><button type="button" onClick={() => setGroupNameDraft(null)}>CANCEL</button></div>
             </div>
           ) : null}
-          <div className="flow-wrap">
+          <div className={`flow-wrap${paletteDrag ? ' palette-drop-active' : ''}`}
+            onDragOver={(event) => { if (event.dataTransfer.types.includes('application/x-reverb-palette')) { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; } }}
+            onDrop={dropPaletteItem}>
+            {paletteDrag ? <div className="palette-drag-preview" style={{ left: paletteDrag.x, top: paletteDrag.y }} role="status">
+              <strong>{paletteDrag.label}</strong><span>DROP TO CREATE · ESC CANCELS</span>
+            </div> : null}
             {!workspaceLayout.modulesVisible ? <button className="dock-reveal dock-reveal-left" type="button" onClick={() => toggleDock('modules')}>MODULES ›</button> : null}
             {!workspaceLayout.contextVisible ? <button className="dock-reveal dock-reveal-right" type="button" onClick={() => toggleDock('context')}>‹ CONTEXT</button> : null}
             <ReactFlow
@@ -1880,12 +1956,10 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <div><dt>SIGNAL / CHANNELS</dt><dd>{vocabularyFor(selectedNode.data)?.signal ?? `${selectedNode.data.ports.length} explicit ports`}</dd></div>
                 <div><dt>PORTS</dt><dd>{selectedNode.data.ports.filter((port) => port.signal === 'audio' && port.direction === 'input').length} audio in · {selectedNode.data.ports.filter((port) => port.signal === 'audio' && port.direction === 'output').length} audio out · {selectedNode.data.ports.filter((port) => port.signal === 'control' && port.direction === 'input').length} control in · {selectedNode.data.ports.filter((port) => port.signal === 'control' && port.direction === 'output').length} control out</dd></div>
               </dl>
-              {vocabularyFor(selectedNode.data) ? <section className="module-contract" aria-label="Module signal and audible role">
-                <strong>AUDIBLE ROLE</strong><p>{vocabularyFor(selectedNode.data)!.audibleRole}</p>
-                <strong>INCREASE / LISTEN</strong><p>{vocabularyFor(selectedNode.data)!.increasingControl}</p>
-                <strong>WHY USE IT</strong><p>{vocabularyFor(selectedNode.data)!.purpose}</p>
-                <strong>LATENCY / SAFETY</strong><p>{vocabularyFor(selectedNode.data)!.latencySafety}</p>
-                {selectedNode.data.type === 'gain' ? <small>Negative Gain values invert polarity; no separate Invert mode or hidden switch is used.</small> : null}
+              {selectedNode.data.role !== 'io' && selectedNode.data.type !== 'graph-group' && !selectedNode.data.hierarchyBoundary ? <section className="layout-inspector" aria-label="Block presentation controls">
+                <strong>LAYOUT / PRESENTATION</strong>
+                <p>{selectedNode.data.orientation === 'reverse' ? 'Ports face right-to-left; audio direction and labels are unchanged.' : 'Ports face left-to-right.'}</p>
+                <button type="button" onClick={flipSelection}>FLIP HORIZONTALLY</button>
               </section> : null}
               {selectedNode.data.presentationGroup ? <section className="group-inspector" aria-label="Visual group controls">
                 <label><span>GROUP NAME</span><input aria-label="Group name" defaultValue={selectedNode.data.presentationGroup.name}
@@ -1898,6 +1972,13 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                   <button type="button" onClick={() => changeSelectedGroup('ungroup')}>UNGROUP</button>
                 </div>
                 <small>Nested groups are intentionally unsupported.</small>
+              </section> : null}
+              {vocabularyFor(selectedNode.data) ? <section className="module-contract" aria-label="Module signal and audible role">
+                <strong>AUDIBLE ROLE</strong><p>{vocabularyFor(selectedNode.data)!.audibleRole}</p>
+                <strong>INCREASE / LISTEN</strong><p>{vocabularyFor(selectedNode.data)!.increasingControl}</p>
+                <strong>WHY USE IT</strong><p>{vocabularyFor(selectedNode.data)!.purpose}</p>
+                <strong>LATENCY / SAFETY</strong><p>{vocabularyFor(selectedNode.data)!.latencySafety}</p>
+                {selectedNode.data.type === 'gain' ? <small>Negative Gain values invert polarity; no separate Invert mode or hidden switch is used.</small> : null}
               </section> : null}
               {selectedNode.data.compoundPresentation ? <section className="compound-inspector" aria-label="Compound presentation authority">
                 <header><strong>{selectedNode.data.hierarchyPresentation?.kind === 'subpatch' ? 'REUSABLE SUBPATCH' : 'COMPOUND BLOCK'}</strong><span>DERIVED VIEW</span></header>

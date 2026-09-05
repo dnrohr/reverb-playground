@@ -44,6 +44,7 @@ describe('patch persistence', () => {
     flow.nodes[0].data.parameters[0].value = 0.371;
     flow.nodes[0].data.parameters[0].modulation = { portId: 'gain-mod', amount: -0.275, polarity: 'unipolar', clampMinimum: 0.1, clampMaximum: 0.9 };
     flow.nodes[0].position = { x: -42.25, y: 319.75 };
+    flow.nodes[0].data.orientation = 'reverse';
     const viewport = { x: 17.5, y: -88.25, zoom: 1.375 };
     const semanticBeforeSave = semanticGraphHash(flow);
     const written = writePatchJson(flow.nodes, flow.edges, viewport);
@@ -53,8 +54,11 @@ describe('patch persistence', () => {
     expect(loaded.nodes[0].data.parameters[0].value).toBe(0.371);
     expect(loaded.nodes[0].data.parameters[0].modulation).toEqual({ portId: 'gain-mod', amount: -0.275, polarity: 'unipolar', clampMinimum: 0.1, clampMaximum: 0.9 });
     expect(loaded.nodes[0].position).toEqual(flow.nodes[0].position);
+    expect(loaded.nodes[0].data.orientation).toBe('reverse');
     expect(loaded.viewport).toEqual(viewport);
     expect(writePatchJson(loaded.nodes, loaded.edges, loaded.viewport)).toBe(written);
+    const invalidOrientation = JSON.parse(written); invalidOrientation.layout.nodes[0].orientation = 'upside-down';
+    expect(() => parsePatchJson(JSON.stringify(invalidOrientation), reference)).toThrow(/invalid orientation/);
   });
 
   it('round trips bounded layout-only cable waypoints and paired portals', () => {

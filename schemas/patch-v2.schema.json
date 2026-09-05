@@ -97,7 +97,8 @@
       "properties": {
         "nodeId": { "$ref": "#/$defs/identifier" },
         "x": { "type": "number" },
-        "y": { "type": "number" }
+        "y": { "type": "number" },
+        "orientation": { "enum": ["reverse"] }
       }
     },
     "viewport": {
@@ -189,6 +190,7 @@
         "position": { "$ref": "#/$defs/point" },
         "nestedViewport": { "$ref": "#/$defs/viewport" },
         "ports": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/hierarchyPort" } },
+        "orientation": { "enum": ["reverse"] },
         "parentId": { "$ref": "#/$defs/identifier" }
       }
     },

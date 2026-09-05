@@ -47,6 +47,7 @@ export interface HierarchyPresentation {
   memberNodeIds: string[];
   position: { x: number; y: number };
   nestedViewport: { x: number; y: number; zoom: number };
+  orientation?: 'reverse';
   ports: HierarchyPortBinding[];
   parentId?: string;
 }
@@ -60,6 +61,7 @@ export interface PatchNodeData extends Record<string, unknown> {
   runtimeBound: boolean;
   userName?: string;
   presentation?: 'gravity';
+  orientation?: 'reverse';
   controlPreview?: { value: number; label: string };
   presentationGroup?: { id: string; name: string; collapsed: boolean };
   groupMemberIds?: string[];

@@ -51,3 +51,7 @@ export function createModuleNode(type: ModuleType, id: string, position: XYPosit
   if (!definition) throw new Error(`Unsupported module type '${type}'`);
   return { id, type: 'patchNode', position: { ...position }, data: { label: definition.label, type, role: definition.role, ports: structuredClone(definition.ports), parameters: structuredClone(definition.parameters), runtimeBound: false, ...(type === 'macro' ? { userName: 'Macro' } : {}) } };
 }
+
+export function modulePositionForDrop(point: XYPosition): XYPosition {
+  return { x: point.x - 91.5, y: point.y - 52.5 };
+}

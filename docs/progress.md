@@ -2,6 +2,17 @@
 
 Last updated: 2026-09-04
 
+M31 predictable layout and construction is complete. Align and distribute now
+use measured bounding boxes and equal free gaps; bounded group arrangement keeps
+its anchor, avoids protected neighbors, and refuses impossible layouts. Blocks
+and compound parents can face right-to-left without changing graph/audio truth.
+The palette supports exact pan/zoom-aware drops while retaining click, keyboard,
+screen-reader, and touch-capable activation, including live nested creation.
+Group and hierarchy transitions now repair selection, Inspect context, focus,
+and status immediately. Desktop/compact screenshots and the complete workflow
+record are in
+[`artifacts/ui/m31-predictable-layout`](../artifacts/ui/m31-predictable-layout/).
+
 M29 hierarchical schematics are complete. Dense recognized compounds and
 versioned subpatches are now movable saved parents with stable mono proxy ports;
 they open into a dedicated, immediately live nested canvas with breadcrumbs,
@@ -140,7 +151,27 @@ video are in
 | M28 Guidance and rendered help | Complete | Searchable rendered offline Help; selection-specific guidance; centralized plain-language module contracts; workflow user guide; three-arrangement compact/desktop validation; screenshots/video |
 | M29 Hierarchical compound schematics | Complete | Persistent movable parent/proxy blocks; live nested editing; stable boundary IDs; exact primitive/audio authority; web/native validation and desktop/compact evidence |
 | M30 Interaction and state correctness | Complete | Revision-gated authoritative parameter layers, explicit audition toggles/global exits, cumulative conflict-aware tuning, representative tests, and desktop/compact evidence |
-| M31 Predictable layout and construction | Planned | Non-overlapping distribute/grid, presentation-only horizontal flip, palette drag creation, and correct group/context transitions |
+| M31 Predictable layout and construction | Complete | Exact bounding-box tests; bounded group grid; persisted R→L orientation; pan/zoom-aware palette drop; repaired group/context transitions; desktop/compact screenshot and workflow video |
+
+## M31 verification
+
+- Mixed-size distribution preserves the outer bounding-box edges, creates exact
+  equal free gaps, and refuses insufficient spans. Bounded grid selection tests
+  deterministic aspect choice, idempotence, stable anchor, and protected-neighbor
+  refusal without semantic hash changes.
+- Schema-v2 web/native round trips preserve ordinary and compound orientation;
+  legacy absence means forward presentation. Copy/paste assigns fresh graph IDs
+  while keeping orientation, and every flip remains one undoable layout edit.
+- Palette drag uses the active screen-to-flow transform and the same factories,
+  defaults, singleton checks, and history transaction as button creation. Nested
+  drops become visible authoritative hierarchy members; invalid/cancelled drops
+  do not call the creation path.
+- Ungroup chooses the stable first surviving member, collapse chooses its derived
+  summary, and Back returns focus to the parent. Inspect context and accessible
+  status remain current through the exercised workflow.
+- Evidence: [flipped dense routing](../artifacts/ui/m31-predictable-layout/01-flipped-dense-routing.png),
+  [arranged group compact](../artifacts/ui/m31-predictable-layout/02-arranged-group-compact.png), and
+  [workflow](../artifacts/ui/m31-predictable-layout/predictable-layout-workflow.mp4).
 | M32 Crash recovery and emergency safety | Planned | Local minidump plus plain-text summary with no automatic upload, safe recovery choices, and global Ctrl/Cmd+Shift+M Emergency Mute |
 | M33 Usability alpha refresh | Planned | Integrated workflow regression, updated rendered guidance/release materials, exact package/host qualification, and the next coherent alpha publication |
 

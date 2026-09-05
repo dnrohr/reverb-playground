@@ -33,6 +33,7 @@ function canonicalGraph(state: GraphState, includeLayout: boolean) {
       presentation: node.data.presentation,
       ...(includeLayout ? {
         position: { x: node.position.x, y: node.position.y },
+        orientation: node.data.orientation,
         presentationGroup: node.data.presentationGroup ? { ...node.data.presentationGroup } : undefined,
         subpatchInstance: node.data.subpatchInstance ? structuredClone(node.data.subpatchInstance) : undefined,
         hierarchyPresentation: node.data.hierarchyPresentation ? (() => {

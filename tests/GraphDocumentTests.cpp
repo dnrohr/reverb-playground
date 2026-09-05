@@ -242,8 +242,9 @@ TEST_CASE("Hierarchical compound layout round trips without changing executable 
     auto graph = parsePatchJson(readFixture("patches/valid/barr-minimal.json"));
     const auto semanticNodes = graph.nodes;
     const auto semanticConnections = graph.connections;
+    graph.layout.nodes.front().reversed = true;
     graph.layout.hierarchies = { LayoutHierarchyPresentation {
-        "allpass-compound", "compound", "Input diffuser", true, { "allpass-1" }, 420.0, 180.0,
+        "allpass-compound", "compound", "Input diffuser", true, true, { "allpass-1" }, 420.0, 180.0,
         Viewport { -15.0, 22.0, 0.85 }, {
             HierarchyPortBinding { "in", "IN", SignalType::audio, PortDirection::input, { PortReference { "allpass-1", "in" } } },
             HierarchyPortBinding { "out", "OUT", SignalType::audio, PortDirection::output, { PortReference { "allpass-1", "out" } } },

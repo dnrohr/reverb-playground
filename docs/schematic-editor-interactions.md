@@ -40,11 +40,16 @@ Each patch opens fitted to the available canvas. Blocks retain stable IDs and us
 - Press Delete or Backspace to remove selected blocks or cables from the UI copy.
 - Press Ctrl/Cmd+C and Ctrl/Cmd+V, or use **Copy** and **Paste**, to duplicate selected non-I/O blocks with fresh identities while preserving internal cables.
 - Press Ctrl/Cmd+Z to undo and Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y to redo any committed node, cable, layout, parameter, or clipboard transaction.
+- Drag a palette item to place its center at an exact canvas point; click or press Enter for the equivalent center-biased creation path.
+- Use the Edit menu to align bounding-box edges, distribute equal free gaps, arrange an expanded group without protected-neighbor collisions, or flip selected non-I/O blocks to an explicit right-to-left presentation.
 - Press R, or choose **Reset Patch**, to restore the selected factory graph and fitted viewport. A custom file resets to the Barr reference.
 
 Deletion and other audible semantic edits publish the current visible graph through the off-thread compiler. **Reset Patch** reconstructs the selected factory canvas; the Barr reference is rebuilt from the native runtime snapshot, while the other factories are parsed from their checked-in schema-v2 documents.
 
 The toolbar's **Saved/Unsaved** badge compares the current semantic-plus-layout document identity with the most recent successful save/load baseline. See [Unified graph history and clipboard](unified-graph-history-and-clipboard.md).
+
+Layout geometry, refusal behavior, persisted orientation, and repaired group
+context are specified in [Predictable layout and construction](predictable-layout-and-construction.md).
 
 Selecting a block or cable also inspects directed feedback. The active complete loop is amber, alternate matching loops are violet/dashed, and Previous/Next cycles shared or nested results. The inspector reports nominal delay and constituent gain/polarity/filter elements. See [Feedback-loop highlighting](feedback-loop-highlighting.md).
 

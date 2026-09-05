@@ -4,6 +4,18 @@ import type { CableLayout, GraphState, PatchNodeData } from './graph';
 export type AlignmentCommand = 'left' | 'top' | 'horizontal' | 'vertical';
 export type TraceDirection = 'source' | 'output';
 
+export interface NodeBounds { x: number; y: number; width: number; height: number }
+const defaultNodeWidth = 183;
+const defaultNodeHeight = 105;
+const boundsFor = (node: Node<PatchNodeData>): NodeBounds => ({
+  x: node.position.x, y: node.position.y,
+  width: node.measured?.width ?? node.width ?? defaultNodeWidth,
+  height: node.measured?.height ?? node.height ?? defaultNodeHeight,
+});
+const intersects = (a: NodeBounds, b: NodeBounds, clearance = 24) =>
+  a.x < b.x + b.width + clearance && a.x + a.width + clearance > b.x
+  && a.y < b.y + b.height + clearance && a.y + a.height + clearance > b.y;
+
 export const cableLayout = (edge: Edge): CableLayout => (edge.data?.layout ?? {}) as CableLayout;
 
 const withLayout = (edge: Edge, layout: CableLayout): Edge => ({
@@ -62,13 +74,22 @@ export function alignSelectedNodes(state: GraphState, command: AlignmentCommand)
   if (selected.length < required) throw new Error(`${command === 'horizontal' || command === 'vertical' ? 'Distribute' : 'Align'} requires ${required} selected non-I/O blocks.`);
   const positions = new Map(selected.map((node) => [node.id, { ...node.position }]));
   if (command === 'left' || command === 'top') {
-    const value = Math.min(...selected.map((node) => command === 'left' ? node.position.x : node.position.y));
+    const value = Math.min(...selected.map((node) => command === 'left' ? boundsFor(node).x : boundsFor(node).y));
     for (const node of selected) positions.set(node.id, { ...node.position, [command === 'left' ? 'x' : 'y']: value });
   } else {
     const axis = command === 'horizontal' ? 'x' : 'y';
-    const ordered = [...selected].sort((a, b) => a.position[axis] - b.position[axis] || a.id.localeCompare(b.id));
-    const start = ordered[0].position[axis]; const step = (ordered.at(-1)!.position[axis] - start) / (ordered.length - 1);
-    ordered.forEach((node, index) => positions.set(node.id, { ...node.position, [axis]: start + step * index }));
+    const size = command === 'horizontal' ? 'width' : 'height';
+    const ordered = [...selected].sort((a, b) => boundsFor(a)[axis] - boundsFor(b)[axis] || a.id.localeCompare(b.id));
+    const first = boundsFor(ordered[0]); const last = boundsFor(ordered.at(-1)!);
+    const start = first[axis]; const end = last[axis] + last[size];
+    const totalSize = ordered.reduce((sum, node) => sum + boundsFor(node)[size], 0);
+    const gap = (end - start - totalSize) / (ordered.length - 1);
+    if (gap < 0) throw new Error(`Cannot distribute ${command}: selected bounding boxes need ${Math.ceil(-gap * (ordered.length - 1))} more graph pixels.`);
+    let cursor = start;
+    ordered.forEach((node) => {
+      positions.set(node.id, { ...node.position, [axis]: cursor });
+      cursor += boundsFor(node)[size] + gap;
+    });
   }
   return { ...state, nodes: state.nodes.map((node) => positions.has(node.id) ? { ...node, position: positions.get(node.id)! } : node) };
 }
@@ -76,11 +97,43 @@ export function alignSelectedNodes(state: GraphState, command: AlignmentCommand)
 export function arrangeGraphGroup(state: GraphState, groupId: string): GraphState {
   const members = state.nodes.filter((node) => node.data.presentationGroup?.id === groupId);
   if (members.length < 2) throw new Error(`Group '${groupId}' does not exist.`);
-  const ordered = [...members].sort((a, b) => a.position.y - b.position.y || a.position.x - b.position.x || a.id.localeCompare(b.id));
+  if (members.some((node) => node.data.presentationGroup?.collapsed)) throw new Error('Expand the group before arranging its members.');
+  const ordered = [...members].sort((a, b) => a.id.localeCompare(b.id));
   const origin = { x: Math.min(...members.map((node) => node.position.x)), y: Math.min(...members.map((node) => node.position.y)) };
-  const columns = Math.ceil(Math.sqrt(ordered.length)); const positions = new Map<string, { x: number; y: number }>();
-  ordered.forEach((node, index) => positions.set(node.id, { x: origin.x + (index % columns) * 210, y: origin.y + Math.floor(index / columns) * 150 }));
+  const protectedBounds = state.nodes.filter((node) => !members.includes(node)).map(boundsFor);
+  const spacing = 36;
+  const candidates = Array.from({ length: ordered.length }, (_, index) => index + 1).map((columns) => {
+    const rows = Math.ceil(ordered.length / columns);
+    const columnWidths = Array.from({ length: columns }, () => 0);
+    const rowHeights = Array.from({ length: rows }, () => 0);
+    ordered.forEach((node, index) => {
+      const bounds = boundsFor(node); const column = index % columns; const row = Math.floor(index / columns);
+      columnWidths[column] = Math.max(columnWidths[column]!, bounds.width);
+      rowHeights[row] = Math.max(rowHeights[row]!, bounds.height);
+    });
+    const xOffsets = columnWidths.map((_, index) => columnWidths.slice(0, index).reduce((sum, value) => sum + value + spacing, 0));
+    const yOffsets = rowHeights.map((_, index) => rowHeights.slice(0, index).reduce((sum, value) => sum + value + spacing, 0));
+    const positions = new Map<string, { x: number; y: number }>();
+    ordered.forEach((node, index) => positions.set(node.id, { x: origin.x + xOffsets[index % columns]!, y: origin.y + yOffsets[Math.floor(index / columns)]! }));
+    const placed = ordered.map((node) => ({ ...boundsFor(node), ...positions.get(node.id)! }));
+    const collision = placed.some((bounds) => protectedBounds.some((other) => intersects(bounds, other)));
+    const width = columnWidths.reduce((sum, value) => sum + value, 0) + spacing * (columns - 1);
+    const height = rowHeights.reduce((sum, value) => sum + value, 0) + spacing * (rows - 1);
+    return { columns, positions, collision, score: Math.abs(Math.log(Math.max(width, 1) / Math.max(height, 1))) };
+  }).filter((candidate) => !candidate.collision).sort((a, b) => a.score - b.score || a.columns - b.columns);
+  const positions = candidates[0]?.positions;
+  if (!positions) throw new Error('No bounded group grid fits without colliding with protected neighboring blocks. Move the group anchor and retry.');
   return { ...state, nodes: state.nodes.map((node) => positions.has(node.id) ? { ...node, position: positions.get(node.id)! } : node) };
+}
+
+export function flipSelectedNodes(state: GraphState): GraphState {
+  const selected = state.nodes.filter((node) => node.selected && node.data.role !== 'io'
+    && node.data.type !== 'graph-group' && !node.data.hierarchyBoundary);
+  if (!selected.length) throw new Error('Select at least one eligible non-I/O block to flip.');
+  const ids = new Set(selected.map((node) => node.id));
+  return { ...state, nodes: state.nodes.map((node) => ids.has(node.id) ? {
+    ...node, data: { ...node.data, ...(node.data.orientation === 'reverse' ? { orientation: undefined } : { orientation: 'reverse' as const }) },
+  } : node) };
 }
 
 const appendClass = (current: string | undefined, active: boolean) => [current?.replace(/\brouting-trace-(?:active|related)\b/g, '').trim(), active ? 'routing-trace-active' : ''].filter(Boolean).join(' ');

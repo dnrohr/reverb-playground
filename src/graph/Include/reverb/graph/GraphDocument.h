@@ -79,6 +79,7 @@ struct NodePosition final {
     std::string nodeId;
     double x { 0.0 };
     double y { 0.0 };
+    bool reversed { false };
 
     friend bool operator==(const NodePosition&, const NodePosition&) = default;
 };
@@ -139,6 +140,7 @@ struct LayoutHierarchyPresentation final {
     std::string kind;
     std::string name;
     bool collapsed { true };
+    bool reversed { false };
     std::vector<std::string> memberNodeIds;
     double x { 0.0 };
     double y { 0.0 };

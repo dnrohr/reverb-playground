@@ -239,10 +239,14 @@ GraphDocument parsePatchJson(const std::string_view jsonText)
 
     const auto& layout = root.at("layout");
     for (const auto& positionJson : layout.at("nodes")) {
+        if (const auto orientation = positionJson.find("orientation"); orientation != positionJson.end()
+            && orientation->get<std::string>() != "reverse")
+            throw std::invalid_argument("unsupported node layout orientation");
         document.layout.nodes.push_back({
             .nodeId = positionJson.at("nodeId").get<std::string>(),
             .x = positionJson.at("x").get<double>(),
             .y = positionJson.at("y").get<double>(),
+            .reversed = positionJson.value("orientation", std::string {}) == "reverse",
         });
     }
     const auto& viewport = layout.at("viewport");
@@ -287,6 +291,9 @@ GraphDocument parsePatchJson(const std::string_view jsonText)
     }
     if (const auto hierarchies = layout.find("hierarchies"); hierarchies != layout.end()) {
         for (const auto& hierarchyJson : *hierarchies) {
+            if (const auto orientation = hierarchyJson.find("orientation"); orientation != hierarchyJson.end()
+                && orientation->get<std::string>() != "reverse")
+                throw std::invalid_argument("unsupported hierarchy layout orientation");
             const auto& position = hierarchyJson.at("position");
             const auto& nestedViewport = hierarchyJson.at("nestedViewport");
             LayoutHierarchyPresentation hierarchy {
@@ -294,6 +301,7 @@ GraphDocument parsePatchJson(const std::string_view jsonText)
                 .kind = hierarchyJson.at("kind").get<std::string>(),
                 .name = hierarchyJson.at("name").get<std::string>(),
                 .collapsed = hierarchyJson.at("collapsed").get<bool>(),
+                .reversed = hierarchyJson.value("orientation", std::string {}) == "reverse",
                 .memberNodeIds = hierarchyJson.at("memberNodeIds").get<std::vector<std::string>>(),
                 .x = position.at("x").get<double>(),
                 .y = position.at("y").get<double>(),
@@ -354,11 +362,14 @@ std::string writePatchJson(const GraphDocument& document)
 
     Json positionArray = Json::array();
     for (const auto& position : document.layout.nodes) {
-        positionArray.push_back({
+        Json writtenPosition {
             { "nodeId", position.nodeId },
             { "x", position.x },
             { "y", position.y },
-        });
+        };
+        if (position.reversed)
+            writtenPosition["orientation"] = "reverse";
+        positionArray.push_back(std::move(writtenPosition));
     }
     Json groupArray = Json::array();
     for (const auto& group : document.layout.groups)
@@ -414,6 +425,7 @@ std::string writePatchJson(const GraphDocument& document)
             { "ports", std::move(ports) },
         };
         if (hierarchy.parentId) entry["parentId"] = *hierarchy.parentId;
+        if (hierarchy.reversed) entry["orientation"] = "reverse";
         hierarchyArray.push_back(std::move(entry));
     }
     if (!hierarchyArray.empty()) layoutJson["hierarchies"] = std::move(hierarchyArray);

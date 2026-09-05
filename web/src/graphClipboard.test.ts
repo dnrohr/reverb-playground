@@ -7,6 +7,7 @@ describe('graph clipboard', () => {
   it('pastes new IDs while preserving parameters and internal connections', () => {
     const delay = { ...createModuleNode('delay', 'delay-1', { x: 10, y: 20 }), selected: true };
     delay.data.parameters[0].value = 37.25;
+    delay.data.orientation = 'reverse';
     const gain = { ...createModuleNode('gain', 'gain-1', { x: 180, y: 20 }), selected: true };
     const graph: GraphState = {
       nodes: [delay, gain],
@@ -16,6 +17,7 @@ describe('graph clipboard', () => {
     const pasted = pasteGraph(graph, clipboard);
     expect(pasted.nodes.map((node) => node.id)).toEqual(['delay-1', 'gain-1', 'delay-1-copy', 'gain-1-copy']);
     expect(pasted.nodes[2].data.parameters[0].value).toBe(37.25);
+    expect(pasted.nodes[2].data.orientation).toBe('reverse');
     expect(pasted.nodes[2].position).toEqual({ x: 50, y: 60 });
     expect(pasted.edges[1]).toMatchObject({ id: 'delay-gain-copy', source: 'delay-1-copy', target: 'gain-1-copy', sourceHandle: 'out', targetHandle: 'in' });
   });

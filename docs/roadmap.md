@@ -2168,7 +2168,10 @@ Milestone exit criteria:
 Goal: make placement and cleanup tools reduce work and crossings without moving
 blocks unexpectedly, overlapping them, or leaving stale inspector context.
 
-### M31.1 Define non-overlapping alignment and distribution geometry
+### M31.1 Define non-overlapping alignment and distribution geometry — Complete
+
+Status: Complete (2026-09-04). See
+[`predictable-layout-and-construction.md`](predictable-layout-and-construction.md).
 
 Tasks: specify whether each command uses centers, edges, or bounding boxes;
 preserve the outer selected blocks; distribute equal free gaps horizontally or
@@ -2186,7 +2189,9 @@ Acceptance criteria:
 - Every layout operation is presentation-only, one undo step, save/reopen stable,
   and covered by exact geometry tests.
 
-### M31.2 Replace Arrange Group Grid with a bounded layout
+### M31.2 Replace Arrange Group Grid with a bounded layout — Complete
+
+Status: Complete (2026-09-04).
 
 Tasks: choose rows/columns from member count, dimensions, available aspect ratio,
 and saved spacing; avoid unrelated blocks and group-boundary clipping; preserve a
@@ -2201,7 +2206,9 @@ Acceptance criteria:
 - The result remains readable at compact and desktop sizes and routes boundary
   cables from stable positions.
 
-### M31.3 Add presentation-only horizontal block flipping
+### M31.3 Add presentation-only horizontal block flipping — Complete
+
+Status: Complete (2026-09-04).
 
 Tasks: allow eligible blocks to face left-to-right or right-to-left so ports can
 reduce cable crossings; keep signal direction, port identity, automation, audio,
@@ -2219,7 +2226,9 @@ Acceptance criteria:
 - Crossing-count fixtures demonstrate a useful reduction without introducing
   ambiguous backward signal flow.
 
-### M31.4 Support palette drag-to-create
+### M31.4 Support palette drag-to-create — Complete
+
+Status: Complete (2026-09-04).
 
 Tasks: drag a module or reusable subpatch from the left palette onto an exact
 canvas location with an accessible drag preview; retain click-to-create and
@@ -2235,7 +2244,9 @@ Acceptance criteria:
 - Pointer, keyboard, screen-reader, and touch-capable paths retain equivalent
   functionality without requiring drag precision.
 
-### M31.5 Repair group and context transitions
+### M31.5 Repair group and context transitions — Complete
+
+Status: Complete (2026-09-04).
 
 Tasks: make Ungroup immediately refresh the inspector/tab and selection to a
 valid member or empty context; audit collapse, expand, delete, detach, Back, and
@@ -2250,7 +2261,10 @@ Acceptance criteria:
 - Selection/context restoration is deterministic through undo/redo and nested
   navigation.
 
-### M31.6 Validate dense graph cleanup
+### M31.6 Validate dense graph cleanup — Complete
+
+Status: Complete (2026-09-04). Evidence is stored under
+[`artifacts/ui/m31-predictable-layout`](../artifacts/ui/m31-predictable-layout/).
 
 Tasks: construct and clean representative Barr, Four-Line, and Reverse Cosmic
 graphs using drag creation, flipping, grouping, grid, alignment, distribution,

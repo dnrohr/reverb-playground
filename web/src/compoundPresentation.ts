@@ -191,7 +191,7 @@ export function validateHierarchyPresentations(nodes: Node<PatchNodeData>[], edg
 }
 
 export function updateHierarchyPresentation(state: GraphState, hierarchyId: string,
-  change: Partial<Pick<HierarchyPresentation, 'name' | 'collapsed' | 'position' | 'nestedViewport'>>): GraphState {
+  change: Partial<Pick<HierarchyPresentation, 'name' | 'collapsed' | 'position' | 'nestedViewport' | 'orientation'>>): GraphState {
   let found = false;
   const nodes = state.nodes.map((node) => {
     if (node.data.hierarchyPresentation?.id !== hierarchyId) return node;
@@ -201,6 +201,19 @@ export function updateHierarchyPresentation(state: GraphState, hierarchyId: stri
   });
   if (!found) throw new Error(`Hierarchy '${hierarchyId}' does not exist.`);
   return { ...state, nodes };
+}
+
+export function addHierarchyMembers(state: GraphState, hierarchyId: string, memberIds: string[]): GraphState {
+  const hierarchy = inspectHierarchyPresentations(state.nodes).find((item) => item.id === hierarchyId);
+  if (!hierarchy) throw new Error(`Hierarchy '${hierarchyId}' does not exist.`);
+  const additions = memberIds.filter((id) => !hierarchy.memberNodeIds.includes(id));
+  const existing = new Set(state.nodes.map((node) => node.id));
+  if (!additions.length || additions.some((id) => !existing.has(id))) throw new Error(`Hierarchy '${hierarchyId}' received invalid new members.`);
+  const updated = { ...hierarchy, memberNodeIds: [...hierarchy.memberNodeIds, ...additions] };
+  const owned = new Set(updated.memberNodeIds);
+  return { ...state, nodes: state.nodes.map((node) => owned.has(node.id) ? {
+    ...node, data: { ...node.data, hierarchyPresentation: structuredClone(updated) },
+  } : node) };
 }
 
 export function deleteHierarchy(state: GraphState, hierarchyId: string): GraphState {
@@ -230,6 +243,7 @@ export function projectHierarchyRoot(nodes: Node<PatchNodeData>[], edges: Edge[]
       className: compoundClass(members), draggable: true, deletable: true, width: 232, height: 142,
       data: { label: hierarchy.name, type: 'compound-summary', role: 'routing', runtimeBound: false, parameters: [],
         ports: hierarchy.ports.map(parentPort), hierarchyPresentation: structuredClone(hierarchy),
+        ...(hierarchy.orientation ? { orientation: hierarchy.orientation } : {}),
         ...(members.find((node) => node.data.subpatchInstance)?.data.subpatchInstance
           ? { subpatchInstance: structuredClone(members.find((node) => node.data.subpatchInstance)!.data.subpatchInstance) }
           : {}),
