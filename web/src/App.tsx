@@ -72,6 +72,7 @@ import {
   workspacePresentationStorageKey,
   type WorkspaceArrangement,
 } from './workspaceLayout';
+import { isEmergencyMuteShortcut, parseRecoveryState, type RecoveryState } from './crashRecovery';
 
 const modules = [
   { group: 'I/O', items: moduleDefinitions.filter((item) => item.role === 'io') },
@@ -633,6 +634,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     catch { return parseWorkspacePresentation(null); }
   });
   const [diagnostics, setDiagnostics] = useState<RuntimeDiagnostics | null>(null);
+  const [recoveryState, setRecoveryState] = useState<RecoveryState | null>(null);
+  const [emergencyAnnouncement, setEmergencyAnnouncement] = useState('');
   const activeGraphRevision = useRef(0);
   const [controlPreviewTime, setControlPreviewTime] = useState(() => performance.now() / 1000);
   const audibleFingerprint = useMemo(() => audibleGraphFingerprint(nodes, edges), [edges, nodes]);
@@ -654,7 +657,15 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
 
   useEffect(() => {
     void callNative('standaloneAuditionAvailable').then((available) => setStandaloneAvailable(available === true));
+    void callNative('getRecoveryState').then((payload) => {
+      if (payload !== undefined) setRecoveryState(parseRecoveryState(payload));
+    }).catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    void callNative('updateCrashContext', activePatchId, semanticGraphHash({ nodes, edges }),
+      diagnostics?.topologyPublication.activeRevision ?? 0).catch(() => undefined);
+  }, [activePatchId, diagnostics?.topologyPublication.activeRevision, edges, nodes]);
 
   useEffect(() => {
     try { window.localStorage.removeItem('reverb-playground-teaching'); }
@@ -1487,8 +1498,20 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     else if (edge) openContext('cable');
   }, [openContext, selectedNode]);
 
+  const activateEmergencyMute = useCallback(() => {
+    void callNative('setEmergencyMuted', true).then(() => {
+      setEmergencyAnnouncement('Emergency Mute active. Final output is silent.');
+      setGraphStatus({ kind: 'error', message: 'EMERGENCY MUTE ACTIVE / FINAL OUTPUT SILENT / RESET SAFETY REMAINS EXPLICIT' });
+    });
+  }, []);
+
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
+      if (isEmergencyMuteShortcut(event)) {
+        event.preventDefault();
+        activateEmergencyMute();
+        return;
+      }
       if (event.altKey && event.key === 'ArrowLeft' && activeHierarchyId) {
         event.preventDefault(); closeHierarchy(); return;
       }
@@ -1526,7 +1549,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [activeHierarchyId, auditionOverlay, beginCreateGroup, cancelAssistedTuning, clearAuditionOverlay, closeHierarchy, copySelection, openApplicationMenu, pasteSelection, redoGraph, removeSelection, resetPatch, tuningPreview, undoGraph]);
+  }, [activateEmergencyMute, activeHierarchyId, auditionOverlay, beginCreateGroup, cancelAssistedTuning, clearAuditionOverlay, closeHierarchy, copySelection, openApplicationMenu, pasteSelection, redoGraph, removeSelection, resetPatch, tuningPreview, undoGraph]);
 
   const beginParameterEdit = useCallback((nodeId: string, parameterId: string, _before: number) => {
     activeEdit.current = { label: `Edit ${nodeId}.${parameterId}`, before: snapshotGraph({ nodes, edges }) };
@@ -1588,6 +1611,32 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
     }
   }, [setEdges, setFlowViewport, setNodes, snapshot]);
 
+  const restoreRecovery = useCallback(async () => {
+    try {
+      const payload = await callNative('restoreRecoveryPatch');
+      if (typeof payload !== 'string' || !payload) throw new Error('Recovery candidate is unavailable or quarantined');
+      const parsed = parsePatchJson(payload, snapshot);
+      const loaded = { ...parsed, ...materializeHierarchyPresentations(parsed, inspectMatrixMixers(parsed.nodes)) };
+      setNodes(loaded.nodes); setEdges(loaded.edges); setViewport(loaded.viewport);
+      setQualityPolicy(loaded.source.qualityPolicy); setActiveHierarchyId(null);
+      await setFlowViewport(loaded.viewport);
+      setSelectedNode(null); setSelectedEdge(null); setPendingConnection(null);
+      setGraphHistory(emptyGraphHistory(loaded)); setActivePatchId('custom');
+      setRecoveryState(null);
+      setFileStatus({ kind: 'ok', message: `RECOVERED ${recoveryState?.candidateName.toUpperCase()} / VALIDATED / AUDITION MUTED / ORIGINAL PATCH UNCHANGED` });
+      setEmergencyAnnouncement('Recovered graph loaded. Emergency Mute is active.');
+    } catch (reason) {
+      setFileStatus({ kind: 'error', message: reason instanceof Error ? reason.message : 'Recovery failed' });
+    }
+  }, [recoveryState?.candidateName, setEdges, setFlowViewport, setNodes, snapshot]);
+
+  const declineRecovery = useCallback(() => {
+    void callNative('declineRecovery');
+    setRecoveryState(null);
+    resetPatch();
+    setFileStatus({ kind: 'ok', message: 'STARTED CLEAN / CRASH REPORT RETAINED FOR LATER INSPECTION' });
+  }, [resetPatch]);
+
   useEffect(() => {
     const handleFileShortcut = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey)) return;
@@ -1621,6 +1670,7 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <button role="menuitem" type="button" onClick={() => { loadInput.current?.click(); setOpenApplicationMenu(null); }}>OPEN PATCH… <kbd>CTRL O</kbd></button>
                 {standaloneAvailable ? <button role="menuitem" type="button" onClick={() => { void callNative('chooseAudioDevice'); setOpenApplicationMenu(null); }}>AUDIO DEVICE…</button> : null}
                 <button role="menuitem" type="button" onClick={() => { resetPatch(); setOpenApplicationMenu(null); }}>RESET PATCH <kbd>R</kbd></button>
+                <button role="menuitem" type="button" onClick={() => { void callNative('openCrashReportsFolder'); setOpenApplicationMenu(null); }}>OPEN CRASH REPORTS FOLDER</button>
               </> : null}
               {menu === 'edit' ? <>
                 <button role="menuitem" type="button" disabled={!graphHistory.undo.length} onClick={() => { undoGraph(); setOpenApplicationMenu(null); }}>UNDO <kbd>CTRL Z</kbd></button>
@@ -1672,6 +1722,8 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
                 <button role="menuitem" type="button" onClick={() => { setHelpArticleId('user-guide'); setOpenApplicationMenu(null); }}>USER GUIDE</button>
                 <button role="menuitem" type="button" onClick={() => { setHelpArticleId('barr-architectures'); setOpenApplicationMenu(null); }}>KEITH BARR ARCHITECTURES</button>
                 <button role="menuitem" type="button" onClick={() => { setHelpArticleId('module-reference'); setOpenApplicationMenu(null); }}>MODULE REFERENCE</button>
+                <button role="menuitem" type="button" onClick={() => { activateEmergencyMute(); setOpenApplicationMenu(null); }}>EMERGENCY MUTE <kbd>CTRL SHIFT M</kbd></button>
+                <button role="menuitem" type="button" onClick={() => { void callNative('openCrashReportsFolder'); setOpenApplicationMenu(null); }}>OPEN CRASH REPORTS FOLDER</button>
                 {snapshot.productVersion && snapshot.buildCommit ? <span className="menu-build">REVERB PLAYGROUND v{snapshot.productVersion}<br />{snapshot.buildCommit}</span> : null}
               </> : null}
             </div> : null}
@@ -1718,6 +1770,16 @@ function Editor({ snapshot }: { snapshot: RuntimeSnapshot }) {
           </div>
         </div>
       </header>
+
+      <div className="sr-announcement" aria-live="assertive" aria-atomic="true">{emergencyAnnouncement}</div>
+
+      {recoveryState?.available ? <section className={`recovery-banner${recoveryState.quarantined ? ' is-quarantined' : ''}`} role="alert" aria-label="Crash recovery">
+        <div><strong>{recoveryState.quarantined ? 'RECOVERY CANDIDATE QUARANTINED' : 'PREVIOUS SESSION ENDED ABNORMALLY'}</strong>
+          <span>{recoveryState.message}</span><code>{recoveryState.candidateName} · {recoveryState.candidateHash} · {recoveryState.incidentId}</code></div>
+        <div>{!recoveryState.quarantined ? <button type="button" onClick={() => void restoreRecovery()}>RESTORE MUTED</button> : null}
+          <button type="button" onClick={declineRecovery}>START CLEAN</button>
+          <button type="button" onClick={() => void callNative('openCrashReportsFolder')}>OPEN REPORTS</button></div>
+      </section> : null}
 
       <section className={`workspace arrangement-${workspacePresentation.arrangement}${workspaceLayout.overlay ? ' workspace-overlay' : ''}`}
         style={{ gridTemplateColumns: workspaceGridColumns(workspaceLayout) }}>
@@ -2196,6 +2258,22 @@ export function App() {
 
   useEffect(() => {
     const controller = new AbortController();
+    if (import.meta.env.DEV && new URLSearchParams(window.location.search).get('recoveryFixture') === '1') {
+      setSnapshot(parseRuntimeSnapshot({
+        contractVersion: 2, engineId: 'barr-reference', productVersion: '0.1.0', buildCommit: 'm32-fixture', sampleRate: 48000,
+        nodes: [
+          { id: 'input', type: 'stereo-input', label: 'Stereo Input', role: 'io', position: { x: 80, y: 180 },
+            ports: [{ id: 'out-l', signal: 'audio', direction: 'output' }, { id: 'out-r', signal: 'audio', direction: 'output' }], parameters: [] },
+          { id: 'output', type: 'stereo-output', label: 'Stereo Output', role: 'io', position: { x: 520, y: 180 },
+            ports: [{ id: 'in-l', signal: 'audio', direction: 'input' }, { id: 'in-r', signal: 'audio', direction: 'input' }], parameters: [] },
+        ],
+        connections: [
+          { id: 'left', source: 'input', sourcePort: 'out-l', target: 'output', targetPort: 'in-l', signal: 'audio' },
+          { id: 'right', source: 'input', sourcePort: 'out-r', target: 'output', targetPort: 'in-r', signal: 'audio' },
+        ], outsidePatch: [],
+      }));
+      return () => controller.abort();
+    }
     fetch(new URL('./runtime-snapshot.json', window.location.href), { signal: controller.signal, cache: 'no-store' })
       .then((response) => {
         if (!response.ok) throw new Error(`Native runtime returned HTTP ${response.status}`);

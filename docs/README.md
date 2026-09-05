@@ -61,6 +61,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Reusable subpatches](reusable-subpatches.md) - pinned definition provenance over expanded primitives, explicit ports, recovery, and Diffuse Delay qualification.
 - [Temporary audition overlays](temporary-audition-overlays.md) - non-persistent cable/block mute, path isolate, safe bypass, preview publication, and export/capture disclosure.
 - [Interaction and state correctness](interaction-state-correctness.md) - authoritative parameter layers, toggleable temporary audition, cumulative assisted tuning, and M30 qualification.
+- [Crash recovery and emergency safety](crash-recovery-and-emergency-safety.md) - private local reports, opt-in muted recovery, retention/privacy boundaries, and the global mute shortcut.
 - [Predictable layout and construction](predictable-layout-and-construction.md) - exact non-overlap geometry, bounded group grids, horizontal presentation flips, palette drag creation, and context repair.
 - [A/B comparison snapshots](ab-comparison-snapshots.md) - explicit session slots, raw and measured attenuation-only matching, graph/gain/latency diffs, revert, and undoable promotion.
 - [Feedback-loop highlighting](feedback-loop-highlighting.md) - bounded directed-cycle analysis, active/alternate styling, and topology-derived loop facts.

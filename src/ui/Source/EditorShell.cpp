@@ -50,6 +50,8 @@ EditorShell::EditorShell(Callbacks callbacks)
         impulseButton_.setButtonText("QUICK IMPULSE SENT");
     };
     muteButton_.setClickingTogglesState(true);
+    muteButton_.setTitle("Emergency Mute");
+    muteButton_.setDescription("Latch final output silent. Shortcut: Ctrl or Command plus Shift plus M.");
     muteButton_.onClick = [this] { callbacks_.setEmergencyMuted(muteButton_.getToggleState()); };
     resetButton_.onClick = [this] { callbacks_.resetSafety(); };
 
@@ -235,6 +237,29 @@ EditorShell::EditorShell(Callbacks callbacks)
                 return;
             }
             complete(callbacks_.storePatchStateJson(arguments[0].toString()));
+        })
+        .withNativeFunction("setEmergencyMuted", [this](const auto& arguments, auto complete) {
+            const auto muted = arguments.size() == 0 || static_cast<bool>(arguments[0]);
+            callbacks_.setEmergencyMuted(muted);
+            complete(callbacks_.emergencyMuted());
+        })
+        .withNativeFunction("getRecoveryState", [this](const auto&, auto complete) {
+            complete(callbacks_.recoveryStateJson());
+        })
+        .withNativeFunction("restoreRecoveryPatch", [this](const auto&, auto complete) {
+            complete(callbacks_.restoreRecoveryPatch());
+        })
+        .withNativeFunction("declineRecovery", [this](const auto&, auto complete) {
+            callbacks_.declineRecovery(); complete(true);
+        })
+        .withNativeFunction("openCrashReportsFolder", [this](const auto&, auto complete) {
+            callbacks_.openCrashReportsFolder(); complete(true);
+        })
+        .withNativeFunction("updateCrashContext", [this](const auto& arguments, auto complete) {
+            if (arguments.size() != 3) { complete(false); return; }
+            callbacks_.updateCrashContext(arguments[0].toString(), arguments[1].toString(),
+                static_cast<std::uint64_t>(static_cast<std::int64_t>(arguments[2])));
+            complete(true);
         })
         .withNativeFunction("resetSafety", [this](const auto&, auto complete) {
             callbacks_.resetSafety();
@@ -610,6 +635,17 @@ void EditorShell::timerCallback()
     status_.setColour(
         juce::Label::textColourId,
         safetyLatched || muteButton_.getToggleState() ? danger : text);
+}
+
+bool EditorShell::keyPressed(const juce::KeyPress& key)
+{
+    const auto modifiers = key.getModifiers();
+    if (modifiers.isCommandDown() && modifiers.isShiftDown()
+        && juce::CharacterFunctions::toLowerCase(key.getTextCharacter()) == 'm') {
+        callbacks_.setEmergencyMuted(true);
+        return true;
+    }
+    return Component::keyPressed(key);
 }
 
 } // namespace reverb::ui

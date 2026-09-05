@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 
 #include "PluginEditor.h"
+#include "CrashRecovery.h"
 
 #include <reverb/graph/BarrReferenceGraph.h>
 #include <reverb/graph/PatchJson.h>
@@ -17,6 +18,8 @@ ReverbPlaygroundProcessor::ReverbPlaygroundProcessor()
                          .withInput("Input", juce::AudioChannelSet::stereo(), true)
                          .withOutput("Output", juce::AudioChannelSet::stereo(), true))
 {
+    if (juce::PluginHostType::getPluginLoadedAs() == wrapperType_VST3)
+        reverb::app::CrashRecovery::instance().startSession(false);
     startTimerHz(30);
 }
 
@@ -352,7 +355,11 @@ void ReverbPlaygroundProcessor::setComparisonAudition(
     setComparisonGain(enabled ? match : 1.0F);
     comparisonAuditionEnabled_.store(enabled, std::memory_order_release);
 }
-void ReverbPlaygroundProcessor::setEmergencyMuted(const bool muted) noexcept { harness_.setEmergencyMuted(muted); }
+void ReverbPlaygroundProcessor::setEmergencyMuted(const bool muted) noexcept
+{
+    harness_.setEmergencyMuted(muted);
+    if (muted) fileExporter_.cancel();
+}
 void ReverbPlaygroundProcessor::requestSafetyReset() noexcept
 {
     harness_.requestSafetyReset();
@@ -794,6 +801,10 @@ bool ReverbPlaygroundProcessor::startProcessedFileExport(
     const bool overwriteConfirmed,
     std::string& error)
 {
+    if (isEmergencyMuted() || isSafetyLatched()) {
+        error = "Export is unavailable while Emergency Mute or the safety latch is active.";
+        return false;
+    }
     const auto patch = hostPatchState_.document().value_or(reverb::graph::makeBarrReferenceGraph());
     const auto transport = audioFileSource_.snapshot();
     return fileExporter_.start({

@@ -121,6 +121,8 @@ the DAW's stereo input, transport, automation, and export workflow.
 ## Feedback safety and recovery
 
 - **Emergency Mute** silences output immediately without rewriting the patch.
+- Press **Ctrl+Shift+M** on Windows or **Command+Shift+M** on macOS from any
+  editor context. Key repeat never toggles the latch back off.
 - A non-finite or sustained runaway output latches safety mute. Correct the
   graph, then use **Reset Safety**.
 - A failed compilation leaves the last valid runtime active and reports the
@@ -130,12 +132,14 @@ the DAW's stereo input, transport, automation, and export workflow.
 
 ## Crash reports
 
-Automatic crash upload is not present in the current alpha. If the application
-crashes, report the Windows version, standalone or DAW/host name, audio device,
-sample rate, block size, factory or patch, exact last action, and the version
-plus 12-character commit shown under **Help**. Attach the smallest patch that
-reproduces the problem if it is safe to share. Local minidumps and plain-text
-crash summaries are planned for M32.
+Crash reports are written locally under the per-user application-data
+`Reverb Playground/Crash Reports` folder and are never uploaded automatically.
+Use **Help > Open crash reports folder**. Review a dump before sharing it because
+process memory can be sensitive; the paired text summary excludes source audio,
+full patches, and user paths. After an abnormal standalone exit, choose
+**Restore muted**, **Start clean**, or **Open reports**. Recovery validates the
+last-known-valid autosave, never overwrites the original patch, and starts with
+Emergency Mute active. See [Crash recovery and emergency safety](crash-recovery-and-emergency-safety.md).
 
 ## Workspace arrangements
 

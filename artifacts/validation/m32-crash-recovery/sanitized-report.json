@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "incidentId": "<sanitized-incident-id>",
+  "termination": "forced-crash",
+  "timestamp": "<local-iso-8601-timestamp>",
+  "productVersion": "0.1.0",
+  "buildCommit": "<exact-build-commit>",
+  "platform": "Windows 11",
+  "mode": "standalone",
+  "phase": "runtime",
+  "activeFactory": "barr-reference",
+  "graphHash": "<semantic-hash>",
+  "graphRevision": 42,
+  "audio": { "sampleRate": 48000.0, "blockSize": 512 },
+  "safetyStatus": "clear",
+  "publicationStatus": "active",
+  "detail": "Explicit M32 qualification fixture",
+  "minidumpComplete": true,
+  "privacy": {
+    "automaticUpload": false,
+    "sourceAudioIncluded": false,
+    "patchContentIncluded": false,
+    "pathsIncluded": false
+  },
+  "breadcrumbs": ["session-started", "context:runtime:revision-42"]
+}

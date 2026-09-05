@@ -1,4 +1,5 @@
 #include "PluginEditor.h"
+#include "CrashRecovery.h"
 
 #include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
@@ -57,7 +58,33 @@ ReverbPlaygroundEditor::ReverbPlaygroundEditor(ReverbPlaygroundProcessor& proces
           [&processor] { return processor.runtimeDiagnosticsJson(); },
           [&processor](const auto& patchJson) { return processor.publishGraphJson(patchJson); },
           [&processor](const auto& patchJson) { return processor.previewGraphJson(patchJson); },
-          [&processor](const auto& patchJson) { return processor.storePatchStateJson(patchJson); },
+          [&processor](const auto& patchJson) {
+              const auto result = processor.storePatchStateJson(patchJson);
+              if (juce::JSON::parse(result).getProperty("accepted", false))
+                  reverb::app::CrashRecovery::instance().storeRecoveryCandidate(patchJson);
+              return result;
+          },
+          [] { return reverb::app::CrashRecovery::instance().recoveryStateJson(); },
+          [&processor] {
+              auto patch = reverb::app::CrashRecovery::instance().restoreRecoveryCandidate();
+              if (patch.isEmpty()) return juce::String {};
+              processor.setEmergencyMuted(true);
+              const auto result = juce::JSON::parse(processor.publishGraphJson(patch));
+              return result.getProperty("accepted", false) ? patch : juce::String {};
+          },
+          [] { reverb::app::CrashRecovery::instance().declineRecovery(); },
+          [] { reverb::app::CrashRecovery::instance().openReportsFolder(); },
+          [&processor](const juce::String& factory, const juce::String& hash, const std::uint64_t revision) {
+              reverb::app::CrashContext context;
+              context.phase = "runtime";
+              context.activeFactory = factory;
+              context.graphHash = hash;
+              context.graphRevision = revision;
+              context.sampleRate = processor.activeSampleRate();
+              context.safetyStatus = processor.isSafetyLatched() ? "latched" : "clear";
+              context.publicationStatus = "active";
+              reverb::app::CrashRecovery::instance().updateContext(context);
+          },
           juce::StandalonePluginHolder::getInstance() != nullptr,
           [&processor](const juce::File& file) {
               std::string error;

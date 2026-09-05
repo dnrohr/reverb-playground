@@ -2284,12 +2284,12 @@ Milestone exit criteria:
 
 ---
 
-## M32. Crash recovery and emergency safety
+## M32. Crash recovery and emergency safety — Complete
 
 Goal: turn crashes into private, actionable local evidence and make immediate
 silencing available regardless of current editor focus or presentation level.
 
-### M32.1 Establish crash and hang observability
+### M32.1 Establish crash and hang observability — Complete
 
 Tasks: reproduce and classify known standalone and hosted failures where
 possible; inventory current exception, assertion, log, and termination paths;
@@ -2307,7 +2307,7 @@ Acceptance criteria:
 - The schema documents included, excluded, truncated, and potentially sensitive
   fields and remains bounded under repeated failures.
 
-### M32.2 Write local minidumps and plain-text summaries
+### M32.2 Write local minidumps and plain-text summaries — Complete
 
 Tasks: install a Windows process-level crash handler for the standalone and the
 safe plugin boundary; write a local minidump plus human-readable summary through
@@ -2326,7 +2326,7 @@ Acceptance criteria:
 - Standalone and VST3 behavior is qualified without destabilizing host shutdown,
   exception boundaries, or real-time processing.
 
-### M32.3 Add recovery guidance and safe state restoration
+### M32.3 Add recovery guidance and safe state restoration — Complete
 
 Tasks: detect the prior abnormal exit, offer to open reports and restore the last
 known-valid autosaved graph in a disabled/safe-audition state, keep the original
@@ -2342,7 +2342,7 @@ Acceptance criteria:
 - Declining recovery produces a clean default start and retains the report for
   later inspection.
 
-### M32.4 Add a global Emergency Mute shortcut
+### M32.4 Add a global Emergency Mute shortcut — Complete
 
 Tasks: bind `Ctrl/Cmd+Shift+M` to the existing authoritative Emergency Mute;
 expose it in menus and Help; handle focus in inputs, dialogs, parent/nested
@@ -2359,7 +2359,7 @@ Acceptance criteria:
 - Native and UI tests prove bounded activation and explicit recovery under legal
   audio, runaway feedback, and non-finite output.
 
-### M32.5 Qualify crash privacy, recovery, and safety
+### M32.5 Qualify crash privacy, recovery, and safety — Complete
 
 Tasks: run forced-crash/restart/report/recovery fixtures, host lifecycle checks,
 retention/privacy inspection, Emergency Mute keyboard tests, and clean shutdown;

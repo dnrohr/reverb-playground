@@ -13,6 +13,17 @@ and status immediately. Desktop/compact screenshots and the complete workflow
 record are in
 [`artifacts/ui/m31-predictable-layout`](../artifacts/ui/m31-predictable-layout/).
 
+M32 crash recovery and emergency safety is complete. Windows standalone and
+VST3 failures now produce bounded local summary/minidump pairs on a pre-created
+non-audio worker, retain only eight incidents, chain host exception handling,
+and never upload. The standalone detects an abnormal prior session and offers
+validated last-known-valid recovery in an Emergency-Muted state, a clean start,
+or local report inspection; twice-failing candidates are quarantined.
+Ctrl/Cmd+Shift+M latches the same final-output mute from every focus context,
+including text inputs, and active mute cancels/refuses processed export. Current
+desktop/minimum screenshots and workflow record are in
+[`artifacts/ui/m32-crash-recovery`](../artifacts/ui/m32-crash-recovery/).
+
 M29 hierarchical schematics are complete. Dense recognized compounds and
 versioned subpatches are now movable saved parents with stable mono proxy ports;
 they open into a dedicated, immediately live nested canvas with breadcrumbs,
@@ -152,6 +163,8 @@ video are in
 | M29 Hierarchical compound schematics | Complete | Persistent movable parent/proxy blocks; live nested editing; stable boundary IDs; exact primitive/audio authority; web/native validation and desktop/compact evidence |
 | M30 Interaction and state correctness | Complete | Revision-gated authoritative parameter layers, explicit audition toggles/global exits, cumulative conflict-aware tuning, representative tests, and desktop/compact evidence |
 | M31 Predictable layout and construction | Complete | Exact bounding-box tests; bounded group grid; persisted R→L orientation; pan/zoom-aware palette drop; repaired group/context transitions; desktop/compact screenshot and workflow video |
+| M32 Crash recovery and emergency safety | Complete | Private bounded local dump/summary pairs; opt-in muted autosave recovery and quarantine; global non-toggling mute shortcut; Release/host validation and current UI evidence |
+| M33 Usability alpha refresh | Planned | Integrated workflow regression, updated rendered guidance/release materials, exact package/host qualification, and the next coherent alpha publication |
 
 ## M31 verification
 
@@ -172,8 +185,32 @@ video are in
 - Evidence: [flipped dense routing](../artifacts/ui/m31-predictable-layout/01-flipped-dense-routing.png),
   [arranged group compact](../artifacts/ui/m31-predictable-layout/02-arranged-group-compact.png), and
   [workflow](../artifacts/ui/m31-predictable-layout/predictable-layout-workflow.mp4).
-| M32 Crash recovery and emergency safety | Planned | Local minidump plus plain-text summary with no automatic upload, safe recovery choices, and global Ctrl/Cmd+Shift+M Emergency Mute |
-| M33 Usability alpha refresh | Planned | Integrated workflow regression, updated rendered guidance/release materials, exact package/host qualification, and the next coherent alpha publication |
+## M32 verification
+
+- Forced crash, unhandled exception, assertion, startup failure, and clean exit
+  have distinct fixture classifications. The versioned summary records exact
+  build/runtime context and bounded breadcrumbs while excluding audio, full
+  patches, user paths, and automatic telemetry. `.partial` names expose failed
+  writes; collision-safe pairs retain the newest eight incidents.
+- The Windows exception path signals a pre-created worker and waits for its
+  matched report; it performs no allocation, logging, locking, or filesystem
+  access in the audio callback. Recursive entry fails closed and VST3 chains an
+  existing host exception filter.
+- Only normally validated standalone graph state becomes a recovery candidate.
+  Restore is opt-in, validates/compiles through normal gates, starts manually
+  muted, never overwrites a patch or host project, and quarantines after two
+  abnormal attempts. Decline starts the default graph and retains reports.
+- Ctrl/Cmd+Shift+M always sets (never toggles) the authoritative latch and ignores
+  repeat. Native shell, rendered Help/menu, diagnostics, screen-reader live
+  announcement, A/B/preview/audition, and export share the same final-output
+  boundary; numerical-safety recovery stays explicit.
+- The local Release gate passed 208 web, 25 repository-policy, and 256 native/CLI
+  tests. pluginval 1.0.4 strictness 10 succeeded; Steinberg validator 3.8.1
+  extensive mode passed 537/537. Sanitized logs/report are in
+  [`artifacts/validation/m32-crash-recovery`](../artifacts/validation/m32-crash-recovery/).
+- Evidence: [recovery choice](../artifacts/ui/m32-crash-recovery/01-recovery-choice-desktop.png),
+  [minimum-size rendered Help](../artifacts/ui/m32-crash-recovery/02-emergency-help-640x400.png), and
+  [workflow](../artifacts/ui/m32-crash-recovery/recovery-and-emergency-workflow.mp4).
 
 ## M0.2 verification
 

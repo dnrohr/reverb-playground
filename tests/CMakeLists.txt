@@ -6,6 +6,7 @@ add_executable(reverb_tests
     BarrReferenceTests.cpp
     ControlRateTests.cpp
     ControlModulationTests.cpp
+    CrashRecoveryTests.cpp
     DelayMemoryPlanTests.cpp
     DenseFigureEightTests.cpp
     DenseReverbQualificationTests.cpp

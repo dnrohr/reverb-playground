@@ -16,6 +16,17 @@
   --danger: #ec575c;
 }
 
+.sr-announcement { position: fixed; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.recovery-banner { position: fixed; z-index: 1200; top: 48px; left: 50%; width: min(760px, calc(100vw - 24px)); transform: translateX(-50%); display: flex; justify-content: space-between; gap: 16px; padding: 12px 14px; border: 1px solid var(--danger); background: #191216; box-shadow: 0 14px 42px rgba(0, 0, 0, .5); color: #edf1f2; }
+.recovery-banner > div { display: grid; gap: 5px; }
+.recovery-banner > div:last-child { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.recovery-banner strong { color: var(--danger); font: 800 10px var(--mono); letter-spacing: .09em; }
+.recovery-banner span, .recovery-banner code { font-size: 10px; line-height: 1.4; }
+.recovery-banner code { color: var(--muted); overflow-wrap: anywhere; }
+.recovery-banner button { min-height: 32px; }
+.recovery-banner.is-quarantined { border-color: #f2b44e; }
+@media (max-width: 700px) { .recovery-banner { top: 42px; flex-direction: column; } .recovery-banner > div:last-child { justify-content: flex-start; } }
+
 * { box-sizing: border-box; }
 html, body, #root { width: 100%; height: 100%; margin: 0; overflow: hidden; }
 button { font: inherit; }

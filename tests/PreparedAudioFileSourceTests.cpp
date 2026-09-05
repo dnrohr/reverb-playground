@@ -431,6 +431,24 @@ TEST_CASE("Plugin exports the loaded source without persisting export state")
     static_cast<void>(destination.deleteFile());
 }
 
+TEST_CASE("Emergency Mute refuses export and remains an explicit latch")
+{
+    juce::WavAudioFormat wav;
+    AudioFixture fixture(wav, ".wav", 2, 48'000.0, 480, 24);
+    const auto destination = juce::File::getSpecialLocation(juce::File::tempDirectory)
+                                 .getNonexistentChildFile("reverb-muted-export-" + juce::Uuid().toString(), ".wav", false);
+    ReverbPlaygroundProcessor processor;
+    processor.prepareToPlay(48'000.0, 128);
+    std::string error;
+    REQUIRE(processor.loadAudioFile(fixture.file(), error));
+    processor.setEmergencyMuted(true);
+    REQUIRE_FALSE(processor.startProcessedFileExport(
+        destination, reverb::render::FileExportMode::wetOnly, false, error));
+    CHECK(error.find("Emergency Mute") != std::string::npos);
+    CHECK(processor.isEmergencyMuted());
+    CHECK_FALSE(destination.existsAsFile());
+}
+
 TEST_CASE("Standalone transport survives graph state reload but not processor restart")
 {
     juce::WavAudioFormat wav;

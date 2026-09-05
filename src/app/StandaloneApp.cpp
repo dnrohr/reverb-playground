@@ -1,4 +1,5 @@
 #include "StartupProgress.h"
+#include "CrashRecovery.h"
 
 #include <JuceHeader.h>
 #include <juce_audio_plugin_client/Standalone/juce_StandaloneFilterWindow.h>
@@ -110,6 +111,7 @@ class ReverbStandaloneApp final : public juce::JUCEApplication {
 public:
     ReverbStandaloneApp()
     {
+        reverb::app::CrashRecovery::instance().startSession(true);
         juce::PropertiesFile::Options options;
         options.applicationName = juce::CharPointer_UTF8(JucePlugin_Name);
         options.filenameSuffix = ".settings";
@@ -128,8 +130,20 @@ public:
     bool moreThanOneInstanceAllowed() override { return true; }
     void anotherInstanceStarted(const juce::String&) override {}
 
-    void initialise(const juce::String&) override
+    void initialise(const juce::String& commandLine) override
     {
+        if (commandLine.contains("--qualify-crash-report")) {
+            static_cast<void>(reverb::app::CrashRecovery::instance().writeDiagnosticFixture(
+                reverb::app::TerminationKind::forcedCrash, "Explicit M32 qualification fixture"));
+            quit();
+            return;
+        }
+        if (commandLine.contains("--qualify-startup-failure")) {
+            reverb::app::CrashRecovery::instance().recordStartupFailure(
+                "Explicit M32 startup-failure qualification fixture");
+            quit();
+            return;
+        }
         startupWindow_ = std::make_unique<StartupWindow>(progress_);
         startupWindow_->setVisible(true);
         progress_.advanceTo(reverb::app::StartupPhase::connectingAudio);
@@ -143,6 +157,8 @@ public:
                 }
             } catch (...) {
                 progress_.advanceTo(reverb::app::StartupPhase::failed);
+                reverb::app::CrashRecovery::instance().recordStartupFailure(
+                    "Audio holder initialization threw an exception");
             }
 
             juce::MessageManager::callAsync([this] {
@@ -163,6 +179,7 @@ public:
         mainWindow_ = nullptr;
         startupWindow_ = nullptr;
         appProperties_.saveIfNeeded();
+        reverb::app::CrashRecovery::instance().finishSessionCleanly();
     }
 
     void systemRequestedQuit() override

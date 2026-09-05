@@ -36,6 +36,11 @@ public:
         std::function<juce::String(const juce::String&)> publishGraphJson;
         std::function<juce::String(const juce::String&)> previewGraphJson;
         std::function<juce::String(const juce::String&)> storePatchStateJson;
+        std::function<juce::String()> recoveryStateJson;
+        std::function<juce::String()> restoreRecoveryPatch;
+        std::function<void()> declineRecovery;
+        std::function<void()> openCrashReportsFolder;
+        std::function<void(const juce::String&, const juce::String&, std::uint64_t)> updateCrashContext;
         bool standaloneAuditionAvailable {};
         std::function<juce::String(const juce::File&)> loadAudioFile;
         std::function<void(int)> setAuditionSourceMode;
@@ -56,6 +61,7 @@ public:
     void resized() override;
     void mouseDown(const juce::MouseEvent& event) override;
     void mouseDrag(const juce::MouseEvent& event) override;
+    bool keyPressed(const juce::KeyPress& key) override;
     bool isInterestedInFileDrag(const juce::StringArray& files) override;
     void filesDropped(const juce::StringArray& files, int x, int y) override;
 

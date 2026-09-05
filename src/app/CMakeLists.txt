@@ -18,6 +18,8 @@ target_sources(ReverbPlayground
         PluginEditor.h
         PluginProcessor.cpp
         PluginProcessor.h
+        CrashRecovery.cpp
+        CrashRecovery.h
         StandaloneApp.cpp
         StartupProgress.h)
 
@@ -40,6 +42,7 @@ target_link_libraries(ReverbPlayground
         reverb_render
         reverb_ui
         juce::juce_audio_utils
+        $<$<PLATFORM_ID:Windows>:dbghelp>
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags)

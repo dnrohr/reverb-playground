@@ -34,7 +34,15 @@ function backend(): JuceBackend | undefined {
 
 export function callNative(name: string, ...parameters: unknown[]): Promise<unknown> {
   const nativeBackend = backend();
-  if (!nativeBackend) return Promise.resolve(undefined);
+  if (!nativeBackend) {
+    if (import.meta.env.DEV && new URLSearchParams(window.location.search).get('recoveryFixture') === '1') {
+      if (name === 'getRecoveryState') return Promise.resolve(JSON.stringify({ available: true, quarantined: false, attempts: 1,
+        incidentId: '20260904T201500-4a8c1d2e', candidateName: 'last-known-valid.autosave.rvp.json', candidateHash: '7f8c9d0e12ab34cd',
+        message: 'The previous standalone session did not exit cleanly. Recovery is optional and starts muted.' }));
+      if (name === 'setEmergencyMuted' || name === 'openCrashReportsFolder' || name === 'declineRecovery') return Promise.resolve(true);
+    }
+    return Promise.resolve(undefined);
+  }
   const resultId = nextPromiseId++;
   const result = new Promise<unknown>((resolve) => pending.set(resultId, resolve));
   nativeBackend.emitEvent('__juce__invoke', { name, params: parameters, resultId });
