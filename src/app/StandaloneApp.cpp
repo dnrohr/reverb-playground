@@ -59,7 +59,7 @@ private:
             const auto desktopScale = static_cast<float>(juce::jmax(1.0,
                 getPeer() != nullptr ? getPeer()->getPlatformScaleFactor() : 1.0));
             auto logoArea = juce::Rectangle<int> {
-                juce::jmax(42, juce::roundToInt(static_cast<float>(getWidth()) / desktopScale) - 170),
+                juce::jmax(42, juce::roundToInt(static_cast<float>(getWidth()) / desktopScale) - 144),
                 42, 128, 128 };
             area.removeFromRight(142);
             area.removeFromRight(28);
