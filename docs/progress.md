@@ -1,6 +1,15 @@
 # Roadmap progress
 
-Last updated: 2026-09-04
+Last updated: 2026-09-05
+
+M33 usability alpha refresh is complete. Alpha.2 presents M28-M32 as one
+workflow from searchable guidance through live nested construction,
+state-correct tuning, predictable layout, private crash reporting, and muted
+recovery. The landing page, shipped package guide, release notes, release
+workflow, static contract, integrated matrix, and demonstration now agree on
+`v0.1.0-alpha.2`. External non-implementer usability sessions and comparative
+dense-reverb listening remain explicit outstanding dependencies rather than
+release claims.
 
 M31 predictable layout and construction is complete. Align and distribute now
 use measured bounding boxes and equal free gaps; bounded group arrangement keeps
@@ -164,7 +173,7 @@ video are in
 | M30 Interaction and state correctness | Complete | Revision-gated authoritative parameter layers, explicit audition toggles/global exits, cumulative conflict-aware tuning, representative tests, and desktop/compact evidence |
 | M31 Predictable layout and construction | Complete | Exact bounding-box tests; bounded group grid; persisted R→L orientation; pan/zoom-aware palette drop; repaired group/context transitions; desktop/compact screenshot and workflow video |
 | M32 Crash recovery and emergency safety | Complete | Private bounded local dump/summary pairs; opt-in muted autosave recovery and quarantine; global non-toggling mute shortcut; Release/host validation and current UI evidence |
-| M33 Usability alpha refresh | Planned | Integrated workflow regression, updated rendered guidance/release materials, exact package/host qualification, and the next coherent alpha publication |
+| M33 Usability alpha refresh | Complete | Integrated M28-M32 regression; alpha.2 landing/help/install/recovery/compatibility notes; exact package and host gates; tagged prerelease publication |
 
 ## M31 verification
 
@@ -211,6 +220,29 @@ video are in
 - Evidence: [recovery choice](../artifacts/ui/m32-crash-recovery/01-recovery-choice-desktop.png),
   [minimum-size rendered Help](../artifacts/ui/m32-crash-recovery/02-emergency-help-640x400.png), and
   [workflow](../artifacts/ui/m32-crash-recovery/recovery-and-emergency-workflow.mp4).
+
+## M33 verification
+
+- The integrated matrix repeats first audition/construction, nested Matrix
+  editing, revision-correct parameter changes, cumulative tuning, temporary
+  diagnosis, A/B, audio-file playback/export, dense layout, recovery, and
+  Emergency Mute. Each row records state/audio truth, save/reopen, undo/redo,
+  accessibility, real-time safety, failure/recovery, and evidence.
+- README, rendered Help/user guide, packaged installation/removal/recovery
+  guide, alpha.2 notes, workflow, checker, archive/checksum names, editor build
+  identity, and CI artifact paths use the same release contract.
+- Schema-v1/v2 migration, the one-octave Pitch Shift clamp, default quality
+  policy, host-state authority, and presentation-only hierarchy metadata remain
+  covered by the native/web suite and are disclosed in the release notes.
+- Exact-candidate Release, pluginval strictness 10, Steinberg extensive,
+  standalone cold-start, crash-report, deterministic package, clean-main CI,
+  tag workflow, and GitHub prerelease gates are recorded in the completion
+  report and release run.
+- External M7.5 non-implementer sessions and M24.1 comparative listening remain
+  open. No internal dry run or objective metric is substituted for them.
+- Evidence: [integrated workflow matrix](../artifacts/validation/m33-usability-alpha-refresh/workflow-matrix.json),
+  [qualification summary](../artifacts/validation/m33-usability-alpha-refresh/README.md), and
+  [alpha.2 demonstration](../artifacts/ui/m33-usability-alpha-refresh/reverb-playground-alpha-2-demo.mp4).
 
 ## M0.2 verification
 

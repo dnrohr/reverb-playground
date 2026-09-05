@@ -4,13 +4,14 @@ Reverb Playground is a free, open-source visual reverb instrument for Windows. I
 
 The project began as a visible, playable reconstruction of a Keith Barr/Alesis MIDIVerb-I-style architecture and has grown into a focused environment for learning and designing algorithmic reverbs.
 
-![Reverse Cosmic Shimmer schematic workflow](artifacts/ui/m13-3-reverse-cosmic-shimmer/reverse-cosmic-workflow.gif)
+![Hierarchical Matrix schematic](artifacts/ui/m29-hierarchical-compounds/02-matrix-nested-desktop.png)
 
-*Reverse Cosmic Shimmer: inspect the signal path, focus the feedback architecture, and edit the sound continuously.*
+*Open a compound without hiding its primitives: the nested Matrix remains live,
+editable, and part of the same saved graph.*
 
 ## Download
 
-For most people, the best choice is the current [Windows alpha release](https://github.com/dnrohr/reverb-playground/releases/tag/v0.1.0-alpha.1). Download `ReverbPlayground-0.1.0-windows-x64.zip`, extract the complete ZIP, and choose one of the included formats:
+For most people, the best choice is the current [Windows alpha release](https://github.com/dnrohr/reverb-playground/releases/tag/v0.1.0-alpha.2). Download `ReverbPlayground-0.1.0-windows-x64.zip`, extract the complete ZIP, and choose one of the included formats:
 
 - **Standalone** — open `Standalone/Reverb Playground.exe`; no DAW is required.
 - **VST3** — install the plug-in and open it as a stereo effect in a compatible DAW.
@@ -40,7 +41,10 @@ For a guided tour, follow [Getting started: hear and inspect the Barr reference]
 - Audio-file playback, looping, seeking, wet/dry comparison, and processed-file export
 - Live energy, impulse response, decay, RT60, safety, and feedback-loop visualizations
 - Continuous audible editing, undo/redo, copy/paste, and patch save/load
+- Searchable offline Help, live nested schematics, layout tools, A/B snapshots,
+  temporary diagnosis, and assisted tuning
 - Draft, Normal, and High processing policies that are saved with each patch
+- Private local crash reports, opt-in muted recovery, and a global Emergency Mute
 - Contextual explanations intended to teach through use
 
 ## Standalone or VST3?
@@ -53,7 +57,7 @@ For VST3 installation, run the included `install-vst3.ps1` script from PowerShel
 
 Reverb Playground is alpha software. Save important patches, keep monitoring levels conservative, and expect the interface and patch library to evolve. Runaway feedback is detected and muted, but feedback-heavy designs can still change level quickly. The current reverse-style topology creates a causal rising-energy impression; it does not reverse future samples or create true pre-echo.
 
-The latest published alpha and its known limitations are documented in the [release notes](docs/releases/v0.1.0-alpha.1.md).
+The latest published alpha and its known limitations are documented in the [release notes](docs/releases/v0.1.0-alpha.2.md).
 
 ## Help and feedback
 
@@ -70,12 +74,13 @@ Useful references:
 - [Saving and loading patches](docs/patch-saving-and-loading.md)
 - [Schematic editor interactions](docs/schematic-editor-interactions.md)
 - [Hierarchical compounds and reusable subpatches](docs/hierarchical-schematics.md)
+- [Crash recovery and emergency safety](docs/crash-recovery-and-emergency-safety.md)
 - [Keith Barr reverb architecture research](docs/keith-barr-reverb-architectures.md)
 - [Large modulated, reverse, and shimmer topology research](docs/large-modulated-and-shimmer-reverb-topologies.md)
 - [Dense figure-eight reference design](docs/dense-figure-eight-design.md)
 - [Four-line FDN reference design](docs/four-line-fdn-design.md)
 - [Current progress](docs/progress.md) and [roadmap](docs/roadmap.md)
-- [Alpha demonstration video](artifacts/ui/m7-6-alpha-release/reverb-playground-alpha-demo.mp4)
+- [Alpha.2 demonstration video](artifacts/ui/m33-usability-alpha-refresh/reverb-playground-alpha-2-demo.mp4)
 
 ## Developers and contributors
 

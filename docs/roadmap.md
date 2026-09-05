@@ -2380,12 +2380,12 @@ Milestone exit criteria:
 
 ---
 
-## M33. Usability alpha refresh
+## M33. Usability alpha refresh — Complete
 
 Goal: ship M28-M32 as one coherent, documented alpha rather than a collection of
 unannounced development changes.
 
-### M33.1 Run the integrated workflow regression
+### M33.1 Run the integrated workflow regression — Complete
 
 Tasks: repeat first audition, first construction, nested Matrix editing,
 parameter synchronization, cumulative tuning, temporary diagnosis, A/B,
@@ -2401,7 +2401,7 @@ Acceptance criteria:
 - Automated tests and current screenshots/video cover the complete user-facing
   change set; human listening remains explicitly separate where required.
 
-### M33.2 Prepare the next alpha release
+### M33.2 Prepare the next alpha release — Complete
 
 Tasks: choose the next alpha version at release time; update user-facing README,
 rendered Help/user guide, release notes, compatibility/migration notes, crash
@@ -2419,7 +2419,7 @@ Acceptance criteria:
   known limitations, and privacy boundaries without overstating Barr provenance
   or reverse-reverb equivalence.
 
-### M33.3 Qualify and publish the alpha candidate
+### M33.3 Qualify and publish the alpha candidate — Complete
 
 Tasks: build/package from a clean immutable commit; validate standalone cold
 start, VST3 hosts, pluginval strictness 10, Steinberg extensive mode, migration,

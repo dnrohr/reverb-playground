@@ -18,6 +18,7 @@ Working notes begun 2026-08-08. This directory connects three related subjects:
 - [Execution roadmap](roadmap.md) - ordered milestones, tasks, acceptance criteria, and delivery policy.
 - [Development guide](development.md) - supported toolchain, source layout, build/test commands, and artifact conventions.
 - [Windows package installation](windows-package-installation.md) - install, run, verify, and remove the standalone/VST3 alpha package.
+- [Alpha.2 release notes](releases/v0.1.0-alpha.2.md) - changes, migration, privacy, compatibility, and known limitations.
 - [Barr reference tutorial](getting-started-barr-tutorial.md) - clean-install first run, safe audition, measurement, editing, diagnostics, and save/reload.
 - [Module and visualization reference](module-and-visualization-reference.md) - every shipped block, unit, range, socket, display, and constraint.
 - [Module vocabulary and Advanced controls](module-vocabulary-and-advanced-controls.md) - visible naming, channel contracts, behavior badges, and compact disclosure rules.

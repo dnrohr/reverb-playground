@@ -89,7 +89,7 @@ This builds Release standalone and VST3 targets, stages the license/notices/inst
 
 The public alpha is reproduced by `.github/workflows/release.yml`. A maintainer
 first runs the full Release verifier and packaging rehearsal on a clean `main`,
-then pushes the annotated `v0.1.0-alpha.1` tag at that verified release commit.
+then pushes the annotated `v0.1.0-alpha.2` tag at that verified release commit.
 The tag workflow checks the tag/release-note contract, repeats the full Release
 build and tests, regenerates the deterministic package, retains it as a workflow
 artifact, and creates the GitHub prerelease with ZIP, checksum, demonstration,
@@ -99,7 +99,7 @@ The release demonstration is reproducible from reviewed interaction evidence:
 
 ```powershell
 .\scripts\create_release_demo.ps1
-python scripts\check_release.py --tag v0.1.0-alpha.1
+python scripts\check_release.py --tag v0.1.0-alpha.2
 ```
 
 Build products are written beneath `build/windows-msvc/`. The relevant smoke products are:

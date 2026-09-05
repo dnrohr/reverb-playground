@@ -53,8 +53,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           prerelease: true
-          body_path: docs/releases/v0.1.0-alpha.1.md
+          body_path: docs/releases/v0.1.0-alpha.2.md
           files: |
             out/packages/ReverbPlayground-0.1.0-windows-x64.zip
             out/packages/ReverbPlayground-0.1.0-windows-x64.zip.sha256
-            artifacts/ui/m7-6-alpha-release/reverb-playground-alpha-demo.mp4
+            artifacts/ui/m33-usability-alpha-refresh/reverb-playground-alpha-2-demo.mp4

@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "candidate": "v0.1.0-alpha.2",
+  "scope": "M28-M32 integrated alpha workflow",
+  "environments": [
+    "Windows 11 x64 standalone",
+    "Windows VST3 host boundary",
+    "640x400 minimum editor",
+    "1280x800 desktop editor",
+    "keyboard and screen-reader contracts"
+  ],
+  "workflows": [
+    {
+      "id": "first-audition",
+      "expectedStateAudio": "Barr reference is visible; conservative Trigger Impulse or loaded audio reaches the selected graph without hidden mutation.",
+      "saveReopen": "Factory identity and complete graph round-trip through patch and host state.",
+      "undoRedo": "Audition transport remains outside graph history.",
+      "accessibility": "Named source, transport, Wet/Dry, mute, and status controls remain keyboard reachable.",
+      "realTimeSafety": "Prepared source routing and final-output safety are bounded on the callback.",
+      "failureRecovery": "Missing device/file reports an actionable status without changing the graph.",
+      "evidence": ["tests/PreparedAudioFileSourceTests.cpp", "artifacts/ui/m25-5-primary-journeys"]
+    },
+    {
+      "id": "first-construction",
+      "expectedStateAudio": "Typed primitive creation and explicit Sum insertion publish only a valid connected graph.",
+      "saveReopen": "Schema-v2 preserves semantic graph, layout, stable IDs, and millisecond parameters.",
+      "undoRedo": "Creation, connection, and assisted Sum are single reversible history operations.",
+      "accessibility": "Palette click, keyboard, touch-sized targets, and drag-to-canvas use the same creation path.",
+      "realTimeSafety": "Compilation remains worker-owned and publication is bounded.",
+      "failureRecovery": "Illegal algebraic cycles retain the last valid runtime and expose the failing path.",
+      "evidence": ["artifacts/ui/m26-1-assisted-sum", "artifacts/ui/m31-predictable-layout"]
+    },
+    {
+      "id": "nested-matrix-editing",
+      "expectedStateAudio": "The Matrix parent opens to its authoritative 16 Gains, 12 Sums, and crossing cables without changing audio truth.",
+      "saveReopen": "Parent presentation, proxy ports, child membership, and nested viewport round-trip.",
+      "undoRedo": "Parent and nested canvases share one graph history.",
+      "accessibility": "Breadcrumbs, Back, parent focus, and compact navigation are named and keyboard operable.",
+      "realTimeSafety": "Expansion is presentation-only; the prepared primitive runtime is unchanged.",
+      "failureRecovery": "Invalid compound metadata falls back to authoritative primitives.",
+      "evidence": ["artifacts/ui/m29-hierarchical-compounds/qualification.json", "artifacts/ui/m29-hierarchical-compounds/matrix-hierarchy-workflow.mp4"]
+    },
+    {
+      "id": "parameter-synchronization-and-tuning",
+      "expectedStateAudio": "Inspector, schematic, Macro, and tuning layers reflect the active revision and audible value.",
+      "saveReopen": "Committed parameters and quality policy persist; temporary preview layers do not.",
+      "undoRedo": "Cumulative tuning commits as a conflict-aware transaction and restores the exact prior value.",
+      "accessibility": "Advanced disclosure and value/status text do not rely on color.",
+      "realTimeSafety": "Control ramps and topology publication remain bounded and lock-free at block entry.",
+      "failureRecovery": "Superseded or rejected revisions cannot overwrite newer visible controls.",
+      "evidence": ["artifacts/ui/m30-interaction-state/qualification.json", "artifacts/ui/m30-interaction-state/interaction-state-workflow.mp4"]
+    },
+    {
+      "id": "temporary-diagnosis-and-ab",
+      "expectedStateAudio": "Isolate, mute, legal bypass, and raw or impulse-matched A/B affect audition only until explicitly promoted.",
+      "saveReopen": "Preview overlays and A/B snapshots are excluded from patch and host persistence.",
+      "undoRedo": "Promotion/revert creates explicit graph history; switching does not.",
+      "accessibility": "State, latency, probe validity, and exit commands are textually disclosed.",
+      "realTimeSafety": "Preview publication uses the existing compiled crossfade and refuses unsafe bypass.",
+      "failureRecovery": "Global exits clear temporary layers without clearing safety latches.",
+      "evidence": ["artifacts/ui/m27-5-product-qualification", "docs/ab-comparison-snapshots.md"]
+    },
+    {
+      "id": "audio-file-playback-and-export",
+      "expectedStateAudio": "WAV, AIFF, or FLAC playback uses explicit channel policy; export renders the chosen source range and bounded tail once.",
+      "saveReopen": "Transport, source paths, and export state remain private and non-persistent.",
+      "undoRedo": "Transport and export never enter graph history.",
+      "accessibility": "Load, waveform, loop, playback, mode, progress, and cancel remain named in the standalone drawer.",
+      "realTimeSafety": "Decode/read-ahead/export are worker-owned; callback reads are bounded.",
+      "failureRecovery": "Cancel is atomic; unsafe destination, Emergency Mute, or safety latch refuses export.",
+      "evidence": ["tests/PreparedAudioFileSourceTests.cpp", "artifacts/ui/m14-3-standalone-audition", "artifacts/ui/m14-4-processed-export"]
+    },
+    {
+      "id": "dense-layout-cleanup",
+      "expectedStateAudio": "Align, distribute, bounded group arrangement, cable routes, and orientation change presentation only.",
+      "saveReopen": "Routes, group bounds, hierarchy, orientation, and viewports persist without semantic hash drift.",
+      "undoRedo": "Each accepted layout operation is one reversible edit; impossible layouts are no-ops.",
+      "accessibility": "Commands expose names, disabled states, and current focus at desktop and minimum size.",
+      "realTimeSafety": "No DSP compile occurs for presentation-only changes.",
+      "failureRecovery": "Protected-neighbor overlap and insufficient spans are refused with stable selection/context.",
+      "evidence": ["artifacts/ui/m31-predictable-layout/predictable-layout-workflow.mp4", "artifacts/ui/m31-predictable-layout/02-arranged-group-compact.png"]
+    },
+    {
+      "id": "crash-recovery",
+      "expectedStateAudio": "An abnormal standalone exit offers the exact last-known-valid candidate and restores it only in an Emergency-Muted state.",
+      "saveReopen": "Autosave accepts only normally validated graph JSON and never overwrites a patch or VST3 host project.",
+      "undoRedo": "Recovery establishes a new base history rather than fabricating edits.",
+      "accessibility": "Restore muted, Start clean, Open reports, candidate hash, and incident ID are screen-reader visible at minimum size.",
+      "realTimeSafety": "The exception boundary signals a pre-created non-audio worker; no crash I/O occurs in the callback.",
+      "failureRecovery": "Two abnormal recovery attempts quarantine the candidate; decline retains reports.",
+      "evidence": ["tests/CrashRecoveryTests.cpp", "artifacts/ui/m32-crash-recovery/recovery-and-emergency-workflow.mp4"]
+    },
+    {
+      "id": "emergency-mute",
+      "expectedStateAudio": "Ctrl/Cmd+Shift+M always latches final output silent and never toggles on repeat.",
+      "saveReopen": "The explicit manual latch uses host state; recovery activates it before publishing recovered audio.",
+      "undoRedo": "Graph history cannot clear manual mute or the numerical-safety latch.",
+      "accessibility": "Shortcut, native button, Help command, diagnostics, and assertive announcement expose one state.",
+      "realTimeSafety": "The authoritative atomic latch is checked at final output.",
+      "failureRecovery": "Active mute cancels/refuses export; Reset Safety remains a separate explicit action.",
+      "evidence": ["web/src/crashRecovery.test.ts", "tests/PreparedAudioFileSourceTests.cpp", "artifacts/ui/m32-crash-recovery/02-emergency-help-640x400.png"]
+    },
+    {
+      "id": "guidance-and-reporting",
+      "expectedStateAudio": "Searchable offline Help explains audible purpose, signal behavior, safety, workflows, and evidence without changing the graph or audio.",
+      "saveReopen": "Opening and closing Help preserves graph, selection, viewport, history, and audible state.",
+      "undoRedo": "Help navigation never enters graph history.",
+      "accessibility": "Articles, search, results, context links, and return focus work at desktop and minimum size.",
+      "realTimeSafety": "Help rendering and report-folder access stay off the audio callback.",
+      "failureRecovery": "Shipped guidance covers safe startup, recovery choices, local report privacy, and issue details.",
+      "evidence": ["artifacts/ui/m28-guidance-rendered-help/help-round-trip.mp4", "docs/user-guide.md", "docs/crash-recovery-and-emergency-safety.md"]
+    }
+  ],
+  "outstandingExternalDependencies": [
+    "Three M7.5 non-implementer usability and accessibility sessions",
+    "M24.1 comparative dense-reverb listening notes"
+  ]
+}

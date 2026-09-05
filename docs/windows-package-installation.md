@@ -10,6 +10,10 @@ This package contains Reverb Playground 0.1.0 alpha for 64-bit Windows 10 and 11
 4. Begin at a conservative speaker or headphone level.
 5. Load an audio file or choose **Trigger Impulse**, then edit the visible reverb schematic.
 
+Open **Help > User Guide** for the shipped searchable walkthrough. It covers
+first sound, construction, nested schematics, comparison, diagnosis, tuning,
+save/reopen, export, recovery, and Emergency Mute without requiring internet access.
+
 The startup screen may remain visible for eight seconds while the editor opens. The standalone is portable: there is no installer and it does not place program files elsewhere. It does use the normal JUCE settings and WebView2 profile locations for your user account.
 
 ## If Windows shows a warning
@@ -51,6 +55,20 @@ Keep these files with any redistributed copy of the application.
 ## Removing Reverb Playground
 
 Delete the extracted package folder to remove the standalone. Remove `Reverb Playground.vst3` from the VST3 folder where you installed it to remove the plug-in. Existing DAW projects retain their saved state but report a missing plug-in until it is reinstalled.
+
+## Recovering or reporting a crash
+
+After an abnormal standalone exit, the next launch offers **Restore muted**,
+**Start clean**, and **Open reports**. Restore is optional, validates the last
+known-good graph through the normal safety gates, and keeps Emergency Mute on.
+Press **Ctrl+Shift+M** at any time to silence final output.
+
+Crash reports remain local under `%APPDATA%\Reverb Playground\Crash Reports`.
+The text summary excludes audio, full patch content, and user document paths.
+The matching minidump may contain process memory, so review it before sharing.
+Nothing is uploaded automatically. Use **Help > Open crash reports folder** to
+inspect the files and include the displayed version/commit and incident ID when
+filing an issue.
 
 ## Confirming the build
 
